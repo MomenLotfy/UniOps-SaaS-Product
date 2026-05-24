@@ -3,12 +3,6 @@ import { clsx } from 'clsx';
 import { formatRelative } from '@/lib/formatters';
 import type { UserSession } from '@/types/user';
 
-const MOCK_SESSIONS: UserSession[] = [
-  { id: 'sess_1', device: 'MacBook Pro', browser: 'Chrome 124', os: 'macOS 14', ip: '192.168.1.45', location: 'Cairo, EG', current: true, lastActive: new Date().toISOString() },
-  { id: 'sess_2', device: 'iPhone 15', browser: 'Safari', os: 'iOS 17', ip: '5.22.103.12', location: 'Dubai, AE', current: false, lastActive: new Date(Date.now() - 3600000 * 2).toISOString() },
-  { id: 'sess_3', device: 'Windows PC', browser: 'Edge 124', os: 'Windows 11', ip: '82.44.15.200', location: 'London, UK', current: false, lastActive: new Date(Date.now() - 3600000 * 24).toISOString() },
-];
-
 interface SessionManagementProps {
   sessions?: UserSession[];
   onRevoke?: (sessionId: string) => void;
@@ -20,7 +14,22 @@ function DeviceIcon({ os }: { os: string }) {
   return <Monitor className="w-5 h-5" />;
 }
 
-export function SessionManagement({ sessions = MOCK_SESSIONS, onRevoke, onRevokeAll }: SessionManagementProps) {
+export function SessionManagement({ sessions = [], onRevoke, onRevokeAll }: SessionManagementProps) {
+  if (sessions.length === 0) {
+    return (
+      <div className="space-y-4 max-w-2xl">
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4 text-blue-400" />
+          <p className="text-sm text-foreground font-medium">Active Sessions</p>
+        </div>
+        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+          <Monitor className="w-6 h-6 mb-2 opacity-40" />
+          <p className="text-sm">No active sessions found</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 max-w-2xl">
       <div className="flex items-center justify-between">

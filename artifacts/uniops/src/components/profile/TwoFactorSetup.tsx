@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Shield, Smartphone, CheckCircle, Copy, Eye } from 'lucide-react';
+import { Shield, Smartphone, CheckCircle, Copy, Eye, Loader2 } from 'lucide-react';
 import { clsx } from 'clsx';
+import apiClient from '@/services/api/client';
 
 interface TwoFactorSetupProps {
   isEnabled: boolean;
@@ -8,21 +9,40 @@ interface TwoFactorSetupProps {
   onDisable: (code: string) => Promise<void>;
 }
 
-const MOCK_SECRET = 'JBSWY3DPEHPK3PXP';
-const MOCK_QR = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=otpauth://totp/UniOps:user@company.com?secret=${MOCK_SECRET}&issuer=UniOps`;
-
 export function TwoFactorSetup({ isEnabled, onEnable, onDisable }: TwoFactorSetupProps) {
-  const [step, setStep] = useState<'idle' | 'setup' | 'disable'>(isEnabled ? 'idle' : 'idle');
-  const [code, setCode] = useState('');
+  const [step, setStep]           = useState<'idle' | 'setup' | 'disable'>('idle');
+  const [code, setCode]           = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied]       = useState(false);
   const [showSecret, setShowSecret] = useState(false);
+  const [setupData, setSetupData] = useState<{ secret: string; qr_code_url: string } | null>(null);
+  const [setupLoading, setSetupLoading] = useState(false);
+  const [setupError, setSetupError]     = useState('');
+
+  const handleStartSetup = async () => {
+    setSetupLoading(true);
+    setSetupError('');
+    try {
+      const res = await apiClient.post<any>('/auth/2fa/setup', {});
+      const data = res.data?.data;
+      setSetupData({ secret: data?.secret ?? '', qr_code_url: data?.qr_code_url ?? '' });
+      setStep('setup');
+    } catch {
+      setSetupError('Failed to start 2FA setup. Please try again.');
+    } finally {
+      setSetupLoading(false);
+    }
+  };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(MOCK_SECRET);
+    if (setupData?.secret) navigator.clipboard.writeText(setupData.secret);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const qrImageUrl = setupData?.qr_code_url
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(setupData.qr_code_url)}`
+    : null;
 
   const handleConfirm = async () => {
     setIsLoading(true);
@@ -31,6 +51,7 @@ export function TwoFactorSetup({ isEnabled, onEnable, onDisable }: TwoFactorSetu
       else await onDisable(code);
       setStep('idle');
       setCode('');
+      setSetupData(null);
     } finally {
       setIsLoading(false);
     }
@@ -51,32 +72,40 @@ export function TwoFactorSetup({ isEnabled, onEnable, onDisable }: TwoFactorSetu
         {isEnabled && <CheckCircle className="w-5 h-5 text-green-400" />}
       </div>
 
+      {setupError && (
+        <p className="text-xs text-red-400 px-1">{setupError}</p>
+      )}
+
       {step === 'idle' && (
         <button
-          onClick={() => setStep(isEnabled ? 'disable' : 'setup')}
-          className={clsx('w-full py-2.5 rounded-lg text-sm font-semibold transition-colors', isEnabled
+          onClick={isEnabled ? () => setStep('disable') : handleStartSetup}
+          disabled={setupLoading}
+          className={clsx('w-full py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-60', isEnabled
             ? 'text-red-400 hover:bg-red-500/10 border border-red-500/20'
             : 'text-white')}
           style={!isEnabled ? { background: 'hsl(220 90% 60%)' } : undefined}>
-          {isEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+          {setupLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+          {isEnabled ? 'Disable 2FA' : setupLoading ? 'Setting up...' : 'Enable 2FA'}
         </button>
       )}
 
-      {step === 'setup' && (
+      {step === 'setup' && setupData && (
         <div className="space-y-4 p-4 rounded-xl border" style={{ borderColor: 'hsl(230 15% 14%)', background: 'hsl(230 18% 8%)' }}>
           <div className="flex items-center gap-2">
             <Smartphone className="w-4 h-4 text-blue-400" />
             <p className="text-sm font-medium text-foreground">Scan QR with your authenticator app</p>
           </div>
-          <div className="flex justify-center">
-            <img src={MOCK_QR} alt="2FA QR Code" className="w-40 h-40 rounded-lg" />
-          </div>
+          {qrImageUrl && (
+            <div className="flex justify-center">
+              <img src={qrImageUrl} alt="2FA QR Code" className="w-40 h-40 rounded-lg" />
+            </div>
+          )}
           <div>
             <p className="text-xs text-muted-foreground mb-1.5">Or enter this key manually:</p>
             <div className="flex items-center gap-2">
               <code className={clsx('flex-1 px-3 py-2 rounded-lg text-xs font-mono text-blue-400', showSecret ? '' : 'blur-sm select-none')}
                 style={{ background: 'hsl(230 18% 11%)', border: '1px solid hsl(230 15% 14%)' }}>
-                {MOCK_SECRET}
+                {setupData.secret}
               </code>
               <button type="button" onClick={() => setShowSecret((p) => !p)}
                 className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
@@ -97,7 +126,7 @@ export function TwoFactorSetup({ isEnabled, onEnable, onDisable }: TwoFactorSetu
               style={{ background: 'hsl(230 18% 9%)', borderColor: 'hsl(230 15% 14%)', color: 'white' }} />
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => { setStep('idle'); setCode(''); }}
+            <button type="button" onClick={() => { setStep('idle'); setCode(''); setSetupData(null); }}
               className="flex-1 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground border transition-colors"
               style={{ borderColor: 'hsl(230 15% 14%)' }}>Cancel</button>
             <button type="button" disabled={code.length !== 6 || isLoading} onClick={handleConfirm}

@@ -21,11 +21,12 @@ from app.models.alert import Alert
 from app.models.audit_log import AuditLog
 from app.models.webhook import Webhook
 from app.models.scan import Scan, Repository   # DevSecOps scan engine
+from app.models.api_key import ApiKey
 
 __all__ = [
     "BaseModel", "Tenant", "User", "Role", "Permission", "Subscription",
     "Integration", "Pipeline", "Pod", "Threat", "Vulnerability", "Compliance",
     "CostMetric", "CostAnomaly", "Savings", "MLPrediction", "MLPattern",
     "MLRecommendation", "MLCorrelation", "Alert", "AuditLog", "Webhook",
-    "Scan", "Repository",
+    "Scan", "Repository", "ApiKey",
 ]

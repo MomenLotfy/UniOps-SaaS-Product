@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import apiClient from '@/services/api/client';
 
 export interface Notification {
   id: string;
@@ -21,31 +22,55 @@ interface NotificationContextValue {
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 
-const INITIAL: Notification[] = [
-  { id: '1', title: 'SQL Injection Blocked', message: 'Threat THR-001 blocked from 185.142.53.179', type: 'error', read: false, createdAt: new Date(Date.now() - 300_000).toISOString() },
-  { id: '2', title: 'Deployment Succeeded', message: 'api-gateway v2.1.0 deployed to production', type: 'success', read: false, createdAt: new Date(Date.now() - 7_200_000).toISOString() },
-  { id: '3', title: 'Cost Anomaly Detected', message: 'EC2 spend +45% above forecast threshold', type: 'warning', read: true, createdAt: new Date(Date.now() - 10_800_000).toISOString() },
-  { id: '4', title: 'ML Analysis Complete', message: '24 patterns discovered with 92% accuracy', type: 'info', read: true, createdAt: new Date(Date.now() - 18_000_000).toISOString() },
-];
+const SEV_TO_TYPE: Record<string, Notification['type']> = {
+  critical: 'error', high: 'error', medium: 'warning',
+  low: 'info', info: 'info', warning: 'warning',
+};
+
+function alertToNotification(a: any): Notification {
+  return {
+    id:        String(a.id),
+    title:     a.title   ?? a.message ?? 'Alert',
+    message:   a.message ?? a.title   ?? '',
+    type:      SEV_TO_TYPE[a.severity ?? 'info'] ?? 'info',
+    read:      a.status === 'resolved' || a.status === 'dismissed',
+    createdAt: a.created_at ?? new Date().toISOString(),
+  };
+}
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const [notifications, setNotifications] = useState<Notification[]>(INITIAL);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    apiClient.get<any>('/alerts', { params: { page_size: 10 } })
+      .then((res) => {
+        const raw = res.data;
+        // FastAPI wraps: { success, data: { data: [...], total, ... } }
+        const items: any[] = raw?.data?.data ?? raw?.data ?? [];
+        if (Array.isArray(items) && items.length > 0) {
+          setNotifications(items.map(alertToNotification));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const addNotification = useCallback((n: Omit<Notification, 'id' | 'read' | 'createdAt'>) => {
     setNotifications((prev) => [
-      { ...n, id: Math.random().toString(36).slice(2), read: false, createdAt: new Date().toISOString() },
+      { ...n, id: crypto.randomUUID(), read: false, createdAt: new Date().toISOString() },
       ...prev,
     ]);
   }, []);
 
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+    apiClient.patch(`/alerts/${id}`, { status: 'resolved' }).catch(() => {});
   }, []);
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    apiClient.post('/alerts/bulk/mark-read', {}).catch(() => {});
   }, []);
 
   const removeNotification = useCallback((id: string) => {

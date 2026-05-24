@@ -1,7 +1,8 @@
 from __future__ import annotations
 """Users API — CRUD operations for tenant users, invitations, and role management."""
 from typing import Optional
-from fastapi import APIRouter, Query, status
+from datetime import datetime, timezone
+from fastapi import APIRouter, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import CurrentUser, AdminUser, TenantID, DBSession, Pagination
@@ -81,9 +82,34 @@ async def invite_user(data: UserInvite, current_user: AdminUser, tenant_id: Tena
 
 
 @router.get("/me/sessions")
-async def get_my_sessions(current_user: CurrentUser):
-    """Return empty sessions list — session tracking not yet implemented."""
-    return APIResponse(data=[])
+async def get_my_sessions(current_user: CurrentUser, request: Request):
+    """Return active sessions — currently returns the calling session."""
+    ua       = request.headers.get("user-agent", "")
+    ip       = request.client.host if request.client else "unknown"
+    ua_lower = ua.lower()
+
+    browser = "Chrome"
+    if   "firefox" in ua_lower: browser = "Firefox"
+    elif "edg"     in ua_lower: browser = "Edge"
+    elif "safari"  in ua_lower and "chrome" not in ua_lower: browser = "Safari"
+
+    os_name = "Linux"
+    device  = "Web Browser"
+    if   "windows" in ua_lower: os_name = "Windows"
+    elif "mac"     in ua_lower: os_name = "macOS"
+    elif "iphone"  in ua_lower: os_name = "iOS";     device = "iPhone"
+    elif "android" in ua_lower: os_name = "Android"; device = "Android Phone"
+
+    return APIResponse(data=[{
+        "id":         "current",
+        "device":     device,
+        "browser":    browser,
+        "os":         os_name,
+        "ip":         ip,
+        "location":   "Current location",
+        "current":    True,
+        "lastActive": datetime.now(timezone.utc).isoformat(),
+    }])
 
 
 @router.delete("/me/sessions/{session_id}")
