@@ -2719,3 +2719,5 @@ WHERE scans.id = $1::VARCHAR AND scans.tenant_id = $2::VARCHAR]
 2026-05-24 14:23:52 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
 2026-05-24 14:23:52 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 12330d84-9527-4554-88b2-96b7541726ff: Dependabot alerts are disabled for this repository.
 2026-05-24 14:23:52 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 14:24:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 14:24:50 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
