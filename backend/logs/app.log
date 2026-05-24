@@ -1,0 +1,794 @@
+2026-05-15 08:36:42 | INFO     | app.main:98 - Prometheus metrics enabled at /metrics
+2026-05-15 08:36:42 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-15 08:36:42 | INFO     | app.main:33 - Database initialized
+2026-05-15 08:36:42 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-15 08:36:42 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-15 08:36:42 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-15 08:36:42 | INFO     | app.main:39 - Background scheduler started
+2026-05-15 08:36:42 | INFO     | app.main:53 - ML event listener started — subscribed to Redis pub/sub
+2026-05-15 08:36:42 | INFO     | app.services.ml_service:339 - [MLListener] Starting — subscribing to 4 channels
+2026-05-15 08:36:42 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-15 08:36:47 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-15 08:36:52 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-15 08:36:57 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-15 08:37:02 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-15 08:37:07 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-15 08:37:13 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-15 08:37:13 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-15 08:37:13 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-15 08:37:13 | INFO     | app.tasks.sync_costs:54 - Syncing AWS costs for 0 integrations
+2026-05-15 08:37:13 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-15 08:37:13 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-15 08:37:13 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-15 08:37:18 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-15 08:37:23 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-15 08:37:28 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-15 08:37:33 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-15 08:37:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-15 08:38:59 | INFO     | app.main:98 - Prometheus metrics enabled at /metrics
+2026-05-15 08:39:00 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-15 08:39:00 | INFO     | app.main:33 - Database initialized
+2026-05-15 08:39:00 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-15 08:39:00 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-15 08:39:00 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-15 08:39:00 | INFO     | app.main:39 - Background scheduler started
+2026-05-15 08:39:00 | INFO     | app.main:53 - ML event listener started — subscribed to Redis pub/sub
+2026-05-15 08:39:00 | INFO     | app.services.ml_service:339 - [MLListener] Starting — subscribing to 4 channels
+2026-05-15 08:39:00 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:39:30 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-15 08:39:30 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-15 08:39:30 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-15 08:39:30 | INFO     | app.tasks.sync_costs:54 - Syncing AWS costs for 0 integrations
+2026-05-15 08:39:30 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-15 08:39:30 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-15 08:40:36 | INFO     | app.main:98 - Prometheus metrics enabled at /metrics
+2026-05-15 08:40:36 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-15 08:40:36 | INFO     | app.main:33 - Database initialized
+2026-05-15 08:40:36 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-15 08:40:36 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-15 08:40:36 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-15 08:40:36 | INFO     | app.main:39 - Background scheduler started
+2026-05-15 08:40:36 | INFO     | app.main:53 - ML event listener started — subscribed to Redis pub/sub
+2026-05-15 08:40:36 | INFO     | app.services.ml_service:339 - [MLListener] Starting — subscribing to 4 channels
+2026-05-15 08:40:36 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:40:46 | INFO     | app.main:75 - Shutting down...
+2026-05-15 08:40:46 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-15 08:40:46 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-15 08:41:08 | INFO     | app.main:98 - Prometheus metrics enabled at /metrics
+2026-05-15 08:41:08 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-15 08:41:09 | INFO     | app.main:33 - Database initialized
+2026-05-15 08:41:09 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-15 08:41:09 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-15 08:41:09 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-15 08:41:09 | INFO     | app.main:39 - Background scheduler started
+2026-05-15 08:41:09 | INFO     | app.main:53 - ML event listener started — subscribed to Redis pub/sub
+2026-05-15 08:41:09 | INFO     | app.services.ml_service:339 - [MLListener] Starting — subscribing to 4 channels
+2026-05-15 08:41:09 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:41:19 | INFO     | app.middleware.logging:14 - [996c029a] GET /health → 200 (1.49ms)
+2026-05-15 08:41:19 | INFO     | app.middleware.logging:14 - [d01dde65] GET /api/v1/health → 200 (0.37ms)
+2026-05-15 08:41:40 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-15 08:41:41 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:41:41 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:41:41 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-15 08:41:41 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-15 08:41:41 | INFO     | app.tasks.sync_costs:54 - Syncing AWS costs for 1 integrations
+2026-05-15 08:41:42 | WARNING  | app.integrations.aws.cost_explorer:66 - CostExplorer.get_costs_by_service failed: Unable to locate credentials
+2026-05-15 08:41:42 | WARNING  | app.integrations.aws.cost_explorer:97 - CostExplorer.get_cost_anomalies failed: Unable to locate credentials
+2026-05-15 08:41:42 | WARNING  | app.integrations.aws.cost_explorer:123 - CostExplorer.get_rightsizing failed: Unable to locate credentials
+2026-05-15 08:41:42 | ERROR    | app.tasks.sync_costs:114 - Failed to sync AWS costs for integration 77dbe8aa-6f35-426b-b523-7693aee179c9: 'CostExplorer' object has no attribute 'get_reserved_instance_recommendations'
+2026-05-15 08:41:42 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-15 08:41:42 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-15 08:41:43 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-15 08:41:44 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-15 08:41:45 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-05-15 08:41:45 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-15 08:41:45 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-15 08:41:45 | WARNING  | app.integrations.github.client:28 - GitHub API /user/repos failed: Illegal header value b'Bearer '
+2026-05-15 08:41:47 | INFO     | app.services.auth_service:62 - User admin@demo.com logged in successfully
+2026-05-15 08:41:47 | INFO     | app.middleware.logging:14 - [a0b75bef] POST /api/v1/auth/login → 200 (326.62ms)
+2026-05-15 08:42:01 | INFO     | app.middleware.logging:14 - [a848ad93] GET /api/v1/integrations → 200 (18.27ms)
+2026-05-15 08:42:09 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [28ae9b19] GET /api/v1/health → 200 (0.44ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [0167df49] GET /api/v1/users/me → 200 (6.18ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [57c10043] GET /api/v1/companies → 200 (5.86ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [265dddd3] GET /api/v1/companies/stats → 200 (16.34ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [929f802e] GET /api/v1/alerts → 200 (9.43ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [0027e587] GET /api/v1/alerts/stats → 200 (5.68ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [6e73d120] GET /api/v1/threats → 200 (9.07ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [c43ca0fc] GET /api/v1/threats/stats → 200 (5.66ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [b0c0a8c3] GET /api/v1/vulnerabilities → 200 (9.99ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [b43e846a] GET /api/v1/vulnerabilities/stats → 200 (5.35ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [4bdc6f3f] GET /api/v1/compliance → 200 (5.72ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [c533ffb0] GET /api/v1/compliance/score → 200 (4.45ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [defe9601] GET /api/v1/costs/summary → 200 (10.4ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [6508b70f] GET /api/v1/costs/breakdown → 404 (1.04ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [222c4409] GET /api/v1/costs/forecast → 404 (1.0ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [dc3a071f] GET /api/v1/costs/anomalies → 200 (5.65ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [f3c106f7] GET /api/v1/savings → 200 (5.67ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [3f091da4] GET /api/v1/pipelines → 200 (9.16ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [e792536d] GET /api/v1/pipelines/stats → 200 (4.73ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [6ce70b44] GET /api/v1/kubernetes/pods → 200 (7.99ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [cd430f8f] GET /api/v1/kubernetes/pods/stats → 200 (4.49ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [a1d86d83] GET /api/v1/ml/correlations → 200 (5.93ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [c747f7d0] GET /api/v1/ml/patterns → 200 (5.53ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [423a5122] GET /api/v1/ml/recommendations → 200 (5.7ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [f3ecc2a4] GET /api/v1/ml/predictions → 200 (7.63ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [8da9259e] GET /api/v1/ml/predictions/summary → 404 (1.2ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [03b89e64] GET /api/v1/ml/stats → 200 (8.62ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [3fdf94bb] GET /api/v1/ml/radar → 404 (0.95ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [5df067a1] GET /api/v1/integrations → 200 (6.12ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [4627b4e0] GET /api/v1/users → 200 (7.38ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [7e0b58b4] GET /api/v1/audit-logs → 200 (8.28ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [b8c0f5e7] GET /api/v1/audit-logs/summary → 200 (116.54ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [fd06087c] GET /api/v1/billing/subscription → 200 (5.75ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [59b8b536] GET /api/v1/billing/invoices → 200 (3.74ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [eea9ff78] GET /api/v1/users/me/sessions → 200 (0.83ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [ee1617e5] GET /api/v1/security/repos → 200 (5.17ms)
+2026-05-15 08:42:14 | INFO     | app.middleware.logging:14 - [01c0c279] GET /api/v1/security/scan-history → 200 (5.94ms)
+2026-05-15 08:42:47 | INFO     | app.middleware.logging:14 - [1b360bf0] GET /api/v1/costs/summary → 200 (8.08ms)
+2026-05-15 08:42:47 | INFO     | app.middleware.logging:14 - [adfe7511] GET /api/v1/ml/stats → 200 (5.71ms)
+2026-05-15 08:42:47 | INFO     | app.middleware.logging:14 - [3fb20414] GET /api/v1/ml/predictions → 200 (6.34ms)
+2026-05-15 08:42:47 | INFO     | app.middleware.logging:14 - [9d8cbbb5] GET /api/v1/ml/correlations → 200 (4.19ms)
+2026-05-15 08:43:09 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:43:41 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-15 08:43:41 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:43:41 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:43:41 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-15 08:43:41 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-15 08:44:09 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:45:03 | INFO     | app.main:75 - Shutting down...
+2026-05-15 08:45:03 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-15 08:45:03 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-15 08:45:07 | INFO     | app.main:98 - Prometheus metrics enabled at /metrics
+2026-05-15 08:45:07 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-15 08:45:07 | INFO     | app.main:33 - Database initialized
+2026-05-15 08:45:07 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-15 08:45:07 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-15 08:45:07 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-15 08:45:07 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-15 08:45:07 | INFO     | app.main:39 - Background scheduler started
+2026-05-15 08:45:07 | INFO     | app.main:53 - ML event listener started — subscribed to Redis pub/sub
+2026-05-15 08:45:08 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=b42dff69-7be3-420b-84da-0d879ceba086)
+2026-05-15 08:45:08 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:45:08 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:45:08 | INFO     | app.services.ml_service:339 - [MLListener] Starting — subscribing to 4 channels
+2026-05-15 08:45:08 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:45:16 | INFO     | app.middleware.logging:14 - [03902095] GET /api/v1/costs/breakdown → 200 (9.24ms)
+2026-05-15 08:45:16 | INFO     | app.middleware.logging:14 - [6d8ade18] GET /api/v1/costs/forecast → 200 (10.15ms)
+2026-05-15 08:45:16 | INFO     | app.middleware.logging:14 - [51ec7e32] GET /api/v1/ml/predictions/summary → 200 (6.15ms)
+2026-05-15 08:45:16 | INFO     | app.middleware.logging:14 - [5675fbcd] GET /api/v1/ml/radar → 200 (16.2ms)
+2026-05-15 08:45:38 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:45:38 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:45:38 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-15 08:45:38 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:45:38 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:45:38 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-15 08:45:38 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-15 08:45:38 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-05-15 08:45:38 | INFO     | app.tasks.sync_costs:54 - Syncing AWS costs for 1 integrations
+2026-05-15 08:45:39 | WARNING  | app.integrations.aws.cost_explorer:66 - CostExplorer.get_costs_by_service failed: Unable to locate credentials
+2026-05-15 08:45:40 | WARNING  | app.integrations.aws.cost_explorer:97 - CostExplorer.get_cost_anomalies failed: Unable to locate credentials
+2026-05-15 08:45:41 | WARNING  | app.integrations.aws.cost_explorer:123 - CostExplorer.get_rightsizing failed: Unable to locate credentials
+2026-05-15 08:45:41 | ERROR    | app.tasks.sync_costs:114 - Failed to sync AWS costs for integration 77dbe8aa-6f35-426b-b523-7693aee179c9: 'CostExplorer' object has no attribute 'get_reserved_instance_recommendations'
+2026-05-15 08:45:41 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-15 08:45:41 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-15 08:45:41 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-15 08:45:41 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-15 08:45:41 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-15 08:45:41 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-15 08:45:41 | WARNING  | app.integrations.github.client:28 - GitHub API /user/repos failed: Illegal header value b'Bearer '
+2026-05-15 08:46:08 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:46:08 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:46:08 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:46:38 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:46:38 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:46:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [c3072c07] GET /api/v1/kubernetes/pods/workloads/deployments → 200 (9.57ms)
+2026-05-15 08:46:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [9f0af84b] GET /api/v1/kubernetes/pods/workloads/statefulsets → 200 (4.77ms)
+2026-05-15 08:46:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [9a3817a5] GET /api/v1/kubernetes/pods/workloads/daemonsets → 200 (5.87ms)
+2026-05-15 08:46:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [3c92a3e7] GET /api/v1/kubernetes/pods/network/services → 200 (13.78ms)
+2026-05-15 08:46:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [2b49946c] GET /api/v1/kubernetes/pods/network/ingresses → 200 (4.63ms)
+2026-05-15 08:46:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [f4ae0512] GET /api/v1/kubernetes/pods/batch/jobs → 200 (3.73ms)
+2026-05-15 08:46:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [cbd6712a] GET /api/v1/kubernetes/pods/config/configmaps → 200 (4.6ms)
+2026-05-15 08:46:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [01092326] GET /api/v1/kubernetes/pods/config/secrets → 200 (3.89ms)
+2026-05-15 08:46:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [c30e97a2] GET /api/v1/kubernetes/pods/autoscaling/hpa → 200 (4.3ms)
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [5b7d6e44] GET /api/v1/security/score → 200 (5.38ms)
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [301947e2] GET /api/v1/security/scan → 405 (0.87ms)
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [187147da] GET /api/v1/security/scan-history → 200 (7.17ms)
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [60f09df9] GET /api/v1/users/me/sessions → 200 (1.07ms)
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [801d71ad] GET /api/v1/billing/checkout → 405 (0.88ms)
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [9d5490f1] GET /api/v1/billing/portal → 405 (0.83ms)
+2026-05-15 08:46:53 | INFO     | app.middleware.logging:14 - [3db3cc72] GET /api/v1/ml/analyze → 404 (1.02ms)
+2026-05-15 08:47:08 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:47:08 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:47:08 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:47:38 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:47:38 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:47:41 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-15 08:47:41 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:47:41 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:47:41 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-15 08:47:41 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-15 08:47:58 | INFO     | app.main:75 - Shutting down...
+2026-05-15 08:47:58 | INFO     | app.integrations.kubernetes.watcher:45 - K8s watcher cancelled: K8s Cluster
+2026-05-15 08:47:58 | INFO     | app.integrations.kubernetes.watcher:209 - K8s watcher stopped: f7c31bf6-4bed-4c04-906c-5e2541d7943f
+2026-05-15 08:47:58 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-15 08:47:58 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-15 08:48:00 | INFO     | app.main:98 - Prometheus metrics enabled at /metrics
+2026-05-15 08:48:01 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-15 08:48:01 | INFO     | app.main:33 - Database initialized
+2026-05-15 08:48:01 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-15 08:48:01 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-15 08:48:01 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-15 08:48:01 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-15 08:48:01 | INFO     | app.main:39 - Background scheduler started
+2026-05-15 08:48:01 | INFO     | app.main:53 - ML event listener started — subscribed to Redis pub/sub
+2026-05-15 08:48:02 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=b42dff69-7be3-420b-84da-0d879ceba086)
+2026-05-15 08:48:02 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:48:02 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:48:02 | INFO     | app.services.ml_service:339 - [MLListener] Starting — subscribing to 4 channels
+2026-05-15 08:48:02 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [9285957d] GET /api/v1/health → 200 (0.57ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [9c18fcc8] GET /api/v1/users/me → 200 (7.52ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [7b4d14af] GET /api/v1/alerts → 200 (10.35ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [46d50552] GET /api/v1/alerts/stats → 200 (4.83ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [bd796b0c] GET /api/v1/threats → 200 (8.91ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [9a9272df] GET /api/v1/threats/stats → 200 (4.2ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [1dd7add0] GET /api/v1/vulnerabilities → 200 (8.7ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [7f290d68] GET /api/v1/compliance → 200 (4.97ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [a0c42f70] GET /api/v1/compliance/score → 200 (4.27ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [e544e571] GET /api/v1/security/score → 200 (5.12ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [b86d05e0] GET /api/v1/security/repos → 200 (5.51ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [8ef3e2c9] GET /api/v1/security/scan-history → 200 (6.6ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [13a2732d] GET /api/v1/costs/summary → 200 (11.78ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [cf4d2ced] GET /api/v1/costs/breakdown → 200 (5.37ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [233d66a8] GET /api/v1/costs/forecast → 200 (7.34ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [81ef587f] GET /api/v1/costs/anomalies → 200 (6.49ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [ab343702] GET /api/v1/savings → 200 (5.41ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [8ba4ebbe] GET /api/v1/pipelines → 200 (9.57ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [244dbde7] GET /api/v1/pipelines/stats → 200 (4.14ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [bd7c3525] GET /api/v1/kubernetes/pods → 200 (9.07ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [6a229e9c] GET /api/v1/kubernetes/pods/stats → 200 (4.03ms)
+2026-05-15 08:48:14 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [2b9223f3] GET /api/v1/kubernetes/pods/workloads/deployments → 200 (5.03ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [8ef9cf7e] GET /api/v1/ml/correlations → 200 (4.89ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [9645cc86] GET /api/v1/ml/patterns → 200 (5.64ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [e1797ee6] GET /api/v1/ml/recommendations → 200 (7.02ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [58d900ec] GET /api/v1/ml/predictions → 200 (7.32ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [c86d7581] GET /api/v1/ml/predictions/summary → 200 (4.13ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [93d26ca4] GET /api/v1/ml/radar → 200 (11.46ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [45f10c5e] GET /api/v1/ml/stats → 200 (5.0ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [bf0d499b] GET /api/v1/ml/models/status → 200 (1.17ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [10bc67eb] GET /api/v1/integrations → 200 (6.62ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [432c1fcb] GET /api/v1/users → 200 (6.62ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [b1990573] GET /api/v1/audit-logs → 200 (7.22ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [e3b9ae11] GET /api/v1/audit-logs/summary → 200 (6.99ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [91e637f4] GET /api/v1/billing/subscription → 200 (5.78ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [2d1d350c] GET /api/v1/billing/invoices → 200 (3.75ms)
+2026-05-15 08:48:14 | INFO     | app.middleware.logging:14 - [421fe7fb] GET /api/v1/users/me/sessions → 200 (0.88ms)
+2026-05-15 08:48:18 | ERROR    | app.main:151 - Unhandled error: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.InvalidTextRepresentationError'>: invalid input syntax for type json
+DETAIL:  Token "NaN" is invalid.
+[SQL: INSERT INTO ml_correlations (tenant_id, metric_a, metric_b, correlation_score, method, insight, data_points, id, created_at, updated_at) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::FLOAT, $5::VARCHAR, $6::VARCHAR, $7::JSON, $8::VARCHAR, $9::TI ... 1494 characters truncated ... 96::VARCHAR, $97::JSON, $98::VARCHAR, $99::TIMESTAMP WITH TIME ZONE, $100::TIMESTAMP WITH TIME ZONE)]
+[parameters: ('b42dff69-7be3-420b-84da-0d879ceba086', 'Cost', 'CPU_Usage', nan, 'pearson', 'Cost is negligiblely negatively correlated with CPU_Usage (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '41d7c0b9-b9c7-460a-86d9-01579694893f', datetime.datetime(2026, 5, 15, 8, 48, 17, 997427, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 17, 997432, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'Cost', 'Pod_Restarts', nan, 'pearson', 'Cost is negligiblely negatively correlated with Pod_Restarts (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '88e42679-a645-4eda-a309-87b82f84fa85', datetime.datetime(2026, 5, 15, 8, 48, 17, 997440, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 17, 997441, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'Cost', 'Threat_Count', nan, 'pearson', 'Cost is negligiblely negatively correlated with Threat_Count (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', 'f390e8ec-7a6d-454b-b8b2-926f97fc1e68', datetime.datetime(2026, 5, 15, 8, 48, 17, 997446, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 17, 997446, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'Cost', 'Pipeline_Failures', nan, 'pearson', 'Cost is negligiblely negatively correlated with Pipeline_Failures (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '5b9c3d80-f769-4f62-888f-a521c9c3908f', datetime.datetime(2026, 5, 15, 8, 48, 17, 997450, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 17, 997451, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'CPU_Usage', 'Pod_Restarts', nan, 'pearson', 'CPU_Usage is negligiblely negatively correlated with Pod_Restarts (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '8278a317-ac6b-4ca4-8155-4c587baf8a27', datetime.datetime(2026, 5, 15, 8, 48, 17, 997455, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 17, 997455, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'CPU_Usage', 'Threat_Count', nan, 'pearson', 'CPU_Usage is negligiblely negatively correlated with Threat_Count (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '071e9afc-f36e-46fe-b13d-566951cbe6e0', datetime.datetime(2026, 5, 15, 8, 48, 17, 997460, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 17, 997460, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'CPU_Usage', 'Pipeline_Failures', nan, 'pearson', 'CPU_Usage is negligiblely negatively correlated with Pipeline_Failures (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '9a464ee0-abee-4e76-9d17-2ada67941680', datetime.datetime(2026, 5, 15, 8, 48, 17, 997464, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 17, 997465, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'Pod_Restarts', 'Threat_Count', nan, 'pearson', 'Pod_Restarts is negligiblely negatively correlated with Threat_Count (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '4df3dca3-aace-4396-9e11-cb011b07f406', datetime.datetime(2026, 5, 15, 8, 48, 17, 997468, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 17, 997469, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'Pod_Restarts', 'Pipeline_Failures', nan, 'pearson', 'Pod_Restarts is negligiblely negatively correlated with Pipeline_Failures (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', 'e2b2bca9-530a-4245-a78b-45f5b67c0570', datetime.datetime(2026, 5, 15, 8, 48, 17, 997472, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 17, 997473, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'Threat_Count', 'Pipeline_Failures', nan, 'pearson', 'Threat_Count is negligiblely negatively correlated with Pipeline_Failures (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '76fb6f79-2951-4a71-be84-2ab6371f35db', datetime.datetime(2026, 5, 15, 8, 48, 17, 997477, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 17, 997477, tzinfo=datetime.timezone.utc))]
+(Background on this error at: https://sqlalche.me/e/20/dbapi) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2026-05-15 08:48:28 | ERROR    | app.main:151 - Unhandled error: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.InvalidTextRepresentationError'>: invalid input syntax for type json
+DETAIL:  Token "NaN" is invalid.
+[SQL: INSERT INTO ml_correlations (tenant_id, metric_a, metric_b, correlation_score, method, insight, data_points, id, created_at, updated_at) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::FLOAT, $5::VARCHAR, $6::VARCHAR, $7::JSON, $8::VARCHAR, $9::TI ... 1494 characters truncated ... 96::VARCHAR, $97::JSON, $98::VARCHAR, $99::TIMESTAMP WITH TIME ZONE, $100::TIMESTAMP WITH TIME ZONE)]
+[parameters: ('b42dff69-7be3-420b-84da-0d879ceba086', 'Cost', 'CPU_Usage', nan, 'pearson', 'Cost is negligiblely negatively correlated with CPU_Usage (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', 'b3e40659-5cb1-4c16-a9ed-36015b793c34', datetime.datetime(2026, 5, 15, 8, 48, 28, 130182, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 28, 130186, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'Cost', 'Pod_Restarts', nan, 'pearson', 'Cost is negligiblely negatively correlated with Pod_Restarts (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '19ed11cf-843d-4193-b3d2-de04715fc880', datetime.datetime(2026, 5, 15, 8, 48, 28, 130193, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 28, 130193, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'Cost', 'Threat_Count', nan, 'pearson', 'Cost is negligiblely negatively correlated with Threat_Count (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '4ca6c331-2e71-46e1-862e-219b462e2e3d', datetime.datetime(2026, 5, 15, 8, 48, 28, 130198, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 28, 130198, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'Cost', 'Pipeline_Failures', nan, 'pearson', 'Cost is negligiblely negatively correlated with Pipeline_Failures (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '043861a0-5af0-4a49-a8b0-0d152eb0195a', datetime.datetime(2026, 5, 15, 8, 48, 28, 130202, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 28, 130203, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'CPU_Usage', 'Pod_Restarts', nan, 'pearson', 'CPU_Usage is negligiblely negatively correlated with Pod_Restarts (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', 'a07c60bd-2bd0-449b-831c-03f4211b3062', datetime.datetime(2026, 5, 15, 8, 48, 28, 130207, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 28, 130208, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'CPU_Usage', 'Threat_Count', nan, 'pearson', 'CPU_Usage is negligiblely negatively correlated with Threat_Count (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '552c162f-6559-419e-9326-77872e03780b', datetime.datetime(2026, 5, 15, 8, 48, 28, 130212, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 28, 130212, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'CPU_Usage', 'Pipeline_Failures', nan, 'pearson', 'CPU_Usage is negligiblely negatively correlated with Pipeline_Failures (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '7a55d11a-fae5-4851-b74b-37ea287e9e67', datetime.datetime(2026, 5, 15, 8, 48, 28, 130216, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 28, 130216, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'Pod_Restarts', 'Threat_Count', nan, 'pearson', 'Pod_Restarts is negligiblely negatively correlated with Threat_Count (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '10bb5d7c-9a3a-41d8-8192-f67543aadbb0', datetime.datetime(2026, 5, 15, 8, 48, 28, 130220, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 28, 130221, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'Pod_Restarts', 'Pipeline_Failures', nan, 'pearson', 'Pod_Restarts is negligiblely negatively correlated with Pipeline_Failures (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '8b30e77f-b368-456e-8e08-7e4e8505f0e2', datetime.datetime(2026, 5, 15, 8, 48, 28, 130225, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 28, 130225, tzinfo=datetime.timezone.utc), 'b42dff69-7be3-420b-84da-0d879ceba086', 'Threat_Count', 'Pipeline_Failures', nan, 'pearson', 'Threat_Count is negligiblely negatively correlated with Pipeline_Failures (r=nan).', '{"n": 6, "p_value": NaN, "strength": "negligible"}', '0d95fe88-f819-4baa-8510-b82d33c3e769', datetime.datetime(2026, 5, 15, 8, 48, 28, 130229, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 15, 8, 48, 28, 130230, tzinfo=datetime.timezone.utc))]
+(Background on this error at: https://sqlalche.me/e/20/dbapi) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2026-05-15 08:48:32 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:48:32 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:48:32 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-15 08:48:32 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:48:32 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:48:33 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-15 08:48:33 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-15 08:48:33 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-05-15 08:48:33 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-15 08:48:33 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-15 08:48:33 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-15 08:48:33 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-15 08:48:33 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-15 08:48:33 | INFO     | app.tasks.sync_costs:54 - Syncing AWS costs for 1 integrations
+2026-05-15 08:48:34 | WARNING  | app.integrations.aws.cost_explorer:66 - CostExplorer.get_costs_by_service failed: Unable to locate credentials
+2026-05-15 08:48:35 | WARNING  | app.integrations.aws.cost_explorer:97 - CostExplorer.get_cost_anomalies failed: Unable to locate credentials
+2026-05-15 08:48:36 | WARNING  | app.integrations.aws.cost_explorer:123 - CostExplorer.get_rightsizing failed: Unable to locate credentials
+2026-05-15 08:48:36 | ERROR    | app.tasks.sync_costs:114 - Failed to sync AWS costs for integration 77dbe8aa-6f35-426b-b523-7693aee179c9: 'CostExplorer' object has no attribute 'get_reserved_instance_recommendations'
+2026-05-15 08:48:36 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-15 08:48:36 | WARNING  | app.integrations.github.client:28 - GitHub API /user/repos failed: Illegal header value b'Bearer '
+2026-05-15 08:49:02 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:49:02 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:49:02 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:49:32 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:49:32 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:49:44 | INFO     | app.main:75 - Shutting down...
+2026-05-15 08:49:44 | INFO     | app.integrations.kubernetes.watcher:45 - K8s watcher cancelled: K8s Cluster
+2026-05-15 08:49:44 | INFO     | app.integrations.kubernetes.watcher:209 - K8s watcher stopped: f7c31bf6-4bed-4c04-906c-5e2541d7943f
+2026-05-15 08:49:44 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-15 08:49:44 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-15 08:49:46 | INFO     | app.main:98 - Prometheus metrics enabled at /metrics
+2026-05-15 08:49:47 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-15 08:49:47 | INFO     | app.main:33 - Database initialized
+2026-05-15 08:49:47 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-15 08:49:47 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-15 08:49:47 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-15 08:49:47 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-15 08:49:47 | INFO     | app.main:39 - Background scheduler started
+2026-05-15 08:49:47 | INFO     | app.main:53 - ML event listener started — subscribed to Redis pub/sub
+2026-05-15 08:49:48 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=b42dff69-7be3-420b-84da-0d879ceba086)
+2026-05-15 08:49:48 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:49:48 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:49:48 | INFO     | app.services.ml_service:339 - [MLListener] Starting — subscribing to 4 channels
+2026-05-15 08:49:48 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [477ae6a3] GET /api/v1/health → 200 (0.54ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [4b0f79ad] GET /api/v1/users/me → 200 (8.15ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [66c8bd38] GET /api/v1/alerts → 200 (11.59ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [5be5e0b1] GET /api/v1/alerts/stats → 200 (5.49ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [7288462a] GET /api/v1/threats → 200 (9.07ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [2d301057] GET /api/v1/threats/stats → 200 (4.34ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [d9d4f5a0] GET /api/v1/vulnerabilities → 200 (8.65ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [bbb1d80e] GET /api/v1/vulnerabilities/stats → 200 (4.11ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [21d726cc] GET /api/v1/compliance → 200 (4.74ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [a0381657] GET /api/v1/compliance/score → 200 (4.8ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [43eb2144] GET /api/v1/security/score → 200 (5.07ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [851cd76c] GET /api/v1/security/repos → 200 (6.52ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [ba4b9008] GET /api/v1/security/scan-history → 200 (7.06ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [be72a47e] GET /api/v1/costs/summary → 200 (11.93ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [1605435b] GET /api/v1/costs/breakdown → 200 (5.09ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [b38eb5be] GET /api/v1/costs/forecast → 200 (6.82ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [d4c002ef] GET /api/v1/costs/anomalies → 200 (6.0ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [019ced99] GET /api/v1/savings → 200 (5.48ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [d75ec310] GET /api/v1/pipelines → 200 (8.79ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [c3ac31ca] GET /api/v1/pipelines/stats → 200 (4.69ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [73334fff] GET /api/v1/kubernetes/pods → 200 (9.24ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [09644dd2] GET /api/v1/kubernetes/pods/stats → 200 (4.19ms)
+2026-05-15 08:50:09 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [097668a8] GET /api/v1/kubernetes/pods/workloads/deployments → 200 (5.67ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [b5df853f] GET /api/v1/ml/correlations → 200 (5.58ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [47fd4866] GET /api/v1/ml/patterns → 200 (6.29ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [b26ef84f] GET /api/v1/ml/recommendations → 200 (5.49ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [b7fcc8cd] GET /api/v1/ml/predictions → 200 (7.09ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [e8493d24] GET /api/v1/ml/predictions/summary → 200 (4.35ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [07b3a453] GET /api/v1/ml/radar → 200 (11.52ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [896edcf2] GET /api/v1/ml/stats → 200 (5.31ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [d02a706b] GET /api/v1/ml/models/status → 200 (1.19ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [e9d1b2cd] GET /api/v1/integrations → 200 (6.84ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [b8f68d6b] GET /api/v1/users → 200 (8.1ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [30edbce4] GET /api/v1/audit-logs → 200 (7.78ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [3e196fe5] GET /api/v1/audit-logs/summary → 200 (7.35ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [4cec81de] GET /api/v1/billing/subscription → 200 (5.15ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [fdcbc2f9] GET /api/v1/billing/invoices → 200 (3.29ms)
+2026-05-15 08:50:09 | INFO     | app.middleware.logging:14 - [40693b77] GET /api/v1/users/me/sessions → 200 (1.01ms)
+2026-05-15 08:50:10 | INFO     | app.services.ml_service:284 - [ML] run_correlations complete — tenant=b42dff69 pairs_written=0
+2026-05-15 08:50:10 | INFO     | app.middleware.logging:14 - [92ff4cdf] POST /api/v1/ml/analyze → 200 (830.43ms)
+2026-05-15 08:50:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:50:18 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:50:18 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-15 08:50:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:50:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:50:18 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-15 08:50:18 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-15 08:50:18 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-15 08:50:18 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-05-15 08:50:18 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-15 08:50:18 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-15 08:50:18 | INFO     | app.tasks.sync_costs:54 - Syncing AWS costs for 1 integrations
+2026-05-15 08:50:19 | WARNING  | app.integrations.aws.cost_explorer:66 - CostExplorer.get_costs_by_service failed: Unable to locate credentials
+2026-05-15 08:50:20 | WARNING  | app.integrations.aws.cost_explorer:97 - CostExplorer.get_cost_anomalies failed: Unable to locate credentials
+2026-05-15 08:50:21 | WARNING  | app.integrations.aws.cost_explorer:123 - CostExplorer.get_rightsizing failed: Unable to locate credentials
+2026-05-15 08:50:21 | ERROR    | app.tasks.sync_costs:114 - Failed to sync AWS costs for integration 77dbe8aa-6f35-426b-b523-7693aee179c9: 'CostExplorer' object has no attribute 'get_reserved_instance_recommendations'
+2026-05-15 08:50:21 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-15 08:50:21 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-15 08:50:21 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-15 08:50:21 | WARNING  | app.integrations.github.client:28 - GitHub API /user/repos failed: Illegal header value b'Bearer '
+2026-05-15 08:50:48 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:50:48 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:50:48 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:50:58 | INFO     | app.middleware.logging:14 - [1a9ea931] GET /api/v1/threats/stats → 200 (7.9ms)
+2026-05-15 08:50:58 | INFO     | app.middleware.logging:14 - [48c498ed] GET /api/v1/kubernetes/pods/stats → 200 (5.87ms)
+2026-05-15 08:50:58 | INFO     | app.middleware.logging:14 - [eb03277c] GET /api/v1/costs/summary → 200 (10.51ms)
+2026-05-15 08:50:58 | INFO     | app.middleware.logging:14 - [81837b4c] GET /api/v1/ml/stats → 200 (15.72ms)
+2026-05-15 08:50:58 | INFO     | app.middleware.logging:14 - [0b0219ce] GET /api/v1/pipelines/stats → 200 (5.56ms)
+2026-05-15 08:50:58 | INFO     | app.middleware.logging:14 - [be2e61d2] GET /api/v1/security/score → 200 (5.44ms)
+2026-05-15 08:50:58 | INFO     | app.middleware.logging:14 - [b66b6b01] GET /api/v1/security/repos → 200 (4.38ms)
+2026-05-15 08:50:58 | INFO     | app.middleware.logging:14 - [60b1e5e9] GET /api/v1/costs/breakdown → 200 (5.23ms)
+2026-05-15 08:50:58 | INFO     | app.middleware.logging:14 - [2b26adc7] GET /api/v1/costs/forecast → 200 (9.13ms)
+2026-05-15 08:50:58 | INFO     | app.middleware.logging:14 - [c398f940] GET /api/v1/ml/predictions/summary → 200 (4.74ms)
+2026-05-15 08:50:58 | INFO     | app.middleware.logging:14 - [24fdc3be] GET /api/v1/ml/radar → 200 (9.64ms)
+2026-05-15 08:50:58 | INFO     | app.middleware.logging:14 - [17b5bb5b] GET /api/v1/integrations → 200 (6.27ms)
+2026-05-15 08:51:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:51:18 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:51:35 | INFO     | app.middleware.logging:14 - [7d156b43] GET /api/v1/costs/breakdown → 200 (4.95ms)
+2026-05-15 08:51:35 | INFO     | app.middleware.logging:14 - [342c9aee] GET /api/v1/costs/forecast → 200 (6.12ms)
+2026-05-15 08:51:35 | INFO     | app.middleware.logging:14 - [569ab129] GET /api/v1/security/scan-history → 200 (4.92ms)
+2026-05-15 08:51:35 | INFO     | app.middleware.logging:14 - [432bcf20] GET /api/v1/compliance/score → 200 (3.94ms)
+2026-05-15 08:51:46 | INFO     | app.middleware.logging:14 - [4b5fa17d] GET /api/v1/compliance/score → 200 (4.46ms)
+2026-05-15 08:51:46 | INFO     | app.middleware.logging:14 - [83bc7c37] GET /api/v1/compliance → 200 (4.44ms)
+2026-05-15 08:51:48 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:51:48 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:51:48 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:52:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:52:18 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:52:18 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-15 08:52:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:52:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:52:18 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-15 08:52:18 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-15 08:52:48 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:52:48 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:52:48 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:52:53 | INFO     | app.middleware.logging:14 - [045ae670] GET /api/v1/compliance → 200 (5.89ms)
+2026-05-15 08:52:53 | INFO     | app.middleware.logging:14 - [00602820] GET /api/v1/compliance/score → 200 (3.64ms)
+2026-05-15 08:52:53 | INFO     | app.middleware.logging:14 - [fbea133d] GET /api/v1/security/score → 200 (3.82ms)
+2026-05-15 08:52:53 | INFO     | app.middleware.logging:14 - [b5579631] GET /api/v1/costs/breakdown → 200 (3.7ms)
+2026-05-15 08:52:53 | INFO     | app.middleware.logging:14 - [0c80e3f6] GET /api/v1/costs/forecast → 200 (6.2ms)
+2026-05-15 08:52:53 | INFO     | app.middleware.logging:14 - [7f606ab4] GET /api/v1/ml/predictions/summary → 200 (3.73ms)
+2026-05-15 08:52:53 | INFO     | app.middleware.logging:14 - [7f23ffca] GET /api/v1/ml/radar → 200 (7.99ms)
+2026-05-15 08:52:53 | INFO     | app.middleware.logging:14 - [ea6d01f7] GET /api/v1/ml/patterns → 200 (4.0ms)
+2026-05-15 08:52:53 | INFO     | app.middleware.logging:14 - [c385318d] GET /api/v1/ml/recommendations → 200 (5.34ms)
+2026-05-15 08:52:53 | INFO     | app.middleware.logging:14 - [51ade61a] GET /api/v1/ml/correlations → 200 (4.43ms)
+2026-05-15 08:53:14 | INFO     | app.middleware.logging:14 - [88a7bd47] GET /api/v1/compliance → 200 (6.17ms)
+2026-05-15 08:53:14 | INFO     | app.middleware.logging:14 - [be276662] GET /api/v1/compliance/score → 200 (4.03ms)
+2026-05-15 08:53:14 | INFO     | app.middleware.logging:14 - [89f42b58] GET /api/v1/security/score → 200 (3.67ms)
+2026-05-15 08:53:14 | INFO     | app.middleware.logging:14 - [7ef94f9a] GET /api/v1/security/repos → 200 (4.37ms)
+2026-05-15 08:53:14 | INFO     | app.middleware.logging:14 - [7ae43f61] GET /api/v1/security/scan-history → 200 (4.57ms)
+2026-05-15 08:53:14 | INFO     | app.middleware.logging:14 - [d74eb3ed] GET /api/v1/costs/breakdown → 200 (4.53ms)
+2026-05-15 08:53:14 | INFO     | app.middleware.logging:14 - [71607c0f] GET /api/v1/costs/forecast → 200 (8.31ms)
+2026-05-15 08:53:15 | INFO     | app.middleware.logging:14 - [273044e9] GET /api/v1/costs/anomalies → 200 (3.72ms)
+2026-05-15 08:53:15 | INFO     | app.middleware.logging:14 - [aae3d2b6] GET /api/v1/savings → 200 (4.63ms)
+2026-05-15 08:53:15 | INFO     | app.middleware.logging:14 - [c5f8161b] GET /api/v1/pipelines → 200 (8.04ms)
+2026-05-15 08:53:15 | INFO     | app.middleware.logging:14 - [ef43d5e3] GET /api/v1/pipelines/stats → 200 (3.64ms)
+2026-05-15 08:53:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:53:18 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [4c4d5d3b] GET /api/v1/health → 200 (0.39ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [0f9b9a4f] GET /api/v1/users/me → 200 (111.87ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [334a8a5c] GET /api/v1/alerts → 200 (6.8ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [fd5d4764] GET /api/v1/alerts/stats → 200 (4.84ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [04804329] GET /api/v1/threats → 200 (7.34ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [d03e3249] GET /api/v1/threats/stats → 200 (4.21ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [139e8cf6] GET /api/v1/vulnerabilities → 200 (7.5ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [6cbd44ff] GET /api/v1/vulnerabilities/stats → 200 (3.23ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [649e55d7] GET /api/v1/compliance → 200 (3.46ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [d511153f] GET /api/v1/compliance/score → 200 (3.7ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [6d625fcb] GET /api/v1/security/score → 200 (4.14ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [24c07b49] GET /api/v1/security/repos → 200 (3.77ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [17f2745b] GET /api/v1/security/scan-history → 200 (3.53ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [61006731] GET /api/v1/costs/summary → 200 (6.78ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [33f7c4fd] GET /api/v1/costs/breakdown → 200 (3.96ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [ef9b42f7] GET /api/v1/costs/forecast → 200 (7.63ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [455a7195] GET /api/v1/costs/anomalies → 200 (4.78ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [adc8f7a0] GET /api/v1/savings → 200 (3.46ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [67373799] GET /api/v1/pipelines → 200 (6.53ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [057a9d00] GET /api/v1/pipelines/stats → 200 (3.51ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [2b6eba14] GET /api/v1/kubernetes/pods → 200 (7.07ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [06d598cc] GET /api/v1/kubernetes/pods/stats → 200 (3.65ms)
+2026-05-15 08:53:36 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [211051c4] GET /api/v1/kubernetes/pods/workloads/deployments → 200 (3.73ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [26544fc1] GET /api/v1/ml/correlations → 200 (3.95ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [b8a062c6] GET /api/v1/ml/patterns → 200 (3.81ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [c183d4fe] GET /api/v1/ml/recommendations → 200 (4.26ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [668f9a60] GET /api/v1/ml/predictions → 200 (6.07ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [f22418d6] GET /api/v1/ml/predictions/summary → 200 (3.2ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [026fdfed] GET /api/v1/ml/radar → 200 (8.05ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [2578bd4c] GET /api/v1/ml/stats → 200 (5.72ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [88e27ecd] GET /api/v1/ml/models/status → 200 (1.98ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [0e4354c3] GET /api/v1/integrations → 200 (5.12ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [8c0e3f78] GET /api/v1/users → 200 (6.01ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [bb3fdfd9] GET /api/v1/audit-logs → 200 (5.82ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [c5b4d11f] GET /api/v1/audit-logs/summary → 200 (5.79ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [d5d3f4e9] GET /api/v1/billing/subscription → 200 (3.72ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [3397be7b] GET /api/v1/billing/invoices → 200 (3.95ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [bddb38f6] GET /api/v1/users/me/sessions → 200 (0.83ms)
+2026-05-15 08:53:36 | INFO     | app.services.ml_service:284 - [ML] run_correlations complete — tenant=b42dff69 pairs_written=0
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [b0fe8192] POST /api/v1/ml/analyze → 200 (9.46ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [0b41fd47] POST /api/v1/ml/patterns/test-id/restart → 404 (3.91ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [9765ea6e] POST /api/v1/ml/patterns/test-id/dismiss → 404 (3.67ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [c0582afd] POST /api/v1/ml/recommendations/test-id/apply → 404 (3.84ms)
+2026-05-15 08:53:36 | INFO     | app.middleware.logging:14 - [5b544dcc] POST /api/v1/ml/recommendations/test-id/dismiss → 404 (3.75ms)
+2026-05-15 08:53:48 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:53:48 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:53:48 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:53:48 | INFO     | app.middleware.logging:14 - [2da0d127] GET /api/v1/ml/patterns → 200 (5.75ms)
+2026-05-15 08:53:48 | INFO     | app.middleware.logging:14 - [b92338eb] GET /api/v1/ml/recommendations → 200 (4.06ms)
+2026-05-15 08:53:48 | INFO     | app.middleware.logging:14 - [f8da9859] POST /api/v1/ml/patterns/f5a6f23c-48ad-44b8-9167-f46ff860ced3/restart → 200 (36.82ms)
+2026-05-15 08:53:48 | INFO     | app.middleware.logging:14 - [3c94c428] POST /api/v1/ml/patterns/f5a6f23c-48ad-44b8-9167-f46ff860ced3/dismiss → 200 (8.76ms)
+2026-05-15 08:53:48 | INFO     | app.middleware.logging:14 - [b08088d9] POST /api/v1/ml/recommendations/a90315ef-a98d-4b77-b7d4-53043106ea59/apply → 200 (7.99ms)
+2026-05-15 08:53:48 | INFO     | app.middleware.logging:14 - [ff6550b4] POST /api/v1/ml/recommendations/a90315ef-a98d-4b77-b7d4-53043106ea59/dismiss → 200 (7.72ms)
+2026-05-15 08:54:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:54:18 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:54:18 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-15 08:54:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:54:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:54:18 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-15 08:54:18 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-15 08:54:48 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:54:48 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:54:48 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:54:54 | INFO     | app.services.auth_service:115 - New user registered: momen.elpesa123@gmail.com (tenant: Mo'men Lotfy's Organization)
+2026-05-15 08:54:54 | INFO     | app.integrations.email.client:31 - [EMAIL — no key] To: momen.elpesa123@gmail.com | Subject: Welcome to UniOps, Mo'men! 🚀
+2026-05-15 08:54:54 | INFO     | app.middleware.logging:14 - [3eb55fb8] POST /api/v1/auth/register → 200 (533.48ms)
+2026-05-15 08:54:54 | INFO     | app.middleware.logging:14 - [81820270] GET /api/v1/integrations → 200 (10.8ms)
+2026-05-15 08:54:54 | INFO     | app.middleware.logging:14 - [feacbb8c] GET /api/v1/companies → 200 (8.13ms)
+2026-05-15 08:54:54 | INFO     | app.middleware.logging:14 - [538d85b0] GET /api/v1/companies/stats → 200 (21.47ms)
+2026-05-15 08:55:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:55:18 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:55:21 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-15 08:55:21 | WARNING  | app.integrations.github.client:28 - GitHub API /user/repos failed: Illegal header value b'Bearer '
+2026-05-15 08:55:36 | INFO     | app.middleware.logging:14 - [2bc8f03f] POST /api/v1/integrations → 201 (248.57ms)
+2026-05-15 08:55:36 | WARNING  | app.integrations.github.client:25 - GitHub API /user → 401: {
+  "message": "Bad credentials",
+  "documentation_url": "https://docs.github.com/rest",
+  "status": "401"
+}
+2026-05-15 08:55:47 | INFO     | app.middleware.logging:14 - [ef2e6871] GET /api/v1/threats/stats → 200 (4.49ms)
+2026-05-15 08:55:47 | INFO     | app.middleware.logging:14 - [ef6e43d0] GET /api/v1/costs/summary → 200 (8.17ms)
+2026-05-15 08:55:47 | INFO     | app.middleware.logging:14 - [1971a68c] GET /api/v1/kubernetes/pods/stats → 200 (3.94ms)
+2026-05-15 08:55:48 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:55:48 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:55:48 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:55:48 | INFO     | app.middleware.logging:14 - [286aabcb] GET /api/v1/ml/stats → 200 (7.13ms)
+2026-05-15 08:55:48 | INFO     | app.middleware.logging:14 - [93bc4e08] GET /api/v1/alerts → 200 (7.64ms)
+2026-05-15 08:55:48 | INFO     | app.middleware.logging:14 - [c5b42f9a] GET /api/v1/threats/stats → 200 (5.19ms)
+2026-05-15 08:55:48 | INFO     | app.middleware.logging:14 - [ac63bb3e] GET /api/v1/costs/summary → 200 (6.64ms)
+2026-05-15 08:55:48 | INFO     | app.middleware.logging:14 - [b0aacb50] GET /api/v1/kubernetes/pods/stats → 200 (3.38ms)
+2026-05-15 08:55:48 | INFO     | app.middleware.logging:14 - [982788c8] GET /api/v1/ml/stats → 200 (5.76ms)
+2026-05-15 08:55:48 | INFO     | app.middleware.logging:14 - [8a56e8c4] GET /api/v1/alerts → 200 (4.79ms)
+2026-05-15 08:55:56 | INFO     | app.middleware.logging:14 - [5094dd90] GET /api/v1/kubernetes/pods → 200 (6.07ms)
+2026-05-15 08:55:56 | INFO     | app.middleware.logging:14 - [c93ad68c] GET /api/v1/kubernetes/pods/stats → 200 (7.56ms)
+2026-05-15 08:55:56 | INFO     | app.middleware.logging:14 - [9c38ddab] GET /api/v1/pipelines → 200 (11.03ms)
+2026-05-15 08:55:56 | INFO     | app.middleware.logging:14 - [ef7e0505] GET /api/v1/pipelines/stats → 200 (7.19ms)
+2026-05-15 08:55:56 | INFO     | app.middleware.logging:14 - [9b4b4b35] GET /api/v1/kubernetes/pods → 200 (15.24ms)
+2026-05-15 08:55:56 | INFO     | app.middleware.logging:14 - [60619296] GET /api/v1/pipelines/stats → 200 (9.28ms)
+2026-05-15 08:55:56 | INFO     | app.middleware.logging:14 - [5000b919] GET /api/v1/pipelines → 200 (13.46ms)
+2026-05-15 08:55:56 | INFO     | app.middleware.logging:14 - [00d9e274] GET /api/v1/kubernetes/pods/stats → 200 (9.61ms)
+2026-05-15 08:56:05 | INFO     | app.middleware.logging:14 - [285ce68e] GET /api/v1/companies → 200 (12.04ms)
+2026-05-15 08:56:05 | INFO     | app.middleware.logging:14 - [94597bbd] GET /api/v1/integrations → 200 (21.46ms)
+2026-05-15 08:56:05 | INFO     | app.middleware.logging:14 - [4c557c0b] GET /api/v1/companies/stats → 200 (18.46ms)
+2026-05-15 08:56:06 | INFO     | app.middleware.logging:14 - [39c22cea] GET /api/v1/integrations → 200 (5.84ms)
+2026-05-15 08:56:07 | INFO     | app.middleware.logging:14 - [a4e165bf] GET /api/v1/integrations → 200 (6.34ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [5ff4c000] GET /api/v1/security/repos → 200 (20.07ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [7cd601c0] GET /api/v1/threats/stats → 200 (17.72ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [acd23841] GET /api/v1/compliance → 200 (12.78ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [f1f05a0f] GET /api/v1/compliance/score → 200 (11.42ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [80aa7fce] GET /api/v1/threats → 200 (20.96ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [759b5083] GET /api/v1/vulnerabilities → 200 (26.2ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [6273a303] GET /api/v1/security/score → 200 (10.11ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [bd7724c8] GET /api/v1/security/repos → 200 (12.64ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [35124ec8] GET /api/v1/security/scan-history → 200 (13.95ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [97ec30c1] GET /api/v1/threats/stats → 200 (12.03ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [24b21bb5] GET /api/v1/threats → 200 (13.83ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [d71c2139] GET /api/v1/compliance → 200 (11.08ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [0cfd7d20] GET /api/v1/compliance/score → 200 (9.6ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [ed0a05bd] GET /api/v1/security/scan-history → 200 (9.54ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [88aac7ee] GET /api/v1/vulnerabilities → 200 (16.31ms)
+2026-05-15 08:56:14 | INFO     | app.middleware.logging:14 - [cb190151] GET /api/v1/security/score → 200 (6.72ms)
+2026-05-15 08:56:16 | INFO     | app.middleware.logging:14 - [493c3f65] POST /api/v1/security/repos/sync → 200 (5.52ms)
+2026-05-15 08:56:17 | INFO     | app.middleware.logging:14 - [9b143d83] GET /api/v1/security/repos → 200 (5.66ms)
+2026-05-15 08:56:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:56:18 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:56:18 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-15 08:56:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:56:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:56:18 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-15 08:56:18 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-15 08:56:19 | INFO     | app.middleware.logging:14 - [58437bc3] POST /api/v1/security/repos/sync → 200 (5.33ms)
+2026-05-15 08:56:19 | INFO     | app.middleware.logging:14 - [4f777a0d] GET /api/v1/security/repos → 200 (4.39ms)
+2026-05-15 08:56:22 | INFO     | app.middleware.logging:14 - [a584de82] POST /api/v1/security/repos/sync → 200 (5.7ms)
+2026-05-15 08:56:22 | INFO     | app.middleware.logging:14 - [822d99aa] GET /api/v1/security/repos → 200 (4.57ms)
+2026-05-15 08:56:24 | INFO     | app.middleware.logging:14 - [d72b7162] POST /api/v1/security/repos/sync → 200 (5.47ms)
+2026-05-15 08:56:25 | INFO     | app.middleware.logging:14 - [2fd551ec] GET /api/v1/security/repos → 200 (4.34ms)
+2026-05-15 08:56:30 | INFO     | app.middleware.logging:14 - [c1ff6701] GET /api/v1/integrations → 200 (6.51ms)
+2026-05-15 08:56:30 | INFO     | app.middleware.logging:14 - [72e7974a] GET /api/v1/integrations → 200 (7.06ms)
+2026-05-15 08:56:40 | INFO     | app.middleware.logging:14 - [68967d93] POST /api/v1/integrations/github → 405 (0.95ms)
+2026-05-15 08:56:48 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:56:48 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:56:48 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:56:53 | INFO     | app.middleware.logging:14 - [f0851ec4] GET /api/v1/users/me/sessions → 200 (1.26ms)
+2026-05-15 08:56:53 | INFO     | app.middleware.logging:14 - [36d3befc] GET /api/v1/users/me/sessions → 200 (1.23ms)
+2026-05-15 08:57:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:57:18 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:57:48 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:57:48 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:57:48 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:58:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:58:18 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-15 08:58:18 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-15 08:58:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:58:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:58:18 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-15 08:58:18 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-15 08:58:48 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-15 08:58:48 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-15 08:58:48 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-16 09:50:06 | INFO     | app.main:98 - Prometheus metrics enabled at /metrics
+2026-05-16 09:50:07 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-16 09:50:07 | INFO     | app.main:33 - Database initialized
+2026-05-16 09:50:07 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-16 09:50:07 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-16 09:50:07 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-16 09:50:07 | INFO     | app.main:39 - Background scheduler started
+2026-05-16 09:50:07 | INFO     | app.main:53 - ML event listener started — subscribed to Redis pub/sub
+2026-05-16 09:50:07 | INFO     | app.services.ml_service:339 - [MLListener] Starting — subscribing to 4 channels
+2026-05-16 09:50:07 | INFO     | app.services.ml_service:347 - [MLListener] Connected to Redis pub/sub ✓
+2026-05-16 09:50:07 | INFO     | app.middleware.logging:14 - [69247835] GET /api/health → 404 (1.37ms)
+2026-05-16 09:50:08 | INFO     | app.middleware.logging:14 - [f4159ce6] GET /api/health → 404 (1.22ms)
+2026-05-16 09:50:09 | INFO     | app.middleware.logging:14 - [9ee163fc] GET /api/health → 404 (1.12ms)
+2026-05-16 09:50:10 | INFO     | app.middleware.logging:14 - [ecd9d3a7] GET /api/health → 404 (1.13ms)
+2026-05-16 09:50:11 | INFO     | app.middleware.logging:14 - [124bb609] GET /api/health → 404 (1.1ms)
+2026-05-16 09:50:12 | INFO     | app.middleware.logging:14 - [86437384] GET /api/health → 404 (1.11ms)
+2026-05-16 09:50:12 | INFO     | app.middleware.logging:14 - [d81a710b] GET / → 404 (0.69ms)
+2026-05-16 09:50:13 | INFO     | app.middleware.logging:14 - [7b921e47] GET /favicon.ico → 404 (1.19ms)
+2026-05-16 09:50:13 | INFO     | app.middleware.logging:14 - [eb23fcac] GET /api/health → 404 (2.03ms)
+2026-05-16 09:50:14 | INFO     | app.middleware.logging:14 - [6b11f866] GET /api/health → 404 (1.22ms)
+2026-05-16 09:50:15 | INFO     | app.middleware.logging:14 - [1a207ae2] GET /api/health → 404 (1.12ms)
+2026-05-16 09:50:16 | INFO     | app.middleware.logging:14 - [68c6aa5c] GET /api/health → 404 (1.12ms)
+2026-05-16 09:50:17 | INFO     | app.middleware.logging:14 - [bd21571a] GET /api/health → 404 (1.12ms)
+2026-05-16 09:50:18 | INFO     | app.middleware.logging:14 - [60976d94] GET /api/health → 404 (2.04ms)
+2026-05-16 09:50:19 | INFO     | app.middleware.logging:14 - [81bab26c] GET /api/health → 404 (1.12ms)
+2026-05-16 09:50:20 | INFO     | app.middleware.logging:14 - [517dad30] GET /api/health → 404 (1.13ms)
+2026-05-16 09:50:37 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-16 09:50:37 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 0 integrations
+2026-05-16 09:50:37 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-16 09:50:37 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-16 09:50:37 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-16 09:50:37 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-16 09:51:58 | INFO     | app.middleware.logging:14 - [c6a7599a] GET / → 404 (0.86ms)
+2026-05-16 09:51:59 | INFO     | app.middleware.logging:14 - [34fbc14d] GET /.well-known/appspecific/com.chrome.devtools.json → 404 (1.31ms)
+2026-05-16 09:51:59 | INFO     | app.middleware.logging:14 - [ac0713b5] GET /favicon.ico → 404 (1.19ms)
+2026-05-16 09:52:09 | INFO     | app.middleware.logging:14 - [53416498] GET /docs → 200 (0.28ms)
+2026-05-16 09:52:09 | INFO     | app.middleware.logging:14 - [31d44457] GET /.well-known/appspecific/com.chrome.devtools.json → 404 (1.16ms)
+2026-05-16 09:52:10 | INFO     | app.middleware.logging:14 - [21e2f1ac] GET /openapi.json → 200 (127.56ms)
+2026-05-16 09:52:37 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-16 09:52:37 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-16 09:54:37 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-16 09:54:37 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-16 09:55:37 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-16 09:56:37 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-16 09:56:37 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-16 09:58:37 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-16 09:58:37 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-16 10:00:37 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-16 10:00:37 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-16 10:00:37 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-16 10:02:37 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-16 10:02:37 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-16 10:04:37 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-16 10:04:37 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-16 10:05:37 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-16 10:06:37 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-16 10:06:37 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-16 10:08:36 | INFO     | app.main:75 - Shutting down...
+2026-05-16 10:08:36 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-16 10:08:36 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-17 09:17:38 | INFO     | app.main:98 - Prometheus metrics enabled at /metrics
+2026-05-17 09:17:38 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-17 09:17:38 | INFO     | app.main:33 - Database initialized
+2026-05-17 09:17:38 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-17 09:17:38 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-17 09:17:38 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-17 09:17:38 | INFO     | app.main:39 - Background scheduler started
+2026-05-17 09:17:38 | INFO     | app.main:53 - ML event listener started — subscribed to Redis pub/sub
+2026-05-17 09:17:38 | INFO     | app.services.ml_service:339 - [MLListener] Starting — subscribing to 4 channels
+2026-05-17 09:17:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:17:38 | INFO     | app.middleware.logging:14 - [315437ba] GET /api/health → 404 (1.21ms)
+2026-05-17 09:17:39 | INFO     | app.middleware.logging:14 - [91020d3a] GET /api/health → 404 (1.08ms)
+2026-05-17 09:17:40 | INFO     | app.middleware.logging:14 - [770943f1] GET /api/health → 404 (1.06ms)
+2026-05-17 09:17:42 | INFO     | app.middleware.logging:14 - [8bdb088b] GET /api/health → 404 (4.29ms)
+2026-05-17 09:17:43 | INFO     | app.middleware.logging:14 - [89dc9676] GET /api/health → 404 (1.06ms)
+2026-05-17 09:17:44 | INFO     | app.middleware.logging:14 - [17274619] GET /api/health → 404 (2.19ms)
+2026-05-17 09:17:45 | INFO     | app.middleware.logging:14 - [e57c9d4f] GET /api/health → 404 (2.34ms)
+2026-05-17 09:17:46 | INFO     | app.middleware.logging:14 - [da566339] GET /api/health → 404 (1.97ms)
+2026-05-17 09:17:47 | INFO     | app.middleware.logging:14 - [94dfe08e] GET /api/health → 404 (1.14ms)
+2026-05-17 09:17:48 | INFO     | app.middleware.logging:14 - [14b453d2] GET /api/health → 404 (1.1ms)
+2026-05-17 09:17:49 | INFO     | app.middleware.logging:14 - [fa9bb41f] GET /api/health → 404 (1.06ms)
+2026-05-17 09:17:50 | INFO     | app.middleware.logging:14 - [6f21280f] GET /api/health → 404 (1.05ms)
+2026-05-17 09:17:55 | INFO     | app.middleware.logging:14 - [99556bc5] GET / → 404 (0.7ms)
+2026-05-17 09:17:55 | INFO     | app.middleware.logging:14 - [250762db] GET /favicon.ico → 404 (2.15ms)
+2026-05-17 09:18:08 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 09:18:08 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 0 integrations
+2026-05-17 09:18:08 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-17 09:18:08 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-17 09:18:08 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 09:18:08 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-17 09:18:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:19:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:20:08 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 09:20:08 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 09:20:23 | INFO     | app.middleware.logging:14 - [c6130b16] GET / → 404 (0.7ms)
+2026-05-17 09:20:36 | INFO     | app.middleware.logging:14 - [4b6649d0] GET / → 404 (1.31ms)
+2026-05-17 09:20:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:21:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:22:08 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 09:22:08 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 09:22:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:23:08 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-17 09:23:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:24:08 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 09:24:08 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 09:24:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:25:01 | INFO     | app.middleware.logging:14 - [9d3c86dc] GET /docs → 200 (0.26ms)
+2026-05-17 09:25:01 | INFO     | app.middleware.logging:14 - [d68da663] GET /api/health → 404 (2.0ms)
+2026-05-17 09:25:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:26:08 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 09:26:08 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 09:26:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:27:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:28:08 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-17 09:28:08 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 09:28:08 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 09:28:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:29:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:30:08 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 09:30:08 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 09:30:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:31:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:32:08 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 09:32:08 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 09:32:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:33:08 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-17 09:33:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:34:08 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 09:34:08 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 09:34:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:35:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:36:08 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 09:36:08 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 09:36:38 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 60s
+2026-05-17 09:37:03 | INFO     | app.main:75 - Shutting down...
+2026-05-17 09:37:03 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-17 09:37:03 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-17 10:10:30 | INFO     | app.main:98 - Prometheus metrics enabled at /metrics
+2026-05-17 10:10:30 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-17 10:10:30 | INFO     | app.main:33 - Database initialized
+2026-05-17 10:10:30 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-17 10:10:30 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-17 10:10:30 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-17 10:10:30 | INFO     | app.main:39 - Background scheduler started
+2026-05-17 10:10:30 | INFO     | app.main:53 - ML event listener started — subscribed to Redis pub/sub
+2026-05-17 10:10:30 | INFO     | app.services.ml_service:339 - [MLListener] Starting — subscribing to 4 channels
+2026-05-17 10:10:30 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 60s
+2026-05-17 10:10:31 | INFO     | app.middleware.logging:14 - [ff62c39b] GET /api/health → 404 (1.23ms)
+2026-05-17 10:10:32 | INFO     | app.middleware.logging:14 - [ce870639] GET /api/health → 404 (1.21ms)
+2026-05-17 10:10:33 | INFO     | app.middleware.logging:14 - [b1e860c1] GET /api/health → 404 (2.48ms)
+2026-05-17 10:10:34 | INFO     | app.middleware.logging:14 - [c9aac637] GET /api/health → 404 (1.11ms)
+2026-05-17 10:10:35 | INFO     | app.middleware.logging:14 - [010cf6de] GET /api/health → 404 (1.14ms)
+2026-05-17 10:10:36 | INFO     | app.middleware.logging:14 - [e7a69d3e] GET /api/health → 404 (1.14ms)
+2026-05-17 10:10:37 | INFO     | app.middleware.logging:14 - [fd0fbbec] GET /api/health → 404 (1.18ms)
+2026-05-17 10:10:38 | INFO     | app.middleware.logging:14 - [a0a9fd43] GET /api/health → 404 (1.13ms)
+2026-05-17 10:10:39 | INFO     | app.middleware.logging:14 - [a238f478] GET /api/health → 404 (1.13ms)
+2026-05-17 10:10:40 | INFO     | app.middleware.logging:14 - [bbd9be28] GET /api/health → 404 (1.15ms)
+2026-05-17 10:10:41 | INFO     | app.middleware.logging:14 - [3b000e98] GET /api/health → 404 (1.82ms)
+2026-05-17 10:11:01 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-17 10:11:01 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-17 10:11:01 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 10:11:01 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 0 integrations
+2026-05-17 10:11:01 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 10:11:01 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-17 10:11:09 | INFO     | app.middleware.logging:14 - [ad1107c2] GET / → 404 (1.06ms)
+2026-05-17 10:11:12 | INFO     | app.middleware.logging:14 - [1b8387f4] GET / → 404 (2.38ms)
+2026-05-17 10:11:30 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 60s
+2026-05-17 10:12:30 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 60s
+2026-05-17 10:13:01 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 10:13:01 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 10:13:30 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 60s
+2026-05-17 10:14:30 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 60s
+2026-05-17 10:15:01 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 10:15:01 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 10:15:11 | INFO     | app.middleware.logging:14 - [fd6c0a33] GET / → 404 (1.2ms)
+2026-05-17 10:15:30 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 60s
+2026-05-17 10:16:01 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-17 10:16:30 | ERROR    | app.services.ml_service:402 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 60s
+2026-05-17 10:17:01 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-17 10:17:01 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-17 10:17:13 | INFO     | app.main:75 - Shutting down...
+2026-05-17 10:17:13 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-17 10:17:13 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-17 11:51:12 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics

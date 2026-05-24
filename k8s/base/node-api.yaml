@@ -1,0 +1,85 @@
+##############################################################################
+# Node.js Express API — Deployment
+# Lightweight API for dev/fallback; mirrors artifacts/server/
+##############################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-api
+  namespace: uniops
+  labels:
+    app.kubernetes.io/name: node-api
+    app.kubernetes.io/component: api-node
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: node-api
+        app.kubernetes.io/component: api-node
+    spec:
+      containers:
+        - name: node-api
+          image: ghcr.io/your-org/uniops-node-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3001
+              name: http
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3001"
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: uniops-secrets
+                  key: GITHUB_TOKEN
+                  optional: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 15
+
+---
+##############################################################################
+# Node.js API — Service
+##############################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-api
+  namespace: uniops
+  labels:
+    app.kubernetes.io/name: node-api
+    app.kubernetes.io/component: api-node
+spec:
+  selector:
+    app: node-api
+  ports:
+    - port: 3001
+      targetPort: 3001
+      name: http

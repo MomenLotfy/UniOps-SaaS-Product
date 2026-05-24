@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: uniops-dev
+  labels:
+    app.kubernetes.io/name: uniops
+    app.kubernetes.io/managed-by: kustomize
+    environment: dev

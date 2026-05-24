@@ -1,0 +1,17 @@
+PERMISSIONS = {
+    "users:read": "View users",
+    "users:write": "Create/update users",
+    "users:delete": "Delete users",
+    "integrations:read": "View integrations",
+    "integrations:write": "Create/update integrations",
+    "pipelines:read": "View pipelines",
+    "pipelines:write": "Manage pipelines",
+    "security:read": "View security data",
+    "security:write": "Manage security",
+    "costs:read": "View cost data",
+    "costs:write": "Manage cost settings",
+    "ml:read": "View ML insights",
+    "ml:write": "Manage ML models",
+    "audit:read": "View audit logs",
+    "admin:all": "Full admin access",
+}

@@ -1,0 +1,131 @@
+---
+# ─────────────────────────────────────────────────────────────────────────────
+# Role: server_setup
+# بيجهّز الـ server من الصفر:
+#   - يثبّت Docker + AWS CLI
+#   - يحمي الـ server (firewall, fail2ban)
+#   - يعمل swap
+# ─────────────────────────────────────────────────────────────────────────────
+
+- name: Update apt cache
+  apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install required packages
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - git
+      - htop
+      - fail2ban
+      - ufw
+      - unzip
+    state: present
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+
+- name: Install Docker
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: present
+
+- name: Add ubuntu user to docker group
+  user:
+    name: ubuntu
+    groups: docker
+    append: true
+
+- name: Start and enable Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: true
+
+# ── AWS CLI ───────────────────────────────────────────────────────────────────
+- name: Install AWS CLI v2
+  shell: |
+    curl -sf "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+    unzip -q /tmp/awscliv2.zip -d /tmp
+    /tmp/aws/install --update
+    rm -rf /tmp/aws /tmp/awscliv2.zip
+  args:
+    creates: /usr/local/bin/aws
+
+# ── Firewall (UFW) ────────────────────────────────────────────────────────────
+- name: Configure UFW — allow SSH
+  ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+
+- name: Configure UFW — allow HTTP
+  ufw:
+    rule: allow
+    port: '80'
+    proto: tcp
+
+- name: Configure UFW — allow HTTPS
+  ufw:
+    rule: allow
+    port: '443'
+    proto: tcp
+
+- name: Enable UFW
+  ufw:
+    state: enabled
+    policy: deny
+
+# ── Fail2ban — brute force protection ────────────────────────────────────────
+- name: Configure fail2ban for SSH
+  copy:
+    content: |
+      [sshd]
+      enabled = true
+      maxretry = 3
+      bantime = 3600
+      findtime = 600
+    dest: /etc/fail2ban/jail.d/sshd.conf
+
+- name: Start fail2ban
+  systemd:
+    name: fail2ban
+    state: started
+    enabled: true
+
+# ── Swap (for small instances) ────────────────────────────────────────────────
+- name: Create 2GB swap file
+  command: fallocate -l 2G /swapfile
+  args:
+    creates: /swapfile
+
+- name: Set swap permissions
+  file:
+    path: /swapfile
+    mode: '0600'
+
+- name: Enable swap
+  command: mkswap /swapfile && swapon /swapfile
+  args:
+    creates: /proc/swaps
+
+- name: Make swap permanent
+  lineinfile:
+    path: /etc/fstab
+    line: '/swapfile none swap sw 0 0'
+    state: present

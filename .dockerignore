@@ -1,0 +1,49 @@
+# Root .dockerignore — used when build context is "." (frontend Docker build)
+# Minimize context sent to Docker daemon: only keep pnpm workspace + frontend source
+
+# Version control
+.git
+.gitignore
+*.md
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Python backend (not needed for frontend build)
+backend/
+
+# Replit-specific
+.local/
+.replit
+replit.nix
+.upm/
+.cache/
+
+# k8s & infrastructure
+k8s/
+monitoring/
+scripts/
+attached_assets/
+
+# Logs & runtime
+logs/
+tmp/
+*.log
+
+# Test & lint caches
+coverage/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.vscode/
+.idea/
+
+# Pre-built artifacts (rebuilt inside Docker)
+artifacts/uniops/node_modules/
+artifacts/uniops/dist/
+artifacts/mockup-sandbox/
+node_modules/
+
+# Prevent sending server artifacts (only frontend needed)
+artifacts/server/

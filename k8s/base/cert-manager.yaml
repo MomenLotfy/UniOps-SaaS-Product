@@ -1,0 +1,20 @@
+##############################################################################
+# ClusterIssuer — cert-manager Let's Encrypt
+# Only applied in PROD overlay (not dev).
+# Requires cert-manager: kubectl apply -f
+#   https://github.com/cert-manager/cert-manager/releases/download/v1.14.4/cert-manager.yaml
+##############################################################################
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@example.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-key
+    solvers:
+      - http01:
+          ingress:
+            class: nginx

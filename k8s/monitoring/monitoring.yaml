@@ -1,0 +1,86 @@
+##############################################################################
+# ServiceMonitor — Prometheus Operator scrapes the backend
+# Requires: kube-prometheus-stack in monitoring namespace
+##############################################################################
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: uniops-backend
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - uniops
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scheme: http
+
+---
+##############################################################################
+# PrometheusRule — alerting rules
+##############################################################################
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: uniops-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: uniops.backend
+      interval: 30s
+      rules:
+        - alert: UniOpsBackendDown
+          expr: up{job="uniops-backend"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "UniOps backend is DOWN"
+            description: "Backend pod unreachable for > 1 minute"
+
+        - alert: UniOpsHighErrorRate
+          expr: |
+            rate(http_requests_total{job="uniops-backend",status=~"5.."}[5m])
+            / rate(http_requests_total{job="uniops-backend"}[5m]) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "UniOps error rate > 5%"
+            description: "HTTP 5xx rate is {{ $value | humanizePercentage }}"
+
+        - alert: UniOpsHighLatency
+          expr: |
+            histogram_quantile(0.95,
+              rate(http_request_duration_seconds_bucket{job="uniops-backend"}[5m])
+            ) > 2.0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "UniOps p95 latency > 2s"
+
+        - alert: UniOpsPostgresDown
+          expr: up{job="postgres"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "PostgreSQL is unreachable"
+
+        - alert: UniOpsCeleryWorkerDown
+          expr: celery_workers_total == 0
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "No Celery workers — scans and sync tasks will not run"

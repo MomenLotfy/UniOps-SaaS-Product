@@ -1,0 +1,119 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: uniops-dev
+
+resources:
+  - ../../base
+  - namespace-dev.yaml      # creates the uniops-dev namespace
+
+# Dev: single replica to save resources
+patches:
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+    target:
+      kind: Deployment
+      name: backend
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+    target:
+      kind: Deployment
+      name: celery-worker
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+    target:
+      kind: Deployment
+      name: frontend
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+    target:
+      kind: Deployment
+      name: node-api
+  # Dev: smaller resource limits
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "512Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "256Mi"
+    target:
+      kind: Deployment
+      name: backend
+  # Dev: remove docker socket mount from celery (not needed locally)
+  - patch: |-
+      - op: remove
+        path: /spec/template/spec/volumes/1
+      - op: remove
+        path: /spec/template/spec/containers/0/volumeMounts/1
+    target:
+      kind: Deployment
+      name: celery-worker
+  # Dev ingress: no TLS, no cert-manager, use nip.io for local access
+  - patch: |-
+      - op: remove
+        path: /spec/tls
+      - op: replace
+        path: /metadata/annotations
+        value:
+          kubernetes.io/ingress.class: nginx
+          nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+          nginx.ingress.kubernetes.io/configuration-snippet: |
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+      - op: replace
+        path: /spec/rules/0/host
+        value: "uniops.127.0.0.1.nip.io"
+    target:
+      kind: Ingress
+      name: uniops-ingress
+  # Dev: disable HPA (no metrics-server needed)
+  - patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 1
+    target:
+      kind: HorizontalPodAutoscaler
+  # Dev: ReadWriteOnce for models PVC (ReadWriteMany needs EFS/NFS, not available in minikube/kind)
+  - patch: |-
+      - op: replace
+        path: /spec/accessModes
+        value:
+          - ReadWriteOnce
+    target:
+      kind: PersistentVolumeClaim
+      name: models-pvc
+
+# Dev: use :dev image tags
+images:
+  - name: ghcr.io/your-org/uniops-backend
+    newTag: dev
+  - name: ghcr.io/your-org/uniops-frontend
+    newTag: dev
+  - name: ghcr.io/your-org/uniops-node-api
+    newTag: dev
+
+# Dev: override config values
+configMapGenerator:
+  - name: uniops-config
+    behavior: merge
+    literals:
+      - APP_ENV=development
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://uniops.127.0.0.1.nip.io
+      - FRONTEND_URL=http://uniops.127.0.0.1.nip.io
+      - RATE_LIMIT_PER_MINUTE=1000
