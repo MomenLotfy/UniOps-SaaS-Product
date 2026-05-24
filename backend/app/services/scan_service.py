@@ -101,18 +101,43 @@ class ScanService(BaseService):
             )
 
         # ── 3. Belt-and-suspenders: DB check (catches stale locks after restart)
+        from datetime import timedelta
+        from sqlalchemy import update as _update
+
+        STALE_AFTER_MINUTES = 12  # scans stuck longer than this are auto-failed
+
         existing = await self.db.execute(
             select(Scan).where(
                 Scan.repo_id == repo_id,
                 Scan.status.in_(["queued", "cloning", "scanning", "analyzing"]),
             ).limit(1)
         )
-        if existing.scalar_one_or_none():
-            # Release lock we just acquired since we won't proceed
-            await self._release_scan_lock(repo_id)
-            raise ScanAlreadyRunningError(
-                f"A scan is already running for repository {repo.full_name!r}"
-            )
+        running = existing.scalar_one_or_none()
+        if running:
+            stale_cutoff = datetime.now(timezone.utc) - timedelta(minutes=STALE_AFTER_MINUTES)
+            # A scan is "stale" if it has been running longer than STALE_AFTER_MINUTES
+            # (use started_at if available, otherwise created_at)
+            ref_time = running.started_at or running.created_at
+            if ref_time and ref_time.replace(tzinfo=timezone.utc) if ref_time.tzinfo is None else ref_time < stale_cutoff:
+                # Auto-fail the stale scan and allow a fresh one
+                logger.warning(
+                    f"[scan:{running.id}] Auto-failing stale scan for repo={repo.full_name} "
+                    f"(running since {ref_time})"
+                )
+                await self.db.execute(
+                    _update(Scan).where(Scan.id == running.id).values(
+                        status="failed",
+                        error_message=f"Auto-failed: exceeded {STALE_AFTER_MINUTES}-minute limit",
+                        completed_at=datetime.now(timezone.utc),
+                    )
+                )
+                await self.db.commit()
+            else:
+                # Release lock we just acquired since we won't proceed
+                await self._release_scan_lock(repo_id)
+                raise ScanAlreadyRunningError(
+                    f"A scan is already running for repository {repo.full_name!r}"
+                )
 
         # ── 4. Create scan record ─────────────────────────────────────────────
         scan = Scan(
@@ -182,14 +207,14 @@ class ScanService(BaseService):
         asyncio.create_task(self._run_inline_with_timeout(scan_id))
 
     async def _run_inline_with_timeout(self, scan_id: str) -> None:
-        """Run scan inline (no Celery) with a 10-minute hard timeout."""
+        """Run scan inline (no Celery) with a hard 5-minute timeout."""
         from app.tasks.run_scan import _run_scan_async
 
         try:
-            await asyncio.wait_for(_run_scan_async(scan_id), timeout=600)
+            await asyncio.wait_for(_run_scan_async(scan_id), timeout=300)
         except asyncio.TimeoutError:
-            logger.error(f"[scan:{scan_id}] Timed out after 10 minutes")
-            await self._mark_scan_failed_isolated(scan_id, "Scan timed out after 10 minutes")
+            logger.error(f"[scan:{scan_id}] Timed out after 5 minutes")
+            await self._mark_scan_failed_isolated(scan_id, "Scan timed out after 5 minutes")
         except Exception as exc:
             logger.error(f"[scan:{scan_id}] Inline execution failed: {exc}", exc_info=True)
             # _run_scan_async already marks the scan as failed internally;

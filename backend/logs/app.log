@@ -2721,3 +2721,112 @@ WHERE scans.id = $1::VARCHAR AND scans.tenant_id = $2::VARCHAR]
 2026-05-24 14:23:52 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
 2026-05-24 14:24:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
 2026-05-24 14:24:50 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 14:26:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 14:26:50 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 14:28:35 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 14:28:50 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 14:28:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 14:28:50 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 14:28:50 | INFO     | app.main:73 - Shutting down...
+2026-05-24 14:28:50 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 14:28:50 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 14:28:52 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 14:28:52 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 14:28:52 | INFO     | app.main:33 - Database initialized
+2026-05-24 14:28:52 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 14:28:52 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 14:28:52 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 14:28:52 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 14:28:52 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 14:28:52 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 14:28:52 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 14:28:54 | INFO     | app.main:73 - Shutting down...
+2026-05-24 14:28:54 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 14:28:54 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 14:28:56 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 14:28:56 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 14:28:56 | INFO     | app.main:33 - Database initialized
+2026-05-24 14:28:56 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 14:28:56 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 14:28:56 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 14:28:56 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 14:28:56 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 14:28:56 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 14:28:56 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 14:28:56 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 14:28:56 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 14:29:00 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 14:29:00 | INFO     | app.main:73 - Shutting down...
+2026-05-24 14:29:00 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 14:29:00 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 14:29:01 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 14:29:01 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 14:29:02 | INFO     | app.main:33 - Database initialized
+2026-05-24 14:29:02 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 14:29:02 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 14:29:02 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 14:29:02 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 14:29:02 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 14:29:02 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 14:29:02 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 14:29:06 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 14:29:06 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 14:29:07 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 14:29:17 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 14:29:21 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 14:29:21 | INFO     | app.main:73 - Shutting down...
+2026-05-24 14:29:21 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 14:29:21 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 14:29:22 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 14:29:22 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 14:29:22 | INFO     | app.main:33 - Database initialized
+2026-05-24 14:29:22 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 14:29:22 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 14:29:22 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 14:29:22 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 14:29:22 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 14:29:22 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 14:29:22 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 14:29:23 | INFO     | app.main:73 - Shutting down...
+2026-05-24 14:29:23 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 14:29:23 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 14:29:24 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 14:29:24 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 14:29:24 | INFO     | app.main:33 - Database initialized
+2026-05-24 14:29:24 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 14:29:24 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 14:29:24 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 14:29:24 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 14:29:24 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 14:29:24 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 14:29:24 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 14:29:27 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 14:29:27 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 14:29:27 | INFO     | app.main:73 - Shutting down...
+2026-05-24 14:29:27 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 14:29:27 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 14:29:28 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 14:29:28 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 14:29:28 | INFO     | app.main:33 - Database initialized
+2026-05-24 14:29:28 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 14:29:28 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 14:29:28 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 14:29:28 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 14:29:28 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 14:29:28 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 14:29:28 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 14:29:30 | INFO     | app.middleware.logging:15 - [db487018] GET / → 404 (0.79ms)
+2026-05-24 14:29:30 | INFO     | app.middleware.logging:15 - [1d6908fd] GET /favicon.ico → 404 (1.14ms)
+2026-05-24 14:29:32 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 14:29:33 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 14:29:33 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 14:29:43 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 14:29:59 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 14:29:59 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 14:29:59 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 14:29:59 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 0 integrations
+2026-05-24 14:29:59 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 14:29:59 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-24 14:29:59 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-24 14:29:59 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 12330d84-9527-4554-88b2-96b7541726ff: Dependabot alerts are disabled for this repository.
+2026-05-24 14:29:59 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)

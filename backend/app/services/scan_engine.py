@@ -162,7 +162,7 @@ class SastScanner:
             "semgrep", "--config", rules,
             "--json", "--quiet", "--no-git-ignore", "/src",
         ]
-        rc, stdout, stderr = await _run(cmd, timeout=180)
+        rc, stdout, stderr = await _run(cmd, timeout=90)
         if rc not in (0, 1):
             return []
         try:
@@ -301,7 +301,7 @@ class DependencyScanner:
             "--scan", "/src", "--format", "JSON",
             "--out", "/report", "--failOnCVSS", "0",
         ]
-        await _run(cmd, timeout=300)
+        await _run(cmd, timeout=120)
         report_file = Path(report_dir) / "dependency-check-report.json"
         if not report_file.exists():
             shutil.rmtree(report_dir, ignore_errors=True)
@@ -438,7 +438,7 @@ class SecretsScanner:
             "--report-path", f"/report/{os.path.basename(report_file)}",
             "--no-git", "--exit-code", "0",
         ]
-        await _run(cmd, timeout=120)
+        await _run(cmd, timeout=60)
         try:
             data = json.loads(Path(report_file).read_text())
         except Exception:
