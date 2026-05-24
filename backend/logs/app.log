@@ -1741,3 +1741,50 @@ DETAIL:  Token "NaN" is invalid.
 2026-05-24 13:50:08 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
 2026-05-24 13:50:23 | ERROR    | app.middleware.logging:23 - [f96316bb] GET /api/v1/alerts → ERR (8.92ms): Bearer token required
 2026-05-24 13:50:23 | ERROR    | app.middleware.logging:23 - [5a97864d] GET /api/v1/alerts → ERR (1.31ms): Bearer token required
+2026-05-24 13:51:00 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 13:51:00 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 13:52:17 | INFO     | app.middleware.logging:15 - [eabb0c47] GET /api/v1/alerts → 200 (11.4ms)
+2026-05-24 13:52:17 | INFO     | app.middleware.logging:15 - [2cda6695] GET /api/v1/integrations → 200 (10.22ms)
+2026-05-24 13:52:17 | INFO     | app.middleware.logging:15 - [2606cd9b] GET /api/v1/integrations → 200 (9.15ms)
+2026-05-24 13:52:18 | INFO     | app.middleware.logging:15 - [19d928b9] GET /api/v1/companies → 200 (6.71ms)
+2026-05-24 13:52:18 | INFO     | app.middleware.logging:15 - [a7d3905f] GET /api/v1/companies/stats → 200 (11.21ms)
+2026-05-24 13:52:18 | INFO     | app.middleware.logging:15 - [ff500a5a] GET /api/v1/alerts → 200 (8.89ms)
+2026-05-24 13:52:18 | INFO     | app.middleware.logging:15 - [154a6606] GET /api/v1/integrations → 200 (9.5ms)
+2026-05-24 13:52:18 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-05-24 13:52:18 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [44083b1f] GET /api/v1/security/repos → 200 (8.95ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [b9777043] GET /api/v1/threats/stats → 200 (6.33ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [a5a6621f] GET /api/v1/threats → 200 (10.46ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [070cd7fb] GET /api/v1/compliance → 200 (12.42ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [0d8aafae] GET /api/v1/vulnerabilities → 200 (16.4ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [f4d671a8] GET /api/v1/compliance/score → 200 (12.17ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [431dd4ab] GET /api/v1/security/score → 200 (6.41ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [1ea275ad] GET /api/v1/security/scan-history → 200 (6.98ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [cd74c5db] GET /api/v1/security/repos → 200 (15.34ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [37253ee2] GET /api/v1/threats/stats → 200 (16.84ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [8a0a6e46] GET /api/v1/threats → 200 (13.18ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [9da226a6] GET /api/v1/vulnerabilities → 200 (9.4ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [6b0bdde9] GET /api/v1/compliance → 200 (6.55ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [834cfafb] GET /api/v1/compliance/score → 200 (5.26ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [dd1d2ef5] GET /api/v1/security/score → 200 (5.21ms)
+2026-05-24 13:52:24 | INFO     | app.middleware.logging:15 - [614fb2ac] GET /api/v1/security/scan-history → 200 (5.91ms)
+2026-05-24 13:52:31 | WARNING  | app.services.scan_service:315 - Redis lock unavailable for repo da67e6c2-17de-437b-85a6-f43f951e7962 (Error -2 connecting to redis:6379. -2.) — falling back to DB-only deduplication check
+2026-05-24 13:52:31 | INFO     | app.services.scan_service:129 - [scan:43046465-cd64-4fed-8444-5173fa07da03] Queued for repo=MomenLotfy/Animated-Portfolio branch=main triggered_by=38498604-66db-4c24-9718-7c2a66f06b89
+2026-05-24 13:52:31 | INFO     | app.middleware.logging:15 - [7db60c39] POST /api/v1/security/scan → 202 (50.17ms)
+2026-05-24 13:52:34 | INFO     | app.middleware.logging:15 - [c8519c96] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.96ms)
+2026-05-24 13:52:37 | INFO     | app.services.scan_service:173 - [scan:43046465-cd64-4fed-8444-5173fa07da03] No active Celery workers — using inline fallback
+2026-05-24 13:52:37 | ERROR    | app.services.scan_service:194 - [scan:43046465-cd64-4fed-8444-5173fa07da03] Inline execution failed: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $2: datetime.datetime(2026, 5, 24, 13, 52, 3... (can't subtract offset-naive and offset-aware datetimes)
+[SQL: UPDATE scans SET status=$1::VARCHAR, started_at=$2::TIMESTAMP WITHOUT TIME ZONE, updated_at=$3::TIMESTAMP WITH TIME ZONE WHERE scans.id = $4::VARCHAR]
+[parameters: ('cloning', datetime.datetime(2026, 5, 24, 13, 52, 37, 653103, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 5, 24, 13, 52, 37, 653398, tzinfo=datetime.timezone.utc), '43046465-cd64-4fed-8444-5173fa07da03')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2026-05-24 13:52:37 | INFO     | app.middleware.logging:15 - [116170bf] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (8.91ms)
+2026-05-24 13:52:42 | INFO     | app.middleware.logging:15 - [cb6e56cc] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.17ms)
+2026-05-24 13:52:42 | ERROR    | app.middleware.logging:23 - [36c9cabf] GET /api/v1/alerts → ERR (3.23ms): Bearer token required
+2026-05-24 13:52:42 | ERROR    | app.middleware.logging:23 - [d02abd8e] GET /api/v1/alerts → ERR (1.02ms): Bearer token required
+2026-05-24 13:52:42 | ERROR    | app.middleware.logging:23 - [431b3f10] GET /api/v1/alerts → ERR (1.3ms): Bearer token required
+2026-05-24 13:52:42 | ERROR    | app.middleware.logging:23 - [90967047] GET /api/v1/alerts → ERR (1.06ms): Bearer token required
+2026-05-24 13:52:45 | INFO     | app.middleware.logging:15 - [593c05a0] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.37ms)
+2026-05-24 13:52:48 | INFO     | app.middleware.logging:15 - [53d34c52] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.09ms)
+2026-05-24 13:52:51 | INFO     | app.middleware.logging:15 - [a641baa0] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.04ms)
+2026-05-24 13:52:54 | INFO     | app.middleware.logging:15 - [b887f380] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.71ms)
+2026-05-24 13:52:57 | INFO     | app.middleware.logging:15 - [e200c10d] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.45ms)

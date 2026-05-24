@@ -101,6 +101,124 @@ function ConfirmDialog({ open, title, description, confirmLabel, danger, onConfi
   );
 }
 
+// ── Threats Tab — extracted to avoid hooks-in-IIFE violation ─────────────────
+function ThreatsTab({ threats, tLoading, canAct, setConfirmThreat }: {
+  threats: any[];
+  tLoading: boolean;
+  canAct: boolean;
+  setConfirmThreat: (v: any) => void;
+}) {
+  const [threatFilter, setThreatFilter] = useState<string>('all');
+  const [threatPage, setThreatPage] = useState(1);
+  const PAGE_SIZE = 10;
+  const filtered = threats.filter((t: any) =>
+    threatFilter === 'all' || t.severity === threatFilter
+  );
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((threatPage - 1) * PAGE_SIZE, threatPage * PAGE_SIZE);
+
+  return (
+    <div className="card-base space-y-3">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <h2 className="text-sm font-semibold text-foreground">
+          Active Threats
+          {canAct && <span className="ml-2 text-xs text-gray-500 font-normal">· Actions sync to AWS Security Hub</span>}
+        </h2>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 text-xs">
+            <Filter className="w-3 h-3 text-muted-foreground" />
+            {['all','critical','high','medium','low'].map(s => (
+              <button key={s} onClick={() => { setThreatFilter(s); setThreatPage(1); }}
+                className={clsx('px-2 py-1 rounded capitalize transition-colors',
+                  threatFilter === s ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-foreground'
+                )}>{s}</button>
+            ))}
+          </div>
+          <span className="text-xs text-muted-foreground">{filtered.length} threats</span>
+        </div>
+      </div>
+
+      {tLoading ? (
+        <div className="space-y-3">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
+        </div>
+      ) : paginated.length === 0 ? (
+        <div className="py-8 text-center">
+          <Shield className="w-8 h-8 text-green-400 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No {threatFilter !== 'all' ? threatFilter + ' ' : ''}threats found. Run a scan to detect issues.</p>
+        </div>
+      ) : (
+        paginated.map((t: any) => (
+          <div key={t.id} className="p-4 rounded-lg border border-border bg-surface-1">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-md bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-4 h-4 text-red-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <code className="text-xs text-muted-foreground font-mono">{t.id?.substring(0, 8)}</code>
+                      <span className={severityBadge[t.severity]}>{t.severity}</span>
+                      <span className={clsx('text-xs font-medium', statusColor[t.status])}>{t.status}</span>
+                      {t.mitre_tactic && <span className="text-xs text-gray-500 font-mono">{t.mitre_tactic}</span>}
+                    </div>
+                    <p className="text-sm font-medium text-foreground mt-1">{t.title || t.description}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground flex-shrink-0">
+                    {t.created_at ? new Date(t.created_at).toLocaleString() : ''}
+                  </span>
+                </div>
+                {t.resource && (
+                  <p className="text-xs text-gray-500 mt-1 font-mono truncate">{t.resource}</p>
+                )}
+                {canAct && !['resolved', 'suppressed'].includes(t.status) && (
+                  <div className="flex items-center gap-2 mt-3">
+                    <button onClick={() => setConfirmThreat({ threat: t, action: 'resolve' })}
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors border border-green-500/20">
+                      <ShieldCheck className="w-3.5 h-3.5" /> Resolve in AWS
+                    </button>
+                    <button onClick={() => setConfirmThreat({ threat: t, action: 'suppress' })}
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-colors border border-yellow-500/20">
+                      <ShieldOff className="w-3.5 h-3.5" /> Suppress
+                    </button>
+                  </div>
+                )}
+                {['resolved', 'suppressed'].includes(t.status) && (
+                  <div className="flex items-center gap-1.5 mt-3 text-xs text-green-400">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    {t.status === 'resolved' ? 'Resolved in AWS Security Hub' : 'Suppressed in AWS Security Hub'}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'hsl(230 15% 14%)' }}>
+          <span className="text-xs text-muted-foreground">
+            Page {threatPage} of {totalPages}
+          </span>
+          <div className="flex gap-1">
+            <button onClick={() => setThreatPage(p => Math.max(1, p - 1))}
+              disabled={threatPage === 1}
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button onClick={() => setThreatPage(p => Math.min(totalPages, p + 1))}
+              disabled={threatPage === totalPages}
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Scan Panel — the new DevSecOps feature ────────────────────────────────────
 function ScanPanel({ onScanComplete }: { onScanComplete: () => void }) {
   const { data: reposData, loading: reposLoading, refetch: refetchRepos } = useApi<any>('/security/repos');
@@ -708,119 +826,14 @@ export default function SecurityCenter() {
         loading={actionLoading}
       />
 
-      {tab === 'threats' && (() => {
-        const [threatFilter, setThreatFilter] = useState<string>('all');
-        const [threatPage, setThreatPage] = useState(1);
-        const PAGE_SIZE = 10;
-        const filtered = threats.filter((t: any) =>
-          threatFilter === 'all' || t.severity === threatFilter
-        );
-        const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-        const paginated = filtered.slice((threatPage - 1) * PAGE_SIZE, threatPage * PAGE_SIZE);
-
-        return (
-          <div className="card-base space-y-3">
-            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-              <h2 className="text-sm font-semibold text-foreground">
-                Active Threats
-                {canAct && <span className="ml-2 text-xs text-gray-500 font-normal">· Actions sync to AWS Security Hub</span>}
-              </h2>
-              <div className="flex items-center gap-2">
-                {/* Severity filter */}
-                <div className="flex items-center gap-1 text-xs">
-                  <Filter className="w-3 h-3 text-muted-foreground" />
-                  {['all','critical','high','medium','low'].map(s => (
-                    <button key={s} onClick={() => { setThreatFilter(s); setThreatPage(1); }}
-                      className={clsx('px-2 py-1 rounded capitalize transition-colors',
-                        threatFilter === s ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-foreground'
-                      )}>{s}</button>
-                  ))}
-                </div>
-                <span className="text-xs text-muted-foreground">{filtered.length} threats</span>
-              </div>
-            </div>
-
-            {tLoading ? (
-              <div className="space-y-3">
-                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
-              </div>
-            ) : paginated.length === 0 ? (
-              <div className="py-8 text-center">
-                <Shield className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No {threatFilter !== 'all' ? threatFilter + ' ' : ''}threats found. Run a scan to detect issues.</p>
-              </div>
-            ) : (
-              paginated.map((t: any) => (
-                <div key={t.id} className="p-4 rounded-lg border border-border bg-surface-1">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-md bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                      <AlertTriangle className="w-4 h-4 text-red-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3 flex-wrap">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <code className="text-xs text-muted-foreground font-mono">{t.id?.substring(0, 8)}</code>
-                            <span className={severityBadge[t.severity]}>{t.severity}</span>
-                            <span className={clsx('text-xs font-medium', statusColor[t.status])}>{t.status}</span>
-                            {t.mitre_tactic && <span className="text-xs text-gray-500 font-mono">{t.mitre_tactic}</span>}
-                          </div>
-                          <p className="text-sm font-medium text-foreground mt-1">{t.title || t.description}</p>
-                        </div>
-                        <span className="text-xs text-muted-foreground flex-shrink-0">
-                          {t.created_at ? new Date(t.created_at).toLocaleString() : ''}
-                        </span>
-                      </div>
-                      {t.resource && (
-                        <p className="text-xs text-gray-500 mt-1 font-mono truncate">{t.resource}</p>
-                      )}
-                      {canAct && !['resolved', 'suppressed'].includes(t.status) && (
-                        <div className="flex items-center gap-2 mt-3">
-                          <button onClick={() => setConfirmThreat({ threat: t, action: 'resolve' })}
-                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors border border-green-500/20">
-                            <ShieldCheck className="w-3.5 h-3.5" /> Resolve in AWS
-                          </button>
-                          <button onClick={() => setConfirmThreat({ threat: t, action: 'suppress' })}
-                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-colors border border-yellow-500/20">
-                            <ShieldOff className="w-3.5 h-3.5" /> Suppress
-                          </button>
-                        </div>
-                      )}
-                      {['resolved', 'suppressed'].includes(t.status) && (
-                        <div className="flex items-center gap-1.5 mt-3 text-xs text-green-400">
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          {t.status === 'resolved' ? 'Resolved in AWS Security Hub' : 'Suppressed in AWS Security Hub'}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'hsl(230 15% 14%)' }}>
-                <span className="text-xs text-muted-foreground">
-                  Page {threatPage} of {totalPages}
-                </span>
-                <div className="flex gap-1">
-                  <button onClick={() => setThreatPage(p => Math.max(1, p - 1))}
-                    disabled={threatPage === 1}
-                    className="p-1.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => setThreatPage(p => Math.min(totalPages, p + 1))}
-                    disabled={threatPage === totalPages}
-                    className="p-1.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })()}
+      {tab === 'threats' && (
+        <ThreatsTab
+          threats={threats}
+          tLoading={tLoading}
+          canAct={canAct}
+          setConfirmThreat={setConfirmThreat}
+        />
+      )}
 
       {tab === 'vulnerabilities' && (
         <div className="card-base overflow-hidden">
