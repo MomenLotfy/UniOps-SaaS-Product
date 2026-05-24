@@ -268,7 +268,7 @@ class CostExplorer(AWSClient):
             logger.error(f"EC2 stop failed ({resource_id}): {err}")
             return {"success": False, "instance_id": resource_id, "error": err}
 
-
+    async def get_reserved_instance_recommendations(self) -> list[dict]:
         """Reserved Instance purchase recommendations."""
         try:
             ce = self.get_session().client("ce")

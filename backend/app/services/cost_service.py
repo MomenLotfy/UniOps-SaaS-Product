@@ -124,35 +124,50 @@ class CostService(BaseService):
             for r in prov_rows.fetchall() if r[0]
         }
 
-        # Connected check — is there an active AWS integration?
+        # ── AWS integration status ────────────────────────────────────────
         from app.models.integration import Integration
-        count = (await self.db.execute(
-            select(func.count()).select_from(Integration).where(
+        intg = (await self.db.execute(
+            select(Integration).where(
                 Integration.tenant_id == tenant_id,
                 Integration.type      == "aws",
                 Integration.is_active == True,
-                Integration.status    == "connected",
-            )
-        )).scalar() or 0
-        has_aws = count > 0
+            ).order_by(Integration.updated_at.desc()).limit(1)
+        )).scalar_one_or_none()
+
+        intg_status = intg.status if intg else None
+        has_aws     = intg_status == "connected"
+        # has_data: there IS cost data even if integration is currently in error state
+        has_data    = total_all > 0
+
+        logger.info(
+            f"[CostSummary] tenant={tenant_id[:8]} "
+            f"intg_status={intg_status} has_data={has_data} "
+            f"mtd={round(mtd,2)} ytd={round(ytd,2)}"
+        )
 
         return {
             # ── Legacy fields (kept for backwards compat) ─────────────────
-            "total_cost":   round(total_all, 2),
-            "mtd_cost":     round(mtd, 2),
-            "forecast_eom": round(projected, 2),
-            "trend_pct":    round(trend_pct, 1),
-            "by_provider":  by_provider,
-            "by_service":   {},
-            "by_region":    {},
+            "total_cost":          round(total_all, 2),
+            "mtd_cost":            round(mtd, 2),
+            "forecast_eom":        round(projected, 2),
+            "trend_pct":           round(trend_pct, 1),
+            "by_provider":         by_provider,
+            "by_service":          {},
+            "by_region":           {},
             # ── Frontend-expected fields ──────────────────────────────────
-            "mtd":          round(mtd, 2),
-            "projected":    round(projected, 2),
-            "daily_avg":    round(daily_avg, 4),
-            "ytd":          round(ytd, 2),
-            "connected":    has_aws,
-            "prev_month":   round(prev_month, 2),
-            "trend_pct":    round(trend_pct, 1),
+            "mtd":                 round(mtd, 2),
+            "projected":           round(projected, 2),
+            "daily_avg":           round(daily_avg, 4),
+            "ytd":                 round(ytd, 2),
+            "connected":           has_aws,
+            "has_data":            has_data,
+            "prev_month":          round(prev_month, 2),
+            # ── Integration health — lets frontend show precise state ─────
+            # integration_status: "connected" | "error" | "pending" | None
+            # integration_error:  human-readable error string when status="error"
+            "integration_status":  intg_status,
+            "integration_error":   intg.error_message if intg and intg_status == "error" else None,
+            "last_sync":           intg.last_sync.isoformat() if intg and intg.last_sync else None,
         }
 
     # ─────────────────────────────────────────────────────────────────────────

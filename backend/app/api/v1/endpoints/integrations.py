@@ -215,10 +215,9 @@ async def update_integration(
     # the explicit test endpoint is called.
     # ─────────────────────────────────────────────────────────────────────────
     integration_type = item.type
-    if integration_type in ("github", "gitlab"):
-        # Always re-test + sync when a git integration is updated with new creds.
-        # The bg task is idempotent: test_connection sets status=connected/error,
-        # then sync_repos_for_tenant only runs when connected.
+    if integration_type in ("github", "gitlab", "aws"):
+        # Re-test + sync when credentials are updated for git OR cloud integrations.
+        # For AWS: re-tests credentials and immediately syncs costs on success.
         background_tasks.add_task(
             _bg_test_and_sync,
             integration_id=integration_id,

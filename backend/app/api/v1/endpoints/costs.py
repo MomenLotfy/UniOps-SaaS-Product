@@ -303,6 +303,68 @@ def _calculate_forecast_accuracy(
 # ─────────────────────────────────────────────────────────────────────────────
 # Anomalies list
 # ─────────────────────────────────────────────────────────────────────────────
+@router.post("/sync")
+async def trigger_cost_sync(
+    current_user: CurrentUser,
+    tenant_id: TenantID,
+    db: DBSession,
+):
+    """
+    Trigger an immediate AWS cost sync for this tenant.
+    Returns immediately — sync runs in the background.
+    Logs: [sync_trigger] integration created → aws validated → sync triggered
+    """
+    from app.utils.logger import logger
+    from fastapi import BackgroundTasks
+    import asyncio
+
+    logger.info(f"[sync_trigger] Manual cost sync requested by user={current_user.id} tenant={tenant_id[:8]}")
+
+    # Verify at least one active AWS integration exists
+    from sqlalchemy import select as _sel
+    from app.models.integration import Integration as _Intg
+
+    intg = (await db.execute(
+        _sel(_Intg).where(
+            _Intg.tenant_id == tenant_id,
+            _Intg.type      == "aws",
+            _Intg.is_active == True,
+        ).limit(1)
+    )).scalar_one_or_none()
+
+    if not intg:
+        logger.warning(f"[sync_trigger] No AWS integration found for tenant={tenant_id[:8]}")
+        return APIResponse(
+            data={"triggered": False, "reason": "no_aws_integration"},
+            message="No AWS integration configured",
+        )
+
+    logger.info(
+        f"[sync_trigger] Found integration={intg.name} status={intg.status} "
+        f"tenant={tenant_id[:8]} — triggering sync"
+    )
+
+    # Run sync in background so endpoint returns immediately
+    async def _run_sync():
+        try:
+            from app.tasks.sync_costs import sync_aws_costs_async
+            logger.info(f"[sync_trigger] sync_triggered tenant={tenant_id[:8]}")
+            result = await sync_aws_costs_async(tenant_id=tenant_id)
+            logger.info(f"[sync_trigger] ingestion_completed tenant={tenant_id[:8]} result={result}")
+        except Exception as exc:
+            logger.error(f"[sync_trigger] sync failed for tenant={tenant_id[:8]}: {exc}")
+
+    asyncio.create_task(_run_sync())
+
+    return APIResponse(
+        data={"triggered": True, "integration": intg.name, "status": intg.status},
+        message="Cost sync started — data will appear within a few seconds",
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Anomalies list
+# ─────────────────────────────────────────────────────────────────────────────
 @router.get("/anomalies")
 async def list_anomalies(
     current_user: CurrentUser, tenant_id: TenantID, db: DBSession,

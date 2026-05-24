@@ -26,8 +26,13 @@ export interface CostSummary {
   daily_avg:    number;
   ytd:          number;
   connected:    boolean;
+  has_data:     boolean;
   prev_month:   number;
   trend_pct:    number;
+  // Integration health — drives precise UI state
+  integration_status: 'connected' | 'error' | 'pending' | 'disconnected' | null;
+  integration_error:  string | null;
+  last_sync:          string | null;
   // Legacy fields (kept for backwards compat)
   total_cost:   number;
   mtd_cost:     number;
@@ -271,4 +276,35 @@ export function useDismissSaving() {
 export function useInvalidateAllCostData() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: costKeys.all });
+}
+
+/**
+ * Trigger a real AWS cost sync on the backend (POST /costs/sync).
+ * On success, invalidates the full cost cache so all panels refresh.
+ */
+export function useTriggerCostSync() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiClient.post('/costs/sync'),
+    onSuccess: (res) => {
+      const triggered = res.data?.data?.triggered;
+      const status    = res.data?.data?.status;
+      if (!triggered) {
+        toast.warning(res.data?.message ?? 'No AWS integration configured');
+        return;
+      }
+      toast.success(
+        status === 'error'
+          ? 'Sync started — credentials will be re-tested'
+          : 'Cost sync started — data will refresh in a few seconds',
+      );
+      // Delay re-fetch to give the background sync time to write data
+      setTimeout(() => {
+        qc.invalidateQueries({ queryKey: costKeys.all });
+      }, 5_000);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.detail ?? 'Failed to trigger cost sync');
+    },
+  });
 }

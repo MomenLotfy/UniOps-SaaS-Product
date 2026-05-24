@@ -17,7 +17,7 @@ import {
   useCostAnomalies, useSavings,
   useInvestigateAnomaly, useResolveAnomaly, useDismissAnomaly,
   useApplySaving, useDismissSaving,
-  useInvalidateAllCostData,
+  useInvalidateAllCostData, useTriggerCostSync,
 } from '@/hooks/useCostData';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -104,7 +104,7 @@ function MetricCardSkeleton() {
   );
 }
 
-/** Empty state when AWS not connected */
+/** Empty state when AWS not connected at all */
 function NotConnectedBanner() {
   return (
     <div className="card-base py-16 text-center space-y-4">
@@ -119,6 +119,69 @@ function NotConnectedBanner() {
         className="inline-flex items-center gap-2 px-4 py-2 text-xs rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors">
         <Cloud className="w-3.5 h-3.5" /> Connect AWS
       </a>
+    </div>
+  );
+}
+
+/** Error state when AWS integration exists but credentials failed */
+function IntegrationErrorBanner({ error, onSync, syncing }: {
+  error: string | null;
+  onSync: () => void;
+  syncing: boolean;
+}) {
+  return (
+    <div className="card-base py-12 px-6 space-y-4 border-orange-500/20 bg-orange-500/5">
+      <div className="flex items-start gap-3">
+        <AlertTriangle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-foreground mb-1">AWS credentials need attention</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {error
+              ? error
+              : 'The connection test failed. Check your Access Key and Secret Key in Settings → Integrations.'}
+          </p>
+          {error && error.toLowerCase().includes('permission') && (
+            <p className="text-xs text-orange-300 mt-2">
+              Make sure your IAM user has <strong>ce:GetCostAndUsage</strong>, <strong>sts:GetCallerIdentity</strong>, or <strong>ec2:DescribeRegions</strong> permissions.
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-3 pl-8">
+        <a href="/settings/integrations"
+          className="inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg bg-orange-600 hover:bg-orange-700 text-white transition-colors font-medium">
+          <Cloud className="w-3 h-3" /> Fix Credentials
+        </a>
+        <button onClick={onSync} disabled={syncing}
+          className="inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg border border-white/10 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50">
+          <RefreshCw className={clsx('w-3 h-3', syncing && 'animate-spin')} />
+          {syncing ? 'Retrying…' : 'Retry Connection'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Pending state when integration was just saved and is being tested */
+function PendingBanner({ onSync, syncing }: { onSync: () => void; syncing: boolean }) {
+  return (
+    <div className="card-base py-12 px-6 space-y-4 border-blue-500/20 bg-blue-500/5">
+      <div className="flex items-start gap-3">
+        <Loader2 className="w-5 h-5 text-blue-400 animate-spin flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-foreground mb-1">Testing AWS credentials…</p>
+          <p className="text-xs text-muted-foreground">
+            Your AWS integration was just saved. Verifying credentials and pulling initial cost data — this usually takes under 30 seconds.
+          </p>
+        </div>
+      </div>
+      <div className="pl-8">
+        <button onClick={onSync} disabled={syncing}
+          className="inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 transition-colors disabled:opacity-50">
+          <RefreshCw className={clsx('w-3 h-3', syncing && 'animate-spin')} />
+          {syncing ? 'Syncing…' : 'Check Now'}
+        </button>
+      </div>
     </div>
   );
 }
@@ -224,6 +287,7 @@ export default function CostCenter() {
   const savingsQ   = useSavings();
 
   const invalidateAll = useInvalidateAllCostData();
+  const triggerSync   = useTriggerCostSync();
 
   // Mutations
   const investigate = useInvestigateAnomaly();
@@ -249,7 +313,14 @@ export default function CostCenter() {
   const anomalies = anomaliesQ.data ?? [];
   const savings   = savingsQ.data ?? [];
 
-  const connected     = summary?.connected ?? (summary ? (summary.mtd ?? 0) > 0 : false);
+  // ── Integration state (from backend's new integration_status field) ─────────
+  // connected:      integration is "connected" AND credentials verified
+  // intgStatus:     "connected" | "error" | "pending" | "disconnected" | null
+  // showDashboard:  show the full dashboard (connected OR has data from a prev sync)
+  const intgStatus    = summary?.integration_status ?? null;
+  const connected     = summary?.connected ?? (intgStatus === 'connected');
+  const hasData       = summary?.has_data ?? (summary ? (summary.mtd ?? 0) > 0 : false);
+  const showDashboard = connected || (hasData && intgStatus !== null);
   const anyLoading    = summaryQ.isLoading || breakdownQ.isLoading;
   const isRefreshing  = summaryQ.isFetching && !summaryQ.isLoading;
 
@@ -289,8 +360,19 @@ export default function CostCenter() {
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">Real-time cloud cost intelligence</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <LastSyncedBadge dataUpdatedAt={summaryQ.dataUpdatedAt} />
+          {/* Sync Now — triggers a real AWS data pull on the backend */}
+          {intgStatus !== null && (
+            <button
+              onClick={() => triggerSync.mutate()}
+              disabled={triggerSync.isPending || isRefreshing}
+              title="Pull latest cost data from AWS"
+              className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50">
+              <RefreshCw className={clsx('w-3.5 h-3.5', triggerSync.isPending && 'animate-spin')} />
+              {triggerSync.isPending ? 'Syncing…' : 'Sync Now'}
+            </button>
+          )}
           <button
             onClick={invalidateAll}
             disabled={isRefreshing}
@@ -302,14 +384,45 @@ export default function CostCenter() {
         </div>
       </div>
 
+      {/* ── Integration state banners (shown only when no data yet) ── */}
+      {!anyLoading && !showDashboard && intgStatus === 'error' && (
+        <IntegrationErrorBanner
+          error={summary?.integration_error ?? null}
+          onSync={() => triggerSync.mutate()}
+          syncing={triggerSync.isPending}
+        />
+      )}
+      {!anyLoading && !showDashboard && intgStatus === 'pending' && (
+        <PendingBanner
+          onSync={() => { invalidateAll(); summaryQ.refetch(); }}
+          syncing={isRefreshing}
+        />
+      )}
+      {!anyLoading && !showDashboard && (intgStatus === null || intgStatus === 'disconnected') && (
+        <NotConnectedBanner />
+      )}
+
+      {/* ── Error badge shown above dashboard when integration has error but old data exists ── */}
+      {showDashboard && intgStatus === 'error' && (
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs border border-orange-500/20 bg-orange-500/5 text-orange-300">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <span className="flex-1">AWS credentials have an issue — showing last synced data.{' '}
+            <a href="/settings/integrations" className="underline underline-offset-2 hover:text-orange-200">Fix credentials</a>
+            {summary?.integration_error ? `: ${summary.integration_error}` : '.'}
+          </span>
+          <button onClick={() => triggerSync.mutate()} disabled={triggerSync.isPending}
+            className="ml-2 px-2 py-1 rounded border border-orange-500/30 hover:bg-orange-500/10 transition-colors disabled:opacity-50 whitespace-nowrap">
+            {triggerSync.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Retry'}
+          </button>
+        </div>
+      )}
+
       {/* ── Metric Cards ── */}
       {anyLoading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => <MetricCardSkeleton key={i} />)}
         </div>
-      ) : !connected ? (
-        <NotConnectedBanner />
-      ) : (
+      ) : !showDashboard ? null : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard
             label="Month-to-Date"
@@ -342,21 +455,23 @@ export default function CostCenter() {
         </div>
       )}
 
-      {/* ── Tabs ── */}
-      <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'hsl(230 15% 10%)' }}>
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={clsx(
-              'flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all',
-              tab === t.id
-                ? 'bg-blue-600 text-white shadow'
-                : 'text-muted-foreground hover:text-foreground',
-            )}>
-            <t.icon className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t.label}</span>
-          </button>
-        ))}
-      </div>
+      {/* ── Tabs (only when there is something to display) ── */}
+      {showDashboard && (
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'hsl(230 15% 10%)' }}>
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={clsx(
+                'flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all',
+                tab === t.id
+                  ? 'bg-blue-600 text-white shadow'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}>
+              <t.icon className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ══════════════════ OVERVIEW ══════════════════ */}
       {tab === 'overview' && (

@@ -127,9 +127,26 @@ async def sync_aws_costs_async(tenant_id: str | None = None) -> dict:
 
                 integration.last_sync = datetime.now(timezone.utc)
                 await db.commit()
+                logger.info(
+                    f"[sync_costs] ✓ integration={integration.name} "
+                    f"tenant={integration.tenant_id[:8]} "
+                    f"cost_records={len(cost_items)} "
+                    f"anomalies={len(anomaly_items)} "
+                    f"savings_recs={len(rightsizing)}"
+                )
+
+                # Invalidate Redis cost cache so next API call returns fresh data
+                try:
+                    from app.core.cache import cost_cache_invalidate
+                    await cost_cache_invalidate(integration.tenant_id)
+                    logger.info(
+                        f"[sync_costs] Cache invalidated for tenant={integration.tenant_id[:8]}"
+                    )
+                except Exception as cache_exc:
+                    logger.debug(f"[sync_costs] Cache invalidation skipped: {cache_exc}")
 
                 summary["integrations"] += 1
-                logger.info(f"AWS cost sync done for {integration.name}: {summary}")
+                logger.info(f"[sync_costs] Summary: {summary}")
 
             except Exception as e:
                 logger.error(

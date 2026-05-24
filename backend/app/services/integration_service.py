@@ -47,7 +47,9 @@ from app.integrations.github.client import GitHubAPIError
 # Only these keys are encrypt/decrypted — everything else passes through.
 SENSITIVE_FIELDS: frozenset[str] = frozenset({
     "access_key",
+    "access_key_id",       # AWS IAM access key — must be encrypted at rest
     "secret_key",
+    "secret_access_key",   # AWS IAM secret key — must be encrypted at rest
     "token",
     "access_token",
     "password",
