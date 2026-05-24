@@ -139,7 +139,7 @@ class ScanService(BaseService):
     async def dispatch_scan(self, scan_id: str) -> None:
         """
         Dispatch scan execution:
-          1. Try Celery (preferred — fully isolated, monitored, retriable)
+          1. Try Celery with active-worker check (preferred — isolated, monitored, retriable)
           2. Fall back to asyncio background task with hard 10-minute timeout
 
         This method is called from the endpoint *after* the HTTP response has
@@ -148,9 +148,30 @@ class ScanService(BaseService):
         """
         try:
             from app.tasks.run_scan import run_security_scan
-            run_security_scan.delay(scan_id)
-            logger.info(f"[scan:{scan_id}] Dispatched to Celery")
-            return
+            from app.core.celery_app import celery_app
+
+            if celery_app is None:
+                raise RuntimeError("Celery not configured")
+
+            # Check for active workers before enqueuing — tasks sent to Redis when
+            # no workers are running sit in the queue indefinitely (scan stays "queued").
+            # Run inspect in a thread so the async event loop is never blocked.
+            def _check_workers() -> bool:
+                try:
+                    queues = celery_app.control.inspect(timeout=1.0).active_queues() or {}
+                    return bool(queues)
+                except Exception:
+                    return False
+
+            has_worker = await asyncio.get_event_loop().run_in_executor(None, _check_workers)
+
+            if has_worker:
+                run_security_scan.delay(scan_id)
+                logger.info(f"[scan:{scan_id}] Dispatched to Celery worker")
+                return
+            else:
+                logger.info(f"[scan:{scan_id}] No active Celery workers — using inline fallback")
+
         except Exception as exc:
             logger.warning(
                 f"[scan:{scan_id}] Celery unavailable ({exc}) — "

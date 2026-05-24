@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.pool import NullPool
 from app.config import settings
 
 # SQLite needs different pool settings than PostgreSQL
@@ -13,11 +14,32 @@ engine = create_async_engine(
     **({} if _is_sqlite else {
         "pool_size": settings.DATABASE_POOL_SIZE,
         "max_overflow": settings.DATABASE_MAX_OVERFLOW,
+        "pool_pre_ping": True,
     })
 )
 
 AsyncSessionLocal = async_sessionmaker(
     engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autoflush=False,
+    autocommit=False,
+)
+
+# ── Celery / asyncio.run() session factory ────────────────────────────────────
+# Celery tasks call asyncio.run() which creates a fresh event loop per task.
+# asyncpg connections are event-loop bound, so reusing the pooled engine across
+# different event loops raises "Future attached to a different loop".
+# NullPool avoids connection reuse entirely — each task gets fresh connections.
+_celery_engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=False,
+    future=True,
+    poolclass=NullPool,
+)
+
+CelerySessionLocal = async_sessionmaker(
+    _celery_engine,
     class_=AsyncSession,
     expire_on_commit=False,
     autoflush=False,

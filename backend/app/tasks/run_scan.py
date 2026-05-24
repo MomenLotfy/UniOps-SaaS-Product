@@ -81,7 +81,11 @@ async def _run_scan_async(scan_id: str) -> None:
     )
     from app.utils.encryption import decrypt
 
-    async with AsyncSessionLocal() as db:
+    # Use CelerySessionLocal (NullPool) so asyncio.run() in the Celery worker
+    # doesn't inherit stale event-loop-bound connections from the pooled engine.
+    from app.core.database import CelerySessionLocal
+
+    async with CelerySessionLocal() as db:
 
         # ── Load scan ─────────────────────────────────────────────────────────
         res = await db.execute(select(Scan).where(Scan.id == scan_id))
@@ -236,8 +240,8 @@ async def _mark_scan_failed(scan_id: str, error: str, db=None) -> None:
     if db is not None:
         await _do(db)
     else:
-        from app.core.database import AsyncSessionLocal
-        async with AsyncSessionLocal() as session:
+        from app.core.database import CelerySessionLocal
+        async with CelerySessionLocal() as session:
             await _do(session)
 
 

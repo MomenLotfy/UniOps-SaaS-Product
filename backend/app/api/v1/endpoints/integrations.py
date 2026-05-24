@@ -312,7 +312,7 @@ async def _bg_test_and_sync(
     tenant_id: str,
 ) -> None:
     """
-    Background: test connection, then sync repos for git providers.
+    Background: test connection, then sync data for the provider type.
     Uses its own DB session (BackgroundTask runs after response is sent).
     """
     try:
@@ -330,6 +330,16 @@ async def _bg_test_and_sync(
                     f"[bg] Connection test OK + synced {sync_result['synced']} repos "
                     f"for integration {integration_id} (tenant {tenant_id})"
                 )
+            elif result.success and integration_type == "aws":
+                # Trigger AWS cost sync immediately after a successful connection test
+                # so cost data appears without waiting for the hourly beat schedule.
+                logger.info(f"[bg] AWS connection OK — triggering cost sync for tenant {tenant_id}")
+                try:
+                    from app.tasks.sync_costs import sync_aws_costs_async
+                    await sync_aws_costs_async(tenant_id=tenant_id)
+                    logger.info(f"[bg] AWS cost sync completed for tenant {tenant_id}")
+                except Exception as sync_exc:
+                    logger.warning(f"[bg] AWS cost sync failed (non-fatal): {sync_exc}")
             elif not result.success:
                 logger.warning(
                     f"[bg] Connection test FAILED for {integration_id}: {result.message}"
@@ -345,9 +355,31 @@ async def _bg_sync(integration_id: str, integration_type: str) -> None:
 
         async with AsyncSessionLocal() as db:
             svc = IntegrationService(db)
-            await svc.sync(integration_id)
+            result = await svc.sync(integration_id)
             await db.commit()
-            logger.info(f"[bg] Sync complete for integration {integration_id}")
+            logger.info(f"[bg] Sync complete for integration {integration_id}: {result}")
+
+        # For AWS, also persist cost data — svc.sync() calls AWSClient.sync() which
+        # returns counts but does not upsert CostMetric rows.  sync_aws_costs_async
+        # is the function that actually writes cost data to the DB.
+        if integration_type == "aws":
+            try:
+                from app.models.integration import Integration as _Intg
+                from sqlalchemy import select as _sel
+
+                async with AsyncSessionLocal() as db2:
+                    row = (await db2.execute(
+                        _sel(_Intg).where(_Intg.id == integration_id)
+                    )).scalar_one_or_none()
+                    tenant_id = row.tenant_id if row else None
+
+                if tenant_id:
+                    from app.tasks.sync_costs import sync_aws_costs_async
+                    await sync_aws_costs_async(tenant_id=tenant_id)
+                    logger.info(f"[bg] AWS cost sync completed for integration {integration_id}")
+            except Exception as cost_exc:
+                logger.warning(f"[bg] AWS cost sync failed (non-fatal): {cost_exc}")
+
     except Exception as exc:
         logger.error(f"[bg] _bg_sync failed for {integration_id}: {exc}")
 
