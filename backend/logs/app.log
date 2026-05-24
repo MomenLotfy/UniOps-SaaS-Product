@@ -792,3 +792,22 @@ DETAIL:  Token "NaN" is invalid.
 2026-05-17 10:17:13 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
 2026-05-17 10:17:13 | INFO     | app.core.scheduler:55 - Scheduler stopped
 2026-05-17 11:51:12 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 11:42:07 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 11:42:08 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 11:42:09 | INFO     | app.main:33 - Database initialized
+2026-05-24 11:42:09 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 11:42:09 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 11:42:09 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 11:42:09 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 11:42:09 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 11:42:09 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 11:42:11 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 11:42:16 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 11:42:26 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 11:42:39 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 11:42:39 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 11:42:39 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 0 integrations
+2026-05-24 11:42:39 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 11:42:39 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 11:42:39 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-24 11:42:46 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
