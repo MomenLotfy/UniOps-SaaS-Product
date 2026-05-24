@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String, ForeignKey, JSON, Text, Integer, Float, Boolean
+from sqlalchemy import DateTime, String, ForeignKey, JSON, Text, Integer, Float, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import BaseModel
 
@@ -24,8 +24,8 @@ class Scan(BaseModel):
     error_message:  Mapped[str | None]  = mapped_column(Text)
 
     # Timing
-    started_at:     Mapped[datetime | None] = mapped_column()
-    completed_at:   Mapped[datetime | None] = mapped_column()
+    started_at:     Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at:   Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     duration_secs:  Mapped[int | None]  = mapped_column(Integer)
 
     # Which scanners ran and their individual statuses
@@ -73,7 +73,7 @@ class Repository(BaseModel):
     has_cicd:           Mapped[bool]        = mapped_column(Boolean, default=False)
 
     # Last scan reference
-    last_scan_at:       Mapped[datetime | None] = mapped_column()
+    last_scan_at:       Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_scan_score:    Mapped[float | None]    = mapped_column(Float)
 
     def to_dict(self) -> dict:

@@ -1,14 +1,14 @@
 """Cost module fixes: savings default status, last_sync_at on integrations.
 
 Revision ID: 006_cost_fixes
-Revises: 005_add_scan_engine_tables
+Revises: 005
 Create Date: 2025-05-24
 """
 from alembic import op
 import sqlalchemy as sa
 
 revision = "006_cost_fixes"
-down_revision = "005_add_scan_engine_tables"
+down_revision = "005"
 branch_labels = None
 depends_on = None
 

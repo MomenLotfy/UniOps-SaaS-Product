@@ -1788,3 +1788,316 @@ DETAIL:  Token "NaN" is invalid.
 2026-05-24 13:52:51 | INFO     | app.middleware.logging:15 - [a641baa0] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.04ms)
 2026-05-24 13:52:54 | INFO     | app.middleware.logging:15 - [b887f380] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.71ms)
 2026-05-24 13:52:57 | INFO     | app.middleware.logging:15 - [e200c10d] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.45ms)
+2026-05-24 13:53:00 | INFO     | app.middleware.logging:15 - [9c9a6d8e] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.78ms)
+2026-05-24 13:53:00 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 13:53:00 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 13:53:03 | INFO     | app.middleware.logging:15 - [fc038c86] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.33ms)
+2026-05-24 13:53:06 | INFO     | app.middleware.logging:15 - [ca5678e7] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (8.34ms)
+2026-05-24 13:53:09 | INFO     | app.middleware.logging:15 - [77ffba49] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.8ms)
+2026-05-24 13:53:12 | INFO     | app.middleware.logging:15 - [4cb1576a] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.94ms)
+2026-05-24 13:53:15 | INFO     | app.middleware.logging:15 - [e3c31b27] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.32ms)
+2026-05-24 13:53:18 | INFO     | app.middleware.logging:15 - [922548fd] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.41ms)
+2026-05-24 13:53:21 | INFO     | app.middleware.logging:15 - [c9ff0712] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.18ms)
+2026-05-24 13:53:24 | INFO     | app.middleware.logging:15 - [aee85a0f] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.54ms)
+2026-05-24 13:53:27 | INFO     | app.middleware.logging:15 - [5f3b7530] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.75ms)
+2026-05-24 13:53:30 | INFO     | app.middleware.logging:15 - [2ec14767] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.09ms)
+2026-05-24 13:53:33 | INFO     | app.middleware.logging:15 - [ad009bc9] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.44ms)
+2026-05-24 13:53:36 | INFO     | app.middleware.logging:15 - [c7afd8cb] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.15ms)
+2026-05-24 13:53:39 | INFO     | app.middleware.logging:15 - [f9bea88a] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.99ms)
+2026-05-24 13:53:42 | INFO     | app.middleware.logging:15 - [0402fb91] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.21ms)
+2026-05-24 13:53:45 | INFO     | app.middleware.logging:15 - [44779a92] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.27ms)
+2026-05-24 13:53:48 | INFO     | app.middleware.logging:15 - [0a0b31cf] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.14ms)
+2026-05-24 13:53:51 | INFO     | app.middleware.logging:15 - [c36e3ad0] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.17ms)
+2026-05-24 13:53:54 | INFO     | app.middleware.logging:15 - [d08cb271] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.9ms)
+2026-05-24 13:53:57 | INFO     | app.middleware.logging:15 - [bfef3dc1] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.16ms)
+2026-05-24 13:54:00 | INFO     | app.middleware.logging:15 - [cbdbc325] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.89ms)
+2026-05-24 13:54:03 | INFO     | app.middleware.logging:15 - [655b2248] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.46ms)
+2026-05-24 13:54:06 | INFO     | app.middleware.logging:15 - [ff3097ee] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.35ms)
+2026-05-24 13:54:09 | INFO     | app.middleware.logging:15 - [dd6eaace] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.35ms)
+2026-05-24 13:54:12 | INFO     | app.middleware.logging:15 - [a2a59f17] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.71ms)
+2026-05-24 13:54:15 | INFO     | app.middleware.logging:15 - [416a1940] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.17ms)
+2026-05-24 13:54:18 | INFO     | app.middleware.logging:15 - [fc520e39] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.82ms)
+2026-05-24 13:54:21 | INFO     | app.middleware.logging:15 - [862b5246] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.35ms)
+2026-05-24 13:54:24 | INFO     | app.middleware.logging:15 - [abe8c3b3] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.32ms)
+2026-05-24 13:54:27 | INFO     | app.middleware.logging:15 - [124ae85d] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.58ms)
+2026-05-24 13:54:30 | INFO     | app.middleware.logging:15 - [2615e73b] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.33ms)
+2026-05-24 13:54:33 | INFO     | app.middleware.logging:15 - [f59ec00d] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.69ms)
+2026-05-24 13:54:36 | INFO     | app.middleware.logging:15 - [dd297760] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.2ms)
+2026-05-24 13:54:39 | INFO     | app.middleware.logging:15 - [92ce1318] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.59ms)
+2026-05-24 13:54:42 | INFO     | app.middleware.logging:15 - [f342f242] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.05ms)
+2026-05-24 13:54:44 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 13:54:45 | INFO     | app.middleware.logging:15 - [d30b0af4] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.52ms)
+2026-05-24 13:54:48 | INFO     | app.middleware.logging:15 - [8b831a2b] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.31ms)
+2026-05-24 13:54:51 | INFO     | app.middleware.logging:15 - [a2611cf9] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.51ms)
+2026-05-24 13:54:54 | INFO     | app.middleware.logging:15 - [b56b9b76] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.92ms)
+2026-05-24 13:54:57 | INFO     | app.middleware.logging:15 - [a8712880] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.23ms)
+2026-05-24 13:55:00 | INFO     | app.middleware.logging:15 - [3f09f099] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.43ms)
+2026-05-24 13:55:00 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 13:55:00 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 13:55:01 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-24 13:55:02 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-24 13:55:02 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 12330d84-9527-4554-88b2-96b7541726ff: Dependabot alerts are disabled for this repository.
+2026-05-24 13:55:03 | INFO     | app.middleware.logging:15 - [182a88db] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (13.09ms)
+2026-05-24 13:55:06 | INFO     | app.middleware.logging:15 - [43ecb45a] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.02ms)
+2026-05-24 13:55:09 | INFO     | app.middleware.logging:15 - [490066be] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.25ms)
+2026-05-24 13:55:12 | INFO     | app.middleware.logging:15 - [e02e41ca] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.91ms)
+2026-05-24 13:55:15 | INFO     | app.middleware.logging:15 - [e707c0ee] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.98ms)
+2026-05-24 13:55:18 | INFO     | app.middleware.logging:15 - [99dcad15] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.7ms)
+2026-05-24 13:55:21 | INFO     | app.middleware.logging:15 - [cae01916] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.37ms)
+2026-05-24 13:55:24 | INFO     | app.middleware.logging:15 - [da2d13e1] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.5ms)
+2026-05-24 13:55:27 | INFO     | app.middleware.logging:15 - [64c3c6d9] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.09ms)
+2026-05-24 13:55:30 | INFO     | app.middleware.logging:15 - [06a1b069] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.72ms)
+2026-05-24 13:55:33 | INFO     | app.middleware.logging:15 - [dae56bce] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.89ms)
+2026-05-24 13:55:36 | INFO     | app.middleware.logging:15 - [b52882a7] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.48ms)
+2026-05-24 13:55:39 | INFO     | app.middleware.logging:15 - [fbe18f51] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.97ms)
+2026-05-24 13:55:42 | INFO     | app.middleware.logging:15 - [db81f8ee] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.61ms)
+2026-05-24 13:55:45 | INFO     | app.middleware.logging:15 - [0bc007ca] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.37ms)
+2026-05-24 13:55:48 | INFO     | app.middleware.logging:15 - [bf32dddf] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.37ms)
+2026-05-24 13:55:51 | INFO     | app.middleware.logging:15 - [39594eff] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.06ms)
+2026-05-24 13:55:54 | INFO     | app.middleware.logging:15 - [958226c5] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.18ms)
+2026-05-24 13:55:57 | INFO     | app.middleware.logging:15 - [4752c8aa] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.85ms)
+2026-05-24 13:56:00 | INFO     | app.middleware.logging:15 - [2f12973b] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.12ms)
+2026-05-24 13:56:03 | INFO     | app.middleware.logging:15 - [cbdf05ff] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.63ms)
+2026-05-24 13:56:06 | INFO     | app.middleware.logging:15 - [1326bd64] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.03ms)
+2026-05-24 13:56:09 | INFO     | app.middleware.logging:15 - [04df8f8d] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.59ms)
+2026-05-24 13:56:12 | INFO     | app.middleware.logging:15 - [ed0337cb] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.61ms)
+2026-05-24 13:56:15 | INFO     | app.middleware.logging:15 - [1f5a35bc] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.89ms)
+2026-05-24 13:56:18 | INFO     | app.middleware.logging:15 - [f8012c71] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.89ms)
+2026-05-24 13:56:21 | INFO     | app.middleware.logging:15 - [98690097] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.14ms)
+2026-05-24 13:56:24 | INFO     | app.middleware.logging:15 - [649c28f9] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.9ms)
+2026-05-24 13:56:27 | INFO     | app.middleware.logging:15 - [06a6775a] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.6ms)
+2026-05-24 13:56:30 | INFO     | app.middleware.logging:15 - [465fab6a] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.28ms)
+2026-05-24 13:56:33 | INFO     | app.middleware.logging:15 - [327f7aec] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.71ms)
+2026-05-24 13:56:36 | INFO     | app.middleware.logging:15 - [f35050bd] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.05ms)
+2026-05-24 13:56:39 | INFO     | app.middleware.logging:15 - [3dfe411b] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.93ms)
+2026-05-24 13:56:42 | INFO     | app.middleware.logging:15 - [a3c4f37c] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.86ms)
+2026-05-24 13:56:45 | INFO     | app.middleware.logging:15 - [4b3dd385] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.88ms)
+2026-05-24 13:56:48 | INFO     | app.middleware.logging:15 - [a90b8346] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.8ms)
+2026-05-24 13:56:51 | INFO     | app.middleware.logging:15 - [25b7898e] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.26ms)
+2026-05-24 13:56:54 | INFO     | app.middleware.logging:15 - [ca4b2ae8] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.14ms)
+2026-05-24 13:56:57 | INFO     | app.middleware.logging:15 - [c46e1fea] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.97ms)
+2026-05-24 13:57:00 | INFO     | app.middleware.logging:15 - [13eb1b90] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.47ms)
+2026-05-24 13:57:00 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 13:57:00 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 13:57:03 | INFO     | app.middleware.logging:15 - [9228cb35] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.03ms)
+2026-05-24 13:57:06 | INFO     | app.middleware.logging:15 - [40a70900] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.51ms)
+2026-05-24 13:57:09 | INFO     | app.middleware.logging:15 - [9ab63ba8] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.64ms)
+2026-05-24 13:57:12 | INFO     | app.middleware.logging:15 - [b48fe353] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.03ms)
+2026-05-24 13:57:15 | INFO     | app.middleware.logging:15 - [09e06d12] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.7ms)
+2026-05-24 13:57:18 | INFO     | app.middleware.logging:15 - [d6243ba8] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.9ms)
+2026-05-24 13:57:19 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 13:57:19 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 13:57:19 | INFO     | app.main:73 - Shutting down...
+2026-05-24 13:57:19 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 13:57:19 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 13:57:22 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 13:57:22 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 13:57:22 | INFO     | app.main:33 - Database initialized
+2026-05-24 13:57:22 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 13:57:22 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 13:57:22 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 13:57:22 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 13:57:22 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 13:57:22 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 13:57:24 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 13:57:24 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 13:57:24 | INFO     | app.main:33 - Database initialized
+2026-05-24 13:57:24 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 13:57:24 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 13:57:24 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 13:57:24 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 13:57:24 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 13:57:24 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 13:57:24 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 13:57:24 | INFO     | app.middleware.logging:15 - [0f09dba7] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (10.67ms)
+2026-05-24 13:57:24 | INFO     | app.middleware.logging:15 - [8877ac50] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.76ms)
+2026-05-24 13:57:25 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 13:57:25 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 13:57:26 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-05-24 13:57:26 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 13:57:27 | INFO     | app.middleware.logging:15 - [07d69d2d] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.44ms)
+2026-05-24 13:57:27 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 13:57:27 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 13:57:27 | INFO     | app.main:73 - Shutting down...
+2026-05-24 13:57:27 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 13:57:27 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 13:57:29 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 13:57:29 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 13:57:29 | INFO     | app.main:33 - Database initialized
+2026-05-24 13:57:29 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 13:57:29 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 13:57:29 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 13:57:29 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 13:57:29 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 13:57:29 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 13:57:31 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 13:57:31 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 13:57:31 | INFO     | app.main:33 - Database initialized
+2026-05-24 13:57:31 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 13:57:31 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 13:57:31 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 13:57:31 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 13:57:31 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 13:57:31 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 13:57:31 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 13:57:31 | INFO     | app.middleware.logging:15 - [2b897b8c] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (10.47ms)
+2026-05-24 13:57:33 | INFO     | app.middleware.logging:15 - [679baf24] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.99ms)
+2026-05-24 13:57:33 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 13:57:33 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 13:57:34 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-05-24 13:57:34 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 13:57:36 | INFO     | app.middleware.logging:15 - [b457a9ec] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.74ms)
+2026-05-24 13:57:36 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 13:57:39 | INFO     | app.middleware.logging:15 - [e55938eb] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.29ms)
+2026-05-24 13:57:42 | INFO     | app.middleware.logging:15 - [d8a0ed4b] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.72ms)
+2026-05-24 13:57:45 | INFO     | app.middleware.logging:15 - [1fdd19d7] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.85ms)
+2026-05-24 13:57:46 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 13:57:48 | INFO     | app.middleware.logging:15 - [88119e27] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.77ms)
+2026-05-24 13:57:51 | INFO     | app.middleware.logging:15 - [98cfa8f5] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.59ms)
+2026-05-24 13:57:54 | INFO     | app.middleware.logging:15 - [d8e4812d] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.9ms)
+2026-05-24 13:57:57 | INFO     | app.middleware.logging:15 - [66752335] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.25ms)
+2026-05-24 13:58:00 | INFO     | app.middleware.logging:15 - [d2d2707b] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.58ms)
+2026-05-24 13:58:02 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 13:58:02 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 13:58:02 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 13:58:02 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 0 integrations
+2026-05-24 13:58:02 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 13:58:02 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-24 13:58:03 | INFO     | app.middleware.logging:15 - [e4620e12] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.36ms)
+2026-05-24 13:58:03 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-24 13:58:03 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 12330d84-9527-4554-88b2-96b7541726ff: Dependabot alerts are disabled for this repository.
+2026-05-24 13:58:06 | INFO     | app.middleware.logging:15 - [1547aea1] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (8.74ms)
+2026-05-24 13:58:06 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-24 13:58:07 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 13:58:07 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 13:58:07 | INFO     | app.main:73 - Shutting down...
+2026-05-24 13:58:07 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 13:58:07 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 13:58:09 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 13:58:09 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 13:58:09 | INFO     | app.main:33 - Database initialized
+2026-05-24 13:58:09 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 13:58:09 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 13:58:09 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 13:58:09 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 13:58:09 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 13:58:09 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 13:58:11 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 13:58:11 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 13:58:12 | INFO     | app.main:33 - Database initialized
+2026-05-24 13:58:12 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 13:58:12 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 13:58:12 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 13:58:12 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 13:58:12 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 13:58:12 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 13:58:13 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 13:58:14 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 13:58:14 | INFO     | app.main:33 - Database initialized
+2026-05-24 13:58:14 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 13:58:14 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 13:58:14 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 13:58:14 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 13:58:14 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 13:58:14 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 13:58:14 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 13:58:14 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 13:58:14 | INFO     | app.middleware.logging:15 - [2bad5364] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (13.89ms)
+2026-05-24 13:58:14 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 13:58:14 | INFO     | app.middleware.logging:15 - [2d45cf4c] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.44ms)
+2026-05-24 13:58:14 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-05-24 13:58:15 | INFO     | app.middleware.logging:15 - [4de57554] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.89ms)
+2026-05-24 13:58:15 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 13:58:18 | INFO     | app.middleware.logging:15 - [31495fb6] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.18ms)
+2026-05-24 13:58:19 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 13:58:21 | INFO     | app.middleware.logging:15 - [a99a7021] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.04ms)
+2026-05-24 13:58:24 | INFO     | app.middleware.logging:15 - [4172979b] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.65ms)
+2026-05-24 13:58:27 | INFO     | app.middleware.logging:15 - [062bbfc7] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (4.44ms)
+2026-05-24 13:58:29 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 13:58:30 | INFO     | app.middleware.logging:15 - [e07f12b8] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.71ms)
+2026-05-24 13:58:33 | INFO     | app.middleware.logging:15 - [c22cb5fe] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.1ms)
+2026-05-24 13:58:36 | INFO     | app.middleware.logging:15 - [f0103425] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.31ms)
+2026-05-24 13:58:39 | INFO     | app.middleware.logging:15 - [c983e843] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.55ms)
+2026-05-24 13:58:42 | INFO     | app.middleware.logging:15 - [0acbb85a] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.55ms)
+2026-05-24 13:58:44 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 13:58:44 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 13:58:44 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 0 integrations
+2026-05-24 13:58:44 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 13:58:44 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 13:58:44 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-24 13:58:45 | INFO     | app.middleware.logging:15 - [3605ca5e] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (9.79ms)
+2026-05-24 13:58:45 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-24 13:58:45 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 12330d84-9527-4554-88b2-96b7541726ff: Dependabot alerts are disabled for this repository.
+2026-05-24 13:58:48 | INFO     | app.middleware.logging:15 - [decc9df8] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (8.24ms)
+2026-05-24 13:58:49 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-24 13:58:51 | INFO     | app.middleware.logging:15 - [2ff1da39] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.89ms)
+2026-05-24 13:58:54 | INFO     | app.middleware.logging:15 - [cfc49fdd] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (11.85ms)
+2026-05-24 13:58:57 | INFO     | app.middleware.logging:15 - [651694b7] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.72ms)
+2026-05-24 13:59:00 | INFO     | app.middleware.logging:15 - [6acc7008] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.13ms)
+2026-05-24 13:59:03 | ERROR    | app.middleware.logging:23 - [0fcf7716] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → ERR (6.62ms): (sqlalchemy.dialects.postgresql.asyncpg.InvalidCachedStatementError) <class 'asyncpg.exceptions.InvalidCachedStatementError'>: cached statement plan is invalid due to a database schema or configuration change (SQLAlchemy asyncpg dialect will now invalidate all prepared caches in response to this exception)
+[SQL: SELECT scans.tenant_id, scans.repo_id, scans.triggered_by, scans.branch, scans.commit_sha, scans.status, scans.error_message, scans.started_at, scans.completed_at, scans.duration_secs, scans.scanners_run, scans.critical_count, scans.high_count, scans.medium_count, scans.low_count, scans.secret_count, scans.misconfig_count, scans.security_score, scans.ai_summary, scans.ai_suggestions, scans.raw_results, scans.id, scans.created_at, scans.updated_at 
+FROM scans 
+WHERE scans.id = $1::VARCHAR AND scans.tenant_id = $2::VARCHAR]
+[parameters: ('43046465-cd64-4fed-8444-5173fa07da03', '13400fcd-4c0e-4b81-941d-6c50c1ef132e')]
+(Background on this error at: https://sqlalche.me/e/20/tw8g)
+2026-05-24 13:59:03 | ERROR    | app.main:149 - Unhandled error: (sqlalchemy.dialects.postgresql.asyncpg.InvalidCachedStatementError) <class 'asyncpg.exceptions.InvalidCachedStatementError'>: cached statement plan is invalid due to a database schema or configuration change (SQLAlchemy asyncpg dialect will now invalidate all prepared caches in response to this exception)
+[SQL: SELECT scans.tenant_id, scans.repo_id, scans.triggered_by, scans.branch, scans.commit_sha, scans.status, scans.error_message, scans.started_at, scans.completed_at, scans.duration_secs, scans.scanners_run, scans.critical_count, scans.high_count, scans.medium_count, scans.low_count, scans.secret_count, scans.misconfig_count, scans.security_score, scans.ai_summary, scans.ai_suggestions, scans.raw_results, scans.id, scans.created_at, scans.updated_at 
+FROM scans 
+WHERE scans.id = $1::VARCHAR AND scans.tenant_id = $2::VARCHAR]
+[parameters: ('43046465-cd64-4fed-8444-5173fa07da03', '13400fcd-4c0e-4b81-941d-6c50c1ef132e')]
+(Background on this error at: https://sqlalche.me/e/20/tw8g)
+2026-05-24 13:59:06 | INFO     | app.middleware.logging:15 - [de8f350d] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (8.97ms)
+2026-05-24 13:59:09 | INFO     | app.middleware.logging:15 - [b1b1ddd6] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.76ms)
+2026-05-24 13:59:12 | INFO     | app.middleware.logging:15 - [a4c4a349] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.44ms)
+2026-05-24 13:59:15 | INFO     | app.middleware.logging:15 - [5cceb95e] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.5ms)
+2026-05-24 13:59:17 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 13:59:17 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 13:59:17 | INFO     | app.main:73 - Shutting down...
+2026-05-24 13:59:17 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 13:59:17 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 13:59:19 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 13:59:19 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 13:59:20 | INFO     | app.main:33 - Database initialized
+2026-05-24 13:59:20 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 13:59:20 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 13:59:20 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 13:59:20 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 13:59:20 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 13:59:20 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 13:59:20 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 13:59:20 | INFO     | app.middleware.logging:15 - [adde50bf] GET / → 404 (1.6ms)
+2026-05-24 13:59:20 | INFO     | app.middleware.logging:15 - [618642e7] GET /favicon.ico → 404 (1.31ms)
+2026-05-24 13:59:21 | INFO     | app.middleware.logging:15 - [ac52693f] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (12.22ms)
+2026-05-24 13:59:23 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 13:59:23 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 13:59:24 | INFO     | app.middleware.logging:15 - [98b3cb0c] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.88ms)
+2026-05-24 13:59:24 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-05-24 13:59:24 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 13:59:25 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 13:59:27 | INFO     | app.middleware.logging:15 - [770efc9c] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.09ms)
+2026-05-24 13:59:30 | INFO     | app.middleware.logging:15 - [0fdcaa51] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.49ms)
+2026-05-24 13:59:33 | INFO     | app.middleware.logging:15 - [df364fd1] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.13ms)
+2026-05-24 13:59:35 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 13:59:36 | INFO     | app.middleware.logging:15 - [1996f07e] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (7.23ms)
+2026-05-24 13:59:39 | INFO     | app.middleware.logging:15 - [54bf5e9e] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.6ms)
+2026-05-24 13:59:42 | INFO     | app.middleware.logging:15 - [40d4cb27] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (6.88ms)
+2026-05-24 13:59:45 | INFO     | app.middleware.logging:15 - [cc47d594] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.38ms)
+2026-05-24 13:59:48 | INFO     | app.middleware.logging:15 - [0b15b38c] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (5.85ms)
+2026-05-24 13:59:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 13:59:50 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 13:59:50 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 0 integrations
+2026-05-24 13:59:50 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-24 13:59:50 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 13:59:50 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 13:59:51 | INFO     | app.middleware.logging:15 - [9b532131] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (20.11ms)
+2026-05-24 13:59:51 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-24 13:59:51 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 12330d84-9527-4554-88b2-96b7541726ff: Dependabot alerts are disabled for this repository.
+2026-05-24 13:59:54 | INFO     | app.middleware.logging:15 - [6334bb80] GET /api/v1/security/scan/43046465-cd64-4fed-8444-5173fa07da03 → 200 (8.63ms)
+2026-05-24 13:59:55 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-24 14:00:12 | INFO     | app.services.scan_engine:888 - [scan:cbb07f85-8688-4a49-af87-1a2056def05c] lang=javascript dockerfile=False cicd=True docker_available=True
+2026-05-24 14:00:35 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 80s
+2026-05-24 14:01:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 14:01:50 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 14:01:55 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 160s
+2026-05-24 14:03:06 | ERROR    | app.middleware.logging:23 - [bbf50f51] GET /api/v1/alerts → ERR (1.36ms): Bearer token required
+2026-05-24 14:03:06 | ERROR    | app.middleware.logging:23 - [7d5579eb] GET /api/v1/alerts → ERR (3.99ms): Bearer token required
