@@ -28,11 +28,11 @@ async def seed_data(tenant_id: str = None) -> None:
     import random
 
     async with AsyncSessionLocal() as db:
-        # ── Idempotency guard — skip if already seeded ────────────────────────
-        existing = await db.execute(
-            select(User).where(User.email == "admin@demo.com")
+        # ── Idempotency guard — skip only if integrations are already seeded ──
+        existing_integrations = await db.execute(
+            select(Integration).limit(1)
         )
-        if existing.scalar_one_or_none():
+        if existing_integrations.scalar_one_or_none():
             print("⏭️  Demo data already exists — skipping seed")
             return
 

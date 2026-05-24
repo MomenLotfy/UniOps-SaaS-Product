@@ -43,8 +43,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node artifacts/server/index.js"
-waitForPort = 3001
+args = "docker compose up db redis backend celery_worker celery_beat"
 
 [[ports]]
 localPort = 3001

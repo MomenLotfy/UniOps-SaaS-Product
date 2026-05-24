@@ -16,7 +16,10 @@ class AuditMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         start_time = time.monotonic()
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        except Exception:
+            raise
         duration_ms = int((time.monotonic() - start_time) * 1000)
 
         user_id = getattr(request.state, "user_id", None)

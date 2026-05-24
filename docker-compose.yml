@@ -1,10 +1,6 @@
 ##############################################################################
-# UniOps Control Tower — Production Docker Compose
+# UniOps Control Tower — Docker Compose (host networking)
 ##############################################################################
-
-networks:
-  uniops_net:
-    driver: bridge
 
 services:
 
@@ -12,35 +8,20 @@ services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
-    networks: [uniops_net]
+    network_mode: host
     environment:
       POSTGRES_USER: uniops
       POSTGRES_PASSWORD: uniops_password
       POSTGRES_DB: uniops_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U uniops -d uniops_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   # ── Redis ─────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    networks: [uniops_net]
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+    network_mode: host
+    command: redis-server --save "" --appendonly no
 
   # ── Backend ─────────────────────────────────────────────
   backend:
@@ -48,27 +29,17 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
-    networks: [uniops_net]
-    env_file: ./backend/.env.docker
-    ports:
-      - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    network_mode: host
+    env_file: ./backend/.env.host
     volumes:
+      - ./backend/app:/app/app
+      - ./backend/scripts:/app/scripts
       - models_data:/app/models
       - backend_logs:/app/logs
-      # Mount Docker socket so the scan engine can run semgrep/trivy in containers
-      # Optional: remove if Docker-in-Docker is not desired
       - /var/run/docker.sock:/var/run/docker.sock
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8000/api/v1/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 60s
+    depends_on:
+      - db
+      - redis
 
   # ── Celery Worker ─────────────────────────────────────────
   celery_worker:
@@ -76,14 +47,15 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
-    networks: [uniops_net]
-    env_file: ./backend/.env.docker
+    network_mode: host
+    env_file: ./backend/.env.host
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/scripts:/app/scripts
     depends_on:
-      backend:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: ["celery", "-A", "app.tasks.worker", "worker", "--loglevel=info", "--concurrency=4", "-Q", "default,scans"]
+      - backend
+      - redis
+    command: ["celery", "-A", "app.tasks.worker", "worker", "--loglevel=info", "--concurrency=2", "-Q", "default,scans"]
 
   # ── Celery Beat ─────────────────────────────────────────
   celery_beat:
@@ -91,72 +63,17 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
-    networks: [uniops_net]
-    env_file: ./backend/.env.docker
+    network_mode: host
+    env_file: ./backend/.env.host
     depends_on:
-      backend:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - backend
+      - redis
     volumes:
       - celery_beat_data:/app/beat
     command: ["celery", "-A", "app.tasks.worker", "beat", "--loglevel=info", "--scheduler", "celery.beat.PersistentScheduler", "--schedule", "/app/beat/celerybeat-schedule"]
 
-  # ── FRONTEND ─────────────────────────────────────────────
-  frontend:
-    build:
-      context: .
-      dockerfile: artifacts/uniops/Dockerfile
-      args:
-        VITE_API_URL: /api/v1
-    restart: unless-stopped
-    networks: [uniops_net]
-    ports:
-      - "5173:80"
-    depends_on:
-      backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/health 2>/dev/null || curl -sf http://localhost/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  # ── Flower ─────────────────────────────────────────────
-  flower:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    networks: [uniops_net]
-    env_file: ./backend/.env.docker
-    ports:
-      - "5555:5555"
-    depends_on:
-      redis:
-        condition: service_healthy
-    command: ["celery", "-A", "app.tasks.worker", "flower", "--port=5555", "--basic_auth=admin:admin123"]
-
-  # ── Prometheus ─────────────────────────────────────────────
-  prometheus:
-    image: prom/prometheus:v2.53.0
-    restart: unless-stopped
-    networks: [uniops_net]
-    ports:
-      - "9090:9090"
-
-  # ── Grafana ─────────────────────────────────────────────
-  grafana:
-    image: grafana/grafana:11.1.0
-    restart: unless-stopped
-    networks: [uniops_net]
-    ports:
-      - "3002:3000"
-
 volumes:
   postgres_data:
-  redis_data:
   models_data:
   backend_logs:
   celery_beat_data:
