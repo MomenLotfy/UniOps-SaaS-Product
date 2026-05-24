@@ -4238,3 +4238,49 @@ WHERE scans.id = $1::VARCHAR AND scans.tenant_id = $2::VARCHAR]
 2026-05-24 15:40:53 | INFO     | app.middleware.logging:15 - [af4fce56] GET /api/v1/companies → 200 (9.22ms)
 2026-05-24 15:40:53 | INFO     | app.middleware.logging:15 - [3d0154eb] GET /api/v1/companies/stats → 200 (23.89ms)
 2026-05-24 15:40:54 | INFO     | app.middleware.logging:15 - [cd2e3a86] GET /api/v1/alerts → 200 (17.0ms)
+2026-05-24 16:22:46 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 16:22:46 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 16:22:48 | INFO     | app.main:33 - Database initialized
+2026-05-24 16:22:48 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 16:22:48 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 16:22:48 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 16:22:48 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 16:22:48 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 16:22:48 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 16:22:48 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 16:22:53 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 16:22:56 | INFO     | app.main:73 - Shutting down...
+2026-05-24 16:22:56 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 16:22:56 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 16:23:01 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 16:23:02 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 16:23:02 | INFO     | app.main:33 - Database initialized
+2026-05-24 16:23:02 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 16:23:02 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 16:23:02 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 16:23:02 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 16:23:02 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 16:23:02 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 16:23:02 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 16:23:03 | INFO     | app.middleware.logging:15 - [c3561d19] GET / → 404 (1.7ms)
+2026-05-24 16:23:04 | INFO     | app.middleware.logging:15 - [685d3617] GET /favicon.ico → 404 (1.38ms)
+2026-05-24 16:23:07 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 16:23:17 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 16:23:17 | INFO     | app.middleware.logging:15 - [af796057] GET /api/v1/health → 200 (0.48ms)
+2026-05-24 16:23:23 | ERROR    | app.middleware.logging:23 - [d868a21c] GET /api/v1/alerts → ERR (1.31ms): Bearer token required
+2026-05-24 16:23:23 | ERROR    | app.middleware.logging:23 - [71e5ed20] GET /api/v1/alerts → ERR (1.27ms): Bearer token required
+2026-05-24 16:23:25 | ERROR    | app.middleware.logging:23 - [7e31a0f8] GET /api/v1/alerts → ERR (2.07ms): Bearer token required
+2026-05-24 16:23:25 | ERROR    | app.middleware.logging:23 - [aeb17ddc] GET /api/v1/alerts → ERR (1.48ms): Bearer token required
+2026-05-24 16:23:32 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 16:23:32 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 16:23:32 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 0 integrations
+2026-05-24 16:23:32 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 16:23:32 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-24 16:23:32 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 16:23:37 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-24 16:23:48 | ERROR    | app.middleware.logging:23 - [5afce286] POST /api/v1/auth/login → ERR (12.19ms): Invalid email or password
+2026-05-24 16:24:17 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 80s
+2026-05-24 16:24:32 | INFO     | app.services.auth_service:62 - User admin@demo.com logged in successfully
+2026-05-24 16:24:32 | INFO     | app.middleware.logging:15 - [297bd8d1] POST /api/v1/auth/login → 200 (310.23ms)
+2026-05-24 16:24:37 | ERROR    | app.middleware.logging:23 - [a3c2fdf0] GET /api/v1/alerts → ERR (1.91ms): Bearer token required
+2026-05-24 16:24:37 | ERROR    | app.middleware.logging:23 - [e9a12cf5] GET /api/v1/alerts → ERR (1.28ms): Bearer token required
