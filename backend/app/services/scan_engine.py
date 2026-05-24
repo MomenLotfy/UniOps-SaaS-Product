@@ -846,10 +846,176 @@ class AiAnalyzer:
 # Orchestrator
 # ─────────────────────────────────────────────────────────────────────────────
 
+
+class CloneError(Exception):
+    """Raised when git clone fails — no real code to scan."""
+
+
 class ScanOrchestrator:
     def __init__(self, github_token: str = "", gitlab_token: str = ""):
         self.github_token = github_token
         self.gitlab_token = gitlab_token
+
+    # ── Public API ─────────────────────────────────────────────────────────────
+
+    async def clone(
+        self,
+        clone_url: str,
+        branch:    str,
+        scan_id:   str,
+        provider:  str,
+    ) -> str:
+        """
+        Clone the repository into a fresh temp directory.
+
+        Returns the path to the cloned working directory on success.
+        Raises CloneError with a user-readable message on any failure —
+        never falls back to demo data.
+        """
+        work_dir   = tempfile.mkdtemp(prefix="uniops_scan_")
+        authed_url = self._auth_url(clone_url, provider)
+
+        logger.info(
+            f"[scan:{scan_id}] Cloning {clone_url} "
+            f"(branch={branch} provider={provider} has_token={bool(self.github_token or self.gitlab_token)})"
+        )
+
+        rc, _, stderr = await _run(
+            ["git", "clone", "--depth", "1", "--branch", branch,
+             "--single-branch", authed_url, work_dir],
+            timeout=120,
+        )
+
+        if rc == 0:
+            logger.info(f"[scan:{scan_id}] Clone successful → {work_dir}")
+            return work_dir
+
+        # Clone failed — clean up and raise a descriptive error.
+        # Never fall back to synthetic data.
+        shutil.rmtree(work_dir, ignore_errors=True)
+        sl = stderr.lower()
+
+        if any(k in sl for k in (
+            "authentication failed", "could not read username",
+            "invalid credentials", "bad credentials",
+            "the requested url returned error: 403",
+        )):
+            raise CloneError(
+                f"Authentication failed cloning {clone_url}. "
+                "Go to Settings → Integrations and connect a GitHub/GitLab token "
+                "with 'repo' (read) scope, then sync repositories."
+            )
+        if any(k in sl for k in (
+            "repository not found", "not found", "does not exist",
+            "the requested url returned error: 404",
+        )):
+            raise CloneError(
+                f"Repository not found: {clone_url}. "
+                "Verify the repository exists and your token has read access."
+            )
+        if any(k in sl for k in (
+            "could not resolve host", "name or service not known",
+            "network is unreachable", "connection refused",
+        )):
+            raise CloneError(
+                f"Network error while cloning {clone_url}. "
+                "Check connectivity and the repository URL."
+            )
+        if "remote branch" in sl and "not found" in sl:
+            raise CloneError(
+                f"Branch '{branch}' not found in {clone_url}. "
+                "Check the branch name or leave it blank to use the default branch."
+            )
+        if rc == 124:
+            raise CloneError(
+                f"Clone timed out for {clone_url} (120 s limit). "
+                "The repository may be too large or the connection too slow."
+            )
+        raise CloneError(
+            f"git clone failed (exit {rc}) for {clone_url}: {stderr[:400]}"
+        )
+
+    async def scan_repo(
+        self,
+        work_dir:  str,
+        scan_id:   str,
+        full_name: str,
+    ) -> ScanResult:
+        """
+        Run all security scanners on an already-cloned working directory.
+        Does NOT delete work_dir — the caller is responsible for cleanup.
+        """
+        result   = ScanResult()
+        language = self._detect_language(work_dir)
+        has_docker = (Path(work_dir) / "Dockerfile").exists()
+        has_cicd   = bool(CiCdScanner()._find_ci_files(work_dir))
+
+        logger.info(
+            f"[scan:{scan_id}] Starting scan — "
+            f"lang={language} dockerfile={has_docker} cicd={has_cicd} "
+            f"docker_available={_get_docker_available()}"
+        )
+
+        all_findings: list[RawFinding] = []
+
+        # ── SAST + Secrets + Dependencies in parallel ──────────────────────────
+        parallel_results = await asyncio.gather(
+            SastScanner().run(work_dir, language),
+            SecretsScanner().run(work_dir),
+            DependencyScanner().run(work_dir, language),
+            return_exceptions=True,
+        )
+
+        for scanner_name, res in zip(["sast", "secrets", "deps"], parallel_results):
+            if isinstance(res, Exception):
+                logger.warning(f"[scan:{scan_id}] {scanner_name} scanner error: {res}")
+                result.scanners_run[scanner_name] = "failed"
+            else:
+                all_findings.extend(res)
+                result.scanners_run[scanner_name] = "completed"
+                result.raw_by_scanner[scanner_name] = [vars(f) for f in res[:20]]
+                logger.info(f"[scan:{scan_id}] {scanner_name} → {len(res)} findings")
+
+        # ── Container scanner (only when Dockerfile exists) ────────────────────
+        if has_docker:
+            try:
+                cf = await ContainerScanner().run(work_dir)
+                all_findings.extend(cf)
+                result.scanners_run["container"] = "completed"
+                result.raw_by_scanner["container"] = [vars(f) for f in cf]
+                logger.info(f"[scan:{scan_id}] container → {len(cf)} findings")
+            except Exception as e:
+                logger.warning(f"[scan:{scan_id}] container scanner error: {e}")
+                result.scanners_run["container"] = "failed"
+        else:
+            result.scanners_run["container"] = "skipped"
+            logger.info(f"[scan:{scan_id}] container → skipped (no Dockerfile)")
+
+        # ── CI/CD scanner (only when CI config files exist) ────────────────────
+        if has_cicd:
+            try:
+                cf = await CiCdScanner().run(work_dir)
+                all_findings.extend(cf)
+                result.scanners_run["cicd"] = "completed"
+                result.raw_by_scanner["cicd"] = [vars(f) for f in cf]
+                logger.info(f"[scan:{scan_id}] cicd → {len(cf)} findings")
+            except Exception as e:
+                logger.warning(f"[scan:{scan_id}] cicd scanner error: {e}")
+                result.scanners_run["cicd"] = "failed"
+        else:
+            result.scanners_run["cicd"] = "skipped"
+            logger.info(f"[scan:{scan_id}] cicd → skipped (no CI config found)")
+
+        result.findings = all_findings
+
+        logger.info(
+            f"[scan:{scan_id}] Scan complete — {len(all_findings)} findings | "
+            f"critical={sum(1 for f in all_findings if f.severity == 'critical')} "
+            f"high={sum(1 for f in all_findings if f.severity == 'high')} "
+            f"medium={sum(1 for f in all_findings if f.severity == 'medium')} "
+            f"low={sum(1 for f in all_findings if f.severity == 'low')}"
+        )
+        return result
 
     async def run(
         self,
@@ -860,203 +1026,17 @@ class ScanOrchestrator:
         scan_id:        str,
         repo_full_name: str,
     ) -> ScanResult:
-        work_dir = tempfile.mkdtemp(prefix="uniops_scan_")
-        result   = ScanResult()
-
+        """
+        Combined clone + scan (backward-compatible entry point).
+        Raises CloneError if the repository cannot be cloned.
+        The caller must NOT catch CloneError silently — let it propagate.
+        """
+        work_dir = await self.clone(clone_url, branch, scan_id, provider)
         try:
-            # ── 1. Clone ─────────────────────────────────────────────────────
-            authed_url = self._auth_url(clone_url, provider)
-            rc, _, stderr = await _run(
-                ["git", "clone", "--depth", "1", "--branch", branch, authed_url, work_dir],
-                timeout=60,
-            )
-            if rc != 0:
-                # Clone failed — generate realistic demo findings so the scan
-                # always completes with meaningful data (no real code to scan).
-                logger.warning(
-                    f"[scan:{scan_id}] git clone failed (rc={rc}) — "
-                    "falling back to deterministic demo scan results"
-                )
-                shutil.rmtree(work_dir, ignore_errors=True)
-                return self._demo_scan_result(repo_full_name, scan_id)
-
-            # ── 2. Detect ─────────────────────────────────────────────────────
-            language     = self._detect_language(work_dir)
-            has_docker   = (Path(work_dir) / "Dockerfile").exists()
-            has_cicd     = bool(CiCdScanner()._find_ci_files(work_dir))
-
-            logger.info(f"[scan:{scan_id}] lang={language} dockerfile={has_docker} cicd={has_cicd} docker_available={_get_docker_available()}")
-
-            # ── 3. Run scanners (with per-scanner error isolation) ────────────
-            all_findings: list[RawFinding] = []
-
-            # SAST + Secrets + Deps in parallel
-            results = await asyncio.gather(
-                SastScanner().run(work_dir, language),
-                SecretsScanner().run(work_dir),
-                DependencyScanner().run(work_dir, language),
-                return_exceptions=True,
-            )
-
-            for scanner_name, res in zip(["sast", "secrets", "deps"], results):
-                if isinstance(res, Exception):
-                    logger.warning(f"[scan:{scan_id}] {scanner_name} error: {res}")
-                    result.scanners_run[scanner_name] = "failed"
-                else:
-                    all_findings.extend(res)
-                    result.scanners_run[scanner_name] = "completed"
-                    result.raw_by_scanner[scanner_name] = [vars(f) for f in res[:20]]
-
-            # Container (conditional)
-            if has_docker:
-                try:
-                    cf = await ContainerScanner().run(work_dir)
-                    all_findings.extend(cf)
-                    result.scanners_run["container"] = "completed"
-                    result.raw_by_scanner["container"] = [vars(f) for f in cf]
-                except Exception as e:
-                    logger.warning(f"[scan:{scan_id}] container error: {e}")
-                    result.scanners_run["container"] = "failed"
-            else:
-                result.scanners_run["container"] = "skipped"
-
-            # CI/CD (conditional)
-            if has_cicd:
-                try:
-                    cf = await CiCdScanner().run(work_dir)
-                    all_findings.extend(cf)
-                    result.scanners_run["cicd"] = "completed"
-                    result.raw_by_scanner["cicd"] = [vars(f) for f in cf]
-                except Exception as e:
-                    logger.warning(f"[scan:{scan_id}] cicd error: {e}")
-                    result.scanners_run["cicd"] = "failed"
-            else:
-                result.scanners_run["cicd"] = "skipped"
-
-            result.findings = all_findings
-
+            return await self.scan_repo(work_dir, scan_id, repo_full_name)
         finally:
             shutil.rmtree(work_dir, ignore_errors=True)
-
-        return result
-
-    def _demo_scan_result(self, repo_full_name: str, scan_id: str) -> ScanResult:
-        """
-        Return a realistic deterministic scan result used when:
-          - git clone fails (no token, private repo, network issue)
-          - No real code is available to scan
-
-        Findings are seeded from the repo name for determinism across reruns.
-        """
-        import hashlib
-        seed = int(hashlib.md5(repo_full_name.encode()).hexdigest()[:8], 16)
-
-        demo_findings: list[RawFinding] = [
-            RawFinding(
-                scanner="sast", severity="high",
-                title="Hardcoded credentials detected",
-                description=f"Possible hardcoded secret found in {repo_full_name}/config/settings.py:42",
-                file_path="config/settings.py", line=42, rule_id="SAST-001",
-                mitre_tactic="TA0006",
-            ),
-            RawFinding(
-                scanner="sast", severity="medium",
-                title="SQL Injection risk via string concatenation",
-                description=f"User input concatenated directly into SQL query in {repo_full_name}/api/users.py:87",
-                file_path="api/users.py", line=87, rule_id="SAST-002",
-            ),
-            RawFinding(
-                scanner="sast", severity="high",
-                title="Dangerous eval() usage",
-                description="Dynamic code execution via eval() may allow arbitrary code execution",
-                file_path="utils/template.py", line=12, rule_id="SAST-003",
-            ),
-            RawFinding(
-                scanner="secrets", severity="critical",
-                title="Potential AWS Access Key",
-                description=f"Found in {repo_full_name}/.env:3 — value redacted for security",
-                file_path=".env", line=3, rule_id="SECRET-AWS",
-                mitre_tactic="TA0006",
-            ),
-            RawFinding(
-                scanner="secrets", severity="critical",
-                title="Potential API Token",
-                description=f"Found in {repo_full_name}/scripts/deploy.sh:18 — value redacted for security",
-                file_path="scripts/deploy.sh", line=18, rule_id="SECRET-TOKEN",
-                mitre_tactic="TA0006",
-            ),
-            RawFinding(
-                scanner="deps", severity="high",
-                title="CVE-2024-3094: XZ Utils backdoor",
-                description="Critical supply chain compromise in xz/liblzma 5.6.0-5.6.1",
-                cve_id="CVE-2024-3094", package="xz", version="5.6.0", fixed_in="5.6.1",
-                rule_id="DEP-CVE",
-            ),
-            RawFinding(
-                scanner="deps", severity="medium",
-                title="CVE-2023-44487: HTTP/2 Rapid Reset",
-                description="Denial of service vulnerability in HTTP/2 implementation",
-                cve_id="CVE-2023-44487", package="aiohttp", version="3.8.0", fixed_in="3.9.0",
-                rule_id="DEP-CVE",
-            ),
-            RawFinding(
-                scanner="container", severity="high",
-                title="Container running as root user",
-                description="Dockerfile uses USER root — container privilege escalation risk",
-                file_path="Dockerfile", line=4, rule_id="CONT-002",
-            ),
-            RawFinding(
-                scanner="container", severity="high",
-                title="Using :latest tag makes builds non-reproducible",
-                description="FROM python:latest — pin to a specific digest for reproducible builds",
-                file_path="Dockerfile", line=1, rule_id="CONT-001",
-            ),
-            RawFinding(
-                scanner="cicd", severity="medium",
-                title="CI/CD pipeline uses hardcoded secrets",
-                description="GitHub Actions workflow references secrets without masking",
-                file_path=".github/workflows/deploy.yml", line=22, rule_id="CICD-001",
-            ),
-            RawFinding(
-                scanner="cicd", severity="low",
-                title="Missing branch protection rules",
-                description="No required reviews configured for main branch pushes",
-                file_path=".github/workflows/ci.yml", line=5, rule_id="CICD-002",
-            ),
-            RawFinding(
-                scanner="sast", severity="low",
-                title="Non-cryptographic random usage",
-                description="random.randint() used for security-sensitive token generation",
-                file_path="auth/tokens.py", line=31, rule_id="SAST-009",
-            ),
-        ]
-
-        # Vary finding count slightly by repo (deterministic, 8-12 findings)
-        count = 8 + (seed % 5)
-        findings = demo_findings[:count]
-
-        result = ScanResult(
-            findings=findings,
-            scanners_run={
-                "sast":      "completed",
-                "secrets":   "completed",
-                "deps":      "completed",
-                "container": "completed",
-                "cicd":      "completed",
-            },
-            raw_by_scanner={
-                "sast":      [vars(f) for f in findings if f.scanner == "sast"],
-                "secrets":   [vars(f) for f in findings if f.scanner == "secrets"],
-                "deps":      [vars(f) for f in findings if f.scanner == "deps"],
-                "container": [vars(f) for f in findings if f.scanner == "container"],
-                "cicd":      [vars(f) for f in findings if f.scanner == "cicd"],
-            },
-        )
-        logger.info(
-            f"[scan:{scan_id}] Demo scan complete — "
-            f"{len(findings)} findings across 5 scanners"
-        )
-        return result
+            logger.info(f"[scan:{scan_id}] Temporary clone directory removed")
 
     def _auth_url(self, clone_url: str, provider: str) -> str:
         if provider == "github" and self.github_token:

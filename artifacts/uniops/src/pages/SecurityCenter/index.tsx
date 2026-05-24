@@ -223,7 +223,10 @@ function ThreatsTab({ threats, tLoading, canAct, setConfirmThreat }: {
 }
 
 // ── Scan Panel — the new DevSecOps feature ────────────────────────────────────
-function ScanPanel({ onScanComplete }: { onScanComplete: () => void }) {
+function ScanPanel({ onScanComplete, onViewResults }: {
+  onScanComplete: () => void;
+  onViewResults?: (tab: Tab) => void;
+}) {
   const { data: reposData, loading: reposLoading, refetch: refetchRepos } = useApi<any>('/security/repos');
   const [selectedRepo, setSelectedRepo]   = useState<any | null>(null);
   const [branch, setBranch]               = useState('');
@@ -255,9 +258,9 @@ function ScanPanel({ onScanComplete }: { onScanComplete: () => void }) {
       await refetchRepos();
       const code = (err as any)?.code ?? '';
       if (code === 'integration_not_ready' || (err?.message ?? '').includes('integration_not_ready')) {
-        setScanError('No GitHub/GitLab integration configured. Using demo repositories.');
+        setScanError('No GitHub/GitLab integration found. Go to Settings → Integrations to connect GitHub or GitLab with a personal access token.');
       } else {
-        setScanError(err?.message ?? 'Sync failed — using cached repositories');
+        setScanError(err?.message ?? 'Sync failed — check your integration token and try again');
       }
     } finally {
       setSyncing(false);
@@ -280,7 +283,8 @@ function ScanPanel({ onScanComplete }: { onScanComplete: () => void }) {
       try {
         const res = await apiClient.get<any>(`/security/scan/${activeScan.id}`);
         const body = res.data;
-        setActiveScan(body?.data ?? body);
+        const updated = body?.data ?? body;
+        setActiveScan(updated);
       } catch { /* ignore transient errors */ }
     }, 3000);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
@@ -456,15 +460,34 @@ function ScanPanel({ onScanComplete }: { onScanComplete: () => void }) {
 
                 {/* Completed summary */}
                 {activeScan.status === 'completed' && (
-                  <div className="flex gap-3 mt-2 text-xs">
-                    {activeScan.critical_count > 0 && <span className="text-red-400 font-semibold">{activeScan.critical_count} critical</span>}
-                    {activeScan.high_count     > 0 && <span className="text-orange-400">{activeScan.high_count} high</span>}
-                    {activeScan.secret_count   > 0 && <span className="text-red-400 font-bold">⚠ {activeScan.secret_count} secrets</span>}
-                    <span className={clsx('ml-auto font-semibold',
-                      (activeScan.security_score ?? 0) >= 80 ? 'text-green-400'
-                      : (activeScan.security_score ?? 0) >= 60 ? 'text-yellow-400' : 'text-red-400')}>
-                      Score: {activeScan.security_score ?? '—'}/100
-                    </span>
+                  <div className="mt-2 space-y-2">
+                    <div className="flex gap-3 text-xs">
+                      {activeScan.critical_count > 0 && <span className="text-red-400 font-semibold">{activeScan.critical_count} critical</span>}
+                      {activeScan.high_count     > 0 && <span className="text-orange-400">{activeScan.high_count} high</span>}
+                      {activeScan.medium_count   > 0 && <span className="text-yellow-400">{activeScan.medium_count} medium</span>}
+                      {activeScan.secret_count   > 0 && <span className="text-red-400 font-bold">⚠ {activeScan.secret_count} secrets</span>}
+                      <span className={clsx('ml-auto font-semibold',
+                        (activeScan.security_score ?? 0) >= 80 ? 'text-green-400'
+                        : (activeScan.security_score ?? 0) >= 60 ? 'text-yellow-400' : 'text-red-400')}>
+                        Score: {activeScan.security_score ?? '—'}/100
+                      </span>
+                    </div>
+                    {onViewResults && (
+                      <div className="flex gap-2">
+                        <button onClick={() => onViewResults('threats')}
+                          className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors border border-red-500/20">
+                          <AlertTriangle className="w-3 h-3" /> View Threats
+                        </button>
+                        <button onClick={() => onViewResults('vulnerabilities')}
+                          className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-colors border border-yellow-500/20">
+                          <Eye className="w-3 h-3" /> View CVEs
+                        </button>
+                        <button onClick={() => onViewResults('overview')}
+                          className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors border border-blue-500/20">
+                          <Activity className="w-3 h-3" /> Overview
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -701,7 +724,12 @@ export default function SecurityCenter() {
       </div>
 
       {/* ── DevSecOps Scan Panel (new — above existing content) ── */}
-      {canAct && <ScanPanel onScanComplete={handleScanComplete} />}
+      {canAct && (
+        <ScanPanel
+          onScanComplete={handleScanComplete}
+          onViewResults={(t) => setTab(t as Tab)}
+        />
+      )}
 
       <div className="flex items-center gap-3 mb-1">
         <div className="flex items-center gap-3 ml-auto">

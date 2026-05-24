@@ -57,7 +57,7 @@ async def _run_scan_async(scan_id: str) -> None:
     from app.models.threat import Threat
     from app.models.vulnerability import Vulnerability
     from app.services.scan_engine import (
-        AiAnalyzer, ResultAdapter, ScoreCalculator, ScanOrchestrator,
+        AiAnalyzer, CloneError, ResultAdapter, ScoreCalculator, ScanOrchestrator,
     )
 
     async with CelerySessionLocal() as db:
@@ -106,32 +106,63 @@ async def _run_scan_async(scan_id: str) -> None:
                 elif provider == "gitlab":
                     gitlab_token = creds.get("token") or creds.get("access_token", "")
 
+        # ── Validate we have a clone URL ──────────────────────────────────────
+        if not clone_url:
+            await _set_status(
+                db, scan_id, "failed",
+                error=(
+                    "No clone URL configured for this repository. "
+                    "Sync repositories from Settings → Integrations first."
+                ),
+                completed_at=datetime.now(timezone.utc),
+            )
+            await _release_scan_lock(repo_id)
+            return
+
+        orchestrator = ScanOrchestrator(
+            github_token=github_token,
+            gitlab_token=gitlab_token,
+        )
+
         # ── queued → cloning (COMMIT — poller sees it immediately) ───────────
         now_start = datetime.now(timezone.utc)
         await _set_status(db, scan_id, "cloning", started_at=now_start)
-        logger.info(f"[scan:{scan_id}] Status → cloning (repo={full_name})")
+        logger.info(
+            f"[scan:{scan_id}] Status → cloning "
+            f"(repo={full_name} branch={scan_branch} "
+            f"has_token={bool(github_token or gitlab_token)})"
+        )
 
+        # ── Attempt git clone (raises CloneError on failure) ─────────────────
+        work_dir: str | None = None
         try:
-            # ── cloning → scanning (COMMIT) ───────────────────────────────────
+            work_dir = await orchestrator.clone(
+                clone_url, scan_branch, scan_id, provider
+            )
+        except CloneError as exc:
+            logger.error(f"[scan:{scan_id}] Clone failed: {exc}")
+            await _set_status(
+                db, scan_id, "failed",
+                error=str(exc),
+                completed_at=datetime.now(timezone.utc),
+            )
+            await _release_scan_lock(repo_id)
+            return
+
+        # ── Clone succeeded → run scanners ────────────────────────────────────
+        try:
+            # cloning → scanning (COMMIT)
             await _set_status(db, scan_id, "scanning")
             logger.info(f"[scan:{scan_id}] Status → scanning")
 
-            orchestrator = ScanOrchestrator(
-                github_token=github_token,
-                gitlab_token=gitlab_token,
-            )
-            result = await orchestrator.run(
-                clone_url=clone_url,
-                branch=scan_branch,
-                provider=provider,
-                tenant_id=tenant_id,
-                scan_id=scan_id,
-                repo_full_name=full_name,
-            )
+            result = await orchestrator.scan_repo(work_dir, scan_id, full_name)
 
-            # ── scanning → analyzing (COMMIT) ─────────────────────────────────
+            # scanning → analyzing (COMMIT)
             await _set_status(db, scan_id, "analyzing")
-            logger.info(f"[scan:{scan_id}] Status → analyzing ({len(result.findings)} findings)")
+            logger.info(
+                f"[scan:{scan_id}] Status → analyzing "
+                f"({len(result.findings)} findings)"
+            )
 
             # ── Persist findings ──────────────────────────────────────────────
             threat_dicts = ResultAdapter.to_threats(
@@ -139,6 +170,10 @@ async def _run_scan_async(scan_id: str) -> None:
             )
             vuln_dicts = ResultAdapter.to_vulnerabilities(
                 result.findings, tenant_id, scan_id, full_name
+            )
+            logger.info(
+                f"[scan:{scan_id}] Persisting "
+                f"{len(threat_dicts)} threats, {len(vuln_dicts)} vulnerabilities"
             )
 
             for td in threat_dicts:
@@ -155,7 +190,7 @@ async def _run_scan_async(scan_id: str) -> None:
             )
 
             # ── Final scan update (single UPDATE + commit) ────────────────────
-            now_end = datetime.now(timezone.utc)
+            now_end  = datetime.now(timezone.utc)
             duration = int((now_end - now_start).total_seconds())
 
             await db.execute(
@@ -190,13 +225,13 @@ async def _run_scan_async(scan_id: str) -> None:
             await _update_compliance(db, tenant_id, result.findings, security_score, now_end)
 
             logger.info(
-                f"[scan:{scan_id}] Completed ✓ "
+                f"[scan:{scan_id}] ✓ COMPLETED — "
                 f"score={security_score} findings={len(result.findings)} "
                 f"threats={len(threat_dicts)} vulns={len(vuln_dicts)} duration={duration}s"
             )
 
         except Exception as exc:
-            logger.error(f"[scan:{scan_id}] Execution failed: {exc}", exc_info=True)
+            logger.error(f"[scan:{scan_id}] Scan execution failed: {exc}", exc_info=True)
             await db.rollback()
             await _set_status(
                 db, scan_id, "failed",
@@ -206,6 +241,11 @@ async def _run_scan_async(scan_id: str) -> None:
             raise
 
         finally:
+            # Always clean up the temporary clone directory
+            if work_dir:
+                import shutil as _shutil
+                _shutil.rmtree(work_dir, ignore_errors=True)
+                logger.info(f"[scan:{scan_id}] Temp clone dir removed")
             await _release_scan_lock(repo_id)
 
 

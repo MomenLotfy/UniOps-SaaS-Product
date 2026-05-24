@@ -3092,3 +3092,741 @@ WHERE scans.id = $1::VARCHAR AND scans.tenant_id = $2::VARCHAR]
 2026-05-24 14:57:46 | ERROR    | app.middleware.logging:23 - [793ad70c] GET /api/v1/alerts → ERR (1.23ms): Bearer token required
 2026-05-24 14:57:46 | ERROR    | app.middleware.logging:23 - [737bfc4c] GET /api/v1/alerts → ERR (1.52ms): Bearer token required
 2026-05-24 14:57:50 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 80s
+2026-05-24 14:58:52 | ERROR    | app.middleware.logging:23 - [9e3dd516] GET /api/v1/alerts → ERR (1.99ms): Bearer token required
+2026-05-24 14:58:52 | ERROR    | app.middleware.logging:23 - [f115578b] GET /api/v1/alerts → ERR (1.32ms): Bearer token required
+2026-05-24 14:59:05 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 14:59:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 14:59:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 14:59:07 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 14:59:07 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 14:59:10 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 160s
+2026-05-24 15:00:30 | ERROR    | app.middleware.logging:23 - [838a2d28] GET /api/v1/alerts → ERR (1.34ms): Bearer token required
+2026-05-24 15:00:30 | ERROR    | app.middleware.logging:23 - [5767c8c5] GET /api/v1/alerts → ERR (1.28ms): Bearer token required
+2026-05-24 15:01:07 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:01:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:01:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:01:07 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:01:07 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:01:50 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 15:02:05 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-24 15:02:05 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 57b3d1bb-a15d-4ae7-af0d-cf14476cb88c: Missing GitHub token
+2026-05-24 15:03:07 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:03:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:03:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:03:07 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:03:07 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:03:46 | ERROR    | app.middleware.logging:23 - [ff47611d] GET /api/v1/alerts → ERR (1.5ms): Bearer token required
+2026-05-24 15:03:46 | ERROR    | app.middleware.logging:23 - [8fb2db9f] GET /api/v1/alerts → ERR (1.35ms): Bearer token required
+2026-05-24 15:04:09 | INFO     | app.services.auth_service:115 - New user registered: nvesa123@gmail.com (tenant: Moamen Lotfy's Organization)
+2026-05-24 15:04:09 | INFO     | app.integrations.email.client:31 - [EMAIL — no key] To: nvesa123@gmail.com | Subject: Welcome to UniOps, Moamen! 🚀
+2026-05-24 15:04:09 | INFO     | app.middleware.logging:15 - [fff1bf0b] POST /api/v1/auth/register → 200 (371.57ms)
+2026-05-24 15:04:09 | INFO     | app.middleware.logging:15 - [67cb17d5] GET /api/v1/integrations → 200 (21.89ms)
+2026-05-24 15:04:09 | INFO     | app.middleware.logging:15 - [fd381c4a] GET /api/v1/companies → 200 (17.63ms)
+2026-05-24 15:04:09 | INFO     | app.middleware.logging:15 - [b777822c] GET /api/v1/companies/stats → 200 (28.38ms)
+2026-05-24 15:04:10 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 15:04:10 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 15:04:24 | INFO     | app.middleware.logging:15 - [6cf89841] GET /api/v1/integrations → 200 (8.87ms)
+2026-05-24 15:04:24 | INFO     | app.middleware.logging:15 - [b04e0087] POST /api/v1/integrations → 201 (20.21ms)
+2026-05-24 15:04:25 | INFO     | app.middleware.logging:15 - [491854e7] PATCH /api/v1/integrations/a1491344-8f99-4170-8f57-7ee3056dac5f → 200 (13.92ms)
+2026-05-24 15:04:25 | INFO     | app.api.v1.endpoints.integrations:329 - [bg] Connection test OK + synced 30 repos for integration a1491344-8f99-4170-8f57-7ee3056dac5f (tenant a821a024-91ed-4fb5-879a-c110e72a4930)
+2026-05-24 15:04:25 | INFO     | app.middleware.logging:15 - [a57332a8] POST /api/v1/integrations/a1491344-8f99-4170-8f57-7ee3056dac5f/test → 200 (205.35ms)
+2026-05-24 15:04:25 | INFO     | app.api.v1.endpoints.integrations:329 - [bg] Connection test OK + synced 30 repos for integration a1491344-8f99-4170-8f57-7ee3056dac5f (tenant a821a024-91ed-4fb5-879a-c110e72a4930)
+2026-05-24 15:04:25 | INFO     | app.middleware.logging:15 - [ffa7f0a0] GET /api/v1/integrations/a1491344-8f99-4170-8f57-7ee3056dac5f → 200 (6.29ms)
+2026-05-24 15:04:36 | INFO     | app.middleware.logging:15 - [b732aeaf] GET /api/v1/threats/stats → 200 (28.51ms)
+2026-05-24 15:04:36 | INFO     | app.middleware.logging:15 - [819e61a0] GET /api/v1/kubernetes/pods/stats → 200 (21.12ms)
+2026-05-24 15:04:36 | INFO     | app.middleware.logging:15 - [83491606] GET /api/v1/alerts → 200 (28.82ms)
+2026-05-24 15:04:36 | INFO     | app.middleware.logging:15 - [b05d909a] GET /api/v1/ml/stats → 200 (35.42ms)
+2026-05-24 15:04:36 | INFO     | app.middleware.logging:15 - [d348a09c] GET /api/v1/costs/summary → 200 (43.91ms)
+2026-05-24 15:04:36 | INFO     | app.middleware.logging:15 - [9d8cbc8b] GET /api/v1/kubernetes/pods/stats → 200 (9.29ms)
+2026-05-24 15:04:36 | INFO     | app.middleware.logging:15 - [72876d6f] GET /api/v1/threats/stats → 200 (10.79ms)
+2026-05-24 15:04:36 | INFO     | app.middleware.logging:15 - [f2e177d3] GET /api/v1/alerts → 200 (17.01ms)
+2026-05-24 15:04:36 | INFO     | app.middleware.logging:15 - [8f4b927b] GET /api/v1/costs/summary → 200 (22.26ms)
+2026-05-24 15:04:36 | INFO     | app.middleware.logging:15 - [037cec20] GET /api/v1/ml/stats → 200 (21.51ms)
+2026-05-24 15:04:42 | INFO     | app.middleware.logging:15 - [79f0c21e] GET /api/v1/threats/stats → 200 (16.73ms)
+2026-05-24 15:04:42 | INFO     | app.middleware.logging:15 - [fa1104de] GET /api/v1/security/repos → 200 (19.96ms)
+2026-05-24 15:04:42 | INFO     | app.middleware.logging:15 - [74f2aba5] GET /api/v1/compliance → 200 (25.71ms)
+2026-05-24 15:04:42 | INFO     | app.middleware.logging:15 - [21a5ba9c] GET /api/v1/threats → 200 (32.29ms)
+2026-05-24 15:04:42 | INFO     | app.middleware.logging:15 - [22be1e8d] GET /api/v1/compliance/score → 200 (28.53ms)
+2026-05-24 15:04:42 | INFO     | app.middleware.logging:15 - [89750508] GET /api/v1/vulnerabilities → 200 (35.61ms)
+2026-05-24 15:04:42 | INFO     | app.middleware.logging:15 - [a6d03046] GET /api/v1/security/score → 200 (19.12ms)
+2026-05-24 15:04:42 | INFO     | app.middleware.logging:15 - [3e0db819] GET /api/v1/security/scan-history → 200 (20.38ms)
+2026-05-24 15:04:42 | INFO     | app.middleware.logging:15 - [5881606c] GET /api/v1/compliance → 200 (142.23ms)
+2026-05-24 15:04:42 | INFO     | app.middleware.logging:15 - [7f4e1570] GET /api/v1/security/repos → 200 (140.83ms)
+2026-05-24 15:04:42 | INFO     | app.middleware.logging:15 - [0e6a88f0] GET /api/v1/threats/stats → 200 (18.1ms)
+2026-05-24 15:04:42 | INFO     | app.middleware.logging:15 - [a7c24b14] GET /api/v1/threats → 200 (139.76ms)
+2026-05-24 15:04:43 | INFO     | app.middleware.logging:15 - [cde91d9d] GET /api/v1/vulnerabilities → 200 (12.89ms)
+2026-05-24 15:04:43 | INFO     | app.middleware.logging:15 - [ed40baf2] GET /api/v1/compliance/score → 200 (7.05ms)
+2026-05-24 15:04:43 | INFO     | app.middleware.logging:15 - [4aa51365] GET /api/v1/security/score → 200 (10.03ms)
+2026-05-24 15:04:43 | INFO     | app.middleware.logging:15 - [ef7231fd] GET /api/v1/security/scan-history → 200 (9.45ms)
+2026-05-24 15:04:47 | WARNING  | app.services.scan_service:341 - Redis lock unavailable for repo e6618916-b286-466b-9447-bdbb8c5eaffe (Error -2 connecting to redis:6379. -2.) — falling back to DB-only deduplication check
+2026-05-24 15:04:47 | INFO     | app.services.scan_service:155 - [scan:8b3ef082-44a1-4771-bbaa-826f9f71dfb6] Queued for repo=MomenLotfy/DEPI-Final-Project branch=master triggered_by=0414ba3f-2a9a-4105-b3c1-b29c8584c7df
+2026-05-24 15:04:47 | INFO     | app.middleware.logging:15 - [3a8f647e] POST /api/v1/security/scan → 202 (29.52ms)
+2026-05-24 15:04:50 | INFO     | app.middleware.logging:15 - [ca8dcdc6] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (9.63ms)
+2026-05-24 15:04:53 | INFO     | app.services.scan_service:199 - [scan:8b3ef082-44a1-4771-bbaa-826f9f71dfb6] No active Celery workers — using inline fallback
+2026-05-24 15:04:53 | INFO     | app.tasks.run_scan:112 - [scan:8b3ef082-44a1-4771-bbaa-826f9f71dfb6] Status → cloning (repo=MomenLotfy/DEPI-Final-Project)
+2026-05-24 15:04:53 | INFO     | app.tasks.run_scan:117 - [scan:8b3ef082-44a1-4771-bbaa-826f9f71dfb6] Status → scanning
+2026-05-24 15:04:54 | INFO     | app.middleware.logging:15 - [54afefd4] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (12.25ms)
+2026-05-24 15:04:56 | INFO     | app.services.scan_engine:888 - [scan:8b3ef082-44a1-4771-bbaa-826f9f71dfb6] lang=unknown dockerfile=False cicd=True docker_available=True
+2026-05-24 15:04:57 | INFO     | app.middleware.logging:15 - [a25156be] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (8.67ms)
+2026-05-24 15:05:00 | INFO     | app.middleware.logging:15 - [9f79a53b] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (11.78ms)
+2026-05-24 15:05:03 | INFO     | app.middleware.logging:15 - [b7f8c270] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (6.84ms)
+2026-05-24 15:05:06 | INFO     | app.middleware.logging:15 - [f1adfa5f] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (6.99ms)
+2026-05-24 15:05:07 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:05:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:05:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:05:07 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:05:07 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:05:09 | INFO     | app.middleware.logging:15 - [f358aa4f] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (198.06ms)
+2026-05-24 15:05:12 | INFO     | app.middleware.logging:15 - [456551e6] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (5.55ms)
+2026-05-24 15:05:15 | INFO     | app.middleware.logging:15 - [b227c457] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (8.46ms)
+2026-05-24 15:05:18 | INFO     | app.middleware.logging:15 - [5b5a4a9e] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (6.26ms)
+2026-05-24 15:05:21 | INFO     | app.middleware.logging:15 - [4389b5a0] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (9.59ms)
+2026-05-24 15:05:24 | INFO     | app.middleware.logging:15 - [623b5285] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (155.12ms)
+2026-05-24 15:05:27 | INFO     | app.middleware.logging:15 - [4d9375f9] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (7.14ms)
+2026-05-24 15:05:30 | INFO     | app.middleware.logging:15 - [f9eb32a3] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (6.02ms)
+2026-05-24 15:05:33 | INFO     | app.middleware.logging:15 - [0b8118f9] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (10.98ms)
+2026-05-24 15:05:36 | INFO     | app.middleware.logging:15 - [709cbafa] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (7.48ms)
+2026-05-24 15:05:39 | INFO     | app.middleware.logging:15 - [fcc36423] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (7.38ms)
+2026-05-24 15:05:42 | INFO     | app.middleware.logging:15 - [f05d1e1c] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (6.4ms)
+2026-05-24 15:05:45 | INFO     | app.middleware.logging:15 - [5ca157f2] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (6.92ms)
+2026-05-24 15:05:48 | INFO     | app.middleware.logging:15 - [e3f3dadf] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (7.61ms)
+2026-05-24 15:05:51 | INFO     | app.middleware.logging:15 - [b649aac1] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (6.29ms)
+2026-05-24 15:05:54 | INFO     | app.middleware.logging:15 - [ed6c72a4] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (6.48ms)
+2026-05-24 15:05:57 | INFO     | app.middleware.logging:15 - [006647b6] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (5.82ms)
+2026-05-24 15:06:00 | INFO     | app.middleware.logging:15 - [32c10c84] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (9.02ms)
+2026-05-24 15:06:03 | INFO     | app.middleware.logging:15 - [c21b0ecb] GET /api/v1/security/scan/8b3ef082-44a1-4771-bbaa-826f9f71dfb6 → 200 (6.88ms)
+2026-05-24 15:06:04 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 15:06:06 | INFO     | app.middleware.logging:15 - [b136dcea] GET /api/v1/companies → 200 (37.25ms)
+2026-05-24 15:06:06 | INFO     | app.middleware.logging:15 - [4895ed4b] GET /api/v1/integrations → 200 (40.78ms)
+2026-05-24 15:06:06 | INFO     | app.middleware.logging:15 - [8878a9e0] GET /api/v1/alerts → 200 (232.12ms)
+2026-05-24 15:06:06 | INFO     | app.middleware.logging:15 - [bcac2700] GET /api/v1/companies/stats → 200 (42.57ms)
+2026-05-24 15:06:06 | INFO     | app.middleware.logging:15 - [6c80f773] GET /api/v1/alerts → 200 (7.13ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [07db609b] GET /api/v1/security/repos → 200 (8.97ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [b5c28326] GET /api/v1/threats/stats → 200 (10.72ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [a5962a8c] GET /api/v1/vulnerabilities → 200 (14.25ms)
+2026-05-24 15:06:07 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [272d2d40] GET /api/v1/threats → 200 (37.3ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [c369be95] GET /api/v1/compliance → 200 (27.15ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [1ef9d398] GET /api/v1/compliance/score → 200 (25.8ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [67a2db25] GET /api/v1/security/score → 200 (6.84ms)
+2026-05-24 15:06:07 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [80e46f06] GET /api/v1/security/scan-history → 200 (6.56ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [8abbc573] GET /api/v1/security/repos → 200 (13.52ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [75d93173] GET /api/v1/threats/stats → 200 (13.14ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [185ad985] GET /api/v1/vulnerabilities → 200 (11.02ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [443dc59a] GET /api/v1/threats → 200 (8.02ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [b8c2977c] GET /api/v1/compliance/score → 200 (7.04ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [47526e2a] GET /api/v1/compliance → 200 (5.53ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [72486c4b] GET /api/v1/security/score → 200 (7.29ms)
+2026-05-24 15:06:07 | INFO     | app.middleware.logging:15 - [df0c05cb] GET /api/v1/security/scan-history → 200 (6.34ms)
+2026-05-24 15:06:14 | WARNING  | app.services.scan_service:341 - Redis lock unavailable for repo e6618916-b286-466b-9447-bdbb8c5eaffe (Error -2 connecting to redis:6379. -2.) — falling back to DB-only deduplication check
+2026-05-24 15:06:14 | INFO     | app.middleware.logging:15 - [4cdb7a44] POST /api/v1/security/scan → 409 (141.37ms)
+2026-05-24 15:06:18 | WARNING  | app.services.scan_service:341 - Redis lock unavailable for repo ef83819f-4c3d-4475-aced-24e5a901ead1 (Error -2 connecting to redis:6379. -2.) — falling back to DB-only deduplication check
+2026-05-24 15:06:18 | INFO     | app.services.scan_service:155 - [scan:4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041] Queued for repo=MomenLotfy/DevOps-Interview-MCQ branch=main triggered_by=0414ba3f-2a9a-4105-b3c1-b29c8584c7df
+2026-05-24 15:06:18 | INFO     | app.middleware.logging:15 - [b1333571] POST /api/v1/security/scan → 202 (22.97ms)
+2026-05-24 15:06:21 | INFO     | app.middleware.logging:15 - [392cd3a3] GET /api/v1/security/scan/4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041 → 200 (5.21ms)
+2026-05-24 15:06:24 | INFO     | app.services.scan_service:199 - [scan:4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041] No active Celery workers — using inline fallback
+2026-05-24 15:06:24 | INFO     | app.tasks.run_scan:112 - [scan:4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041] Status → cloning (repo=MomenLotfy/DevOps-Interview-MCQ)
+2026-05-24 15:06:24 | INFO     | app.tasks.run_scan:117 - [scan:4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041] Status → scanning
+2026-05-24 15:06:24 | INFO     | app.middleware.logging:15 - [f6788487] GET /api/v1/security/scan/4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041 → 200 (8.9ms)
+2026-05-24 15:06:24 | INFO     | app.services.scan_engine:888 - [scan:4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041] lang=unknown dockerfile=False cicd=False docker_available=True
+2026-05-24 15:06:26 | WARNING  | app.services.scan_engine:85 - Command timed out (90s): docker run --rm
+2026-05-24 15:06:27 | INFO     | app.middleware.logging:15 - [85650ab5] GET /api/v1/security/scan/4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041 → 200 (11.97ms)
+2026-05-24 15:06:30 | INFO     | app.middleware.logging:15 - [3b856cdd] GET /api/v1/security/scan/4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041 → 200 (6.83ms)
+2026-05-24 15:06:33 | INFO     | app.middleware.logging:15 - [83fca73d] GET /api/v1/security/scan/4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041 → 200 (6.07ms)
+2026-05-24 15:06:36 | INFO     | app.middleware.logging:15 - [e1850059] GET /api/v1/security/scan/4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041 → 200 (6.98ms)
+2026-05-24 15:06:39 | INFO     | app.middleware.logging:15 - [4c21ccfd] GET /api/v1/security/scan/4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041 → 200 (7.83ms)
+2026-05-24 15:06:42 | INFO     | app.middleware.logging:15 - [65b74256] GET /api/v1/security/scan/4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041 → 200 (8.1ms)
+2026-05-24 15:06:45 | INFO     | app.middleware.logging:15 - [e2b7adcb] GET /api/v1/security/scan/4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041 → 200 (10.79ms)
+2026-05-24 15:06:50 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 15:06:56 | WARNING  | app.services.scan_engine:85 - Command timed out (120s): docker run --rm
+2026-05-24 15:06:56 | INFO     | app.tasks.run_scan:134 - [scan:8b3ef082-44a1-4771-bbaa-826f9f71dfb6] Status → analyzing (0 findings)
+2026-05-24 15:06:56 | INFO     | app.tasks.run_scan:383 - [compliance] Updated 4 frameworks for tenant=a821a024
+2026-05-24 15:06:56 | INFO     | app.tasks.run_scan:192 - [scan:8b3ef082-44a1-4771-bbaa-826f9f71dfb6] Completed ✓ score=100.0 findings=0 threats=0 vulns=0 duration=122s
+2026-05-24 15:07:05 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-24 15:07:05 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 57b3d1bb-a15d-4ae7-af0d-cf14476cb88c: Missing GitHub token
+2026-05-24 15:07:05 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 15:07:07 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:07:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:07:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:07:07 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:07:07 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:07:18 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 15:07:54 | WARNING  | app.services.scan_engine:85 - Command timed out (90s): docker run --rm
+2026-05-24 15:08:09 | INFO     | app.middleware.logging:15 - [54cbbf42] GET /api/v1/alerts → 200 (12.81ms)
+2026-05-24 15:08:09 | INFO     | app.middleware.logging:15 - [6f530073] GET /api/v1/integrations → 200 (16.36ms)
+2026-05-24 15:08:09 | INFO     | app.middleware.logging:15 - [2ff165ea] GET /api/v1/companies → 200 (24.1ms)
+2026-05-24 15:08:10 | INFO     | app.middleware.logging:15 - [ac7fdd6b] GET /api/v1/companies/stats → 200 (31.34ms)
+2026-05-24 15:08:10 | INFO     | app.middleware.logging:15 - [7aeb2a4a] GET /api/v1/alerts → 200 (10.26ms)
+2026-05-24 15:08:10 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 15:08:10 | INFO     | app.middleware.logging:15 - [05f9eef1] GET /api/v1/threats/stats → 200 (11.16ms)
+2026-05-24 15:08:10 | INFO     | app.middleware.logging:15 - [c218e514] GET /api/v1/kubernetes/pods/stats → 200 (19.89ms)
+2026-05-24 15:08:10 | INFO     | app.middleware.logging:15 - [109d5138] GET /api/v1/alerts → 200 (14.05ms)
+2026-05-24 15:08:10 | INFO     | app.middleware.logging:15 - [9c20860c] GET /api/v1/costs/summary → 200 (30.87ms)
+2026-05-24 15:08:10 | INFO     | app.middleware.logging:15 - [c5dfb1ca] GET /api/v1/ml/stats → 200 (26.53ms)
+2026-05-24 15:08:10 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 15:08:11 | INFO     | app.middleware.logging:15 - [5677f097] GET /api/v1/threats/stats → 200 (16.27ms)
+2026-05-24 15:08:11 | INFO     | app.middleware.logging:15 - [79c1c8c3] GET /api/v1/kubernetes/pods/stats → 200 (18.72ms)
+2026-05-24 15:08:11 | INFO     | app.middleware.logging:15 - [e425961d] GET /api/v1/ml/stats → 200 (25.7ms)
+2026-05-24 15:08:11 | INFO     | app.middleware.logging:15 - [8908a087] GET /api/v1/alerts → 200 (20.47ms)
+2026-05-24 15:08:11 | INFO     | app.middleware.logging:15 - [ec8124cf] GET /api/v1/costs/summary → 200 (30.93ms)
+2026-05-24 15:08:12 | INFO     | app.middleware.logging:15 - [a8690825] GET /api/v1/security/repos → 200 (12.83ms)
+2026-05-24 15:08:12 | INFO     | app.middleware.logging:15 - [79a0e6a8] GET /api/v1/threats/stats → 200 (12.07ms)
+2026-05-24 15:08:12 | INFO     | app.middleware.logging:15 - [03737df6] GET /api/v1/threats → 200 (15.97ms)
+2026-05-24 15:08:12 | INFO     | app.middleware.logging:15 - [aad40595] GET /api/v1/compliance → 200 (10.55ms)
+2026-05-24 15:08:12 | INFO     | app.middleware.logging:15 - [65b33bc2] GET /api/v1/vulnerabilities → 200 (20.9ms)
+2026-05-24 15:08:12 | INFO     | app.middleware.logging:15 - [a34cc20e] GET /api/v1/compliance/score → 200 (19.95ms)
+2026-05-24 15:08:12 | INFO     | app.middleware.logging:15 - [fcf155bb] GET /api/v1/security/repos → 200 (23.53ms)
+2026-05-24 15:08:12 | INFO     | app.middleware.logging:15 - [85395876] GET /api/v1/security/score → 200 (24.32ms)
+2026-05-24 15:08:12 | INFO     | app.middleware.logging:15 - [9fae98f4] GET /api/v1/security/scan-history → 200 (28.04ms)
+2026-05-24 15:08:13 | INFO     | app.middleware.logging:15 - [3a1222b4] GET /api/v1/threats/stats → 200 (6.89ms)
+2026-05-24 15:08:13 | INFO     | app.middleware.logging:15 - [ef2637fb] GET /api/v1/threats → 200 (8.62ms)
+2026-05-24 15:08:13 | INFO     | app.middleware.logging:15 - [f72a3e8a] GET /api/v1/compliance → 200 (16.33ms)
+2026-05-24 15:08:13 | INFO     | app.middleware.logging:15 - [b34f3e6f] GET /api/v1/vulnerabilities → 200 (21.29ms)
+2026-05-24 15:08:13 | INFO     | app.middleware.logging:15 - [1f6622ca] GET /api/v1/compliance/score → 200 (6.53ms)
+2026-05-24 15:08:13 | INFO     | app.middleware.logging:15 - [bf7a76b3] GET /api/v1/security/score → 200 (6.92ms)
+2026-05-24 15:08:13 | INFO     | app.middleware.logging:15 - [3aa1dd6a] GET /api/v1/security/scan-history → 200 (6.47ms)
+2026-05-24 15:08:22 | WARNING  | app.services.scan_service:341 - Redis lock unavailable for repo e6618916-b286-466b-9447-bdbb8c5eaffe (Error -2 connecting to redis:6379. -2.) — falling back to DB-only deduplication check
+2026-05-24 15:08:22 | INFO     | app.services.scan_service:155 - [scan:c56b16e1-e673-434d-803a-055cae6cc09c] Queued for repo=MomenLotfy/DEPI-Final-Project branch=master triggered_by=0414ba3f-2a9a-4105-b3c1-b29c8584c7df
+2026-05-24 15:08:22 | INFO     | app.middleware.logging:15 - [2d7b5052] POST /api/v1/security/scan → 202 (21.16ms)
+2026-05-24 15:08:24 | WARNING  | app.services.scan_engine:85 - Command timed out (120s): docker run --rm
+2026-05-24 15:08:24 | INFO     | app.tasks.run_scan:134 - [scan:4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041] Status → analyzing (0 findings)
+2026-05-24 15:08:24 | INFO     | app.tasks.run_scan:383 - [compliance] Updated 4 frameworks for tenant=a821a024
+2026-05-24 15:08:24 | INFO     | app.tasks.run_scan:192 - [scan:4dc7f1fa-7c8b-4219-92cf-e5ea06f6f041] Completed ✓ score=100.0 findings=0 threats=0 vulns=0 duration=120s
+2026-05-24 15:08:25 | INFO     | app.middleware.logging:15 - [d9db18c7] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (10.03ms)
+2026-05-24 15:08:28 | INFO     | app.services.scan_service:199 - [scan:c56b16e1-e673-434d-803a-055cae6cc09c] No active Celery workers — using inline fallback
+2026-05-24 15:08:28 | INFO     | app.tasks.run_scan:112 - [scan:c56b16e1-e673-434d-803a-055cae6cc09c] Status → cloning (repo=MomenLotfy/DEPI-Final-Project)
+2026-05-24 15:08:28 | INFO     | app.tasks.run_scan:117 - [scan:c56b16e1-e673-434d-803a-055cae6cc09c] Status → scanning
+2026-05-24 15:08:28 | INFO     | app.middleware.logging:15 - [52d826b6] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (10.43ms)
+2026-05-24 15:08:29 | INFO     | app.services.scan_engine:888 - [scan:c56b16e1-e673-434d-803a-055cae6cc09c] lang=unknown dockerfile=False cicd=True docker_available=True
+2026-05-24 15:08:32 | INFO     | app.middleware.logging:15 - [23b0f1c6] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (10.02ms)
+2026-05-24 15:08:35 | INFO     | app.middleware.logging:15 - [28614ece] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.46ms)
+2026-05-24 15:08:38 | INFO     | app.middleware.logging:15 - [0a0ee838] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.45ms)
+2026-05-24 15:08:41 | INFO     | app.middleware.logging:15 - [f6dea7f9] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (7.26ms)
+2026-05-24 15:08:44 | INFO     | app.middleware.logging:15 - [4562e9b3] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (15.96ms)
+2026-05-24 15:08:47 | INFO     | app.middleware.logging:15 - [4452fd45] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (8.99ms)
+2026-05-24 15:08:50 | INFO     | app.middleware.logging:15 - [933f43cf] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (14.08ms)
+2026-05-24 15:08:53 | INFO     | app.middleware.logging:15 - [e910aae2] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (7.36ms)
+2026-05-24 15:08:56 | INFO     | app.middleware.logging:15 - [7ffaf7f1] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (9.81ms)
+2026-05-24 15:08:59 | INFO     | app.middleware.logging:15 - [76d31958] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (7.15ms)
+2026-05-24 15:09:02 | INFO     | app.middleware.logging:15 - [23a63999] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.58ms)
+2026-05-24 15:09:05 | INFO     | app.middleware.logging:15 - [f277da03] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (5.24ms)
+2026-05-24 15:09:07 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:09:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:09:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:09:07 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:09:07 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:09:08 | INFO     | app.middleware.logging:15 - [0f4595f8] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (7.53ms)
+2026-05-24 15:09:11 | INFO     | app.middleware.logging:15 - [0618b78a] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (5.65ms)
+2026-05-24 15:09:14 | INFO     | app.middleware.logging:15 - [27af862b] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (7.39ms)
+2026-05-24 15:09:17 | INFO     | app.middleware.logging:15 - [8bd9eaca] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.15ms)
+2026-05-24 15:09:20 | INFO     | app.middleware.logging:15 - [98b79795] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (7.13ms)
+2026-05-24 15:09:23 | INFO     | app.middleware.logging:15 - [631a535c] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.16ms)
+2026-05-24 15:09:26 | INFO     | app.middleware.logging:15 - [6bd1e7ab] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (11.24ms)
+2026-05-24 15:09:29 | INFO     | app.middleware.logging:15 - [ca81f93e] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.66ms)
+2026-05-24 15:09:32 | INFO     | app.middleware.logging:15 - [a3471072] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (5.49ms)
+2026-05-24 15:09:35 | INFO     | app.middleware.logging:15 - [bc05c598] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.69ms)
+2026-05-24 15:09:38 | INFO     | app.middleware.logging:15 - [723c377b] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.28ms)
+2026-05-24 15:09:41 | INFO     | app.middleware.logging:15 - [24835a8e] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (7.53ms)
+2026-05-24 15:09:44 | INFO     | app.middleware.logging:15 - [d52c3e98] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.51ms)
+2026-05-24 15:09:47 | INFO     | app.middleware.logging:15 - [ae9fe879] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (5.37ms)
+2026-05-24 15:09:50 | INFO     | app.middleware.logging:15 - [03877e03] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (5.22ms)
+2026-05-24 15:09:53 | INFO     | app.middleware.logging:15 - [861b18de] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (7.55ms)
+2026-05-24 15:09:56 | INFO     | app.middleware.logging:15 - [e1eef566] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (5.07ms)
+2026-05-24 15:09:59 | WARNING  | app.services.scan_engine:85 - Command timed out (90s): docker run --rm
+2026-05-24 15:09:59 | INFO     | app.middleware.logging:15 - [408a442c] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (5.43ms)
+2026-05-24 15:10:02 | INFO     | app.middleware.logging:15 - [1f797e10] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.13ms)
+2026-05-24 15:10:05 | INFO     | app.middleware.logging:15 - [4ab8d639] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (11.61ms)
+2026-05-24 15:10:08 | INFO     | app.middleware.logging:15 - [3f722bab] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.62ms)
+2026-05-24 15:10:11 | INFO     | app.middleware.logging:15 - [2b5ad064] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.02ms)
+2026-05-24 15:10:14 | INFO     | app.middleware.logging:15 - [e752e8a7] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (8.53ms)
+2026-05-24 15:10:17 | INFO     | app.middleware.logging:15 - [e9fcf780] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.04ms)
+2026-05-24 15:10:20 | INFO     | app.middleware.logging:15 - [1241060c] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.39ms)
+2026-05-24 15:10:23 | INFO     | app.middleware.logging:15 - [2125f583] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (9.51ms)
+2026-05-24 15:10:26 | INFO     | app.middleware.logging:15 - [74529f91] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (5.96ms)
+2026-05-24 15:10:26 | INFO     | app.middleware.logging:15 - [750314da] GET /api/v1/threats/stats → 200 (26.14ms)
+2026-05-24 15:10:26 | INFO     | app.middleware.logging:15 - [92740b6b] GET /api/v1/threats → 200 (22.52ms)
+2026-05-24 15:10:26 | INFO     | app.middleware.logging:15 - [506d44cb] GET /api/v1/compliance → 200 (21.14ms)
+2026-05-24 15:10:26 | INFO     | app.middleware.logging:15 - [067c8ba5] GET /api/v1/compliance/score → 200 (21.03ms)
+2026-05-24 15:10:26 | INFO     | app.middleware.logging:15 - [70fa7f1c] GET /api/v1/security/score → 200 (20.95ms)
+2026-05-24 15:10:26 | INFO     | app.middleware.logging:15 - [d692abff] GET /api/v1/vulnerabilities → 200 (31.19ms)
+2026-05-24 15:10:27 | INFO     | app.middleware.logging:15 - [72e62b59] GET /api/v1/security/scan-history → 200 (7.9ms)
+2026-05-24 15:10:29 | WARNING  | app.services.scan_engine:85 - Command timed out (120s): docker run --rm
+2026-05-24 15:10:29 | INFO     | app.tasks.run_scan:134 - [scan:c56b16e1-e673-434d-803a-055cae6cc09c] Status → analyzing (0 findings)
+2026-05-24 15:10:29 | INFO     | app.tasks.run_scan:383 - [compliance] Updated 4 frameworks for tenant=a821a024
+2026-05-24 15:10:29 | INFO     | app.tasks.run_scan:192 - [scan:c56b16e1-e673-434d-803a-055cae6cc09c] Completed ✓ score=100.0 findings=0 threats=0 vulns=0 duration=120s
+2026-05-24 15:10:29 | INFO     | app.middleware.logging:15 - [e2abdf06] GET /api/v1/security/scan/c56b16e1-e673-434d-803a-055cae6cc09c → 200 (6.35ms)
+2026-05-24 15:10:30 | INFO     | app.middleware.logging:15 - [5bf5cad4] GET /api/v1/threats/stats → 200 (5.91ms)
+2026-05-24 15:10:30 | INFO     | app.middleware.logging:15 - [cc3a9434] GET /api/v1/threats → 200 (12.99ms)
+2026-05-24 15:10:30 | INFO     | app.middleware.logging:15 - [f316a872] GET /api/v1/compliance → 200 (15.58ms)
+2026-05-24 15:10:30 | INFO     | app.middleware.logging:15 - [823a2972] GET /api/v1/compliance/score → 200 (13.98ms)
+2026-05-24 15:10:30 | INFO     | app.middleware.logging:15 - [51d3849d] GET /api/v1/vulnerabilities → 200 (19.91ms)
+2026-05-24 15:10:30 | INFO     | app.middleware.logging:15 - [cfce8ca1] GET /api/v1/security/score → 200 (13.77ms)
+2026-05-24 15:10:31 | INFO     | app.middleware.logging:15 - [f6747936] GET /api/v1/security/scan-history → 200 (5.84ms)
+2026-05-24 15:10:55 | WARNING  | app.services.scan_service:341 - Redis lock unavailable for repo 4cfeb97c-27c8-4903-8e7d-33efce839e95 (Error -2 connecting to redis:6379. -2.) — falling back to DB-only deduplication check
+2026-05-24 15:10:55 | INFO     | app.services.scan_service:155 - [scan:dcd801b8-37e4-44d0-94c0-941e9ecf8902] Queued for repo=MomenLotfy/juice-shop branch=master triggered_by=0414ba3f-2a9a-4105-b3c1-b29c8584c7df
+2026-05-24 15:10:55 | INFO     | app.middleware.logging:15 - [e57f9249] POST /api/v1/security/scan → 202 (44.11ms)
+2026-05-24 15:10:58 | INFO     | app.middleware.logging:15 - [32f513c9] GET /api/v1/threats/stats → 200 (40.64ms)
+2026-05-24 15:10:58 | INFO     | app.middleware.logging:15 - [da002798] GET /api/v1/compliance → 200 (26.04ms)
+2026-05-24 15:10:58 | INFO     | app.middleware.logging:15 - [e17ee0ef] GET /api/v1/compliance/score → 200 (24.59ms)
+2026-05-24 15:10:58 | INFO     | app.middleware.logging:15 - [6c0f079e] GET /api/v1/security/score → 200 (24.43ms)
+2026-05-24 15:10:58 | INFO     | app.middleware.logging:15 - [76f2a341] GET /api/v1/threats → 200 (38.95ms)
+2026-05-24 15:10:58 | INFO     | app.middleware.logging:15 - [9ec446ad] GET /api/v1/vulnerabilities → 200 (43.7ms)
+2026-05-24 15:10:58 | INFO     | app.middleware.logging:15 - [f618e087] GET /api/v1/security/scan-history → 200 (7.76ms)
+2026-05-24 15:10:58 | INFO     | app.middleware.logging:15 - [2032a9ee] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.56ms)
+2026-05-24 15:11:01 | INFO     | app.services.scan_service:199 - [scan:dcd801b8-37e4-44d0-94c0-941e9ecf8902] No active Celery workers — using inline fallback
+2026-05-24 15:11:01 | INFO     | app.tasks.run_scan:112 - [scan:dcd801b8-37e4-44d0-94c0-941e9ecf8902] Status → cloning (repo=MomenLotfy/juice-shop)
+2026-05-24 15:11:01 | INFO     | app.tasks.run_scan:117 - [scan:dcd801b8-37e4-44d0-94c0-941e9ecf8902] Status → scanning
+2026-05-24 15:11:01 | INFO     | app.middleware.logging:15 - [60b36a04] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.81ms)
+2026-05-24 15:11:01 | INFO     | app.middleware.logging:15 - [becc5fd5] GET /api/v1/threats/stats → 200 (6.83ms)
+2026-05-24 15:11:01 | INFO     | app.middleware.logging:15 - [e83a2d0c] GET /api/v1/threats → 200 (24.31ms)
+2026-05-24 15:11:02 | INFO     | app.middleware.logging:15 - [47a97864] GET /api/v1/vulnerabilities → 200 (24.12ms)
+2026-05-24 15:11:02 | INFO     | app.middleware.logging:15 - [65b2f4d6] GET /api/v1/compliance → 200 (16.13ms)
+2026-05-24 15:11:02 | INFO     | app.middleware.logging:15 - [3cf86933] GET /api/v1/compliance/score → 200 (14.43ms)
+2026-05-24 15:11:02 | INFO     | app.middleware.logging:15 - [032cae29] GET /api/v1/security/score → 200 (6.04ms)
+2026-05-24 15:11:02 | INFO     | app.middleware.logging:15 - [891d282b] GET /api/v1/security/scan-history → 200 (10.76ms)
+2026-05-24 15:11:03 | INFO     | app.services.scan_engine:888 - [scan:dcd801b8-37e4-44d0-94c0-941e9ecf8902] lang=javascript dockerfile=True cicd=True docker_available=True
+2026-05-24 15:11:05 | INFO     | app.middleware.logging:15 - [013c3792] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (8.34ms)
+2026-05-24 15:11:07 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:11:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:11:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:11:07 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:11:07 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:11:08 | INFO     | app.middleware.logging:15 - [d965f7b8] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (10.2ms)
+2026-05-24 15:11:11 | INFO     | app.middleware.logging:15 - [5c4e119d] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.04ms)
+2026-05-24 15:11:14 | INFO     | app.middleware.logging:15 - [bbb8f1a7] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (13.15ms)
+2026-05-24 15:11:15 | INFO     | app.middleware.logging:15 - [fdfdff2c] GET /api/v1/threats/stats → 200 (38.63ms)
+2026-05-24 15:11:15 | INFO     | app.middleware.logging:15 - [c06288a4] GET /api/v1/vulnerabilities → 200 (34.9ms)
+2026-05-24 15:11:15 | INFO     | app.middleware.logging:15 - [76f17aca] GET /api/v1/threats → 200 (30.53ms)
+2026-05-24 15:11:15 | INFO     | app.middleware.logging:15 - [9fd850e6] GET /api/v1/compliance → 200 (38.98ms)
+2026-05-24 15:11:15 | INFO     | app.middleware.logging:15 - [13d28ab4] GET /api/v1/compliance/score → 200 (13.12ms)
+2026-05-24 15:11:15 | INFO     | app.middleware.logging:15 - [bfdb7b98] GET /api/v1/security/score → 200 (10.51ms)
+2026-05-24 15:11:15 | INFO     | app.middleware.logging:15 - [a9affeb7] GET /api/v1/security/scan-history → 200 (6.39ms)
+2026-05-24 15:11:17 | INFO     | app.middleware.logging:15 - [bdab6bcf] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (5.93ms)
+2026-05-24 15:11:20 | INFO     | app.middleware.logging:15 - [5ae7756b] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (5.9ms)
+2026-05-24 15:11:23 | INFO     | app.middleware.logging:15 - [55eeddf2] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (9.65ms)
+2026-05-24 15:11:24 | INFO     | app.middleware.logging:15 - [0cdb19bb] GET /api/v1/threats/stats → 200 (25.41ms)
+2026-05-24 15:11:24 | INFO     | app.middleware.logging:15 - [6219053c] GET /api/v1/vulnerabilities → 200 (25.6ms)
+2026-05-24 15:11:24 | INFO     | app.middleware.logging:15 - [71f841a0] GET /api/v1/compliance/score → 200 (20.3ms)
+2026-05-24 15:11:24 | INFO     | app.middleware.logging:15 - [7587805d] GET /api/v1/compliance → 200 (19.12ms)
+2026-05-24 15:11:24 | INFO     | app.middleware.logging:15 - [a1918365] GET /api/v1/threats → 200 (31.74ms)
+2026-05-24 15:11:24 | INFO     | app.middleware.logging:15 - [07e5f115] GET /api/v1/security/score → 200 (24.74ms)
+2026-05-24 15:11:24 | INFO     | app.middleware.logging:15 - [f604b2cd] GET /api/v1/security/scan-history → 200 (7.91ms)
+2026-05-24 15:11:26 | INFO     | app.middleware.logging:15 - [f7dac6d6] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (5.54ms)
+2026-05-24 15:11:29 | INFO     | app.middleware.logging:15 - [d8aebfa7] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.05ms)
+2026-05-24 15:11:32 | INFO     | app.middleware.logging:15 - [50a005a8] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.14ms)
+2026-05-24 15:11:35 | INFO     | app.middleware.logging:15 - [b01ff3c3] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (5.94ms)
+2026-05-24 15:11:38 | INFO     | app.middleware.logging:15 - [5485ae53] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.61ms)
+2026-05-24 15:11:41 | INFO     | app.middleware.logging:15 - [4eedd973] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.67ms)
+2026-05-24 15:11:44 | INFO     | app.middleware.logging:15 - [2c2c7637] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.18ms)
+2026-05-24 15:11:47 | INFO     | app.middleware.logging:15 - [f114d790] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.26ms)
+2026-05-24 15:11:49 | INFO     | app.middleware.logging:15 - [2a97080f] GET /api/v1/threats/stats → 200 (17.15ms)
+2026-05-24 15:11:49 | INFO     | app.middleware.logging:15 - [14ee6f08] GET /api/v1/threats → 200 (31.0ms)
+2026-05-24 15:11:49 | INFO     | app.middleware.logging:15 - [5f1c80fe] GET /api/v1/vulnerabilities → 200 (30.22ms)
+2026-05-24 15:11:49 | INFO     | app.middleware.logging:15 - [1b0eeffc] GET /api/v1/compliance → 200 (18.43ms)
+2026-05-24 15:11:49 | INFO     | app.middleware.logging:15 - [99a1056c] GET /api/v1/security/score → 200 (14.67ms)
+2026-05-24 15:11:49 | INFO     | app.middleware.logging:15 - [d6e9575e] GET /api/v1/compliance/score → 200 (18.53ms)
+2026-05-24 15:11:49 | INFO     | app.middleware.logging:15 - [25f420ae] GET /api/v1/security/scan-history → 200 (6.22ms)
+2026-05-24 15:11:50 | INFO     | app.middleware.logging:15 - [db902f1c] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.35ms)
+2026-05-24 15:11:50 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 15:11:53 | INFO     | app.middleware.logging:15 - [4ab1e4b7] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.18ms)
+2026-05-24 15:11:56 | INFO     | app.middleware.logging:15 - [1f14df4f] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (8.57ms)
+2026-05-24 15:11:59 | INFO     | app.middleware.logging:15 - [53724e67] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.74ms)
+2026-05-24 15:12:02 | INFO     | app.middleware.logging:15 - [ba14be8a] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.24ms)
+2026-05-24 15:12:05 | INFO     | app.middleware.logging:15 - [0d9725c3] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.12ms)
+2026-05-24 15:12:05 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-24 15:12:05 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 57b3d1bb-a15d-4ae7-af0d-cf14476cb88c: Missing GitHub token
+2026-05-24 15:12:05 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 15:12:08 | INFO     | app.middleware.logging:15 - [227f3181] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.24ms)
+2026-05-24 15:12:11 | INFO     | app.middleware.logging:15 - [13c2b4be] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.29ms)
+2026-05-24 15:12:14 | INFO     | app.middleware.logging:15 - [e35de7ae] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.84ms)
+2026-05-24 15:12:17 | INFO     | app.middleware.logging:15 - [02309499] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.22ms)
+2026-05-24 15:12:20 | INFO     | app.middleware.logging:15 - [050ace0a] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (83.72ms)
+2026-05-24 15:12:23 | INFO     | app.middleware.logging:15 - [63d5f122] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (25.85ms)
+2026-05-24 15:12:26 | INFO     | app.middleware.logging:15 - [87067531] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.09ms)
+2026-05-24 15:12:29 | INFO     | app.middleware.logging:15 - [292d9941] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.48ms)
+2026-05-24 15:12:32 | INFO     | app.middleware.logging:15 - [a8a5d285] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (8.79ms)
+2026-05-24 15:12:33 | WARNING  | app.services.scan_engine:85 - Command timed out (90s): docker run --rm
+2026-05-24 15:12:35 | INFO     | app.middleware.logging:15 - [09c64bc0] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (5.38ms)
+2026-05-24 15:12:38 | INFO     | app.middleware.logging:15 - [dc388960] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (9.2ms)
+2026-05-24 15:12:41 | INFO     | app.middleware.logging:15 - [508318e5] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (5.71ms)
+2026-05-24 15:12:44 | INFO     | app.middleware.logging:15 - [a0400467] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (10.55ms)
+2026-05-24 15:12:47 | INFO     | app.middleware.logging:15 - [2ed63971] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (5.52ms)
+2026-05-24 15:12:50 | INFO     | app.middleware.logging:15 - [ea773be4] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (5.46ms)
+2026-05-24 15:12:53 | INFO     | app.middleware.logging:15 - [b9cd53be] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (5.28ms)
+2026-05-24 15:12:56 | INFO     | app.middleware.logging:15 - [1041e442] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.05ms)
+2026-05-24 15:12:59 | INFO     | app.middleware.logging:15 - [c55f9f9a] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.43ms)
+2026-05-24 15:13:02 | INFO     | app.middleware.logging:15 - [bbd17511] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (5.77ms)
+2026-05-24 15:13:03 | WARNING  | app.services.scan_engine:85 - Command timed out (120s): docker run --rm
+2026-05-24 15:13:05 | INFO     | app.middleware.logging:15 - [67a06e68] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (12.67ms)
+2026-05-24 15:13:07 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:13:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:13:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:13:07 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:13:07 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:13:08 | INFO     | app.middleware.logging:15 - [23b5acdb] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.32ms)
+2026-05-24 15:13:11 | INFO     | app.middleware.logging:15 - [90159bb9] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.14ms)
+2026-05-24 15:13:14 | INFO     | app.middleware.logging:15 - [43b04c8f] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.89ms)
+2026-05-24 15:13:17 | INFO     | app.middleware.logging:15 - [1896c689] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (9.34ms)
+2026-05-24 15:13:20 | INFO     | app.middleware.logging:15 - [7cea29ea] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.66ms)
+2026-05-24 15:13:22 | INFO     | app.middleware.logging:15 - [08ab233c] GET /api/v1/threats/stats → 200 (7.1ms)
+2026-05-24 15:13:22 | INFO     | app.middleware.logging:15 - [e2bfd642] GET /api/v1/compliance → 200 (13.26ms)
+2026-05-24 15:13:22 | INFO     | app.middleware.logging:15 - [b0c13770] GET /api/v1/threats → 200 (24.26ms)
+2026-05-24 15:13:22 | INFO     | app.middleware.logging:15 - [3a0786bc] GET /api/v1/compliance/score → 200 (15.68ms)
+2026-05-24 15:13:22 | INFO     | app.middleware.logging:15 - [c8a39e78] GET /api/v1/vulnerabilities → 200 (22.59ms)
+2026-05-24 15:13:22 | INFO     | app.middleware.logging:15 - [80d61a52] GET /api/v1/security/score → 200 (14.17ms)
+2026-05-24 15:13:22 | INFO     | app.middleware.logging:15 - [6dbc23f7] GET /api/v1/security/scan-history → 200 (17.74ms)
+2026-05-24 15:13:23 | INFO     | app.middleware.logging:15 - [a59adc66] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (12.72ms)
+2026-05-24 15:13:26 | INFO     | app.middleware.logging:15 - [96480d48] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (107.64ms)
+2026-05-24 15:13:29 | INFO     | app.middleware.logging:15 - [7e221ec0] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (10.48ms)
+2026-05-24 15:13:32 | INFO     | app.middleware.logging:15 - [998b8573] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (9.33ms)
+2026-05-24 15:13:35 | INFO     | app.middleware.logging:15 - [51d6b6c4] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.12ms)
+2026-05-24 15:13:38 | INFO     | app.middleware.logging:15 - [47dab8d5] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.88ms)
+2026-05-24 15:13:41 | INFO     | app.middleware.logging:15 - [a00bf986] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (12.96ms)
+2026-05-24 15:13:44 | INFO     | app.middleware.logging:15 - [e78a8576] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.01ms)
+2026-05-24 15:13:47 | INFO     | app.middleware.logging:15 - [5240e8da] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.92ms)
+2026-05-24 15:13:50 | INFO     | app.middleware.logging:15 - [f96a7e82] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.6ms)
+2026-05-24 15:13:53 | INFO     | app.middleware.logging:15 - [fa7f2eea] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.08ms)
+2026-05-24 15:13:56 | INFO     | app.middleware.logging:15 - [ade2053a] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (5.35ms)
+2026-05-24 15:13:59 | INFO     | app.middleware.logging:15 - [baadd7f7] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (13.1ms)
+2026-05-24 15:14:02 | INFO     | app.middleware.logging:15 - [b8caff35] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (14.64ms)
+2026-05-24 15:14:05 | INFO     | app.middleware.logging:15 - [309d48eb] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (15.56ms)
+2026-05-24 15:14:08 | INFO     | app.middleware.logging:15 - [f670bd84] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (61.46ms)
+2026-05-24 15:14:11 | INFO     | app.middleware.logging:15 - [50bd18dc] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.05ms)
+2026-05-24 15:14:14 | INFO     | app.middleware.logging:15 - [b415d67a] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (9.64ms)
+2026-05-24 15:14:17 | INFO     | app.middleware.logging:15 - [edde8ed8] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.87ms)
+2026-05-24 15:14:20 | INFO     | app.middleware.logging:15 - [72a1fe16] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.25ms)
+2026-05-24 15:14:23 | INFO     | app.middleware.logging:15 - [c9024784] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (8.95ms)
+2026-05-24 15:14:26 | INFO     | app.middleware.logging:15 - [1b643fd5] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (9.85ms)
+2026-05-24 15:14:29 | INFO     | app.middleware.logging:15 - [92563d73] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (17.06ms)
+2026-05-24 15:14:32 | INFO     | app.middleware.logging:15 - [9aa3f33d] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.66ms)
+2026-05-24 15:14:35 | INFO     | app.middleware.logging:15 - [5c5a9cb2] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.39ms)
+2026-05-24 15:14:38 | INFO     | app.middleware.logging:15 - [0e36af1c] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (19.29ms)
+2026-05-24 15:14:41 | INFO     | app.middleware.logging:15 - [69bf319b] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (30.53ms)
+2026-05-24 15:14:44 | INFO     | app.middleware.logging:15 - [a40ee599] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.56ms)
+2026-05-24 15:14:47 | INFO     | app.middleware.logging:15 - [4d049d46] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.29ms)
+2026-05-24 15:14:50 | INFO     | app.middleware.logging:15 - [ef8bc0a6] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (9.98ms)
+2026-05-24 15:14:51 | INFO     | app.middleware.logging:15 - [9054df0c] GET /api/v1/threats/stats → 200 (222.44ms)
+2026-05-24 15:14:51 | INFO     | app.middleware.logging:15 - [e8888d25] GET /api/v1/threats → 200 (128.16ms)
+2026-05-24 15:14:51 | INFO     | app.middleware.logging:15 - [79215ead] GET /api/v1/compliance/score → 200 (24.49ms)
+2026-05-24 15:14:51 | INFO     | app.middleware.logging:15 - [f1cf02c0] GET /api/v1/security/score → 200 (20.97ms)
+2026-05-24 15:14:51 | INFO     | app.middleware.logging:15 - [0479850e] GET /api/v1/vulnerabilities → 200 (35.92ms)
+2026-05-24 15:14:51 | INFO     | app.middleware.logging:15 - [38af7ee4] GET /api/v1/compliance → 200 (30.3ms)
+2026-05-24 15:14:51 | INFO     | app.middleware.logging:15 - [41bf3813] GET /api/v1/security/scan-history → 200 (11.29ms)
+2026-05-24 15:14:53 | INFO     | app.middleware.logging:15 - [e82c82ad] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (23.54ms)
+2026-05-24 15:14:56 | INFO     | app.middleware.logging:15 - [d69bd488] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (5.49ms)
+2026-05-24 15:14:59 | INFO     | app.middleware.logging:15 - [579c645f] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (8.53ms)
+2026-05-24 15:15:02 | INFO     | app.middleware.logging:15 - [fd05ed07] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (7.24ms)
+2026-05-24 15:15:05 | INFO     | app.middleware.logging:15 - [c219df62] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (14.53ms)
+2026-05-24 15:15:06 | INFO     | app.tasks.run_scan:134 - [scan:dcd801b8-37e4-44d0-94c0-941e9ecf8902] Status → analyzing (130 findings)
+2026-05-24 15:15:06 | WARNING  | app.services.scan_engine:816 - AI analysis failed (non-fatal): 'content'
+2026-05-24 15:15:06 | INFO     | app.tasks.run_scan:383 - [compliance] Updated 4 frameworks for tenant=a821a024
+2026-05-24 15:15:06 | INFO     | app.tasks.run_scan:192 - [scan:dcd801b8-37e4-44d0-94c0-941e9ecf8902] Completed ✓ score=0.0 findings=130 threats=130 vulns=68 duration=245s
+2026-05-24 15:15:07 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:15:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:15:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:15:07 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:15:07 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:15:08 | INFO     | app.middleware.logging:15 - [03df80a0] GET /api/v1/security/scan/dcd801b8-37e4-44d0-94c0-941e9ecf8902 → 200 (6.69ms)
+2026-05-24 15:15:09 | INFO     | app.middleware.logging:15 - [f787b760] GET /api/v1/threats/stats → 200 (11.63ms)
+2026-05-24 15:15:09 | INFO     | app.middleware.logging:15 - [b0e4cb34] GET /api/v1/threats → 200 (20.59ms)
+2026-05-24 15:15:09 | INFO     | app.middleware.logging:15 - [eefd3815] GET /api/v1/vulnerabilities → 200 (29.54ms)
+2026-05-24 15:15:09 | INFO     | app.middleware.logging:15 - [04d5878d] GET /api/v1/compliance → 200 (12.82ms)
+2026-05-24 15:15:09 | INFO     | app.middleware.logging:15 - [5c6d1992] GET /api/v1/security/score → 200 (10.67ms)
+2026-05-24 15:15:09 | INFO     | app.middleware.logging:15 - [961e88f1] GET /api/v1/compliance/score → 200 (13.19ms)
+2026-05-24 15:15:09 | INFO     | app.middleware.logging:15 - [fa51a8f9] GET /api/v1/security/scan-history → 200 (7.96ms)
+2026-05-24 15:16:50 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 15:17:06 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-24 15:17:06 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 57b3d1bb-a15d-4ae7-af0d-cf14476cb88c: Missing GitHub token
+2026-05-24 15:17:06 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 15:17:07 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:17:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:17:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:17:07 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:17:07 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:19:07 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:19:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:19:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:19:07 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:19:07 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:21:00 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 15:21:00 | INFO     | app.main:73 - Shutting down...
+2026-05-24 15:21:00 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 15:21:00 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 15:21:08 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 15:21:08 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 15:21:08 | INFO     | app.main:33 - Database initialized
+2026-05-24 15:21:08 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 15:21:08 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-24 15:21:08 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-24 15:21:08 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 15:21:08 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 15:21:08 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 15:21:11 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=32d9742e-649a-4f66-b279-d53c8ae1a863)
+2026-05-24 15:21:11 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:21:11 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:21:11 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 15:21:11 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 15:21:11 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 15:21:11 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 15:21:16 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 15:21:26 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 15:21:41 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:21:41 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:21:41 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:21:41 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:21:41 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:21:42 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:21:42 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:21:43 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-24 15:21:43 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-24 15:21:43 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-05-24 15:21:43 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 1 integrations
+2026-05-24 15:21:44 | WARNING  | app.integrations.aws.cost_explorer:66 - CostExplorer.get_costs_by_service failed: Unable to locate credentials
+2026-05-24 15:21:45 | WARNING  | app.integrations.aws.cost_explorer:97 - CostExplorer.get_cost_anomalies failed: Unable to locate credentials
+2026-05-24 15:21:46 | WARNING  | app.integrations.aws.cost_explorer:123 - CostExplorer.get_rightsizing failed: Unable to locate credentials
+2026-05-24 15:21:46 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-24 15:21:46 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-24 15:21:46 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 57b3d1bb-a15d-4ae7-af0d-cf14476cb88c: Missing GitHub token
+2026-05-24 15:21:46 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 15:21:46 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 15:21:46 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 15:21:46 | INFO     | app.tasks.sync_costs:132 - AWS cost sync done for AWS Production: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 15:21:46 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 15:21:51 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 15:21:51 | INFO     | app.main:73 - Shutting down...
+2026-05-24 15:21:51 | INFO     | app.integrations.kubernetes.watcher:45 - K8s watcher cancelled: K8s Cluster
+2026-05-24 15:21:51 | INFO     | app.integrations.kubernetes.watcher:209 - K8s watcher stopped: ac778dbf-f61a-4e51-9c96-6d91792e25e7
+2026-05-24 15:21:51 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 15:21:51 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 15:21:55 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 15:21:55 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 15:21:55 | INFO     | app.main:33 - Database initialized
+2026-05-24 15:21:55 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 15:21:55 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-24 15:21:55 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-24 15:21:55 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 15:21:55 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 15:21:55 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 15:21:57 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=32d9742e-649a-4f66-b279-d53c8ae1a863)
+2026-05-24 15:21:57 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:21:57 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:21:57 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 15:21:57 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 15:21:57 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 15:21:57 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 15:22:02 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 15:22:12 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 15:22:27 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:22:27 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:22:27 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:22:27 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:22:27 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:22:27 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:22:27 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:22:27 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-24 15:22:27 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 57b3d1bb-a15d-4ae7-af0d-cf14476cb88c: Missing GitHub token
+2026-05-24 15:22:28 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-24 15:22:28 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-24 15:22:28 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-05-24 15:22:28 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 15:22:28 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 1 integrations
+2026-05-24 15:22:29 | WARNING  | app.integrations.aws.cost_explorer:66 - CostExplorer.get_costs_by_service failed: Unable to locate credentials
+2026-05-24 15:22:30 | WARNING  | app.integrations.aws.cost_explorer:97 - CostExplorer.get_cost_anomalies failed: Unable to locate credentials
+2026-05-24 15:22:31 | WARNING  | app.integrations.aws.cost_explorer:123 - CostExplorer.get_rightsizing failed: Unable to locate credentials
+2026-05-24 15:22:31 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 15:22:31 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 15:22:31 | INFO     | app.tasks.sync_costs:132 - AWS cost sync done for AWS Production: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 15:22:31 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 15:22:32 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-24 15:22:36 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 15:22:36 | INFO     | app.main:73 - Shutting down...
+2026-05-24 15:22:36 | INFO     | app.integrations.kubernetes.watcher:45 - K8s watcher cancelled: K8s Cluster
+2026-05-24 15:22:36 | INFO     | app.integrations.kubernetes.watcher:209 - K8s watcher stopped: ac778dbf-f61a-4e51-9c96-6d91792e25e7
+2026-05-24 15:22:36 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 15:22:36 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 15:22:40 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 15:22:40 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 15:22:41 | INFO     | app.main:33 - Database initialized
+2026-05-24 15:22:41 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 15:22:41 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-24 15:22:41 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-24 15:22:41 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 15:22:41 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 15:22:41 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 15:22:42 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=32d9742e-649a-4f66-b279-d53c8ae1a863)
+2026-05-24 15:22:42 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:22:42 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:22:42 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 15:22:42 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 15:22:42 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 15:22:43 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 15:22:47 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 15:22:57 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 15:23:12 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:23:12 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:23:13 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:23:13 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:23:13 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:23:13 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:23:13 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:23:13 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 1 integrations
+2026-05-24 15:23:14 | WARNING  | app.integrations.aws.cost_explorer:66 - CostExplorer.get_costs_by_service failed: Unable to locate credentials
+2026-05-24 15:23:14 | WARNING  | app.integrations.aws.cost_explorer:97 - CostExplorer.get_cost_anomalies failed: Unable to locate credentials
+2026-05-24 15:23:14 | WARNING  | app.integrations.aws.cost_explorer:123 - CostExplorer.get_rightsizing failed: Unable to locate credentials
+2026-05-24 15:23:14 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-24 15:23:14 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 57b3d1bb-a15d-4ae7-af0d-cf14476cb88c: Missing GitHub token
+2026-05-24 15:23:15 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-24 15:23:16 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-24 15:23:17 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-05-24 15:23:17 | INFO     | app.tasks.sync_costs:132 - AWS cost sync done for AWS Production: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 15:23:17 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 15:23:17 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 15:23:17 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 15:23:17 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 15:23:17 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-24 15:23:25 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 15:23:25 | INFO     | app.main:73 - Shutting down...
+2026-05-24 15:23:25 | INFO     | app.integrations.kubernetes.watcher:45 - K8s watcher cancelled: K8s Cluster
+2026-05-24 15:23:25 | INFO     | app.integrations.kubernetes.watcher:209 - K8s watcher stopped: ac778dbf-f61a-4e51-9c96-6d91792e25e7
+2026-05-24 15:23:25 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 15:23:25 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 15:23:29 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 15:23:30 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 15:23:30 | INFO     | app.main:33 - Database initialized
+2026-05-24 15:23:30 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 15:23:30 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-24 15:23:30 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-24 15:23:30 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 15:23:30 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 15:23:30 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 15:23:32 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=32d9742e-649a-4f66-b279-d53c8ae1a863)
+2026-05-24 15:23:32 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:23:32 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:23:32 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 15:23:32 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 15:23:32 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 15:23:33 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 15:23:37 | INFO     | app.middleware.logging:15 - [109ae098] GET /api/v1/threats/stats → 200 (123.35ms)
+2026-05-24 15:23:37 | INFO     | app.middleware.logging:15 - [2bdabd18] GET /api/v1/threats → 200 (125.04ms)
+2026-05-24 15:23:37 | INFO     | app.middleware.logging:15 - [c4a56ac0] GET /api/v1/vulnerabilities → 200 (13.84ms)
+2026-05-24 15:23:37 | INFO     | app.middleware.logging:15 - [691fae31] GET /api/v1/compliance → 200 (13.63ms)
+2026-05-24 15:23:37 | INFO     | app.middleware.logging:15 - [4d4b727e] GET /api/v1/compliance/score → 200 (9.98ms)
+2026-05-24 15:23:37 | INFO     | app.middleware.logging:15 - [ad2f298e] GET /api/v1/security/score → 200 (11.91ms)
+2026-05-24 15:23:37 | INFO     | app.middleware.logging:15 - [76216ef5] GET /api/v1/security/scan-history → 200 (11.51ms)
+2026-05-24 15:23:37 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 15:23:45 | INFO     | app.middleware.logging:15 - [a0d71d2e] GET /api/v1/threats/stats → 200 (55.75ms)
+2026-05-24 15:23:45 | INFO     | app.middleware.logging:15 - [c935c11c] GET /api/v1/threats → 200 (55.21ms)
+2026-05-24 15:23:45 | INFO     | app.middleware.logging:15 - [690e1a37] GET /api/v1/compliance/score → 200 (103.83ms)
+2026-05-24 15:23:45 | INFO     | app.middleware.logging:15 - [b7bb64db] GET /api/v1/compliance → 200 (104.66ms)
+2026-05-24 15:23:45 | INFO     | app.middleware.logging:15 - [c7526a28] GET /api/v1/security/score → 200 (104.53ms)
+2026-05-24 15:23:45 | INFO     | app.middleware.logging:15 - [15174631] GET /api/v1/vulnerabilities → 200 (107.63ms)
+2026-05-24 15:23:45 | INFO     | app.middleware.logging:15 - [2477b80c] GET /api/v1/security/scan-history → 200 (26.78ms)
+2026-05-24 15:23:47 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 15:23:57 | INFO     | app.middleware.logging:15 - [ef9ae5ef] GET /api/v1/threats/stats → 200 (107.83ms)
+2026-05-24 15:23:57 | INFO     | app.middleware.logging:15 - [8c9e95c9] GET /api/v1/compliance → 200 (30.09ms)
+2026-05-24 15:23:57 | INFO     | app.middleware.logging:15 - [f0a74534] GET /api/v1/compliance/score → 200 (29.29ms)
+2026-05-24 15:23:57 | INFO     | app.middleware.logging:15 - [ee125506] GET /api/v1/security/score → 200 (36.64ms)
+2026-05-24 15:23:57 | INFO     | app.middleware.logging:15 - [ec69b548] GET /api/v1/threats → 200 (45.49ms)
+2026-05-24 15:23:57 | INFO     | app.middleware.logging:15 - [796cb50b] GET /api/v1/vulnerabilities → 200 (37.61ms)
+2026-05-24 15:23:58 | INFO     | app.middleware.logging:15 - [22972fe0] GET /api/v1/security/scan-history → 200 (10.05ms)
+2026-05-24 15:24:02 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:24:02 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:24:05 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-24 15:24:05 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-24 15:24:05 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-05-24 15:24:05 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 1 integrations
+2026-05-24 15:24:06 | WARNING  | app.integrations.aws.cost_explorer:66 - CostExplorer.get_costs_by_service failed: Unable to locate credentials
+2026-05-24 15:24:07 | WARNING  | app.integrations.aws.cost_explorer:97 - CostExplorer.get_cost_anomalies failed: Unable to locate credentials
+2026-05-24 15:24:08 | WARNING  | app.integrations.aws.cost_explorer:123 - CostExplorer.get_rightsizing failed: Unable to locate credentials
+2026-05-24 15:24:08 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-24 15:24:08 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 57b3d1bb-a15d-4ae7-af0d-cf14476cb88c: Missing GitHub token
+2026-05-24 15:24:08 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:24:08 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:24:08 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:24:08 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-24 15:24:08 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 15:24:08 | INFO     | app.tasks.sync_costs:132 - AWS cost sync done for AWS Production: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 15:24:08 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 15:24:08 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:24:08 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:24:08 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 15:24:08 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 15:24:17 | INFO     | app.middleware.logging:15 - [79e102af] GET /api/v1/compliance → 200 (58.85ms)
+2026-05-24 15:24:17 | INFO     | app.middleware.logging:15 - [a40c1b82] GET /api/v1/threats/stats → 200 (66.99ms)
+2026-05-24 15:24:17 | INFO     | app.middleware.logging:15 - [c6a70cd6] GET /api/v1/compliance/score → 200 (100.85ms)
+2026-05-24 15:24:17 | INFO     | app.middleware.logging:15 - [aeeb8ee8] GET /api/v1/vulnerabilities → 200 (71.62ms)
+2026-05-24 15:24:17 | INFO     | app.middleware.logging:15 - [f228fa64] GET /api/v1/security/score → 200 (515.98ms)
+2026-05-24 15:24:17 | INFO     | app.middleware.logging:15 - [166a5cab] GET /api/v1/threats → 200 (201.27ms)
+2026-05-24 15:24:17 | INFO     | app.middleware.logging:15 - [1663193a] GET /api/v1/security/scan-history → 200 (11.8ms)
+2026-05-24 15:24:24 | INFO     | app.middleware.logging:15 - [5c9c6424] GET /api/v1/compliance → 200 (30.91ms)
+2026-05-24 15:24:24 | INFO     | app.middleware.logging:15 - [f47cd8b2] GET /api/v1/compliance/score → 200 (40.11ms)
+2026-05-24 15:24:24 | INFO     | app.middleware.logging:15 - [7e7e7f5b] GET /api/v1/threats/stats → 200 (101.98ms)
+2026-05-24 15:24:24 | INFO     | app.middleware.logging:15 - [7e71be4e] GET /api/v1/security/score → 200 (40.78ms)
+2026-05-24 15:24:24 | INFO     | app.middleware.logging:15 - [eeecc750] GET /api/v1/vulnerabilities → 200 (50.52ms)
+2026-05-24 15:24:24 | INFO     | app.middleware.logging:15 - [2c72c4a0] GET /api/v1/threats → 200 (51.73ms)
+2026-05-24 15:24:25 | INFO     | app.middleware.logging:15 - [127f1a05] GET /api/v1/security/scan-history → 200 (9.2ms)
+2026-05-24 15:24:32 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:24:32 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:24:48 | ERROR    | app.middleware.logging:23 - [8865abb9] GET /api/v1/alerts → ERR (18.91ms): Bearer token required
+2026-05-24 15:24:48 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 80s
+2026-05-24 15:24:49 | ERROR    | app.middleware.logging:23 - [df133158] GET /api/v1/alerts → ERR (42.2ms): Bearer token required
+2026-05-24 15:25:03 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:25:03 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:25:33 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:25:33 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:26:03 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:26:03 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:26:04 | INFO     | app.middleware.logging:15 - [8740ff88] POST /api/v1/threats/ce6ddd41-9cc2-4ab8-be62-e9042e39ba92/resolve → 200 (336.9ms)
+2026-05-24 15:26:04 | INFO     | app.middleware.logging:15 - [2c66d6ca] GET /api/v1/threats/stats → 200 (15.4ms)
+2026-05-24 15:26:04 | INFO     | app.middleware.logging:15 - [e84a3700] GET /api/v1/threats → 200 (64.11ms)
+2026-05-24 15:26:08 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:26:08 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:26:08 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:26:08 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:26:08 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:26:08 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 160s
+2026-05-24 15:26:17 | INFO     | app.middleware.logging:15 - [b0f1211e] POST /api/v1/threats/9e446230-7797-4427-8837-bcdd78022b35/resolve → 200 (574.44ms)
+2026-05-24 15:26:18 | INFO     | app.middleware.logging:15 - [11cb0e6b] GET /api/v1/threats/stats → 200 (48.28ms)
+2026-05-24 15:26:18 | INFO     | app.middleware.logging:15 - [d53f6f8c] GET /api/v1/threats → 200 (20.64ms)
+2026-05-24 15:26:23 | INFO     | app.middleware.logging:15 - [7012d552] POST /api/v1/threats/1d067f46-3a6b-4bec-8cb8-728d1dc0e07d/resolve → 200 (108.57ms)
+2026-05-24 15:26:23 | INFO     | app.middleware.logging:15 - [bf7f05a7] GET /api/v1/threats/stats → 200 (52.78ms)
+2026-05-24 15:26:23 | INFO     | app.middleware.logging:15 - [0446182f] GET /api/v1/threats → 200 (35.76ms)
+2026-05-24 15:26:33 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:26:33 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:27:03 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:27:06 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:27:36 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:27:36 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:27:36 | INFO     | app.middleware.logging:15 - [a0488a27] GET /api/v1/security/score → 200 (113.2ms)
+2026-05-24 15:27:36 | INFO     | app.middleware.logging:15 - [eeff7cb1] GET /api/v1/compliance/score → 200 (123.3ms)
+2026-05-24 15:27:36 | INFO     | app.middleware.logging:15 - [3b5e8e89] GET /api/v1/threats → 200 (133.93ms)
+2026-05-24 15:27:36 | INFO     | app.middleware.logging:15 - [ad3709ac] GET /api/v1/compliance → 200 (533.17ms)
+2026-05-24 15:27:36 | INFO     | app.middleware.logging:15 - [91a7158d] GET /api/v1/threats/stats → 200 (134.96ms)
+2026-05-24 15:27:36 | INFO     | app.middleware.logging:15 - [ef92991d] GET /api/v1/vulnerabilities → 200 (164.81ms)
+2026-05-24 15:27:54 | INFO     | app.middleware.logging:15 - [244938c2] GET /api/v1/security/scan-history → 200 (8670.45ms)
+2026-05-24 15:27:54 | INFO     | app.middleware.logging:15 - [60462b11] GET /api/v1/security/score → 200 (8528.08ms)
+2026-05-24 15:27:54 | INFO     | app.middleware.logging:15 - [207cdca2] GET /api/v1/compliance → 200 (7166.92ms)
+2026-05-24 15:27:54 | INFO     | app.middleware.logging:15 - [0eeba0f4] GET /api/v1/threats → 200 (8314.11ms)
+2026-05-24 15:27:54 | INFO     | app.middleware.logging:15 - [bca51e49] GET /api/v1/threats/stats → 200 (8351.36ms)
+2026-05-24 15:27:54 | INFO     | app.middleware.logging:15 - [cd976ca6] GET /api/v1/vulnerabilities → 200 (8389.31ms)
+2026-05-24 15:28:10 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:28:10 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:28:30 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 15:28:30 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:28:30 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:28:35 | INFO     | app.middleware.logging:15 - [bee6e314] GET /api/v1/compliance/score → 200 (32885.86ms)
+2026-05-24 15:28:35 | INFO     | app.middleware.logging:15 - [0fc6fee1] GET /api/v1/compliance → 200 (24108.19ms)
+2026-05-24 15:28:35 | INFO     | app.middleware.logging:15 - [e78949a7] GET /api/v1/security/score → 200 (26103.78ms)
+2026-05-24 15:28:35 | INFO     | app.middleware.logging:15 - [26834ee6] GET /api/v1/security/scan-history → 200 (28268.45ms)
+2026-05-24 15:28:35 | INFO     | app.middleware.logging:15 - [d7528105] GET /api/v1/threats/stats → 200 (17495.23ms)
+2026-05-24 15:28:35 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 15:28:35 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 15:28:35 | WARNING  | app.services.scan_service:341 - Redis lock unavailable for repo e6618916-b286-466b-9447-bdbb8c5eaffe (Error -2 connecting to redis:6379. -2.) — falling back to DB-only deduplication check
+2026-05-24 15:28:36 | INFO     | app.middleware.logging:15 - [12863504] GET /api/v1/threats → 200 (16125.14ms)
+2026-05-24 15:28:36 | INFO     | app.middleware.logging:15 - [aee8faf5] GET /api/v1/vulnerabilities → 200 (11704.0ms)
+2026-05-24 15:28:36 | INFO     | app.services.scan_service:155 - [scan:3c4c2955-ce06-4f42-a82a-4d9144e447e4] Queued for repo=MomenLotfy/DEPI-Final-Project branch=master triggered_by=0414ba3f-2a9a-4105-b3c1-b29c8584c7df
+2026-05-24 15:28:36 | INFO     | app.middleware.logging:15 - [ded5f2c6] POST /api/v1/security/scan → 202 (32105.9ms)
+2026-05-24 15:28:41 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 15:28:41 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 15:28:41 | WARNING  | app.services.scan_service:341 - Redis lock unavailable for repo e6618916-b286-466b-9447-bdbb8c5eaffe (Error -2 connecting to redis:6379. -2.) — falling back to DB-only deduplication check
