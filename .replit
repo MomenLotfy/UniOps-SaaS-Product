@@ -26,13 +26,13 @@ args = "Backend API"
 name = "Start application"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "PORT=5000 BASE_PATH=/ pnpm --filter @workspace/uniops run dev"
 waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [[workflows.workflow]]
 name = "Backend API"
@@ -43,15 +43,16 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "docker compose up db redis backend celery_worker celery_beat"
+args = "cd backend && uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload"
+waitForPort = 3001
 
 [[ports]]
 localPort = 3001
 externalPort = 3001
 
 [[ports]]
-localPort = 5001
-externalPort = 3000
+localPort = 5000
+externalPort = 80
 
 [[ports]]
 localPort = 8000

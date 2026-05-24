@@ -1575,3 +1575,42 @@ DETAIL:  Token "NaN" is invalid.
 2026-05-24 12:07:23 | INFO     | app.middleware.logging:14 - [179d3f1e] GET /api/v1/security/scan/dbbd80ef-abbe-4b24-8851-55ac9c5f27e8 → 200 (5.59ms)
 2026-05-24 12:07:26 | INFO     | app.middleware.logging:14 - [e30cdc89] GET /api/v1/security/scan/dbbd80ef-abbe-4b24-8851-55ac9c5f27e8 → 200 (6.39ms)
 2026-05-24 12:07:29 | INFO     | app.middleware.logging:14 - [c3a413b5] GET /api/v1/security/scan/dbbd80ef-abbe-4b24-8851-55ac9c5f27e8 → 200 (5.65ms)
+2026-05-24 13:44:13 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 13:44:14 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 13:44:14 | INFO     | app.main:33 - Database initialized
+2026-05-24 13:44:14 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 13:44:14 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 13:44:14 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 13:44:14 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 13:44:14 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 13:44:14 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 13:44:14 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 13:44:19 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 13:44:27 | INFO     | app.main:73 - Shutting down...
+2026-05-24 13:44:27 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 13:44:27 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 13:44:29 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 13:44:29 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 13:44:29 | INFO     | app.main:33 - Database initialized
+2026-05-24 13:44:29 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 13:44:29 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 13:44:29 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 13:44:29 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 13:44:29 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 13:44:29 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 13:44:29 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 13:44:34 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 13:44:44 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 13:45:00 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 13:45:00 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 13:45:00 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 0 integrations
+2026-05-24 13:45:00 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-24 13:45:00 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 13:45:00 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 13:45:04 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-24 13:45:43 | ERROR    | app.middleware.logging:23 - [d88b176e] GET /api/v1/alerts → ERR (2.18ms): Bearer token required
+2026-05-24 13:45:43 | ERROR    | app.middleware.logging:23 - [0f442102] GET /api/v1/alerts → ERR (1.75ms): Bearer token required
+2026-05-24 13:45:44 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 80s
+2026-05-24 13:45:46 | INFO     | app.middleware.logging:15 - [9a55b9f7] GET /api/v1/health → 200 (0.71ms)
+2026-05-24 13:45:52 | ERROR    | app.middleware.logging:23 - [4cc2a4d6] GET /api/v1/alerts → ERR (1.9ms): Bearer token required
+2026-05-24 13:45:52 | ERROR    | app.middleware.logging:23 - [43ea9a79] GET /api/v1/alerts → ERR (1.13ms): Bearer token required
