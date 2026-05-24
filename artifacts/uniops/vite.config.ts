@@ -29,17 +29,13 @@ export default defineConfig({
     host: "0.0.0.0",
     allowedHosts: true,
     proxy: {
-      // Proxy all /api/* requests to FastAPI at :8000
-      // FastAPI serves at /api/v1/* so we pass the path through unchanged
       "/api": {
-        target: "http://localhost:8000",
+        target: "http://localhost:3001",
         changeOrigin: true,
         secure: false,
-        // No rewrite needed: frontend sends /api/v1/... and FastAPI expects /api/v1/...
       },
-      // WebSocket proxy for real-time features
       "/ws": {
-        target: "ws://localhost:8000",
+        target: "ws://localhost:3001",
         ws: true,
         changeOrigin: true,
       },
