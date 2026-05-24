@@ -28,13 +28,47 @@ class SecurityService(BaseService):
         self, tenant_id: str, page: int = 1, page_size: int = 20,
         severity: Optional[str] = None, status: Optional[str] = None,
         category: Optional[str] = None,
+        repo_id: Optional[str] = None,
+        scan_id: Optional[str] = None,
     ) -> dict:
+        """
+        List threats scoped to tenant.
+        Pass repo_id to isolate to a single repository (recommended).
+        Pass scan_id to isolate to a single scan run.
+        Without either, returns ALL threats for the tenant (multi-repo aggregate).
+        """
         query = select(Threat).where(Threat.tenant_id == tenant_id)
+
+        # ── Isolation filters ─────────────────────────────────────────────────
+        if repo_id:
+            query = query.where(Threat.repo_id == repo_id)
+            logger.debug(
+                f"[security:threats] ISOLATED to repo_id={repo_id[:8]} "
+                f"tenant={tenant_id[:8]}"
+            )
+        if scan_id:
+            query = query.where(Threat.scan_id == scan_id)
+            logger.debug(
+                f"[security:threats] ISOLATED to scan_id={scan_id[:8]} "
+                f"tenant={tenant_id[:8]}"
+            )
+        if not repo_id and not scan_id:
+            logger.debug(
+                f"[security:threats] WARNING — no repo/scan filter, "
+                f"returning ALL threats for tenant={tenant_id[:8]}"
+            )
+
         if severity: query = query.where(Threat.severity == severity)
         if status:   query = query.where(Threat.status == status)
         if category: query = query.where(Threat.category == category)
+
         total = await self._count(query)
         items = await self._paginate(query.order_by(Threat.created_at.desc()), page, page_size)
+
+        logger.info(
+            f"[security:threats] returned total={total} "
+            f"repo_id={repo_id} scan_id={scan_id} status={status}"
+        )
         return {
             "data": [ThreatResponse.model_validate(t) for t in items],
             "total": total, "page": page, "page_size": page_size,
@@ -64,13 +98,6 @@ class SecurityService(BaseService):
     ) -> ThreatActionResult:
         """
         Resolve a threat both in UniOps DB and back in AWS Security Hub.
-
-        Flow:
-          1. Load threat — guard if already closed
-          2. Find the AWS integration for this tenant
-          3. Call SecurityHub.resolve_finding(finding_id) → AWS API
-          4. Update threat.status = 'resolved' + resolved_at in DB
-          5. Write AuditLog
         """
         threat = await self._get_by_id(Threat, threat_id)
 
@@ -80,12 +107,10 @@ class SecurityService(BaseService):
                 field="status",
             )
 
-        # Extract the AWS finding ID stored during sync
         finding_id = (threat.raw_data or {}).get("finding_id")
         aws_processed = None
 
         if finding_id and threat.source == "aws_security_hub":
-            # Find the AWS integration for this tenant
             integration = await self._find_aws_integration(threat.tenant_id)
             if integration:
                 from app.utils.encryption import decrypt
@@ -109,7 +134,6 @@ class SecurityService(BaseService):
                     "resolving in DB only"
                 )
 
-        # Update DB
         threat.status      = "resolved"
         threat.resolved_at = datetime.now(timezone.utc)
         threat.updated_at  = datetime.now(timezone.utc)
@@ -125,6 +149,8 @@ class SecurityService(BaseService):
                 "title":      threat.title,
                 "severity":   threat.severity,
                 "source":     threat.source,
+                "repo_id":    threat.repo_id,
+                "scan_id":    threat.scan_id,
                 "finding_id": finding_id,
                 "note":       note,
                 "aws_synced": aws_processed is not None,
@@ -149,10 +175,7 @@ class SecurityService(BaseService):
         suppressed_by: str,
         reason: str = "TOLERATED",
     ) -> ThreatActionResult:
-        """
-        Suppress a threat — marks as false positive or accepted risk.
-        In AWS Security Hub: WorkflowStatus = SUPPRESSED.
-        """
+        """Suppress a threat — marks as false positive or accepted risk."""
         threat = await self._get_by_id(Threat, threat_id)
 
         if threat.status in _CLOSED:
@@ -184,7 +207,13 @@ class SecurityService(BaseService):
             action     = "threat.suppress",
             resource   = "threat",
             resource_id= threat_id,
-            details    = {"title": threat.title, "reason": reason, "finding_id": finding_id},
+            details    = {
+                "title":   threat.title,
+                "reason":  reason,
+                "repo_id": threat.repo_id,
+                "scan_id": threat.scan_id,
+                "finding_id": finding_id,
+            },
         )
 
         return ThreatActionResult(
@@ -196,12 +225,34 @@ class SecurityService(BaseService):
             message      = f"Threat suppressed ({reason})" + (f" in AWS Security Hub" if aws_processed else " (DB only)"),
         )
 
-    async def get_threat_stats(self, tenant_id: str) -> ThreatStats:
-        result = await self.db.execute(
+    async def get_threat_stats(
+        self,
+        tenant_id: str,
+        repo_id: Optional[str] = None,
+        scan_id: Optional[str] = None,
+    ) -> ThreatStats:
+        """
+        Aggregate threat counts for the tenant.
+        Pass repo_id to scope to a single repository.
+        Pass scan_id to scope to a single scan run.
+        """
+        query = (
             select(Threat.severity, Threat.status, func.count(Threat.id))
             .where(Threat.tenant_id == tenant_id)
-            .group_by(Threat.severity, Threat.status)
         )
+        if repo_id:
+            query = query.where(Threat.repo_id == repo_id)
+            logger.debug(f"[security:threat_stats] repo_id={repo_id[:8]}")
+        if scan_id:
+            query = query.where(Threat.scan_id == scan_id)
+            logger.debug(f"[security:threat_stats] scan_id={scan_id[:8]}")
+        if not repo_id and not scan_id:
+            logger.debug(
+                f"[security:threat_stats] WARNING — no repo/scan filter, "
+                f"aggregating ALL threats for tenant={tenant_id[:8]}"
+            )
+
+        result = await self.db.execute(query.group_by(Threat.severity, Threat.status))
         stats = ThreatStats()
         for severity, status, count in result.fetchall():
             stats.total += count
@@ -209,8 +260,13 @@ class SecurityService(BaseService):
             elif severity == "high":   stats.high     += count
             elif severity == "medium": stats.medium   += count
             elif severity == "low":    stats.low      += count
-            if status == "open":     stats.open     += count
+            if status == "open":       stats.open     += count
             elif status == "resolved": stats.resolved += count
+
+        logger.info(
+            f"[security:threat_stats] tenant={tenant_id[:8]} repo_id={repo_id} "
+            f"total={stats.total} open={stats.open} critical={stats.critical}"
+        )
         return stats
 
     # ── Vulnerabilities ───────────────────────────────────────────────────────
@@ -218,14 +274,47 @@ class SecurityService(BaseService):
     async def list_vulnerabilities(
         self, tenant_id: str, page: int = 1, page_size: int = 20,
         severity: Optional[str] = None, status: Optional[str] = None,
+        repo_id: Optional[str] = None,
+        scan_id: Optional[str] = None,
     ) -> dict:
+        """
+        List vulnerabilities scoped to tenant.
+        Pass repo_id to isolate to a single repository (recommended).
+        Pass scan_id to isolate to a single scan run.
+        """
         query = select(Vulnerability).where(Vulnerability.tenant_id == tenant_id)
+
+        # ── Isolation filters ─────────────────────────────────────────────────
+        if repo_id:
+            query = query.where(Vulnerability.repo_id == repo_id)
+            logger.debug(
+                f"[security:vulns] ISOLATED to repo_id={repo_id[:8]} "
+                f"tenant={tenant_id[:8]}"
+            )
+        if scan_id:
+            query = query.where(Vulnerability.scan_id == scan_id)
+            logger.debug(
+                f"[security:vulns] ISOLATED to scan_id={scan_id[:8]} "
+                f"tenant={tenant_id[:8]}"
+            )
+        if not repo_id and not scan_id:
+            logger.debug(
+                f"[security:vulns] WARNING — no repo/scan filter, "
+                f"returning ALL vulns for tenant={tenant_id[:8]}"
+            )
+
         if severity: query = query.where(Vulnerability.severity == severity)
         if status:   query = query.where(Vulnerability.status == status)
+
         total = await self._count(query)
         items = await self._paginate(
             query.order_by(Vulnerability.cvss_score.desc().nullslast(), Vulnerability.created_at.desc()),
             page, page_size,
+        )
+
+        logger.info(
+            f"[security:vulns] returned total={total} "
+            f"repo_id={repo_id} scan_id={scan_id} status={status}"
         )
         return {
             "data": [VulnerabilityResponse.model_validate(v) for v in items],
@@ -244,12 +333,27 @@ class SecurityService(BaseService):
         await self.db.flush()
         return VulnerabilityResponse.model_validate(vuln)
 
-    async def get_vulnerability_stats(self, tenant_id: str) -> VulnerabilityStats:
-        result = await self.db.execute(
+    async def get_vulnerability_stats(
+        self,
+        tenant_id: str,
+        repo_id: Optional[str] = None,
+        scan_id: Optional[str] = None,
+    ) -> VulnerabilityStats:
+        """
+        Aggregate vulnerability counts scoped to tenant.
+        Pass repo_id to scope to a single repository.
+        """
+        query = (
             select(Vulnerability.severity, Vulnerability.status, func.count(Vulnerability.id))
             .where(Vulnerability.tenant_id == tenant_id)
-            .group_by(Vulnerability.severity, Vulnerability.status)
         )
+        if repo_id:
+            query = query.where(Vulnerability.repo_id == repo_id)
+            logger.debug(f"[security:vuln_stats] repo_id={repo_id[:8]}")
+        if scan_id:
+            query = query.where(Vulnerability.scan_id == scan_id)
+
+        result = await self.db.execute(query.group_by(Vulnerability.severity, Vulnerability.status))
         stats = VulnerabilityStats()
         for severity, status, count in result.fetchall():
             stats.total += count
@@ -260,6 +364,11 @@ class SecurityService(BaseService):
             if status == "open":       stats.open      += count
             elif status == "patched":  stats.patched   += count
             elif status == "wont_fix": stats.wont_fix  += count
+
+        logger.info(
+            f"[security:vuln_stats] tenant={tenant_id[:8]} repo_id={repo_id} "
+            f"total={stats.total} open={stats.open} critical={stats.critical}"
+        )
         return stats
 
     # ── Compliance ────────────────────────────────────────────────────────────

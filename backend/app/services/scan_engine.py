@@ -700,7 +700,17 @@ class CiCdScanner:
 
 class ResultAdapter:
     @staticmethod
-    def to_threats(findings: list[RawFinding], tenant_id: str, scan_id: str, repo_full_name: str) -> list[dict]:
+    def to_threats(
+        findings: list[RawFinding],
+        tenant_id: str,
+        scan_id: str,
+        repo_full_name: str,
+        repo_id: str | None = None,
+    ) -> list[dict]:
+        """
+        Convert raw scan findings to Threat dicts.
+        repo_id is stored on every record so queries can be repo-isolated.
+        """
         threats = []
         for f in findings:
             if f.cve_id:
@@ -716,6 +726,8 @@ class ResultAdapter:
             threats.append({
                 "tenant_id":       tenant_id,
                 "scan_id":         scan_id,
+                # ── Repo isolation ───────────────────────────────────────────
+                "repo_id":         repo_id,
                 "title":           f.title[:499],
                 "description":     (f.description or "")[:2000],
                 "severity":        f.severity,
@@ -735,7 +747,17 @@ class ResultAdapter:
         return threats
 
     @staticmethod
-    def to_vulnerabilities(findings: list[RawFinding], tenant_id: str, scan_id: str, repo_full_name: str) -> list[dict]:
+    def to_vulnerabilities(
+        findings: list[RawFinding],
+        tenant_id: str,
+        scan_id: str,
+        repo_full_name: str,
+        repo_id: str | None = None,
+    ) -> list[dict]:
+        """
+        Convert raw scan findings to Vulnerability dicts.
+        repo_id is stored on every record so queries can be repo-isolated.
+        """
         vulns = []
         for f in findings:
             if not f.cve_id and f.scanner not in ("deps", "container"):
@@ -743,6 +765,8 @@ class ResultAdapter:
             vulns.append({
                 "tenant_id":       tenant_id,
                 "scan_id":         scan_id,
+                # ── Repo isolation ───────────────────────────────────────────
+                "repo_id":         repo_id,
                 "cve_id":          f.cve_id,
                 "title":           f.title[:499],
                 "description":     (f.description or "")[:2000],

@@ -1,0 +1,1 @@
+- [Security Center repo isolation](security-center-isolation.md) — All threat/vuln queries must pass repo_id to prevent cross-repo data leakage; selectedRepo is lifted state in SecurityCenter parent.

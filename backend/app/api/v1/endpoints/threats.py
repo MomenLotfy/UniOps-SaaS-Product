@@ -6,6 +6,7 @@ from app.api.deps import CurrentUser, AdminUser, TenantID, DBSession
 from app.schemas.threat import ThreatResponse, ThreatUpdate, ThreatStats, ThreatActionResult
 from app.schemas.common import APIResponse, PaginatedResponse
 from app.services.security_service import SecurityService
+from app.utils.logger import logger
 
 router = APIRouter()
 
@@ -17,16 +18,34 @@ async def list_threats(
     severity: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
+    # ── Repo/Scan isolation filters ──────────────────────────────────────────
+    repo_id: Optional[str] = Query(None, description="Filter threats to a specific repository"),
+    scan_id: Optional[str] = Query(None, description="Filter threats to a specific scan run"),
 ):
+    logger.info(
+        f"[threats:list] tenant={tenant_id[:8]} repo_id={repo_id} "
+        f"scan_id={scan_id} severity={severity} status={status} "
+        f"page={page} page_size={page_size}"
+    )
     svc = SecurityService(db)
-    result = await svc.list_threats(tenant_id, page, page_size, severity, status, category)
+    result = await svc.list_threats(
+        tenant_id, page, page_size, severity, status, category,
+        repo_id=repo_id, scan_id=scan_id,
+    )
     return APIResponse(data=result)
 
 
 @router.get("/stats", response_model=APIResponse[ThreatStats])
-async def get_threat_stats(current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
+async def get_threat_stats(
+    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    repo_id: Optional[str] = Query(None, description="Filter stats to a specific repository"),
+    scan_id: Optional[str] = Query(None, description="Filter stats to a specific scan"),
+):
+    logger.info(
+        f"[threats:stats] tenant={tenant_id[:8]} repo_id={repo_id} scan_id={scan_id}"
+    )
     svc = SecurityService(db)
-    stats = await svc.get_threat_stats(tenant_id)
+    stats = await svc.get_threat_stats(tenant_id, repo_id=repo_id, scan_id=scan_id)
     return APIResponse(data=stats)
 
 
@@ -56,6 +75,7 @@ async def resolve_threat(
     The finding is retained in Security Hub history for audit purposes.
     Requires: admin or security role.
     """
+    logger.info(f"[threats:resolve] threat_id={threat_id} by user={current_user['user_id'][:8]}")
     svc = SecurityService(db)
     result = await svc.resolve_threat(threat_id, current_user["user_id"], note=note)
     return APIResponse(data=result, message=result.message)
@@ -74,7 +94,7 @@ async def suppress_threat(
     reason: INTENDED | FALSE_POSITIVE | TOLERATED
     Requires: admin or security role.
     """
+    logger.info(f"[threats:suppress] threat_id={threat_id} reason={reason} by user={current_user['user_id'][:8]}")
     svc = SecurityService(db)
     result = await svc.suppress_threat(threat_id, current_user["user_id"], reason=reason)
     return APIResponse(data=result, message=result.message)
-

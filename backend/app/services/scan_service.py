@@ -7,11 +7,7 @@ Owns all business logic for the DevSecOps scan subsystem:
   - Scan creation (with concurrency guard)
   - Scan dispatch (Celery → async fallback)
   - Scan status reads
-  - Scan history + score
-
-Previously this logic lived partly in security_scan.py (endpoint), partly in
-run_scan.py (Celery task), and the dispatch helper duplicated a DB session
-open/close.  Everything is now in one place.
+  - Scan history + score (repo-isolated)
 
 Concurrency guard
 ─────────────────
@@ -26,6 +22,13 @@ repo_id, the old code had a TOCTOU window:
 Fix: Redis SETNX lock (scan_lock:{repo_id}) with 15-minute TTL.
 If Redis is unavailable we fall back to DB-only check (still better than
 nothing for single-pod deploys; document the limitation).
+
+Repo Isolation
+──────────────
+All score/history queries accept an optional repo_id parameter.
+When provided, results are strictly scoped to that repository.
+When omitted, the latest scan across all repos for the tenant is used
+(useful for the "all repos" overview mode).
 """
 import asyncio
 from datetime import datetime, timezone
@@ -38,12 +41,10 @@ from app.models.scan import Scan, Repository
 from app.services.base import BaseService
 from app.utils.logger import logger
 
-# Imported lazily to keep startup fast when Redis is unavailable
-_REDIS_LOCK_TTL = 900  # 15 minutes — max scan duration before lock auto-expires
+_REDIS_LOCK_TTL = 900  # 15 minutes
 
 
 class ScanService(BaseService):
-    """Domain service for the DevSecOps scan subsystem."""
 
     # ─────────────────────────────────────────────────────────────────────────
     # Repository queries
@@ -72,10 +73,9 @@ class ScanService(BaseService):
         Create and persist a new Scan record in 'queued' state.
 
         Raises:
-            RepoNotFoundError     — repo does not belong to this tenant
+            RepoNotFoundError      — repo does not belong to this tenant
             ScanAlreadyRunningError — a concurrent scan is already in progress
         """
-        # Import here to avoid circular-import at module load time
         from app.api.v1.endpoints.security_scan import (
             RepoNotFoundError,
             ScanAlreadyRunningError,
@@ -92,6 +92,11 @@ class ScanService(BaseService):
         if not repo:
             raise RepoNotFoundError(f"Repository {repo_id!r} not found for this tenant")
 
+        logger.info(
+            f"[scan:create] repo={repo.full_name} tenant={tenant_id[:8]} "
+            f"triggered_by={triggered_by[:8]}"
+        )
+
         # ── 2. Distributed lock (Redis SETNX) ────────────────────────────────
         lock_acquired = await self._acquire_scan_lock(repo_id)
         if not lock_acquired:
@@ -104,7 +109,7 @@ class ScanService(BaseService):
         from datetime import timedelta
         from sqlalchemy import update as _update
 
-        STALE_AFTER_MINUTES = 12  # scans stuck longer than this are auto-failed
+        STALE_AFTER_MINUTES = 12
 
         existing = await self.db.execute(
             select(Scan).where(
@@ -115,12 +120,9 @@ class ScanService(BaseService):
         running = existing.scalar_one_or_none()
         if running:
             stale_cutoff = datetime.now(timezone.utc) - timedelta(minutes=STALE_AFTER_MINUTES)
-            # A scan is "stale" if it has been running longer than STALE_AFTER_MINUTES
-            # (use started_at if available, otherwise created_at)
             ref_time = running.started_at or running.created_at
             normalized = (ref_time.replace(tzinfo=timezone.utc) if ref_time.tzinfo is None else ref_time)
             if ref_time and normalized < stale_cutoff:
-                # Auto-fail the stale scan and allow a fresh one
                 logger.warning(
                     f"[scan:{running.id}] Auto-failing stale scan for repo={repo.full_name} "
                     f"(running since {ref_time})"
@@ -134,7 +136,6 @@ class ScanService(BaseService):
                 )
                 await self.db.commit()
             else:
-                # Release lock we just acquired since we won't proceed
                 await self._release_scan_lock(repo_id)
                 raise ScanAlreadyRunningError(
                     f"A scan is already running for repository {repo.full_name!r}"
@@ -165,12 +166,8 @@ class ScanService(BaseService):
     async def dispatch_scan(self, scan_id: str) -> None:
         """
         Dispatch scan execution:
-          1. Try Celery with active-worker check (preferred — isolated, monitored, retriable)
+          1. Try Celery with active-worker check (preferred)
           2. Fall back to asyncio background task with hard 10-minute timeout
-
-        This method is called from the endpoint *after* the HTTP response has
-        been sent (via BackgroundTask or a post-response hook), so it must
-        never block the event loop for more than a few milliseconds.
         """
         try:
             from app.tasks.run_scan import run_security_scan
@@ -179,9 +176,6 @@ class ScanService(BaseService):
             if celery_app is None:
                 raise RuntimeError("Celery not configured")
 
-            # Check for active workers before enqueuing — tasks sent to Redis when
-            # no workers are running sit in the queue indefinitely (scan stays "queued").
-            # Run inspect in a thread so the async event loop is never blocked.
             def _check_workers() -> bool:
                 try:
                     queues = celery_app.control.inspect(timeout=1.0).active_queues() or {}
@@ -204,13 +198,10 @@ class ScanService(BaseService):
                 "falling back to inline async execution"
             )
 
-        # Async fallback with hard timeout — never blocks HTTP event loop
         asyncio.create_task(self._run_inline_with_timeout(scan_id))
 
     async def _run_inline_with_timeout(self, scan_id: str) -> None:
-        """Run scan inline (no Celery) with a hard 5-minute timeout."""
         from app.tasks.run_scan import _run_scan_async
-
         try:
             await asyncio.wait_for(_run_scan_async(scan_id), timeout=300)
         except asyncio.TimeoutError:
@@ -218,8 +209,6 @@ class ScanService(BaseService):
             await self._mark_scan_failed_isolated(scan_id, "Scan timed out after 5 minutes")
         except Exception as exc:
             logger.error(f"[scan:{scan_id}] Inline execution failed: {exc}", exc_info=True)
-            # _run_scan_async already marks the scan as failed internally;
-            # this is a safety net for unexpected exceptions outside that scope.
 
     # ─────────────────────────────────────────────────────────────────────────
     # Scan reads
@@ -234,86 +223,149 @@ class ScanService(BaseService):
             return None
         return _scan_to_dict(scan)
 
-    async def get_scan_history(self, tenant_id: str, limit: int = 30) -> list[dict]:
-        result = await self.db.execute(
-            select(Scan)
+    async def get_scan_history(
+        self,
+        tenant_id: str,
+        limit: int = 30,
+        repo_id: Optional[str] = None,
+    ) -> list[dict]:
+        """
+        Returns scan history for the Threat Timeline chart.
+        Pass repo_id to scope history to a single repository.
+        Each entry: {date, score, critical, high, medium, low, secrets, repo, repo_id, scan_id}
+        """
+        query = (
+            select(Scan, Repository.full_name)
+            .join(Repository, Scan.repo_id == Repository.id, isouter=True)
             .where(Scan.tenant_id == tenant_id, Scan.status == "completed")
-            .order_by(Scan.created_at.desc())
-            .limit(limit)
         )
-        scans = list(result.scalars().all())
-        return [
+
+        if repo_id:
+            query = query.where(Scan.repo_id == repo_id)
+            logger.info(
+                f"[scan:history] ISOLATED to repo_id={repo_id[:8]} "
+                f"tenant={tenant_id[:8]} limit={limit}"
+            )
+        else:
+            logger.info(
+                f"[scan:history] All repos for tenant={tenant_id[:8]} limit={limit}"
+            )
+
+        query = query.order_by(Scan.created_at.desc()).limit(limit)
+        result = await self.db.execute(query)
+        rows = list(result.all())
+
+        history = [
             {
                 "date": (
                     s.completed_at.isoformat()
                     if s.completed_at
                     else s.created_at.isoformat()
                 ),
-                "score": s.security_score or 0,
+                "score":    s.security_score or 0,
                 "critical": s.critical_count,
-                "high": s.high_count,
-                "medium": s.medium_count,
-                "low": s.low_count,
-                "secrets": s.secret_count,
-                "repo": None,  # join if needed
-                "scan_id": s.id,
+                "high":     s.high_count,
+                "medium":   s.medium_count,
+                "low":      s.low_count,
+                "secrets":  s.secret_count,
+                "repo":     repo_name,
+                "repo_id":  s.repo_id,
+                "scan_id":  s.id,
             }
-            for s in reversed(scans)  # chronological order
+            for s, repo_name in reversed(rows)  # chronological order
         ]
+        logger.debug(
+            f"[scan:history] returned {len(history)} entries "
+            f"repo_id={repo_id}"
+        )
+        return history
 
-    async def get_latest_score(self, tenant_id: str) -> dict:
+    async def get_latest_score(
+        self,
+        tenant_id: str,
+        repo_id: Optional[str] = None,
+    ) -> dict:
+        """
+        Returns the latest security score for the dashboard.
+        Pass repo_id to get the score for a specific repository only.
+        Without repo_id, returns the most recent scan across all repos.
+        """
         from sqlalchemy import desc
 
-        result = await self.db.execute(
+        query = (
             select(
                 Scan.security_score,
                 Scan.ai_summary,
                 Scan.ai_suggestions,
                 Scan.completed_at,
+                Scan.repo_id,
+                Repository.full_name,
             )
+            .join(Repository, Scan.repo_id == Repository.id, isouter=True)
             .where(Scan.tenant_id == tenant_id, Scan.status == "completed")
-            .order_by(desc(Scan.completed_at))
-            .limit(1)
         )
-        row = result.fetchone()
-        scan_score = float(row[0]) if row and row[0] is not None else None
-        ai_summary = row[1] if row else None
-        ai_suggestions = row[2] if row else []
 
-        # ── Fallback: never return null score ────────────────────────────────
-        # If no scan has completed yet, return a meaningful pending state
-        # so the UI shows something useful instead of empty/loading forever.
+        if repo_id:
+            query = query.where(Scan.repo_id == repo_id)
+            logger.info(
+                f"[scan:score] ISOLATED to repo_id={repo_id[:8]} "
+                f"tenant={tenant_id[:8]}"
+            )
+        else:
+            logger.info(
+                f"[scan:score] Latest across all repos for tenant={tenant_id[:8]}"
+            )
+
+        result = await self.db.execute(query.order_by(desc(Scan.completed_at)).limit(1))
+        row = result.fetchone()
+
+        scan_score   = float(row[0]) if row and row[0] is not None else None
+        ai_summary   = row[1] if row else None
+        ai_suggestions = row[2] if row else []
+        completed_at = row[3] if row else None
+        scanned_repo_id   = row[4] if row else None
+        scanned_repo_name = row[5] if row else None
+
+        logger.info(
+            f"[scan:score] score={scan_score} repo={scanned_repo_name} "
+            f"repo_id={repo_id}"
+        )
+
         if scan_score is None:
             return {
-                "score": None,
-                "status": "no_scan",
-                "ai_summary": "No security scans have been run yet. Trigger a scan from the Security Center to get your security score.",
+                "score":         None,
+                "status":        "no_scan",
+                "repo_id":       repo_id,
+                "repo_name":     None,
+                "ai_summary":    "No security scans have been run yet. Trigger a scan from the Security Center to get your security score.",
                 "ai_suggestions": [
                     "Connect a GitHub or GitLab integration to enable repository scanning",
                     "Trigger your first security scan to establish a baseline score",
                     "Review the Security Center to configure scan settings",
                 ],
-                "last_scan_at": None,
+                "last_scan_at":  None,
                 "breakdown": {
                     "Code Security": None,
-                    "Dependencies": None,
-                    "Secrets": None,
-                    "CI/CD Security": None,
-                    "Containers": None,
+                    "Dependencies":  None,
+                    "Secrets":       None,
+                    "CI/CD Security":None,
+                    "Containers":    None,
                 },
             }
 
         return {
-            "score": scan_score,
-            "ai_summary": ai_summary,
+            "score":          scan_score,
+            "repo_id":        scanned_repo_id,
+            "repo_name":      scanned_repo_name,
+            "ai_summary":     ai_summary,
             "ai_suggestions": ai_suggestions or [],
-            "last_scan_at": row[3].isoformat() if row and row[3] else None,
+            "last_scan_at":   completed_at.isoformat() if completed_at else None,
             "breakdown": {
-                "Code Security": max(0, round(scan_score - 10, 1)),
-                "Dependencies": max(0, round(scan_score - 5, 1)),
-                "Secrets": 100 if scan_score > 75 else 60,
-                "CI/CD Security": max(0, round(scan_score - 8, 1)),
-                "Containers": max(0, round(scan_score - 3, 1)),
+                "Code Security":  max(0, round(scan_score - 10, 1)),
+                "Dependencies":   max(0, round(scan_score - 5,  1)),
+                "Secrets":        max(0, min(scan_score + 15, 100)),
+                "CI/CD Security": max(0, round(scan_score - 8,  1)),
+                "Containers":     max(0, round(scan_score - 3,  1)),
             },
         }
 
@@ -322,19 +374,10 @@ class ScanService(BaseService):
     # ─────────────────────────────────────────────────────────────────────────
 
     async def _acquire_scan_lock(self, repo_id: str) -> bool:
-        """
-        Try to acquire an exclusive scan lock for repo_id.
-        Returns True if lock acquired (no scan is running), False otherwise.
-
-        Uses Redis SET NX EX — atomic, safe across multiple pods.
-        Falls back to True (permit) if Redis is unavailable so deploys without
-        Redis don't break; the DB check below is the fallback guard.
-        """
         try:
             from app.core.redis_client import get_redis
             redis = await get_redis()
             lock_key = f"scan_lock:{repo_id}"
-            # SET key value NX EX ttl — returns True if set, None if already exists
             result = await redis.set(lock_key, "1", nx=True, ex=_REDIS_LOCK_TTL)
             return result is not None
         except Exception as exc:
@@ -342,29 +385,19 @@ class ScanService(BaseService):
                 f"Redis lock unavailable for repo {repo_id} ({exc}) — "
                 "falling back to DB-only deduplication check"
             )
-            return True  # permit; DB check is the fallback
+            return True
 
     async def _release_scan_lock(self, repo_id: str) -> None:
-        """Release the distributed scan lock (called on early-exit paths only)."""
         try:
             from app.core.redis_client import get_redis
             redis = await get_redis()
             await redis.delete(f"scan_lock:{repo_id}")
         except Exception:
-            pass  # lock will expire via TTL
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # Isolated failure marking (used by timeout handler with its own session)
-    # ─────────────────────────────────────────────────────────────────────────
+            pass
 
     @staticmethod
     async def _mark_scan_failed_isolated(scan_id: str, error: str) -> None:
-        """
-        Mark a scan as failed using a fresh DB session.
-        Used by the timeout handler which runs outside the request session.
-        """
         from app.core.database import AsyncSessionLocal
-
         async with AsyncSessionLocal() as db:
             result = await db.execute(select(Scan).where(Scan.id == scan_id))
             scan = result.scalar_one_or_none()
@@ -376,28 +409,28 @@ class ScanService(BaseService):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Serializer (pure function — no DB access)
+# Serializer
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _scan_to_dict(scan: Scan) -> dict:
     return {
-        "id": scan.id,
-        "repo_id": scan.repo_id,
-        "branch": scan.branch,
-        "status": scan.status,
-        "error_message": scan.error_message,
-        "started_at": scan.started_at.isoformat() if scan.started_at else None,
-        "completed_at": scan.completed_at.isoformat() if scan.completed_at else None,
-        "duration_secs": scan.duration_secs,
-        "scanners_run": scan.scanners_run,
+        "id":             scan.id,
+        "repo_id":        scan.repo_id,
+        "branch":         scan.branch,
+        "status":         scan.status,
+        "error_message":  scan.error_message,
+        "started_at":     scan.started_at.isoformat() if scan.started_at else None,
+        "completed_at":   scan.completed_at.isoformat() if scan.completed_at else None,
+        "duration_secs":  scan.duration_secs,
+        "scanners_run":   scan.scanners_run,
         "critical_count": scan.critical_count,
-        "high_count": scan.high_count,
-        "medium_count": scan.medium_count,
-        "low_count": scan.low_count,
-        "secret_count": scan.secret_count,
-        "misconfig_count": scan.misconfig_count,
+        "high_count":     scan.high_count,
+        "medium_count":   scan.medium_count,
+        "low_count":      scan.low_count,
+        "secret_count":   scan.secret_count,
+        "misconfig_count":scan.misconfig_count,
         "security_score": scan.security_score,
-        "ai_summary": scan.ai_summary,
+        "ai_summary":     scan.ai_summary,
         "ai_suggestions": scan.ai_suggestions,
-        "created_at": scan.created_at.isoformat(),
+        "created_at":     scan.created_at.isoformat(),
     }

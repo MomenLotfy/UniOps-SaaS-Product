@@ -6,6 +6,7 @@ from app.api.deps import CurrentUser, TenantID, DBSession
 from app.schemas.vulnerability import VulnerabilityResponse, VulnerabilityUpdate, VulnerabilityStats
 from app.schemas.common import APIResponse, PaginatedResponse
 from app.services.security_service import SecurityService
+from app.utils.logger import logger
 
 router = APIRouter()
 
@@ -16,16 +17,34 @@ async def list_vulnerabilities(
     page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100),
     severity: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
+    # ── Repo/Scan isolation filters ──────────────────────────────────────────
+    repo_id: Optional[str] = Query(None, description="Filter vulnerabilities to a specific repository"),
+    scan_id: Optional[str] = Query(None, description="Filter vulnerabilities to a specific scan run"),
 ):
+    logger.info(
+        f"[vulns:list] tenant={tenant_id[:8]} repo_id={repo_id} "
+        f"scan_id={scan_id} severity={severity} status={status} "
+        f"page={page} page_size={page_size}"
+    )
     svc = SecurityService(db)
-    result = await svc.list_vulnerabilities(tenant_id, page, page_size, severity, status)
+    result = await svc.list_vulnerabilities(
+        tenant_id, page, page_size, severity, status,
+        repo_id=repo_id, scan_id=scan_id,
+    )
     return APIResponse(data=result)
 
 
 @router.get("/stats", response_model=APIResponse[VulnerabilityStats])
-async def get_vuln_stats(current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
+async def get_vuln_stats(
+    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    repo_id: Optional[str] = Query(None, description="Filter stats to a specific repository"),
+    scan_id: Optional[str] = Query(None, description="Filter stats to a specific scan"),
+):
+    logger.info(
+        f"[vulns:stats] tenant={tenant_id[:8]} repo_id={repo_id} scan_id={scan_id}"
+    )
     svc = SecurityService(db)
-    stats = await svc.get_vulnerability_stats(tenant_id)
+    stats = await svc.get_vulnerability_stats(tenant_id, repo_id=repo_id, scan_id=scan_id)
     return APIResponse(data=stats)
 
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import apiClient from '@/services/api/client';
 
 export interface ApiState<T> {
@@ -14,13 +14,36 @@ export function useApi<T>(path: string | null, deps: unknown[] = []): ApiState<T
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
+  // Track the previous path so we can detect repo/endpoint switches
+  // vs. plain manual refreshes (tick changes). Only clear stale data
+  // when the path itself changes — a tick-only refresh keeps the
+  // existing data visible while the refresh completes (no flash).
+  const prevPathRef = useRef<string | null>(null);
+
   const refetch = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => {
-    if (!path) return;
+    if (!path) {
+      // Path became null (e.g. user deselected repo) — clear immediately
+      setData(null);
+      setLoading(false);
+      setError(null);
+      prevPathRef.current = null;
+      return;
+    }
+
     let cancelled = false;
+
+    // ── Reset stale data when switching paths (repo change, tab change, etc.) ──
+    // This prevents data from Repo A briefly showing under Repo B's queries.
+    // We do NOT reset on tick-only changes so manual refresh feels smooth.
+    if (path !== prevPathRef.current) {
+      setData(null);
+      setError(null);
+      prevPathRef.current = path;
+    }
+
     setLoading(true);
-    setError(null);
 
     apiClient.get<any>(path)
       .then((res) => {

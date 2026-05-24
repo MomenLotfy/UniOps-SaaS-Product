@@ -9,6 +9,10 @@ class Threat(BaseModel):
 
     tenant_id:       Mapped[str]           = mapped_column(String(36), ForeignKey("tenants.id"), nullable=False, index=True)
     scan_id:         Mapped[str | None]    = mapped_column(String(36), nullable=True, index=True)
+    # ── Repo isolation: every finding must carry repo_id so queries can be
+    #    scoped to a single repository. Nullable for backward-compat with
+    #    threats created before this column was added (e.g. AWS Security Hub).
+    repo_id:         Mapped[str | None]    = mapped_column(String(36), nullable=True, index=True)
     title:           Mapped[str]           = mapped_column(String(500), nullable=False)
     description:     Mapped[str | None]    = mapped_column(Text)
     severity:        Mapped[str]           = mapped_column(String(50), nullable=False)

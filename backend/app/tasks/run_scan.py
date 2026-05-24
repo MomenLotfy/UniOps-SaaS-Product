@@ -165,11 +165,13 @@ async def _run_scan_async(scan_id: str) -> None:
             )
 
             # ── Persist findings ──────────────────────────────────────────────
+            # Pass repo_id so every Threat/Vulnerability record carries the
+            # repository it came from — enables strict per-repo isolation on reads.
             threat_dicts = ResultAdapter.to_threats(
-                result.findings, tenant_id, scan_id, full_name
+                result.findings, tenant_id, scan_id, full_name, repo_id=repo_id
             )
             vuln_dicts = ResultAdapter.to_vulnerabilities(
-                result.findings, tenant_id, scan_id, full_name
+                result.findings, tenant_id, scan_id, full_name, repo_id=repo_id
             )
             logger.info(
                 f"[scan:{scan_id}] Persisting "

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, AlertTriangle, CheckCircle, XCircle,
   Eye, RefreshCw, Download, Activity,
-  ShieldCheck, ShieldOff, MoreVertical, Loader2, X,
+  ShieldCheck, ShieldOff, Loader2, X,
   GitBranch, Play, Zap, Clock, ChevronDown, ChevronLeft, ChevronRight, Filter,
 } from 'lucide-react';
 import {
@@ -11,7 +11,7 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import { clsx } from 'clsx';
-import { useApi, apiPost, apiPatch } from '@/hooks/use-api';
+import { useApi, apiPost } from '@/hooks/use-api';
 import { usePermissions } from '@/hooks/use-permissions';
 import apiClient from '@/services/api/client';
 import { useWebSocket } from '@/contexts/WebSocketContext';
@@ -63,7 +63,7 @@ const SCAN_STATUS_LABEL: Record<string, string> = {
   failed:    'Failed',
 };
 
-// ── Confirm Dialog (reused pattern) ──────────────────────────────────────────
+// ── Confirm Dialog ────────────────────────────────────────────────────────────
 function ConfirmDialog({ open, title, description, confirmLabel, danger, onConfirm, onCancel, loading }: {
   open: boolean; title: string; description: string; confirmLabel: string;
   danger?: boolean; onConfirm: () => void; onCancel: () => void; loading: boolean;
@@ -101,7 +101,7 @@ function ConfirmDialog({ open, title, description, confirmLabel, danger, onConfi
   );
 }
 
-// ── Threats Tab — extracted to avoid hooks-in-IIFE violation ─────────────────
+// ── Threats Tab ───────────────────────────────────────────────────────────────
 function ThreatsTab({ threats, tLoading, canAct, setConfirmThreat }: {
   threats: any[];
   tLoading: boolean;
@@ -222,39 +222,44 @@ function ThreatsTab({ threats, tLoading, canAct, setConfirmThreat }: {
   );
 }
 
-// ── Scan Panel — the new DevSecOps feature ────────────────────────────────────
-function ScanPanel({ onScanComplete, onViewResults }: {
+// ── Scan Panel ────────────────────────────────────────────────────────────────
+// Now a CONTROLLED component: selectedRepo/onSelectRepo are lifted to SecurityCenter.
+// This ensures the parent knows which repo is selected so it can pass repo_id
+// to all API queries (preventing cross-repo data leakage).
+function ScanPanel({
+  selectedRepo,
+  onSelectRepo,
+  onScanComplete,
+  onViewResults,
+}: {
+  selectedRepo: any | null;
+  onSelectRepo: (repo: any | null) => void;
   onScanComplete: () => void;
   onViewResults?: (tab: Tab) => void;
 }) {
   const { data: reposData, loading: reposLoading, refetch: refetchRepos } = useApi<any>('/security/repos');
-  const [selectedRepo, setSelectedRepo]   = useState<any | null>(null);
-  const [branch, setBranch]               = useState('');
-  const [scanning, setScanning]           = useState(false);
-  const [syncing, setSyncing]             = useState(false);
-  const [activeScan, setActiveScan]       = useState<any | null>(null);
-  const [scanError, setScanError]         = useState<string | null>(null);
-  const [repoOpen, setRepoOpen]           = useState(false);
+  const [branch, setBranch]         = useState('');
+  const [scanning, setScanning]     = useState(false);
+  const [syncing, setSyncing]       = useState(false);
+  const [activeScan, setActiveScan] = useState<any | null>(null);
+  const [scanError, setScanError]   = useState<string | null>(null);
+  const [repoOpen, setRepoOpen]     = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const repos = Array.isArray(reposData)
     ? reposData
     : (reposData?.data ?? []);
 
-  // Sync repos from GitHub/GitLab integration
   const handleSyncRepos = async () => {
     setSyncing(true);
     setScanError(null);
     try {
       const res = await apiPost<{ synced: number; live_synced?: number; errors?: string[] }>('/security/repos/sync', {});
       await refetchRepos();
-      // Show soft warning if sync had errors but repos still exist in DB
       if (res.errors?.length) {
         setScanError(`Sync warning: ${res.errors.join('; ')} — using cached repositories`);
       }
     } catch (err: any) {
-      // 409 = integration_not_ready OR no repos at all
-      // Always refetch — seeded repos may already be in DB
       await refetchRepos();
       const code = (err as any)?.code ?? '';
       if (code === 'integration_not_ready' || (err?.message ?? '').includes('integration_not_ready')) {
@@ -272,13 +277,11 @@ function ScanPanel({ onScanComplete, onViewResults }: {
     if (!activeScan?.id || ['completed', 'failed'].includes(activeScan?.status)) {
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
       if (activeScan?.status === 'completed') {
-        // 600ms delay: let DB commit propagate before refetching threats/vulns
         setTimeout(() => onScanComplete(), 600);
       }
       return;
     }
     pollRef.current = setInterval(async () => {
-      // Don't poll when tab is hidden — saves resources
       if (document.hidden) return;
       try {
         const res = await apiClient.get<any>(`/security/scan/${activeScan.id}`);
@@ -299,7 +302,6 @@ function ScanPanel({ onScanComplete, onViewResults }: {
         repo_id: selectedRepo.id,
         branch:  branch || selectedRepo.default_branch || 'main',
       });
-      // apiPost returns json.data ?? json, so scan_id may be top-level or nested
       const scanId = res?.scan_id ?? res?.data?.scan_id ?? res?.id;
       setActiveScan({ id: scanId, status: 'queued' });
     } catch (err: any) {
@@ -336,7 +338,7 @@ function ScanPanel({ onScanComplete, onViewResults }: {
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        {/* Repo picker */}
+        {/* Repo picker (controlled — changes notify parent via onSelectRepo) */}
         <div className="relative flex-1 min-w-[200px]">
           <button
             onClick={() => setRepoOpen(v => !v)}
@@ -377,7 +379,12 @@ function ScanPanel({ onScanComplete, onViewResults }: {
                   ) : (
                     repos.map((r: any) => (
                       <button key={r.id}
-                        onClick={() => { setSelectedRepo(r); setBranch(r.default_branch || 'main'); setRepoOpen(false); }}
+                        onClick={() => {
+                          // ── Notify parent so all dashboard queries get filtered ──
+                          onSelectRepo(r);
+                          setBranch(r.default_branch || 'main');
+                          setRepoOpen(false);
+                        }}
                         className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
                       >
                         <GitBranch className="w-3 h-3 text-gray-500 flex-shrink-0" />
@@ -431,7 +438,6 @@ function ScanPanel({ onScanComplete, onViewResults }: {
             <div className="flex items-center gap-3 p-3 rounded-lg"
               style={{ background: 'hsl(230 15% 12%)' }}>
 
-              {/* Spinner or done icon */}
               {isRunning
                 ? <Loader2 className="w-4 h-4 text-blue-400 animate-spin flex-shrink-0" />
                 : activeScan.status === 'completed'
@@ -443,7 +449,6 @@ function ScanPanel({ onScanComplete, onViewResults }: {
                   {SCAN_STATUS_LABEL[activeScan.status] ?? activeScan.status}
                 </p>
 
-                {/* Scanners progress */}
                 {activeScan.scanners_run && Object.keys(activeScan.scanners_run).length > 0 && (
                   <div className="flex gap-2 mt-1.5 flex-wrap">
                     {Object.entries(activeScan.scanners_run).map(([s, status]: [string, any]) => (
@@ -458,7 +463,6 @@ function ScanPanel({ onScanComplete, onViewResults }: {
                   </div>
                 )}
 
-                {/* Completed summary */}
                 {activeScan.status === 'completed' && (
                   <div className="mt-2 space-y-2">
                     <div className="flex gap-3 text-xs">
@@ -469,7 +473,7 @@ function ScanPanel({ onScanComplete, onViewResults }: {
                       <span className={clsx('ml-auto font-semibold',
                         (activeScan.security_score ?? 0) >= 80 ? 'text-green-400'
                         : (activeScan.security_score ?? 0) >= 60 ? 'text-yellow-400' : 'text-red-400')}>
-                        Score: {activeScan.security_score ?? '—'}/100
+                        Score: {activeScan.security_score ?? 'N/A'}
                       </span>
                     </div>
                     {onViewResults && (
@@ -491,18 +495,15 @@ function ScanPanel({ onScanComplete, onViewResults }: {
                   </div>
                 )}
 
-                {/* AI Summary */}
                 {activeScan.ai_summary && (
                   <p className="text-xs text-gray-400 mt-2 leading-relaxed">{activeScan.ai_summary}</p>
                 )}
 
-                {/* Error */}
                 {activeScan.status === 'failed' && activeScan.error_message && (
                   <p className="text-xs text-red-400 mt-1">{activeScan.error_message}</p>
                 )}
               </div>
 
-              {/* Clear button */}
               {['completed', 'failed'].includes(activeScan.status) && (
                 <button onClick={() => setActiveScan(null)}
                   className="p-1 text-gray-500 hover:text-white transition-colors flex-shrink-0">
@@ -511,7 +512,6 @@ function ScanPanel({ onScanComplete, onViewResults }: {
               )}
             </div>
 
-            {/* AI Suggestions */}
             {activeScan.status === 'completed' && activeScan.ai_suggestions?.length > 0 && (
               <div className="mt-2 p-3 rounded-lg text-xs space-y-1.5" style={{ background: 'hsl(230 15% 12%)' }}>
                 <p className="text-gray-400 font-medium mb-2">AI Recommendations:</p>
@@ -537,21 +537,36 @@ function ScanPanel({ onScanComplete, onViewResults }: {
 }
 
 
+// ── SecurityCenter (main page) ────────────────────────────────────────────────
 export default function SecurityCenter() {
   const [tab, setTab] = useState<Tab>('overview');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { isAdmin, hasRole } = usePermissions();
   const canAct = isAdmin() || hasRole('security');
 
-  const { data: threatStats, refetch: refetchStats }                      = useApi<any>('/threats/stats');
-  const { data: threatsData, loading: tLoading, refetch: refetchThreats } = useApi<any>('/threats?page_size=20&status=open');
-  const { data: vulnsData,   loading: vLoading, refetch: refetchVulns }   = useApi<any>('/vulnerabilities?page_size=20&status=open');
-  const { data: compliance,  loading: cLoading, refetch: refetchComp }    = useApi<any>('/compliance');
-  const { data: compScore,   refetch: refetchScore }                      = useApi<any>('/compliance/score');
-  const { data: scanScore,   refetch: refetchScanScore }                  = useApi<any>('/security/score');
-  const { data: scanHistory, refetch: refetchHistory }                    = useApi<any>('/security/scan-history?limit=20');
+  // ── LIFTED STATE: selectedRepo is now in the parent so ALL queries can be
+  //    scoped to the selected repository, preventing cross-repo data leakage.
+  const [selectedRepo, setSelectedRepo] = useState<any | null>(null);
 
-  // ── Live WebSocket updates ─────────────────────────────────────────────────
+  // Build query-string fragments for repo isolation.
+  // When selectedRepo is set, EVERY data query is filtered to that repo.
+  // When null, queries return the tenant-wide aggregate (all repos).
+  const repoId    = selectedRepo?.id ?? null;
+  const repoQs    = repoId ? `&repo_id=${repoId}` : '';     // appended to existing QS
+  const repoQsSolo = repoId ? `?repo_id=${repoId}` : '';    // used as the whole QS
+
+  // ── Data queries — all repo-isolated when selectedRepo is set ────────────
+  // The path changes when repoId changes → useApi sees a new path → resets
+  // stale data immediately (see use-api.ts fix) and fires a fresh request.
+  const { data: threatStats,  refetch: refetchStats }                      = useApi<any>(`/threats/stats${repoQsSolo}`);
+  const { data: threatsData,  loading: tLoading, refetch: refetchThreats } = useApi<any>(`/threats?page_size=50&status=open${repoQs}`);
+  const { data: vulnsData,    loading: vLoading, refetch: refetchVulns }   = useApi<any>(`/vulnerabilities?page_size=50&status=open${repoQs}`);
+  const { data: compliance,   loading: cLoading, refetch: refetchComp }    = useApi<any>('/compliance');
+  const { data: compScore,    refetch: refetchScore }                      = useApi<any>('/compliance/score');
+  const { data: scanScore,    refetch: refetchScanScore }                  = useApi<any>(`/security/score${repoQsSolo}`);
+  const { data: scanHistory,  refetch: refetchHistory }                    = useApi<any>(`/security/scan-history?limit=20${repoQs}`);
+
+  // ── Live WebSocket updates — respect current repo filter on refetch ────────
   const { subscribe } = useWebSocket();
   useEffect(() => {
     const unsubThreat = subscribe('threat.detected', () => {
@@ -569,15 +584,16 @@ export default function SecurityCenter() {
   const [confirmThreat, setConfirmThreat] = useState<{ threat: any; action: 'resolve' | 'suppress' } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   const showFeedback = (ok: boolean, msg: string) => {
     setFeedback({ ok, msg });
     setTimeout(() => setFeedback(null), 5000);
   };
 
+  // After scan completes, refetch all repo-scoped queries.
+  // Because selectedRepo is in this parent, the paths already include repo_id,
+  // so refetch will return data only for the scanned repository.
   const handleScanComplete = useCallback(() => {
-    // 600ms grace period so DB writes propagate before refetch
     setTimeout(() => {
       refetchStats(); refetchThreats(); refetchVulns();
       refetchComp(); refetchScore(); refetchScanScore(); refetchHistory();
@@ -611,23 +627,18 @@ export default function SecurityCenter() {
     }
   };
 
-  // useApi unwraps body.data automatically — so list endpoints that return
-  // { data: [...], total: N } arrive here as plain arrays.
-  // We handle both the array form AND the wrapped { data: [...] } form defensively.
   const threats    = (Array.isArray(threatsData) ? threatsData : threatsData?.data) ?? [];
   const vulns      = (Array.isArray(vulnsData)   ? vulnsData   : vulnsData?.data)   ?? [];
   const vulnsTotal = Array.isArray(vulnsData) ? vulnsData.length : (vulnsData as any)?.total;
   const frameworks = compliance?.data ?? compliance ?? [];
   const historyArr = (Array.isArray(scanHistory) ? scanHistory : (scanHistory as any)?.data) ?? [];
 
-  // scanScore is already unwrapped by useApi — access fields directly (no .data)
   const scanScoreData: any = scanScore;
   const score = scanScoreData?.score != null
     ? scanScoreData.score
     : compScore?.overall_score ?? null;
 
   const radarData = scanScoreData?.breakdown
-    // Clamp all values to [0, 100] — breakdown values from get_latest_score() can be null
     ? Object.entries(scanScoreData.breakdown).map(([k, v]: any) => ({
         subject: k, score: Math.max(0, Math.min(100, Number(v) || 0))
       }))
@@ -638,7 +649,6 @@ export default function SecurityCenter() {
       : [
           { subject: 'Code Security',  score: score != null ? Math.max(score - 10, 0) : 82 },
           { subject: 'Dependencies',   score: score != null ? Math.max(score - 5,  0) : 71 },
-          // Smooth Secrets: linear scale (no sudden jump at score=75)
           { subject: 'Secrets',        score: score != null ? Math.max(Math.min(score + 15, 100), 0) : 55 },
           { subject: 'CI/CD Security', score: score != null ? Math.max(score - 8,  0) : 78 },
           { subject: 'Containers',     score: score != null ? Math.max(score - 3,  0) : 87 },
@@ -655,23 +665,25 @@ export default function SecurityCenter() {
     {
       title:   'Security Score',
       value:   score != null ? `${Math.round(score)}` : '—',
-      sub:     scanScoreData?.last_scan_at
-        ? `Scan: ${new Date(scanScoreData.last_scan_at).toLocaleDateString()}`
-        : 'Run a scan to calculate',
+      sub:     scanScoreData?.repo_name
+        ? `Repo: ${scanScoreData.repo_name}`
+        : scanScoreData?.last_scan_at
+          ? `Scan: ${new Date(scanScoreData.last_scan_at).toLocaleDateString()}`
+          : selectedRepo ? 'No scan for this repo yet' : 'Run a scan to calculate',
       icon: Shield, color: 'text-blue-400', bg: 'bg-blue-500/10',
       loading: false,
     },
     {
       title:   'Active Threats',
       value:   threatStats?.open ?? threatStats?.active ?? '—',
-      sub:     `${threatStats?.critical ?? 0} critical`,
+      sub:     `${threatStats?.critical ?? 0} critical${selectedRepo ? ` · ${selectedRepo.full_name}` : ''}`,
       icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/10',
       loading: !threatStats,
     },
     {
       title:   'Open CVEs',
       value:   vulnsTotal ?? '—',
-      sub:     `${vulns.filter((v: any) => v.severity === 'critical').length} critical`,
+      sub:     `${vulns.filter((v: any) => v.severity === 'critical').length} critical${selectedRepo ? ` · ${selectedRepo.full_name}` : ''}`,
       icon: Eye, color: 'text-yellow-400', bg: 'bg-yellow-500/10',
       loading: !vulnsTotal && vLoading,
     },
@@ -698,22 +710,36 @@ export default function SecurityCenter() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Security Center</h1>
-          <p className="page-subtitle">Threat intelligence, vulnerabilities & compliance monitoring</p>
+          <p className="page-subtitle">
+            Threat intelligence, vulnerabilities &amp; compliance monitoring
+            {selectedRepo && (
+              <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                style={{ background: 'hsl(220 90% 60% / 0.12)', color: 'hsl(220 90% 70%)' }}>
+                <GitBranch className="w-3 h-3" />
+                {selectedRepo.full_name}
+                <button onClick={() => setSelectedRepo(null)}
+                  title="Clear repo filter — show all repos"
+                  className="ml-0.5 opacity-60 hover:opacity-100 transition-opacity">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button className="action-btn" onClick={() => {
-            // Export threats + vulns as CSV
             const csvThreats = [
-              ['ID', 'Severity', 'Status', 'Title', 'MITRE', 'Created'],
+              ['ID', 'Severity', 'Status', 'Title', 'Repo', 'MITRE', 'Created'],
               ...threats.map((t: any) => [
                 t.id?.substring(0, 8), t.severity, t.status,
                 `"${(t.title || t.description || '').replace(/"/g, "'")}"`,
+                selectedRepo?.full_name ?? '',
                 t.mitre_tactic ?? '', t.created_at ?? '',
               ]),
             ].map(r => r.join(',')).join('\n');
             const blob = new Blob([csvThreats], { type: 'text/csv' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-            a.download = `security-report-${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `security-report-${selectedRepo ? selectedRepo.full_name.replace('/', '-') + '-' : ''}${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
           }}><Download className="w-4 h-4" />Export</button>
           <button onClick={handleRefresh} className="action-btn" disabled={isRefreshing}>
@@ -723,12 +749,23 @@ export default function SecurityCenter() {
         </div>
       </div>
 
-      {/* ── DevSecOps Scan Panel (new — above existing content) ── */}
+      {/* ── DevSecOps Scan Panel — selectedRepo is now controlled from here ── */}
       {canAct && (
         <ScanPanel
+          selectedRepo={selectedRepo}
+          onSelectRepo={setSelectedRepo}
           onScanComplete={handleScanComplete}
           onViewResults={(t) => setTab(t as Tab)}
         />
+      )}
+
+      {/* ── Repo isolation banner — shown when all-repo mode is active ──────── */}
+      {!selectedRepo && (
+        <div className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-gray-500 border"
+          style={{ background: 'hsl(230 15% 8%)', borderColor: 'hsl(230 15% 14%)' }}>
+          <Shield className="w-3.5 h-3.5 flex-shrink-0" />
+          <span>Showing data across <strong className="text-gray-400">all repositories</strong>. Select a repository in the scanner above to isolate data per-repo.</span>
+        </div>
       )}
 
       <div className="flex items-center gap-3 mb-1">
@@ -754,7 +791,7 @@ export default function SecurityCenter() {
                 : <>
                     <div className="stat-value text-xl">{m.value}</div>
                     <div className="stat-label">{m.title}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{m.sub}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5 truncate">{m.sub}</div>
                   </>
               }
             </div>
@@ -773,7 +810,10 @@ export default function SecurityCenter() {
       {tab === 'overview' && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <div className="card-base">
-            <h2 className="text-sm font-semibold text-foreground mb-4">Security Score Breakdown</h2>
+            <h2 className="text-sm font-semibold text-foreground mb-4">
+              Security Score Breakdown
+              {selectedRepo && <span className="ml-2 text-xs font-normal text-gray-500">· {selectedRepo.full_name}</span>}
+            </h2>
             <ResponsiveContainer width="100%" height={220}>
               <RadarChart data={radarData}>
                 <PolarGrid stroke="hsl(230 15% 14%)" />
@@ -794,7 +834,9 @@ export default function SecurityCenter() {
 
           <div className="card-base">
             <h2 className="text-sm font-semibold text-foreground mb-4">
-              {timelineData.length > 0 ? 'Security Score Trend' : 'Recent Threats Summary'}
+              {timelineData.length > 0
+                ? `Security Score Trend${selectedRepo ? ` · ${selectedRepo.full_name}` : ''}`
+                : 'Recent Threats Summary'}
             </h2>
             {timelineData.length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
@@ -812,7 +854,9 @@ export default function SecurityCenter() {
               <div className="flex flex-col items-center justify-center h-[220px] text-center">
                 <Shield className="w-8 h-8 text-green-400 mb-2" />
                 <p className="text-sm text-green-400 font-medium">No threats detected</p>
-                <p className="text-xs text-gray-500 mt-1">Run a scan to check your repositories</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedRepo ? `Select a repo and run a scan to check ${selectedRepo.full_name}` : 'Run a scan to check your repositories'}
+                </p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -877,13 +921,20 @@ export default function SecurityCenter() {
       {tab === 'vulnerabilities' && (
         <div className="card-base overflow-hidden">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-foreground">Vulnerabilities</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              Vulnerabilities
+              {selectedRepo && <span className="ml-2 text-xs font-normal text-gray-500">· {selectedRepo.full_name}</span>}
+            </h2>
             <span className="text-xs text-muted-foreground">{vulnsTotal ?? 0} total</span>
           </div>
           {vLoading ? (
-            <p className="text-sm text-muted-foreground">Loading vulnerabilities...</p>
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+            </div>
           ) : vulns.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No vulnerabilities found. Run a security scan to detect CVEs in your dependencies.</p>
+            <p className="text-sm text-muted-foreground">
+              No vulnerabilities found.{selectedRepo ? ` Run a scan on ${selectedRepo.full_name} to detect CVEs in its dependencies.` : ' Run a security scan to detect CVEs in your dependencies.'}
+            </p>
           ) : (
             <table className="data-table">
               <thead>
