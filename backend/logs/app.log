@@ -2101,3 +2101,300 @@ WHERE scans.id = $1::VARCHAR AND scans.tenant_id = $2::VARCHAR]
 2026-05-24 14:01:55 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 160s
 2026-05-24 14:03:06 | ERROR    | app.middleware.logging:23 - [bbf50f51] GET /api/v1/alerts → ERR (1.36ms): Bearer token required
 2026-05-24 14:03:06 | ERROR    | app.middleware.logging:23 - [7d5579eb] GET /api/v1/alerts → ERR (3.99ms): Bearer token required
+2026-05-24 14:03:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 14:03:50 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 14:04:19 | WARNING  | app.services.scan_service:315 - Redis lock unavailable for repo f47dc67d-6f73-4fe0-8606-13718465b446 (Error -2 connecting to redis:6379. -2.) — falling back to DB-only deduplication check
+2026-05-24 14:04:19 | INFO     | app.services.scan_service:129 - [scan:7195d93a-8a34-4e5b-9325-8fa24775c952] Queued for repo=MomenLotfy/juice-shop branch=master triggered_by=38498604-66db-4c24-9718-7c2a66f06b89
+2026-05-24 14:04:19 | INFO     | app.middleware.logging:15 - [011ec2ca] POST /api/v1/security/scan → 202 (301.83ms)
+2026-05-24 14:04:22 | INFO     | app.middleware.logging:15 - [7262ad61] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.1ms)
+2026-05-24 14:04:25 | INFO     | app.middleware.logging:15 - [a3a52c31] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.13ms)
+2026-05-24 14:04:25 | INFO     | app.services.scan_service:173 - [scan:7195d93a-8a34-4e5b-9325-8fa24775c952] No active Celery workers — using inline fallback
+2026-05-24 14:04:27 | INFO     | app.services.scan_engine:888 - [scan:7195d93a-8a34-4e5b-9325-8fa24775c952] lang=javascript dockerfile=True cicd=True docker_available=True
+2026-05-24 14:04:28 | INFO     | app.middleware.logging:15 - [874a73d8] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (9.31ms)
+2026-05-24 14:04:31 | INFO     | app.middleware.logging:15 - [f56349a5] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (10.72ms)
+2026-05-24 14:04:34 | INFO     | app.middleware.logging:15 - [95690908] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (10.92ms)
+2026-05-24 14:04:35 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 14:04:37 | INFO     | app.middleware.logging:15 - [075dee3a] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.92ms)
+2026-05-24 14:04:43 | ERROR    | app.middleware.logging:23 - [e8a8dd3d] GET /api/v1/alerts → ERR (1.34ms): Bearer token required
+2026-05-24 14:04:43 | ERROR    | app.middleware.logging:23 - [86dda797] GET /api/v1/alerts → ERR (1.62ms): Bearer token required
+2026-05-24 14:04:51 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-24 14:04:52 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-24 14:04:52 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 12330d84-9527-4554-88b2-96b7541726ff: Dependabot alerts are disabled for this repository.
+2026-05-24 14:05:05 | INFO     | app.services.auth_service:115 - New user registered: shvsbslpesa123@gmail.com (tenant: Mo'men Lotfy's Organization)
+2026-05-24 14:05:05 | INFO     | app.integrations.email.client:31 - [EMAIL — no key] To: shvsbslpesa123@gmail.com | Subject: Welcome to UniOps, Mo'men! 🚀
+2026-05-24 14:05:05 | INFO     | app.middleware.logging:15 - [8c7dc00f] POST /api/v1/auth/register → 200 (456.04ms)
+2026-05-24 14:05:05 | INFO     | app.middleware.logging:15 - [c1d32b65] GET /api/v1/integrations → 200 (18.43ms)
+2026-05-24 14:05:05 | INFO     | app.middleware.logging:15 - [d9ae64d3] GET /api/v1/companies → 200 (14.02ms)
+2026-05-24 14:05:05 | INFO     | app.middleware.logging:15 - [467c9c67] GET /api/v1/companies/stats → 200 (28.47ms)
+2026-05-24 14:05:06 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=3
+2026-05-24 14:05:06 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 14:05:17 | INFO     | app.middleware.logging:15 - [eacf6e97] GET /api/v1/integrations → 200 (11.52ms)
+2026-05-24 14:05:17 | INFO     | app.middleware.logging:15 - [6583f4cb] POST /api/v1/integrations → 201 (18.16ms)
+2026-05-24 14:05:17 | INFO     | app.middleware.logging:15 - [c50410ca] PATCH /api/v1/integrations/16b7dea0-c6d8-41a5-9712-e1e301016ac2 → 200 (16.34ms)
+2026-05-24 14:05:17 | INFO     | app.api.v1.endpoints.integrations:329 - [bg] Connection test OK + synced 30 repos for integration 16b7dea0-c6d8-41a5-9712-e1e301016ac2 (tenant 3844a68d-4c6f-45c1-91ad-8600cb2f0d28)
+2026-05-24 14:05:17 | INFO     | app.middleware.logging:15 - [9a2ae7d6] POST /api/v1/integrations/16b7dea0-c6d8-41a5-9712-e1e301016ac2/test → 200 (164.07ms)
+2026-05-24 14:05:17 | INFO     | app.api.v1.endpoints.integrations:329 - [bg] Connection test OK + synced 30 repos for integration 16b7dea0-c6d8-41a5-9712-e1e301016ac2 (tenant 3844a68d-4c6f-45c1-91ad-8600cb2f0d28)
+2026-05-24 14:05:18 | INFO     | app.middleware.logging:15 - [511054a6] GET /api/v1/integrations/16b7dea0-c6d8-41a5-9712-e1e301016ac2 → 200 (7.2ms)
+2026-05-24 14:05:24 | INFO     | app.middleware.logging:15 - [90247449] GET /api/v1/threats/stats → 200 (18.21ms)
+2026-05-24 14:05:24 | INFO     | app.middleware.logging:15 - [bc036253] GET /api/v1/kubernetes/pods/stats → 200 (19.23ms)
+2026-05-24 14:05:24 | INFO     | app.middleware.logging:15 - [bfeaeccf] GET /api/v1/alerts → 200 (24.7ms)
+2026-05-24 14:05:24 | INFO     | app.middleware.logging:15 - [09a1483d] GET /api/v1/ml/stats → 200 (33.45ms)
+2026-05-24 14:05:24 | INFO     | app.middleware.logging:15 - [ad91673f] GET /api/v1/costs/summary → 200 (31.99ms)
+2026-05-24 14:05:24 | INFO     | app.middleware.logging:15 - [2e3c5a32] GET /api/v1/threats/stats → 200 (5.66ms)
+2026-05-24 14:05:24 | INFO     | app.middleware.logging:15 - [4af35b77] GET /api/v1/kubernetes/pods/stats → 200 (8.21ms)
+2026-05-24 14:05:24 | INFO     | app.middleware.logging:15 - [91acd440] GET /api/v1/ml/stats → 200 (11.73ms)
+2026-05-24 14:05:24 | INFO     | app.middleware.logging:15 - [c2304dd3] GET /api/v1/costs/summary → 200 (20.6ms)
+2026-05-24 14:05:24 | INFO     | app.middleware.logging:15 - [170ecd97] GET /api/v1/alerts → 200 (14.03ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [200cc7d1] GET /api/v1/security/repos → 200 (10.0ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [8298ac06] GET /api/v1/threats/stats → 200 (11.87ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [f8d2b466] GET /api/v1/compliance → 200 (20.2ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [34b6efb6] GET /api/v1/vulnerabilities → 200 (21.59ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [6c5b7ec5] GET /api/v1/threats → 200 (17.22ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [2b6eaafe] GET /api/v1/compliance/score → 200 (15.97ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [e3af8d19] GET /api/v1/security/score → 200 (10.31ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [bdadbeba] GET /api/v1/security/scan-history → 200 (18.13ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [0b2217ed] GET /api/v1/threats/stats → 200 (9.86ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [f651c3da] GET /api/v1/vulnerabilities → 200 (11.34ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [f18e007e] GET /api/v1/compliance/score → 200 (6.36ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [cbb4aa96] GET /api/v1/threats → 200 (10.11ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [58f97ef2] GET /api/v1/compliance → 200 (4.99ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [f0e14219] GET /api/v1/security/repos → 200 (9.26ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [50d3fe72] GET /api/v1/security/score → 200 (8.89ms)
+2026-05-24 14:05:27 | INFO     | app.middleware.logging:15 - [bd44a4ce] GET /api/v1/security/scan-history → 200 (5.7ms)
+2026-05-24 14:05:31 | WARNING  | app.services.scan_service:315 - Redis lock unavailable for repo 6589751b-6565-4c31-bb8d-16f699153ced (Error -2 connecting to redis:6379. -2.) — falling back to DB-only deduplication check
+2026-05-24 14:05:31 | INFO     | app.services.scan_service:129 - [scan:3658d6e6-23e6-43db-a5c0-fefe63c01879] Queued for repo=MomenLotfy/DEPI-Final-Project branch=master triggered_by=eba36d31-ceea-4fd7-a541-9871462f2916
+2026-05-24 14:05:31 | INFO     | app.middleware.logging:15 - [89960a14] POST /api/v1/security/scan → 202 (18.44ms)
+2026-05-24 14:05:34 | INFO     | app.middleware.logging:15 - [19e5f4b2] GET /api/v1/security/scan/3658d6e6-23e6-43db-a5c0-fefe63c01879 → 200 (5.5ms)
+2026-05-24 14:05:37 | INFO     | app.services.scan_service:173 - [scan:3658d6e6-23e6-43db-a5c0-fefe63c01879] No active Celery workers — using inline fallback
+2026-05-24 14:05:37 | INFO     | app.middleware.logging:15 - [529e7124] GET /api/v1/security/scan/3658d6e6-23e6-43db-a5c0-fefe63c01879 → 200 (8.46ms)
+2026-05-24 14:05:37 | INFO     | app.services.scan_engine:888 - [scan:3658d6e6-23e6-43db-a5c0-fefe63c01879] lang=unknown dockerfile=False cicd=True docker_available=True
+2026-05-24 14:05:40 | INFO     | app.middleware.logging:15 - [f0fb11b4] GET /api/v1/security/scan/3658d6e6-23e6-43db-a5c0-fefe63c01879 → 200 (7.0ms)
+2026-05-24 14:05:43 | INFO     | app.middleware.logging:15 - [2af49432] GET /api/v1/security/scan/3658d6e6-23e6-43db-a5c0-fefe63c01879 → 200 (6.38ms)
+2026-05-24 14:05:46 | INFO     | app.middleware.logging:15 - [b0798832] GET /api/v1/security/scan/3658d6e6-23e6-43db-a5c0-fefe63c01879 → 200 (6.37ms)
+2026-05-24 14:05:49 | INFO     | app.middleware.logging:15 - [6ae3b340] GET /api/v1/security/scan/3658d6e6-23e6-43db-a5c0-fefe63c01879 → 200 (6.24ms)
+2026-05-24 14:05:49 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 14:05:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 14:05:50 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 14:05:51 | INFO     | app.middleware.logging:15 - [92f31fac] GET /api/v1/alerts → 200 (9.9ms)
+2026-05-24 14:05:51 | INFO     | app.middleware.logging:15 - [2aa908d5] GET /api/v1/integrations → 200 (8.77ms)
+2026-05-24 14:05:51 | INFO     | app.middleware.logging:15 - [79d50402] GET /api/v1/companies → 200 (10.2ms)
+2026-05-24 14:05:51 | INFO     | app.middleware.logging:15 - [33b41b9b] GET /api/v1/companies/stats → 200 (15.45ms)
+2026-05-24 14:05:51 | INFO     | app.middleware.logging:15 - [60d94870] GET /api/v1/alerts → 200 (8.37ms)
+2026-05-24 14:05:51 | INFO     | app.middleware.logging:15 - [3b5be87b] GET /api/v1/security/repos → 200 (10.75ms)
+2026-05-24 14:05:51 | INFO     | app.middleware.logging:15 - [fdb2688d] GET /api/v1/threats/stats → 200 (12.09ms)
+2026-05-24 14:05:51 | INFO     | app.middleware.logging:15 - [0f28a0e1] GET /api/v1/vulnerabilities → 200 (11.22ms)
+2026-05-24 14:05:51 | INFO     | app.middleware.logging:15 - [dd387c0e] GET /api/v1/threats → 200 (16.9ms)
+2026-05-24 14:05:51 | INFO     | app.middleware.logging:15 - [a6b0b776] GET /api/v1/compliance → 200 (10.61ms)
+2026-05-24 14:05:51 | INFO     | app.middleware.logging:15 - [65819c82] GET /api/v1/compliance/score → 200 (7.99ms)
+2026-05-24 14:05:52 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=3
+2026-05-24 14:05:52 | INFO     | app.middleware.logging:15 - [c027ff74] GET /api/v1/security/score → 200 (8.89ms)
+2026-05-24 14:05:52 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 14:05:52 | INFO     | app.middleware.logging:15 - [7b78e625] GET /api/v1/security/scan-history → 200 (24.86ms)
+2026-05-24 14:05:52 | INFO     | app.middleware.logging:15 - [10de980d] GET /api/v1/threats/stats → 200 (22.92ms)
+2026-05-24 14:05:52 | INFO     | app.middleware.logging:15 - [880929e8] GET /api/v1/security/repos → 200 (22.09ms)
+2026-05-24 14:05:52 | INFO     | app.middleware.logging:15 - [e36ab998] GET /api/v1/threats → 200 (24.11ms)
+2026-05-24 14:05:52 | INFO     | app.middleware.logging:15 - [d8265216] GET /api/v1/vulnerabilities → 200 (8.26ms)
+2026-05-24 14:05:52 | INFO     | app.middleware.logging:15 - [8e420fbd] GET /api/v1/compliance → 200 (6.92ms)
+2026-05-24 14:05:52 | INFO     | app.middleware.logging:15 - [56eb3db3] GET /api/v1/security/score → 200 (8.37ms)
+2026-05-24 14:05:52 | INFO     | app.middleware.logging:15 - [61cead0e] GET /api/v1/compliance/score → 200 (11.41ms)
+2026-05-24 14:05:52 | INFO     | app.middleware.logging:15 - [65776efa] GET /api/v1/security/scan-history → 200 (7.85ms)
+2026-05-24 14:05:54 | WARNING  | app.services.scan_service:315 - Redis lock unavailable for repo 0ce0d4b6-7ede-41e0-95cd-5eba58518529 (Error -2 connecting to redis:6379. -2.) — falling back to DB-only deduplication check
+2026-05-24 14:05:54 | INFO     | app.services.scan_service:129 - [scan:fff8bb2a-70e2-4a05-be20-773f7ef6828b] Queued for repo=MomenLotfy/DevOps-Interview-MCQ branch=main triggered_by=eba36d31-ceea-4fd7-a541-9871462f2916
+2026-05-24 14:05:54 | INFO     | app.middleware.logging:15 - [2cfcbc0d] POST /api/v1/security/scan → 202 (19.78ms)
+2026-05-24 14:05:58 | INFO     | app.middleware.logging:15 - [11d54292] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (6.43ms)
+2026-05-24 14:06:00 | INFO     | app.services.scan_service:173 - [scan:fff8bb2a-70e2-4a05-be20-773f7ef6828b] No active Celery workers — using inline fallback
+2026-05-24 14:06:01 | INFO     | app.services.scan_engine:888 - [scan:fff8bb2a-70e2-4a05-be20-773f7ef6828b] lang=unknown dockerfile=False cicd=False docker_available=True
+2026-05-24 14:06:01 | INFO     | app.middleware.logging:15 - [fb2d9696] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (22.62ms)
+2026-05-24 14:06:04 | INFO     | app.middleware.logging:15 - [af613b0d] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (6.64ms)
+2026-05-24 14:06:07 | INFO     | app.middleware.logging:15 - [94af62d8] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (7.89ms)
+2026-05-24 14:06:10 | INFO     | app.middleware.logging:15 - [969fbae0] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (5.97ms)
+2026-05-24 14:06:13 | INFO     | app.middleware.logging:15 - [c1b3588e] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (8.15ms)
+2026-05-24 14:06:16 | INFO     | app.middleware.logging:15 - [371de92e] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (8.22ms)
+2026-05-24 14:06:19 | INFO     | app.middleware.logging:15 - [0aacdd5a] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (6.61ms)
+2026-05-24 14:06:22 | INFO     | app.middleware.logging:15 - [a4a06ab7] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (5.38ms)
+2026-05-24 14:06:25 | INFO     | app.middleware.logging:15 - [2eeb838d] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (7.22ms)
+2026-05-24 14:06:28 | INFO     | app.middleware.logging:15 - [7ad337b2] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (6.16ms)
+2026-05-24 14:06:31 | INFO     | app.middleware.logging:15 - [89e23e59] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (6.0ms)
+2026-05-24 14:06:34 | INFO     | app.middleware.logging:15 - [5250d6a5] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (6.06ms)
+2026-05-24 14:06:37 | INFO     | app.middleware.logging:15 - [6d6511c4] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (7.22ms)
+2026-05-24 14:06:40 | INFO     | app.middleware.logging:15 - [16f09796] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (5.57ms)
+2026-05-24 14:06:43 | INFO     | app.middleware.logging:15 - [da874deb] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (7.37ms)
+2026-05-24 14:06:46 | INFO     | app.middleware.logging:15 - [9520ae06] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (7.78ms)
+2026-05-24 14:06:49 | INFO     | app.middleware.logging:15 - [1dc48830] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (7.61ms)
+2026-05-24 14:06:55 | INFO     | app.middleware.logging:15 - [2029fae2] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.04ms)
+2026-05-24 14:06:58 | INFO     | app.middleware.logging:15 - [991e5c22] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.45ms)
+2026-05-24 14:07:01 | INFO     | app.middleware.logging:15 - [e696484d] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (4.88ms)
+2026-05-24 14:07:04 | INFO     | app.middleware.logging:15 - [5a512123] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.48ms)
+2026-05-24 14:07:07 | INFO     | app.middleware.logging:15 - [e369ac44] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.18ms)
+2026-05-24 14:07:10 | INFO     | app.middleware.logging:15 - [b3f215f6] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.23ms)
+2026-05-24 14:07:13 | INFO     | app.middleware.logging:15 - [62766d13] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.68ms)
+2026-05-24 14:07:16 | INFO     | app.middleware.logging:15 - [ea7e27df] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.5ms)
+2026-05-24 14:07:19 | INFO     | app.middleware.logging:15 - [66691536] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.45ms)
+2026-05-24 14:07:22 | INFO     | app.middleware.logging:15 - [8a8843d0] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (4.98ms)
+2026-05-24 14:07:25 | INFO     | app.middleware.logging:15 - [849c597b] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.22ms)
+2026-05-24 14:07:28 | INFO     | app.middleware.logging:15 - [4cdca8b3] GET /api/v1/security/scan/fff8bb2a-70e2-4a05-be20-773f7ef6828b → 200 (5.57ms)
+2026-05-24 14:07:31 | INFO     | app.middleware.logging:15 - [18ff04ec] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.66ms)
+2026-05-24 14:07:34 | INFO     | app.middleware.logging:15 - [bde98981] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (4.94ms)
+2026-05-24 14:07:37 | INFO     | app.middleware.logging:15 - [7157a050] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.19ms)
+2026-05-24 14:07:40 | INFO     | app.middleware.logging:15 - [0cc08409] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (8.15ms)
+2026-05-24 14:07:43 | INFO     | app.middleware.logging:15 - [1a5db32a] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (10.55ms)
+2026-05-24 14:07:46 | INFO     | app.middleware.logging:15 - [f3e18f5c] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.44ms)
+2026-05-24 14:07:49 | INFO     | app.middleware.logging:15 - [a344ea8c] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.62ms)
+2026-05-24 14:07:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 14:07:50 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 14:07:52 | INFO     | app.middleware.logging:15 - [337baf58] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (10.34ms)
+2026-05-24 14:07:55 | INFO     | app.middleware.logging:15 - [ac185e5d] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.63ms)
+2026-05-24 14:07:58 | INFO     | app.middleware.logging:15 - [2f92cea5] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.87ms)
+2026-05-24 14:08:01 | INFO     | app.middleware.logging:15 - [18efaeff] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.91ms)
+2026-05-24 14:08:04 | INFO     | app.middleware.logging:15 - [45c4be03] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (10.29ms)
+2026-05-24 14:08:07 | INFO     | app.middleware.logging:15 - [7ba077b7] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (116.57ms)
+2026-05-24 14:08:10 | INFO     | app.middleware.logging:15 - [31c8930a] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.37ms)
+2026-05-24 14:08:13 | INFO     | app.middleware.logging:15 - [bbdeeee6] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.33ms)
+2026-05-24 14:08:16 | INFO     | app.middleware.logging:15 - [7ca22a1a] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (14.68ms)
+2026-05-24 14:08:19 | INFO     | app.middleware.logging:15 - [185b0344] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (8.6ms)
+2026-05-24 14:08:22 | INFO     | app.middleware.logging:15 - [92e21548] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.16ms)
+2026-05-24 14:08:25 | INFO     | app.middleware.logging:15 - [59307e74] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (11.87ms)
+2026-05-24 14:08:28 | INFO     | app.middleware.logging:15 - [7eddd33e] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (8.16ms)
+2026-05-24 14:08:31 | INFO     | app.middleware.logging:15 - [5311e0c8] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.77ms)
+2026-05-24 14:08:34 | INFO     | app.middleware.logging:15 - [25f8e5c2] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.58ms)
+2026-05-24 14:08:37 | INFO     | app.middleware.logging:15 - [7813569f] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.6ms)
+2026-05-24 14:08:40 | INFO     | app.middleware.logging:15 - [8af0242b] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.7ms)
+2026-05-24 14:08:43 | INFO     | app.middleware.logging:15 - [00ea03fc] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.47ms)
+2026-05-24 14:08:46 | INFO     | app.middleware.logging:15 - [61b4c6a2] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.55ms)
+2026-05-24 14:08:49 | INFO     | app.middleware.logging:15 - [c7a5eb5a] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (11.46ms)
+2026-05-24 14:08:52 | INFO     | app.middleware.logging:15 - [cd38d15c] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.06ms)
+2026-05-24 14:08:55 | INFO     | app.middleware.logging:15 - [dc327b92] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.48ms)
+2026-05-24 14:08:58 | INFO     | app.middleware.logging:15 - [f4e9e422] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (56.75ms)
+2026-05-24 14:09:01 | INFO     | app.middleware.logging:15 - [edfa7edb] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.91ms)
+2026-05-24 14:09:04 | INFO     | app.middleware.logging:15 - [40a787a1] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.11ms)
+2026-05-24 14:09:07 | INFO     | app.middleware.logging:15 - [5fcbdede] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.28ms)
+2026-05-24 14:09:10 | INFO     | app.middleware.logging:15 - [60f0a51a] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.97ms)
+2026-05-24 14:09:13 | INFO     | app.middleware.logging:15 - [2ce279b6] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (9.35ms)
+2026-05-24 14:09:16 | INFO     | app.middleware.logging:15 - [fdc5bb05] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.45ms)
+2026-05-24 14:09:19 | INFO     | app.middleware.logging:15 - [2ed54fed] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.58ms)
+2026-05-24 14:09:22 | INFO     | app.middleware.logging:15 - [0c00124a] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.56ms)
+2026-05-24 14:09:25 | INFO     | app.middleware.logging:15 - [1733c5e7] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (9.89ms)
+2026-05-24 14:09:27 | WARNING  | app.services.scan_engine:85 - Command timed out (300s): docker run --rm
+2026-05-24 14:09:28 | INFO     | app.middleware.logging:15 - [71d11440] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (12.67ms)
+2026-05-24 14:09:31 | INFO     | app.middleware.logging:15 - [54ead800] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.98ms)
+2026-05-24 14:09:34 | INFO     | app.middleware.logging:15 - [04ddc388] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.17ms)
+2026-05-24 14:09:35 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 14:09:37 | INFO     | app.middleware.logging:15 - [8f82e057] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (11.58ms)
+2026-05-24 14:09:40 | INFO     | app.middleware.logging:15 - [ab8ced1d] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (15.64ms)
+2026-05-24 14:09:43 | INFO     | app.middleware.logging:15 - [f18c263d] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.56ms)
+2026-05-24 14:09:46 | INFO     | app.middleware.logging:15 - [e3519b33] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (9.39ms)
+2026-05-24 14:09:49 | INFO     | app.middleware.logging:15 - [d8378757] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (13.54ms)
+2026-05-24 14:09:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 14:09:50 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 14:09:52 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-24 14:09:52 | INFO     | app.middleware.logging:15 - [8945b875] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (8.45ms)
+2026-05-24 14:09:53 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-24 14:09:53 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 12330d84-9527-4554-88b2-96b7541726ff: Dependabot alerts are disabled for this repository.
+2026-05-24 14:09:53 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 14:09:55 | INFO     | app.middleware.logging:15 - [e6fa582a] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (17.47ms)
+2026-05-24 14:09:58 | INFO     | app.middleware.logging:15 - [b67e4b44] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.98ms)
+2026-05-24 14:10:01 | INFO     | app.middleware.logging:15 - [3a65b500] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (19.84ms)
+2026-05-24 14:10:04 | INFO     | app.middleware.logging:15 - [ea4c6d56] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (117.04ms)
+2026-05-24 14:10:07 | INFO     | app.middleware.logging:15 - [7521315e] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (38.83ms)
+2026-05-24 14:10:10 | INFO     | app.middleware.logging:15 - [b6399cbf] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (10.72ms)
+2026-05-24 14:10:13 | INFO     | app.middleware.logging:15 - [19207911] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.59ms)
+2026-05-24 14:10:16 | INFO     | app.middleware.logging:15 - [2c0c04b0] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (12.18ms)
+2026-05-24 14:10:19 | INFO     | app.middleware.logging:15 - [eb93b269] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (11.36ms)
+2026-05-24 14:10:22 | INFO     | app.middleware.logging:15 - [7c67f0af] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (17.41ms)
+2026-05-24 14:10:25 | INFO     | app.middleware.logging:15 - [37e8ffd7] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (59.65ms)
+2026-05-24 14:10:28 | INFO     | app.middleware.logging:15 - [5427aecd] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (12.92ms)
+2026-05-24 14:10:31 | INFO     | app.middleware.logging:15 - [ecdeeb5a] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (11.59ms)
+2026-05-24 14:10:34 | INFO     | app.middleware.logging:15 - [f7bf2f45] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (16.55ms)
+2026-05-24 14:10:37 | INFO     | app.middleware.logging:15 - [627f39da] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.82ms)
+2026-05-24 14:10:37 | WARNING  | app.services.scan_engine:85 - Command timed out (300s): docker run --rm
+2026-05-24 14:10:37 | INFO     | app.tasks.run_scan:198 - [scan:3658d6e6-23e6-43db-a5c0-fefe63c01879] Completed ✓ score=100.0 findings=0 threats=0 vulns=0
+2026-05-24 14:10:37 | DEBUG    | app.tasks.run_scan:275 - [lock] Failed to release scan lock for repo 6589751b-6565-4c31-bb8d-16f699153ced: Error -2 connecting to redis:6379. -2.
+2026-05-24 14:10:40 | INFO     | app.middleware.logging:15 - [471fe4dd] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.6ms)
+2026-05-24 14:10:43 | INFO     | app.middleware.logging:15 - [b3165df8] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.35ms)
+2026-05-24 14:10:46 | INFO     | app.middleware.logging:15 - [a468b01c] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.94ms)
+2026-05-24 14:10:49 | INFO     | app.middleware.logging:15 - [1c2490b8] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (14.56ms)
+2026-05-24 14:10:52 | INFO     | app.middleware.logging:15 - [63f3a513] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (5.71ms)
+2026-05-24 14:10:55 | INFO     | app.middleware.logging:15 - [48a5fbd3] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (9.35ms)
+2026-05-24 14:10:58 | INFO     | app.middleware.logging:15 - [0968c189] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (12.61ms)
+2026-05-24 14:11:01 | WARNING  | app.services.scan_engine:85 - Command timed out (300s): docker run --rm
+2026-05-24 14:11:01 | INFO     | app.tasks.run_scan:198 - [scan:fff8bb2a-70e2-4a05-be20-773f7ef6828b] Completed ✓ score=100.0 findings=0 threats=0 vulns=0
+2026-05-24 14:11:01 | DEBUG    | app.tasks.run_scan:275 - [lock] Failed to release scan lock for repo 0ce0d4b6-7ede-41e0-95cd-5eba58518529: Error -2 connecting to redis:6379. -2.
+2026-05-24 14:11:01 | INFO     | app.middleware.logging:15 - [6e316952] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (9.73ms)
+2026-05-24 14:11:01 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 14:11:01 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 14:11:01 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 14:11:01 | INFO     | app.main:73 - Shutting down...
+2026-05-24 14:11:01 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 14:11:01 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 14:11:06 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 14:11:06 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 14:11:06 | INFO     | app.main:33 - Database initialized
+2026-05-24 14:11:06 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 14:11:06 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 14:11:06 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 14:11:06 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 14:11:06 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 14:11:06 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 14:11:06 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 14:11:06 | INFO     | app.middleware.logging:15 - [35ce5c35] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (15.7ms)
+2026-05-24 14:11:06 | INFO     | app.main:73 - Shutting down...
+2026-05-24 14:11:06 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-24 14:11:06 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-24 14:11:10 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-24 14:11:11 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-24 14:11:11 | INFO     | app.main:33 - Database initialized
+2026-05-24 14:11:11 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-24 14:11:11 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-24 14:11:11 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-24 14:11:11 | INFO     | app.main:39 - Background scheduler started
+2026-05-24 14:11:11 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-24 14:11:11 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-24 14:11:11 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-24 14:11:12 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 14:11:13 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 14:11:13 | INFO     | app.middleware.logging:15 - [d116bf47] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (10.03ms)
+2026-05-24 14:11:13 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-05-24 14:11:13 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 14:11:16 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-24 14:11:16 | INFO     | app.middleware.logging:15 - [1644de7b] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.55ms)
+2026-05-24 14:11:19 | INFO     | app.middleware.logging:15 - [403c6d39] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (6.47ms)
+2026-05-24 14:11:22 | INFO     | app.middleware.logging:15 - [cd7c7635] GET /api/v1/security/scan/7195d93a-8a34-4e5b-9325-8fa24775c952 → 200 (7.6ms)
+2026-05-24 14:11:26 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-24 14:11:41 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 14:11:41 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 14:11:41 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 0 integrations
+2026-05-24 14:11:41 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-24 14:11:41 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-24 14:11:41 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-24 14:11:41 | INFO     | app.tasks.run_scan:112 - [scan:657a6ed9-88dc-4fad-bcac-4990433d38ae] Status → cloning (repo=MomenLotfy/UniOps-SaaS-Product)
+2026-05-24 14:11:41 | INFO     | app.tasks.run_scan:117 - [scan:657a6ed9-88dc-4fad-bcac-4990433d38ae] Status → scanning
+2026-05-24 14:11:42 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-24 14:11:42 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 12330d84-9527-4554-88b2-96b7541726ff: Dependabot alerts are disabled for this repository.
+2026-05-24 14:11:42 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 14:11:43 | INFO     | app.services.scan_engine:888 - [scan:657a6ed9-88dc-4fad-bcac-4990433d38ae] lang=javascript dockerfile=False cicd=True docker_available=True
+2026-05-24 14:11:46 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-24 14:12:26 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 80s
+2026-05-24 14:13:00 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 14:13:04 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-05-24 14:13:05 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 14:13:41 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-24 14:13:41 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 14:13:46 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 160s
+2026-05-24 14:13:59 | WARNING  | app.services.scan_service:315 - Redis lock unavailable for repo f47dc67d-6f73-4fe0-8606-13718465b446 (Error -2 connecting to redis:6379. -2.) — falling back to DB-only deduplication check
+2026-05-24 14:13:59 | INFO     | app.services.scan_service:129 - [scan:d914c0c0-dfde-4ad5-b48a-9d84149356e4] Queued for repo=MomenLotfy/juice-shop branch=master triggered_by=38498604-66db-4c24-9718-7c2a66f06b89
+2026-05-24 14:13:59 | INFO     | app.middleware.logging:15 - [6c4a5b14] POST /api/v1/security/scan → 202 (41.05ms)
+2026-05-24 14:14:02 | INFO     | app.middleware.logging:15 - [546d79f2] GET /api/v1/security/scan/d914c0c0-dfde-4ad5-b48a-9d84149356e4 → 200 (29.18ms)
+2026-05-24 14:14:05 | INFO     | app.middleware.logging:15 - [8dff6663] GET /api/v1/security/scan/d914c0c0-dfde-4ad5-b48a-9d84149356e4 → 200 (24.11ms)
+2026-05-24 14:14:05 | INFO     | app.services.scan_service:173 - [scan:d914c0c0-dfde-4ad5-b48a-9d84149356e4] No active Celery workers — using inline fallback
+2026-05-24 14:14:05 | INFO     | app.tasks.run_scan:112 - [scan:d914c0c0-dfde-4ad5-b48a-9d84149356e4] Status → cloning (repo=MomenLotfy/juice-shop)
+2026-05-24 14:14:05 | INFO     | app.tasks.run_scan:117 - [scan:d914c0c0-dfde-4ad5-b48a-9d84149356e4] Status → scanning
+2026-05-24 14:14:07 | INFO     | app.services.scan_engine:888 - [scan:d914c0c0-dfde-4ad5-b48a-9d84149356e4] lang=javascript dockerfile=True cicd=True docker_available=True
+2026-05-24 14:14:08 | INFO     | app.middleware.logging:15 - [6aaa32f3] GET /api/v1/security/scan/d914c0c0-dfde-4ad5-b48a-9d84149356e4 → 200 (20.81ms)
+2026-05-24 14:14:12 | INFO     | app.middleware.logging:15 - [77c8dcc4] GET /api/v1/security/scan/d914c0c0-dfde-4ad5-b48a-9d84149356e4 → 200 (26.16ms)
+2026-05-24 14:14:15 | INFO     | app.middleware.logging:15 - [edec5bf8] GET /api/v1/security/scan/d914c0c0-dfde-4ad5-b48a-9d84149356e4 → 200 (221.62ms)
+2026-05-24 14:14:18 | INFO     | app.middleware.logging:15 - [231424f4] GET /api/v1/security/scan/d914c0c0-dfde-4ad5-b48a-9d84149356e4 → 200 (6.82ms)
+2026-05-24 14:14:21 | INFO     | app.middleware.logging:15 - [864fb2b5] GET /api/v1/security/scan/d914c0c0-dfde-4ad5-b48a-9d84149356e4 → 200 (7.51ms)
+2026-05-24 14:14:24 | INFO     | app.middleware.logging:15 - [9451741c] GET /api/v1/security/scan/d914c0c0-dfde-4ad5-b48a-9d84149356e4 → 200 (15.55ms)
+2026-05-24 14:14:27 | INFO     | app.middleware.logging:15 - [71e2d783] GET /api/v1/security/scan/d914c0c0-dfde-4ad5-b48a-9d84149356e4 → 200 (17.22ms)
+2026-05-24 14:14:30 | INFO     | app.middleware.logging:15 - [af8d5e6f] GET /api/v1/security/scan/d914c0c0-dfde-4ad5-b48a-9d84149356e4 → 200 (6.74ms)
+2026-05-24 14:14:33 | INFO     | app.middleware.logging:15 - [3ddf093a] GET /api/v1/security/scan/d914c0c0-dfde-4ad5-b48a-9d84149356e4 → 200 (386.07ms)
