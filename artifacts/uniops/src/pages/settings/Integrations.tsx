@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Cloud, GitBranch, Server, MessageSquare, Activity,
   CheckCircle, XCircle, AlertCircle, RefreshCw, X, Eye, EyeOff, Loader2,
+  Key, ExternalLink, ShieldCheck, ArrowRight, Copy, Database,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { formatRelative } from '@/lib/formatters';
 import { clsx } from 'clsx';
 import { useApi, apiPost, apiPatch } from '@/hooks/use-api';
-import { integrationsApi } from '@/services/api/integrations'; // ✅ Added: use the corrected integration API methods
+import { integrationsApi } from '@/services/api/integrations';
 
 const PROVIDER_META: Record<string, { icon: any; color: string; description: string; category: string }> = {
   aws:        { icon: Cloud,         color: 'text-orange-400', description: 'Monitor EC2, S3, RDS, and 200+ AWS services', category: 'Cloud' },
@@ -275,6 +277,373 @@ function KubernetesConnectModal({
             </button>
           </div>
         </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ── GitHub PAT Setup Wizard ───────────────────────────────────────────────────
+const GH_TOKEN_URL =
+  'https://github.com/settings/tokens/new' +
+  '?description=UniOps+Control+Tower' +
+  '&scopes=repo,workflow,read%3Aorg';
+
+const REQUIRED_SCOPES = [
+  { name: 'repo',       description: 'Clone and read private repositories for scanning' },
+  { name: 'workflow',   description: 'Trigger and monitor GitHub Actions CI/CD pipelines' },
+  { name: 'read:org',   description: 'List organization repositories and team membership' },
+];
+
+type WizardStep = 'intro' | 'enter' | 'validating' | 'success';
+
+function GitHubPATWizard({
+  integration,
+  onClose,
+  onConnected,
+}: {
+  integration: any;
+  onClose: () => void;
+  onConnected: () => void;
+}) {
+  const navigate  = useNavigate();
+  const [step, setStep]                         = useState<WizardStep>('intro');
+  const [token, setToken]                       = useState('');
+  const [showToken, setShowToken]               = useState(false);
+  const [copied, setCopied]                     = useState(false);
+  const [error, setError]                       = useState<string | null>(null);
+  const [connectedInfo, setConnectedInfo]       = useState<{ username: string; repos: number } | null>(null);
+
+  const trimmed   = token.trim();
+  const formatOk  = trimmed.startsWith('ghp_') || trimmed.startsWith('github_pat_') || trimmed.length >= 40;
+
+  const modalBg   = { background: 'hsl(230 18% 9%)', borderColor: 'hsl(230 15% 16%)' } as React.CSSProperties;
+  const divider   = { borderColor: 'hsl(230 15% 14%)' } as React.CSSProperties;
+  const inputStyle= { background: 'hsl(230 15% 7%)', borderColor: 'hsl(230 15% 18%)', color: 'white' } as React.CSSProperties;
+
+  const handleConnect = useCallback(async () => {
+    if (!trimmed) return;
+    setStep('validating');
+    setError(null);
+    try {
+      const result = await integrationsApi.connectGitHub(trimmed, integration?.name ?? 'GitHub');
+      const username  = (result?.config as any)?.username ?? '';
+      const repos     = (result?.config as any)?.repo_count ?? 0;
+
+      const syncId = result?.id;
+      if (syncId) {
+        await apiPost(`/integrations/${syncId}/sync`, {}).catch(() => {});
+      }
+      await apiPost('/security/repos/sync', {}).catch(() => {});
+
+      setConnectedInfo({ username, repos });
+      setStep('success');
+      onConnected();
+    } catch (e: any) {
+      setError(e?.message ?? 'Connection failed — check your token and try again.');
+      setStep('enter');
+    }
+  }, [trimmed, integration, onConnected]);
+
+  const copyUrl = () => {
+    navigator.clipboard.writeText(GH_TOKEN_URL).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const stepDots: WizardStep[] = ['intro', 'enter', 'success'];
+  const dotIdx = step === 'validating' ? 1 : stepDots.indexOf(step);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={step !== 'validating' ? onClose : undefined} />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        className="relative w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden"
+        style={modalBg}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b" style={divider}>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'hsl(230 15% 13%)' }}>
+              <GitBranch className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-white">Connect GitHub</h2>
+              <p className="text-xs text-gray-500">Personal Access Token setup</p>
+            </div>
+          </div>
+          {step !== 'validating' && (
+            <button onClick={onClose} className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Step dots */}
+        <div className="flex items-center justify-center gap-2 pt-4 pb-1">
+          {['Create token', 'Enter token', 'Connected'].map((label, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className={clsx(
+                'flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold transition-all duration-300',
+                i < dotIdx
+                  ? 'bg-green-500 text-white'
+                  : i === dotIdx
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white/10 text-gray-500'
+              )}>
+                {i < dotIdx ? <CheckCircle className="w-3 h-3" /> : i + 1}
+              </div>
+              <span className={clsx('text-xs hidden sm:block', i === dotIdx ? 'text-white' : 'text-gray-600')}>{label}</span>
+              {i < 2 && <div className="w-6 h-px bg-white/10 hidden sm:block" />}
+            </div>
+          ))}
+        </div>
+
+        {/* Body — animated step transitions */}
+        <AnimatePresence mode="wait">
+
+          {/* ── Step 1: intro ── */}
+          {step === 'intro' && (
+            <motion.div key="intro"
+              initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+              className="p-5 space-y-4"
+            >
+              <p className="text-xs text-gray-400 leading-relaxed">
+                UniOps needs a GitHub <strong className="text-white">Personal Access Token</strong> to clone
+                your repositories for security scanning, read CI/CD pipeline status, and monitor your organization.
+              </p>
+
+              {/* Scopes */}
+              <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'hsl(230 15% 16%)' }}>
+                <div className="px-4 py-2 border-b" style={{ borderColor: 'hsl(230 15% 14%)', background: 'hsl(230 15% 11%)' }}>
+                  <span className="text-xs font-semibold text-gray-300">Required token scopes</span>
+                </div>
+                <div className="divide-y divide-white/5">
+                  {REQUIRED_SCOPES.map(scope => (
+                    <div key={scope.name} className="flex items-start gap-3 px-4 py-2.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <code className="text-xs font-mono text-blue-300">{scope.name}</code>
+                        <p className="text-xs text-gray-500 mt-0.5">{scope.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-lg p-3 text-xs text-yellow-300/80 flex items-start gap-2"
+                style={{ background: 'hsl(48 96% 53% / 0.07)', border: '1px solid hsl(48 96% 53% / 0.15)' }}>
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-yellow-400" />
+                <span>We recommend a <strong>Classic token</strong> (not fine-grained) for full organization access. Your token is encrypted with AES-256-GCM before storage.</span>
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <a
+                  href={GH_TOKEN_URL} target="_blank" rel="noreferrer"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white transition-all"
+                  style={{ background: 'hsl(220 90% 55%)' }}
+                  onClick={() => setTimeout(() => setStep('enter'), 800)}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Open GitHub Token Page
+                </a>
+                <button
+                  onClick={() => setStep('enter')}
+                  className="px-4 py-2.5 rounded-lg text-sm text-gray-400 border border-border hover:text-white transition-colors"
+                >
+                  I have a token
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── Step 2: enter token ── */}
+          {step === 'enter' && (
+            <motion.div key="enter"
+              initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+              className="p-5 space-y-4"
+            >
+              {/* Scope reminder strip */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {REQUIRED_SCOPES.map(s => (
+                  <span key={s.name} className="px-2 py-0.5 rounded-md text-xs font-mono border"
+                    style={{ color: 'hsl(217 91% 70%)', borderColor: 'hsl(217 91% 50% / 0.25)', background: 'hsl(217 91% 50% / 0.08)' }}>
+                    {s.name}
+                  </span>
+                ))}
+                <span className="text-xs text-gray-600 ml-1">scopes required</span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-2">
+                  Paste your Personal Access Token
+                </label>
+                <div className="relative">
+                  <input
+                    type={showToken ? 'text' : 'password'}
+                    value={token}
+                    onChange={e => { setToken(e.target.value); setError(null); }}
+                    onKeyDown={e => e.key === 'Enter' && formatOk && handleConnect()}
+                    placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    autoFocus
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="w-full px-3 py-2.5 pr-10 rounded-lg text-sm border outline-none focus:ring-2 font-mono transition-all"
+                    style={{
+                      ...inputStyle,
+                      borderColor: formatOk && trimmed ? 'hsl(142 72% 40%)' : error ? 'hsl(0 72% 51% / 0.6)' : 'hsl(230 15% 18%)',
+                      boxShadow: formatOk && trimmed ? '0 0 0 2px hsl(142 72% 40% / 0.12)' : undefined,
+                    }}
+                  />
+                  <button type="button" onClick={() => setShowToken(p => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
+                    {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {/* Format indicator */}
+                <div className="mt-1.5 flex items-center justify-between">
+                  <span className={clsx('text-xs', formatOk && trimmed ? 'text-green-400' : 'text-gray-600')}>
+                    {formatOk && trimmed ? '✓ Token format looks valid' : 'Starts with ghp_ or github_pat_'}
+                  </span>
+                  <button onClick={copyUrl} className="text-xs text-gray-600 hover:text-blue-400 flex items-center gap-1 transition-colors">
+                    <Copy className="w-3 h-3" />
+                    {copied ? 'Copied!' : 'Copy GitHub URL'}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div className="flex items-start gap-2 p-3 rounded-lg text-xs text-red-300"
+                  style={{ background: 'hsl(0 72% 51% / 0.1)', border: '1px solid hsl(0 72% 51% / 0.25)' }}>
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-red-400" />
+                  <div>
+                    <div className="font-medium text-red-400 mb-0.5">Connection failed</div>
+                    {error}
+                    {error.toLowerCase().includes('scope') || error.toLowerCase().includes('forbidden') ? (
+                      <a href={GH_TOKEN_URL} target="_blank" rel="noreferrer"
+                        className="block mt-1.5 text-blue-400 hover:underline">
+                        Re-create token with correct scopes →
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-1">
+                <button onClick={() => setStep('intro')}
+                  className="px-4 py-2.5 rounded-lg text-sm text-gray-400 border border-border hover:text-white transition-colors">
+                  Back
+                </button>
+                <button
+                  onClick={handleConnect}
+                  disabled={!formatOk || !trimmed}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-40 transition-all"
+                  style={{ background: 'hsl(220 90% 55%)' }}
+                >
+                  <Key className="w-4 h-4" />
+                  Validate &amp; Connect
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── Step 2b: validating ── */}
+          {step === 'validating' && (
+            <motion.div key="validating"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="p-8 flex flex-col items-center justify-center gap-4"
+            >
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                  style={{ background: 'hsl(220 90% 55% / 0.15)', border: '1px solid hsl(220 90% 55% / 0.25)' }}>
+                  <Loader2 className="w-7 h-7 text-blue-400 animate-spin" />
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-white">Validating token…</p>
+                <p className="text-xs text-gray-500 mt-1">Calling GitHub API &amp; encrypting credentials</p>
+              </div>
+              <div className="flex flex-col gap-1.5 w-full max-w-xs">
+                {['Connecting to GitHub API', 'Verifying token scopes', 'Encrypting credentials', 'Syncing repositories'].map((label, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Loader2 className="w-3 h-3 text-blue-400/60 animate-spin flex-shrink-0"
+                      style={{ animationDelay: `${i * 200}ms` }} />
+                    <span className="text-xs text-gray-500">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── Step 3: success ── */}
+          {step === 'success' && connectedInfo && (
+            <motion.div key="success"
+              initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+              className="p-6 space-y-5"
+            >
+              <div className="flex flex-col items-center gap-3 py-2">
+                <motion.div
+                  initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                  style={{ background: 'hsl(142 72% 40% / 0.15)', border: '1px solid hsl(142 72% 40% / 0.3)' }}>
+                  <CheckCircle className="w-7 h-7 text-green-400" />
+                </motion.div>
+                <div className="text-center">
+                  <p className="text-base font-bold text-white">GitHub Connected!</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Your repositories are ready for security scanning</p>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl p-3 text-center border"
+                  style={{ background: 'hsl(230 15% 11%)', borderColor: 'hsl(230 15% 16%)' }}>
+                  <div className="text-xl font-bold text-white">
+                    {connectedInfo.username ? `@${connectedInfo.username}` : '—'}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">GitHub account</div>
+                </div>
+                <div className="rounded-xl p-3 text-center border"
+                  style={{ background: 'hsl(230 15% 11%)', borderColor: 'hsl(230 15% 16%)' }}>
+                  <div className="text-xl font-bold text-white">{connectedInfo.repos || '—'}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">Repositories synced</div>
+                </div>
+              </div>
+
+              {/* Active scopes */}
+              <div className="rounded-xl border p-3" style={{ borderColor: 'hsl(142 72% 40% / 0.2)', background: 'hsl(142 72% 40% / 0.05)' }}>
+                <p className="text-xs text-green-400 font-medium mb-2">Active permissions</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {REQUIRED_SCOPES.map(s => (
+                    <span key={s.name} className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-mono text-green-300"
+                      style={{ background: 'hsl(142 72% 40% / 0.12)', border: '1px solid hsl(142 72% 40% / 0.2)' }}>
+                      <CheckCircle className="w-2.5 h-2.5" />{s.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button onClick={onClose}
+                  className="px-4 py-2.5 rounded-lg text-sm text-gray-400 border border-border hover:text-white transition-colors">
+                  Done
+                </button>
+                <button
+                  onClick={() => { onClose(); navigate('/security'); }}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white transition-all"
+                  style={{ background: 'hsl(142 72% 40%)' }}
+                >
+                  <Database className="w-4 h-4" />
+                  Go to Security Center
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+        </AnimatePresence>
       </motion.div>
     </div>
   );
@@ -603,6 +972,13 @@ export default function Integrations() {
 
       {/* Connect modals */}
       <AnimatePresence>
+        {connectModal && providerOf(connectModal) === 'github' && (
+          <GitHubPATWizard
+            integration={connectModal}
+            onClose={() => setConnectModal(null)}
+            onConnected={refetch}
+          />
+        )}
         {connectModal && providerOf(connectModal) === 'kubernetes' && (
           <KubernetesConnectModal
             integration={connectModal}
@@ -617,7 +993,7 @@ export default function Integrations() {
             onConnected={refetch}
           />
         )}
-        {connectModal && TOKEN_PROVIDERS[providerOf(connectModal)] && (
+        {connectModal && TOKEN_PROVIDERS[providerOf(connectModal)] && providerOf(connectModal) !== 'github' && (
           <TokenConnectModal
             integration={connectModal}
             onClose={() => setConnectModal(null)}
