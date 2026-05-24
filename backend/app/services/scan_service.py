@@ -118,7 +118,8 @@ class ScanService(BaseService):
             # A scan is "stale" if it has been running longer than STALE_AFTER_MINUTES
             # (use started_at if available, otherwise created_at)
             ref_time = running.started_at or running.created_at
-            if ref_time and ref_time.replace(tzinfo=timezone.utc) if ref_time.tzinfo is None else ref_time < stale_cutoff:
+            normalized = (ref_time.replace(tzinfo=timezone.utc) if ref_time.tzinfo is None else ref_time)
+            if ref_time and normalized < stale_cutoff:
                 # Auto-fail the stale scan and allow a fresh one
                 logger.warning(
                     f"[scan:{running.id}] Auto-failing stale scan for repo={repo.full_name} "

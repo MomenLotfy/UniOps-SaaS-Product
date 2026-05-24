@@ -116,13 +116,14 @@ function ThreatsTab({ threats, tLoading, canAct, setConfirmThreat }: {
   );
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((threatPage - 1) * PAGE_SIZE, threatPage * PAGE_SIZE);
+  const hasAwsThreats = threats.some((t: any) => t.source === 'aws_security_hub');
 
   return (
     <div className="card-base space-y-3">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h2 className="text-sm font-semibold text-foreground">
           Active Threats
-          {canAct && <span className="ml-2 text-xs text-gray-500 font-normal">· Actions sync to AWS Security Hub</span>}
+          {canAct && hasAwsThreats && <span className="ml-2 text-xs text-gray-500 font-normal">· Actions sync to AWS Security Hub</span>}
         </h2>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 text-xs">
@@ -176,7 +177,8 @@ function ThreatsTab({ threats, tLoading, canAct, setConfirmThreat }: {
                   <div className="flex items-center gap-2 mt-3">
                     <button onClick={() => setConfirmThreat({ threat: t, action: 'resolve' })}
                       className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors border border-green-500/20">
-                      <ShieldCheck className="w-3.5 h-3.5" /> Resolve in AWS
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      {t.source === 'aws_security_hub' ? 'Resolve in AWS' : 'Resolve'}
                     </button>
                     <button onClick={() => setConfirmThreat({ threat: t, action: 'suppress' })}
                       className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-colors border border-yellow-500/20">
@@ -187,7 +189,8 @@ function ThreatsTab({ threats, tLoading, canAct, setConfirmThreat }: {
                 {['resolved', 'suppressed'].includes(t.status) && (
                   <div className="flex items-center gap-1.5 mt-3 text-xs text-green-400">
                     <CheckCircle className="w-3.5 h-3.5" />
-                    {t.status === 'resolved' ? 'Resolved in AWS Security Hub' : 'Suppressed in AWS Security Hub'}
+                    {t.status === 'resolved' ? 'Resolved' : 'Suppressed'}
+                    {t.source === 'aws_security_hub' && ' · synced to AWS Security Hub'}
                   </div>
                 )}
               </div>
@@ -813,13 +816,21 @@ export default function SecurityCenter() {
       {/* Confirm dialog */}
       <ConfirmDialog
         open={!!confirmThreat}
-        title={confirmThreat?.action === 'resolve' ? 'Resolve threat in AWS Security Hub?' : 'Suppress threat as false positive?'}
+        title={confirmThreat?.action === 'resolve' ? 'Resolve this threat?' : 'Suppress this threat?'}
         description={
           confirmThreat?.action === 'resolve'
-            ? `"${confirmThreat.threat.title}" will be marked RESOLVED in AWS Security Hub.`
-            : `"${confirmThreat?.threat.title}" will be SUPPRESSED in AWS Security Hub (TOLERATED).`
+            ? confirmThreat.threat.source === 'aws_security_hub'
+              ? `"${confirmThreat.threat.title}" will be marked RESOLVED in AWS Security Hub.`
+              : `"${confirmThreat.threat.title}" will be marked as resolved. Status updated in UniOps.`
+            : confirmThreat?.threat.source === 'aws_security_hub'
+              ? `"${confirmThreat?.threat.title}" will be SUPPRESSED in AWS Security Hub (TOLERATED).`
+              : `"${confirmThreat?.threat.title}" will be suppressed as a false positive or accepted risk.`
         }
-        confirmLabel={confirmThreat?.action === 'resolve' ? 'Resolve in AWS' : 'Suppress Finding'}
+        confirmLabel={
+          confirmThreat?.action === 'resolve'
+            ? confirmThreat.threat.source === 'aws_security_hub' ? 'Resolve in AWS' : 'Resolve Threat'
+            : 'Suppress Finding'
+        }
         danger={confirmThreat?.action === 'suppress'}
         onConfirm={handleConfirmThreat}
         onCancel={() => setConfirmThreat(null)}

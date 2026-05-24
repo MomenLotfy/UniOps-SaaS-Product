@@ -186,6 +186,9 @@ async def _run_scan_async(scan_id: str) -> None:
             )
             await db.commit()
 
+            # ── Update compliance frameworks from scan results ─────────────────
+            await _update_compliance(db, tenant_id, result.findings, security_score, now_end)
+
             logger.info(
                 f"[scan:{scan_id}] Completed ✓ "
                 f"score={security_score} findings={len(result.findings)} "
@@ -281,3 +284,100 @@ async def _release_scan_lock(repo_id: str) -> None:
         await redis.delete(f"scan_lock:{repo_id}")
     except Exception:
         pass
+
+
+async def _update_compliance(db, tenant_id: str, findings: list, security_score: float, scanned_at) -> None:
+    """
+    Derive compliance framework scores from scan findings and upsert them.
+
+    Frameworks:
+      OWASP Top 10       — SAST findings (code security)
+      CIS Controls       — CI/CD + container misconfigs
+      NIST CSF           — overall security posture (all finding types)
+      PCI DSS            — secrets + dependency vulns (data security)
+    """
+    from app.models.compliance import Compliance
+
+    def _score_and_counts(passed: int, total: int) -> tuple[float, str]:
+        if total == 0:
+            return 100.0, "compliant"
+        pct = round((passed / total) * 100, 1)
+        status = "compliant" if pct >= 80 else ("in_progress" if pct >= 50 else "non_compliant")
+        return pct, status
+
+    sast_total   = sum(1 for f in findings if f.scanner == "sast")
+    sast_crit_hi = sum(1 for f in findings if f.scanner == "sast" and f.severity in ("critical", "high"))
+    sast_pass    = max(0, sast_total - sast_crit_hi)
+
+    cicd_cont_total = sum(1 for f in findings if f.scanner in ("cicd", "container"))
+    cicd_cont_fail  = sum(1 for f in findings if f.scanner in ("cicd", "container") and f.severity in ("critical", "high"))
+    cicd_pass       = max(0, cicd_cont_total - cicd_cont_fail)
+
+    secrets_total = sum(1 for f in findings if f.scanner == "secrets")
+    dep_total     = sum(1 for f in findings if f.scanner == "deps")
+    pci_total     = secrets_total + dep_total
+    pci_fail      = sum(1 for f in findings if f.scanner in ("secrets", "deps") and f.severity in ("critical", "high"))
+    pci_pass      = max(0, pci_total - pci_fail)
+
+    all_total = len(findings)
+    all_fail  = sum(1 for f in findings if f.severity in ("critical", "high"))
+    all_pass  = max(0, all_total - all_fail)
+
+    frameworks = [
+        {
+            "framework": "OWASP Top 10",
+            "passed": sast_pass if sast_total > 0 else 10,
+            "failed": sast_crit_hi,
+            "total":  max(sast_total, 10),
+        },
+        {
+            "framework": "CIS Controls",
+            "passed": cicd_pass if cicd_cont_total > 0 else 8,
+            "failed": cicd_cont_fail,
+            "total":  max(cicd_cont_total, 8),
+        },
+        {
+            "framework": "NIST CSF",
+            "passed": all_pass if all_total > 0 else 20,
+            "failed": all_fail,
+            "total":  max(all_total, 20),
+        },
+        {
+            "framework": "PCI DSS",
+            "passed": pci_pass if pci_total > 0 else 12,
+            "failed": pci_fail,
+            "total":  max(pci_total, 12),
+        },
+    ]
+
+    for fw in frameworks:
+        score, status = _score_and_counts(fw["passed"], fw["total"])
+        # Upsert: find existing row for this tenant+framework
+        existing = await db.execute(
+            select(Compliance).where(
+                Compliance.tenant_id == tenant_id,
+                Compliance.framework == fw["framework"],
+            )
+        )
+        rec = existing.scalar_one_or_none()
+        if rec:
+            rec.score   = score
+            rec.passed  = fw["passed"]
+            rec.failed  = fw["failed"]
+            rec.total   = fw["total"]
+            rec.status  = status
+            rec.details = [{"last_scan_at": scanned_at.isoformat(), "security_score": security_score}]
+        else:
+            db.add(Compliance(
+                tenant_id = tenant_id,
+                framework = fw["framework"],
+                score     = score,
+                passed    = fw["passed"],
+                failed    = fw["failed"],
+                total     = fw["total"],
+                status    = status,
+                details   = [{"last_scan_at": scanned_at.isoformat(), "security_score": security_score}],
+            ))
+
+    await db.commit()
+    logger.info(f"[compliance] Updated {len(frameworks)} frameworks for tenant={tenant_id[:8]}")
