@@ -97,6 +97,7 @@ export default function MLInsights() {
   const [tab, setTab]           = useState<Tab>('correlations');
   const [corrDays, setCorrDays] = useState<DaysFilter>(30);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSyncing,   setIsSyncing]   = useState(false);
   const [toast, setToast]       = useState<{ ok: boolean; msg: string } | null>(null);
   const [confirm, setConfirm]   = useState<{ title: string; desc: string; confirmLabel: string; danger?: boolean; action: () => Promise<void> } | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -105,6 +106,7 @@ export default function MLInsights() {
   const corrPath = corrDays > 0 ? `/ml/correlations?days=${corrDays}` : '/ml/correlations';
   const { data: corrRaw,    loading: corrLoad,  refetch: refetchCorr  } = useApi<any>(corrPath);
   const { data: predsRaw,   loading: predLoad,  refetch: refetchPred  } = useApi<any>('/ml/predictions');
+  const { data: chartRaw,   loading: chartLoad, refetch: refetchChart } = useApi<any>('/ml/workload/chart');
   const { data: predSumRaw, loading: psLoad,    refetch: refetchPS    } = useApi<any>('/ml/predictions/summary');
   const { data: patsRaw,    loading: patLoad,   refetch: refetchPat   } = useApi<any>('/ml/patterns');
   const { data: recsRaw,    loading: recLoad,   refetch: refetchRec   } = useApi<any>('/ml/recommendations');
@@ -125,8 +127,9 @@ export default function MLInsights() {
     return () => { unsubML(); };
   }, [subscribe, refetchCorr, refetchRadar]);
 
-  const corrs:  any[] = (Array.isArray(corrRaw)  ? corrRaw  : corrRaw?.data)  ?? [];
-  const preds:  any[] = (Array.isArray(predsRaw) ? predsRaw : predsRaw?.data) ?? [];
+  const corrs:       any[] = (Array.isArray(corrRaw)  ? corrRaw  : corrRaw?.data)  ?? [];
+  const preds:       any[] = (Array.isArray(predsRaw) ? predsRaw : predsRaw?.data) ?? [];
+  const chartPoints: any[] = chartRaw?.data?.points ?? chartRaw?.points ?? [];
   const pats:   any[] = (Array.isArray(patsRaw)  ? patsRaw  : patsRaw?.data)  ?? [];
   const recs:   any[] = (Array.isArray(recsRaw)  ? recsRaw  : recsRaw?.data)  ?? [];
   const predSum: any  = predSumRaw ?? {};
@@ -151,8 +154,8 @@ export default function MLInsights() {
   };
 
   const refetchAll = useCallback(() => {
-    refetchCorr(); refetchPred(); refetchPS(); refetchPat(); refetchRec(); refetchModels(); refetchRadar();
-  }, [refetchCorr, refetchPred, refetchPS, refetchPat, refetchRec, refetchModels, refetchRadar]);
+    refetchCorr(); refetchPred(); refetchChart(); refetchPS(); refetchPat(); refetchRec(); refetchModels(); refetchRadar();
+  }, [refetchCorr, refetchPred, refetchChart, refetchPS, refetchPat, refetchRec, refetchModels, refetchRadar]);
 
   const handleAnalyze = useCallback(async () => {
     setIsAnalyzing(true);
@@ -164,6 +167,20 @@ export default function MLInsights() {
       showToast(false, 'Analysis failed');
     } finally {
       setIsAnalyzing(false);
+    }
+  }, [refetchAll]);
+
+  const handleSyncML = useCallback(async () => {
+    setIsSyncing(true);
+    try {
+      await apiPost('/ml/sync', {});
+      // Poll for a couple seconds then refetch — the sync runs async in the backend
+      setTimeout(() => { refetchAll(); }, 3000);
+      showToast(true, 'Prediction sync started — refreshing in 3s…');
+    } catch {
+      showToast(false, 'Sync failed');
+    } finally {
+      setIsSyncing(false);
     }
   }, [refetchAll]);
 
@@ -225,11 +242,18 @@ export default function MLInsights() {
               : 'Connect GitHub, AWS, or Kubernetes to unlock live insights'}
           </p>
         </div>
-        <button onClick={handleAnalyze} className="action-btn-primary" disabled={isAnalyzing}>
-          {isAnalyzing
-            ? <><Loader2 className="w-4 h-4 animate-spin" />Analyzing…</>
-            : <><Sparkles className="w-4 h-4" />Run Analysis</>}
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handleSyncML} className="action-btn" disabled={isSyncing}>
+            {isSyncing
+              ? <><Loader2 className="w-4 h-4 animate-spin" />Syncing…</>
+              : <><RefreshCw className="w-4 h-4" />Sync Predictions</>}
+          </button>
+          <button onClick={handleAnalyze} className="action-btn-primary" disabled={isAnalyzing}>
+            {isAnalyzing
+              ? <><Loader2 className="w-4 h-4 animate-spin" />Analyzing…</>
+              : <><Sparkles className="w-4 h-4" />Run Analysis</>}
+          </button>
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -469,11 +493,17 @@ export default function MLInsights() {
               </div>
             </div>
 
-            {predLoad ? (
+            {chartLoad ? (
               <div className="h-64 flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+            ) : chartPoints.length === 0 ? (
+              <div className="h-64 flex flex-col items-center justify-center gap-2 text-center">
+                <Brain className="w-8 h-8 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">No workload predictions yet</p>
+                <p className="text-xs text-muted-foreground/60">Click <span className="font-medium text-foreground/70">Sync Predictions</span> to generate real forecasts from your pipeline data</p>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
-                <AreaChart data={preds} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                <AreaChart data={chartPoints} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
                   <defs>
                     <linearGradient id="mlActG" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35} />
@@ -486,7 +516,9 @@ export default function MLInsights() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(230 15% 14%)" />
                   <XAxis dataKey="label" tick={{ fill: 'hsl(215 16% 47%)', fontSize: 10 }} tickLine={false} axisLine={false} interval={5} />
-                  <YAxis tick={{ fill: 'hsl(215 16% 47%)', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} width={36} />
+                  <YAxis tick={{ fill: 'hsl(215 16% 47%)', fontSize: 10 }} tickLine={false} axisLine={false}
+                    tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v % 1 !== 0 ? v.toFixed(1) : String(v)}
+                    width={36} />
                   <Tooltip content={<ChartTooltip />} />
                   <Area type="monotone" dataKey="actual" name="Actual" stroke="#3b82f6" strokeWidth={2} fill="url(#mlActG)" connectNulls={false} dot={false} />
                   <Area type="monotone" dataKey="predicted" name="Predicted" stroke="#8b5cf6" strokeWidth={2} strokeDasharray="6 3" fill="url(#mlPredG)" dot={false} />
@@ -495,16 +527,37 @@ export default function MLInsights() {
             )}
 
             {/* Prediction insight */}
-            <div className="mt-3 p-3 rounded-lg flex gap-2 text-xs" style={{ background: 'hsl(230 15% 11%)' }}>
-              <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
-              <div className="space-y-0.5">
-                <span className="text-yellow-400 font-medium">Prediction: </span>
-                <span className="text-foreground">Load will increase ~30% in the next 24 hours based on historical Friday patterns.</span>
-                <br />
-                <span className="text-green-400 font-medium">Recommended Action: </span>
-                <span className="text-muted-foreground">{predSum.workload?.action ?? 'Consider scaling API Gateway before peak hours.'}</span>
-              </div>
-            </div>
+            {chartPoints.length > 0 && (() => {
+              const actuals   = chartPoints.filter((p: any) => p.actual != null).map((p: any) => p.actual as number);
+              const predicted = chartPoints.filter((p: any) => p.predicted != null).map((p: any) => p.predicted as number);
+              const avgAct    = actuals.length   ? actuals.reduce((a: number, b: number)   => a + b, 0) / actuals.length   : 0;
+              const avgPred   = predicted.length ? predicted.reduce((a: number, b: number) => a + b, 0) / predicted.length : 0;
+              const pctChange = avgAct > 0 ? ((avgPred - avgAct) / avgAct * 100) : 0;
+              const dir       = pctChange > 5 ? 'increase' : pctChange < -5 ? 'decrease' : 'remain stable';
+              const Icon      = pctChange > 5 ? AlertTriangle : pctChange < -5 ? TrendingDown : TrendingUp;
+              const iconColor = pctChange > 5 ? 'text-yellow-400' : pctChange < -5 ? 'text-blue-400' : 'text-green-400';
+              return (
+                <div className="mt-3 p-3 rounded-lg flex gap-2 text-xs" style={{ background: 'hsl(230 15% 11%)' }}>
+                  <Icon className={`w-3.5 h-3.5 ${iconColor} flex-shrink-0 mt-0.5`} />
+                  <div className="space-y-0.5">
+                    <span className={`${iconColor} font-medium`}>Prediction: </span>
+                    <span className="text-foreground">
+                      Pipeline activity will {dir} {Math.abs(pctChange) > 1 ? `~${Math.abs(pctChange).toFixed(0)}%` : ''} in the next 24 hours
+                      {predicted.length > 0 ? ` (avg ${avgPred.toFixed(2)} runs/hr)` : ''}.
+                    </span>
+                    <br />
+                    <span className="text-green-400 font-medium">Recommended Action: </span>
+                    <span className="text-muted-foreground">
+                      {pctChange > 10
+                        ? 'Ensure CI runners have sufficient capacity before the predicted spike.'
+                        : pctChange < -10
+                        ? 'Activity trending down — a good time to run maintenance or batch jobs.'
+                        : 'Pipeline load looks stable. No immediate scaling action required.'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Prediction summary cards */}

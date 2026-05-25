@@ -34,7 +34,8 @@ class BackgroundScheduler:
             asyncio.create_task(self._repeat(300,  self._sync_pipelines),  name="sync-pipelines"),
             asyncio.create_task(self._repeat(3600, self._sync_costs),      name="sync-costs"),
             asyncio.create_task(self._repeat(3600, self._sync_security),   name="sync-security"),
-            asyncio.create_task(self._repeat(86400, self._cleanup),        name="cleanup"),
+            asyncio.create_task(self._repeat(86400,  self._cleanup),        name="cleanup"),
+            asyncio.create_task(self._repeat(21600,  self._sync_ml),          name="sync-ml"),
         ]
         logger.info(f"Scheduler started {len(self._tasks)} periodic tasks")
 
@@ -132,6 +133,15 @@ class BackgroundScheduler:
             await cleanup_async()
         except Exception as e:
             logger.warning(f"Cleanup skipped: {e}")
+
+    @staticmethod
+    async def _sync_ml():
+        try:
+            from app.tasks.sync_ml_insights import sync_ml_insights_async
+            result = await sync_ml_insights_async()
+            logger.info(f"Scheduled ML sync: {result}")
+        except Exception as e:
+            logger.warning(f"ML sync skipped: {e}")
 
 
 # Global singleton
