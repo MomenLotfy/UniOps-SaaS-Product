@@ -10303,3 +10303,48 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-05-25 17:36:59 | INFO     | app.middleware.logging:15 - [27fc7940] GET /api/v1/ml/predictions/summary → 200 (14.4ms)
 2026-05-25 17:37:00 | INFO     | app.middleware.logging:15 - [063e3e50] GET /api/v1/ml/models/status → 200 (4.0ms)
 2026-05-25 17:37:00 | INFO     | app.middleware.logging:15 - [b3273767] GET /api/v1/ml/radar → 200 (14.3ms)
+2026-05-25 17:38:12 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 17:38:12 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 17:38:57 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-05-25 17:39:37 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-25 17:39:38 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:38 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-Product (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:39 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenkins-final-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:39 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenkins-final-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:39 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-Prod/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:39 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-Prod (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:39 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:39 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:40 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-4/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:40 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-4 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:40 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/ansible-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:40 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/ansible-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:40 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:40 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:41 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/cicd-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:41 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/cicd-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:41 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab2/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:41 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab2 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:41 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenk-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:41 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenk-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:42 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:42 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-Product (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:43 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenkins-final-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:43 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenkins-final-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:43 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-Prod/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:43 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-Prod (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:43 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:43 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:44 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-4/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:44 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-4 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:44 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/ansible-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:44 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/ansible-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:44 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:44 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:45 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/cicd-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:45 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/cicd-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:45 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab2/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:45 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab2 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:45 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenk-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:45 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenk-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:39:57 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
