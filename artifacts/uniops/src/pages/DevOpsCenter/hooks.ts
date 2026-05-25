@@ -1,13 +1,21 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// DevOpsCenter — custom hooks
+// DevOpsCenter — custom hooks (WebSocket-driven, no polling)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useApi, apiPost, apiDelete } from '@/hooks/use-api';
 import { useIntegrationsCtx } from '@/contexts/IntegrationsContext';
+import { useWebSocket } from '@/contexts/WebSocketContext';
 import type { PodStats, PipelineStats, LogLine } from './types';
 
-const POLL_INTERVAL = 15_000; // 15 seconds
+// Safety-net fallback interval — only fires if WebSocket is disconnected
+// 60s is acceptable because WS delivers updates instantly when connected
+const FALLBACK_INTERVAL_MS = 60_000;
+
+// Pod WS events that should trigger a data refresh
+const POD_WS_EVENTS = ['pod.update', 'pod.failed', 'pod.restarted', 'integration.sync_done'];
+// Pipeline WS events that should trigger a data refresh
+const PIPE_WS_EVENTS = ['pipeline.update', 'pipeline.started', 'pipeline.completed', 'pipeline.failed'];
 
 // ── Integration status (reads from global context — no HTTP request) ──────────
 export function useDevOpsIntegrations() {
@@ -29,32 +37,45 @@ export function useDevOpsIntegrations() {
   };
 }
 
-// ── Pods (with 15-second auto-polling) ───────────────────────────────────────
+// ── Pods — WebSocket-driven, no polling ──────────────────────────────────────
 export function usePods(namespace?: string) {
   const qs = new URLSearchParams({ page_size: '100' });
   if (namespace) qs.set('namespace', namespace);
 
   const { data, loading, error, refetch } = useApi<any>(`/kubernetes/pods?${qs}`);
   const { data: stats, refetch: refetchStats } = useApi<PodStats>('/kubernetes/pods/stats');
+  const { subscribe, status: wsStatus } = useWebSocket();
 
-  const refetchAll = useCallback(() => { refetch(); refetchStats(); }, [refetch, refetchStats]);
+  const refetchAll = useCallback(() => {
+    refetch();
+    refetchStats();
+  }, [refetch, refetchStats]);
 
-  // Auto-poll every 15 s
+  // Subscribe to WebSocket pod events — instant updates when WS is connected
   useEffect(() => {
-    const id = setInterval(refetchAll, POLL_INTERVAL);
+    const unsubs = POD_WS_EVENTS.map((evt) =>
+      subscribe(evt, () => refetchAll())
+    );
+    return () => unsubs.forEach((u) => u());
+  }, [subscribe, refetchAll]);
+
+  // Safety-net fallback: only poll when WebSocket is NOT connected
+  useEffect(() => {
+    if (wsStatus === 'connected') return;
+    const id = setInterval(refetchAll, FALLBACK_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [refetchAll]);
+  }, [wsStatus, refetchAll]);
 
   return {
-    pods:      (Array.isArray(data) ? data : data?.data ?? data ?? []) as any[],
-    podStats:  stats as PodStats | null,
+    pods:     (Array.isArray(data) ? data : data?.data ?? data ?? []) as any[],
+    podStats: stats as PodStats | null,
     loading,
     error,
-    refetch:   refetchAll,
+    refetch:  refetchAll,
   };
 }
 
-// ── Pipelines (with 15-second auto-polling) ───────────────────────────────────
+// ── Pipelines — WebSocket-driven, no polling ─────────────────────────────────
 export function usePipelines(repository?: string, branch?: string) {
   const qs = new URLSearchParams({ page_size: '30' });
   if (repository) qs.set('repository', repository);
@@ -62,12 +83,22 @@ export function usePipelines(repository?: string, branch?: string) {
 
   const { data, loading, error, refetch } = useApi<any>(`/pipelines?${qs}`);
   const { data: stats } = useApi<PipelineStats>('/pipelines/stats');
+  const { subscribe, status: wsStatus } = useWebSocket();
 
-  // Auto-poll every 15 s
+  // Subscribe to WebSocket pipeline events — instant updates when WS is connected
   useEffect(() => {
-    const id = setInterval(refetch, POLL_INTERVAL);
+    const unsubs = PIPE_WS_EVENTS.map((evt) =>
+      subscribe(evt, () => refetch())
+    );
+    return () => unsubs.forEach((u) => u());
+  }, [subscribe, refetch]);
+
+  // Safety-net fallback: only poll when WebSocket is NOT connected
+  useEffect(() => {
+    if (wsStatus === 'connected') return;
+    const id = setInterval(refetch, FALLBACK_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [refetch]);
+  }, [wsStatus, refetch]);
 
   return {
     pipelines:     (Array.isArray(data) ? data : data?.data ?? []) as any[],
@@ -79,12 +110,13 @@ export function usePipelines(repository?: string, branch?: string) {
   };
 }
 
-// ── Log streaming (polling every 5 s) ────────────────────────────────────────
+// ── Pod log streaming — WS-triggered refetch, no aggressive polling ───────────
 export function usePodLogs(podId: string | null, enabled: boolean) {
   const [lines, setLines]     = useState<LogLine[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
-  const intervalRef            = useRef<ReturnType<typeof setInterval> | null>(null);
+  const intervalRef           = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { subscribe, status: wsStatus } = useWebSocket();
 
   const fetchLogs = useCallback(async () => {
     if (!podId) return;
@@ -108,17 +140,37 @@ export function usePodLogs(podId: string | null, enabled: boolean) {
     }
   }, [podId]);
 
+  // Initial fetch + subscribe to pod events to refresh logs reactively
   useEffect(() => {
     if (!enabled || !podId) return;
     setLines([]);
     setLoading(true);
     fetchLogs().finally(() => setLoading(false));
 
-    intervalRef.current = setInterval(fetchLogs, 5_000);
+    // Refresh logs when this specific pod gets a WS update
+    const unsubs = [...POD_WS_EVENTS, 'k8s.events'].map((evt) =>
+      subscribe(evt, (data: any) => {
+        // Only refetch if the event is for our pod (or no pod_id in payload)
+        const evtPod = data?.pod_id ?? data?.name;
+        if (!evtPod || podId.includes(evtPod)) {
+          fetchLogs();
+        }
+      })
+    );
+
+    return () => unsubs.forEach((u) => u());
+  }, [enabled, podId, fetchLogs, subscribe]);
+
+  // Fallback poll — 30s when WS is connected, 15s when disconnected
+  // (much gentler than previous 5s aggressive polling)
+  useEffect(() => {
+    if (!enabled || !podId) return;
+    const interval = wsStatus === 'connected' ? 30_000 : 15_000;
+    intervalRef.current = setInterval(fetchLogs, interval);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [enabled, podId, fetchLogs]);
+  }, [enabled, podId, fetchLogs, wsStatus]);
 
   return { lines, loading, error };
 }
@@ -172,6 +224,7 @@ export function usePipelineActions(refetchPipelines: () => void) {
         `/pipelines/${pipelineId}/rerun?failed_only=${failedOnly}`,
         {}
       );
+      // WS event will trigger refetch automatically; optimistic 1.5s local refresh as fallback
       setTimeout(refetchPipelines, 1500);
       return res?.message ?? 'Pipeline re-run queued';
     } catch (e: any) {
@@ -186,7 +239,8 @@ export function usePipelineActions(refetchPipelines: () => void) {
     setLoading(true); setError(null);
     try {
       const res: any = await apiPost(`/pipelines/${pipelineId}/cancel`, {});
-      setTimeout(refetchPipelines, 1000);
+      // WS event will trigger refetch automatically; optimistic local refresh as fallback
+      setTimeout(refetchPipelines, 800);
       return res?.message ?? 'Pipeline cancelled';
     } catch (e: any) {
       setError(e.message);

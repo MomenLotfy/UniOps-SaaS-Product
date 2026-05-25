@@ -76,6 +76,16 @@ class BackgroundScheduler:
             from app.tasks.sync_pods import _sync_pods
             result = await _sync_pods()
             logger.info(f"Scheduled pod sync: {result}")
+            # Broadcast real-time update to all connected tenants
+            try:
+                from app.api.v1.websocket.manager import ws_manager
+                if ws_manager.total_connections > 0:
+                    await ws_manager.broadcast({
+                        "event": "pod.update",
+                        "data": {"trigger": "sync", "synced": result if isinstance(result, int) else 0},
+                    })
+            except Exception:
+                pass
         except Exception as e:
             logger.warning(f"Pod sync skipped: {e}")
 
@@ -84,6 +94,16 @@ class BackgroundScheduler:
         try:
             from app.tasks.sync_pipelines import _sync_pipelines
             await _sync_pipelines()
+            # Broadcast real-time update to all connected tenants
+            try:
+                from app.api.v1.websocket.manager import ws_manager
+                if ws_manager.total_connections > 0:
+                    await ws_manager.broadcast({
+                        "event": "pipeline.update",
+                        "data": {"trigger": "sync"},
+                    })
+            except Exception:
+                pass
         except Exception as e:
             logger.warning(f"Pipeline sync skipped: {e}")
 

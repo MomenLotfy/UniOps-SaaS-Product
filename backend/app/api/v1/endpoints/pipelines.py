@@ -81,6 +81,26 @@ async def rerun_pipeline(
     return APIResponse(data=result, message=result.message)
 
 
+@router.post("/{pipeline_id}/cancel", response_model=APIResponse[PipelineRerunResult])
+async def cancel_pipeline(
+    pipeline_id: str,
+    current_user: AdminUser,
+    db: DBSession,
+):
+    """
+    Cancel a running pipeline on its provider.
+
+    - **GitHub** → `POST .../runs/{id}/cancel`
+    - **GitLab** → `POST .../pipelines/{id}/cancel`
+
+    Guards: returns 422 if the pipeline is not in an active/cancellable state.
+    Requires: admin or devops role.
+    """
+    svc = PipelineService(db)
+    result = await svc.cancel(pipeline_id, current_user["user_id"])
+    return APIResponse(data=result, message=result.message)
+
+
 @router.post("/sync")
 async def trigger_sync(
     current_user: AdminUser, tenant_id: TenantID,

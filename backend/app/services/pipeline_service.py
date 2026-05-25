@@ -250,6 +250,107 @@ class PipelineService(BaseService):
 
         return await client.retry_pipeline(str(project_id), str(pipeline_id))
 
+    # ── Cancel operation ──────────────────────────────────────────────────────
+
+    async def cancel(self, pipeline_id: str, triggered_by: str) -> PipelineRerunResult:
+        """
+        Cancel a running pipeline on its provider (GitHub or GitLab).
+        Guards: raises ValidationError if pipeline is not in a cancellable (active) state.
+        """
+        pipeline, integration = await self._resolve(pipeline_id)
+
+        if pipeline.status.lower() not in _ACTIVE:
+            raise ValidationError(
+                f"Pipeline is '{pipeline.status}' — only active pipelines can be cancelled",
+                field="status",
+            )
+
+        creds  = _decrypt_creds(integration.credentials)
+        config = {**creds, **(integration.config or {})}
+
+        if integration.type == "github":
+            result = await self._github_cancel(pipeline, config)
+        elif integration.type == "gitlab":
+            result = await self._gitlab_cancel(pipeline, config)
+        else:
+            raise IntegrationError(
+                integration.type,
+                f"Cancel not supported for provider '{integration.type}'",
+            )
+
+        if not result["success"]:
+            raise IntegrationError(integration.type, result.get("error", "Cancel failed"))
+
+        pipeline.status      = "cancelled"
+        pipeline.finished_at = datetime.now(timezone.utc)
+        pipeline.updated_at  = datetime.now(timezone.utc)
+
+        await self._write_audit(
+            tenant_id  = pipeline.tenant_id,
+            user_id    = triggered_by,
+            action     = "pipeline.cancel",
+            resource   = "pipeline",
+            resource_id= pipeline_id,
+            details    = {
+                "name":        pipeline.name,
+                "repository":  pipeline.repository,
+                "branch":      pipeline.branch,
+                "external_id": pipeline.external_id,
+                "provider":    integration.type,
+            },
+        )
+        await self.db.flush()
+
+        try:
+            from app.api.v1.websocket.manager import ws_manager
+            await ws_manager.send_to_tenant(pipeline.tenant_id, {
+                "event": "pipeline.update",
+                "data": {
+                    "pipeline_id": pipeline_id,
+                    "status":      "cancelled",
+                    "name":        pipeline.name,
+                    "repository":  pipeline.repository,
+                    "action":      "cancelled",
+                },
+            })
+        except Exception:
+            pass
+
+        logger.info(f"[audit] pipeline.cancel {pipeline.repository}#{pipeline.branch} by={triggered_by}")
+        return PipelineRerunResult(
+            success        = True,
+            action         = "cancel",
+            pipeline_id    = pipeline_id,
+            external_run_id= pipeline.external_id,
+            provider       = integration.type,
+            message        = f"Pipeline '{pipeline.name}' cancelled on {pipeline.repository}",
+            logs_url       = pipeline.logs_url,
+        )
+
+    async def _github_cancel(self, pipeline: Pipeline, config: dict) -> dict:
+        from app.integrations.github.client import GitHubClient
+        client = GitHubClient(config)
+        repo   = pipeline.repository or ""
+        parts  = repo.split("/", 1)
+        if len(parts) != 2:
+            return {"success": False, "error": f"Cannot parse owner/repo from '{repo}'"}
+        owner, repo_name = parts
+        run_id = pipeline.external_id
+        if not run_id:
+            return {"success": False, "error": "Pipeline has no external_id (GitHub run ID)"}
+        return await client.cancel_workflow_run(owner, repo_name, run_id)
+
+    async def _gitlab_cancel(self, pipeline: Pipeline, config: dict) -> dict:
+        from app.integrations.gitlab.client import GitLabClient
+        client     = GitLabClient(config)
+        project_id = (pipeline.metadata_ or {}).get("project_id") or config.get("project_id")
+        pipeline_id= pipeline.external_id
+        if not project_id:
+            return {"success": False, "error": "GitLab project_id not found in pipeline metadata or integration config"}
+        if not pipeline_id:
+            return {"success": False, "error": "Pipeline has no external_id (GitLab pipeline ID)"}
+        return await client.cancel_pipeline(str(project_id), str(pipeline_id))
+
     async def _github_get_jobs(self, pipeline: Pipeline, config: dict) -> list[PipelineJob]:
         from app.integrations.github.client import GitHubClient
         client = GitHubClient(config)

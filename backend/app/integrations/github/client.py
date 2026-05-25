@@ -303,6 +303,31 @@ class GitHubClient:
         except Exception as e:
             return {"success": False, "run_id": int(run_id), "error": str(e)}
 
+    async def cancel_workflow_run(self, owner: str, repo: str, run_id: int | str) -> dict:
+        """
+        Cancel a running workflow run.
+        GitHub API: POST /repos/{owner}/{repo}/actions/runs/{run_id}/cancel
+        Returns 202 Accepted with empty body on success.
+        """
+        try:
+            async with httpx.AsyncClient(timeout=20) as c:
+                r = await c.post(
+                    f"{GITHUB_API}/repos/{owner}/{repo}/actions/runs/{run_id}/cancel",
+                    headers=self._headers,
+                )
+            if r.status_code in (202, 200):
+                logger.info(f"GitHub cancel accepted: {owner}/{repo} run={run_id}")
+                return {"success": True, "run_id": int(run_id)}
+            try:
+                msg = r.json().get("message", f"HTTP {r.status_code}")
+            except Exception:
+                msg = f"HTTP {r.status_code}"
+            logger.warning(f"GitHub cancel failed ({owner}/{repo} run={run_id}): {msg}")
+            return {"success": False, "run_id": int(run_id), "error": msg}
+        except Exception as e:
+            logger.error(f"GitHub cancel exception ({owner}/{repo} run={run_id}): {e}")
+            return {"success": False, "run_id": int(run_id), "error": str(e)}
+
     async def get_workflow_run(self, owner: str, repo: str, run_id: int | str) -> dict | None:
         """Fetch a single workflow run — used to poll status after rerun."""
         return await self._get(f"/repos/{owner}/{repo}/actions/runs/{run_id}")

@@ -96,6 +96,30 @@ class GitLabClient(BaseIntegration):
             logger.error(f"GitLab retry_pipeline exception: {e}")
             return {"success": False, "error": str(e)}
 
+    async def cancel_pipeline(self, project_id: str, pipeline_id: str) -> dict:
+        """
+        Cancel a running GitLab pipeline.
+        GitLab API: POST /projects/{id}/pipelines/{pipeline_id}/cancel
+        """
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.post(
+                    f"{self.base_url}/api/v4/projects/{project_id}/pipelines/{pipeline_id}/cancel",
+                    headers=self._headers,
+                )
+                if resp.status_code in (200, 201):
+                    data = resp.json()
+                    logger.info(f"GitLab pipeline cancelled: project={project_id} id={pipeline_id}")
+                    return {"success": True, "status": data.get("status", "cancelled")}
+                try:
+                    msg = resp.json().get("message", f"HTTP {resp.status_code}")
+                except Exception:
+                    msg = f"HTTP {resp.status_code}"
+                return {"success": False, "error": msg}
+        except Exception as e:
+            logger.error(f"GitLab cancel_pipeline exception: {e}")
+            return {"success": False, "error": str(e)}
+
     async def get_pipeline_jobs(self, project_id: str, pipeline_id: str) -> list[dict]:
         """Fetch all jobs for a GitLab pipeline."""
         try:

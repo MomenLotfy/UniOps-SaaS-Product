@@ -8,11 +8,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   RefreshCw, Server, GitBranch, History,
   Plug, CheckCircle, Layers, Network,
-  Clock, Settings2, Zap, Shield,
+  Clock, Settings2, Zap, Shield, Wifi, WifiOff,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useApi } from '@/hooks/use-api';
+import { useWebSocket } from '@/contexts/WebSocketContext';
 
 import {
   useDevOpsIntegrations,
@@ -48,6 +49,10 @@ const TABS: { id: DevOpsTab; label: string; icon: React.ElementType }[] = [
 export default function DevOpsCenter() {
   const [tab, setTab]           = useState<DevOpsTab>('kubernetes');
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // WebSocket status
+  const { status: wsStatus } = useWebSocket();
+  const wsLive = wsStatus === 'connected';
 
   // Permissions
   const { isAdmin, hasRole } = usePermissions();
@@ -203,15 +208,33 @@ export default function DevOpsCenter() {
           <h1 className="text-xl font-bold text-white tracking-tight">DevOps Center</h1>
           <p className="text-sm text-gray-500 mt-0.5">Kubernetes · CI/CD Pipelines · Deployments</p>
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg border text-gray-300 hover:text-white hover:border-white/20 transition-colors"
-          style={{ borderColor: 'hsl(230 15% 20%)', background: 'hsl(230 15% 11%)' }}
-        >
-          <RefreshCw className={clsx('w-3.5 h-3.5', isRefreshing && 'animate-spin')} />
-          {isRefreshing ? 'Refreshing...' : 'Refresh'}
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Real-time status badge */}
+          <div className={clsx(
+            'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors',
+            wsLive
+              ? 'text-green-400 border-green-500/20 bg-green-500/5'
+              : wsStatus === 'connecting'
+                ? 'text-yellow-400 border-yellow-500/20 bg-yellow-500/5'
+                : 'text-gray-500 border-border bg-transparent',
+          )}>
+            {wsLive
+              ? <><Wifi className="w-3 h-3" />Live</>
+              : wsStatus === 'connecting'
+                ? <><Wifi className="w-3 h-3 animate-pulse" />Connecting</>
+                : <><WifiOff className="w-3 h-3" />Offline</>
+            }
+          </div>
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg border text-gray-300 hover:text-white hover:border-white/20 transition-colors"
+            style={{ borderColor: 'hsl(230 15% 20%)', background: 'hsl(230 15% 11%)' }}
+          >
+            <RefreshCw className={clsx('w-3.5 h-3.5', isRefreshing && 'animate-spin')} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {/* ── Stat cards ─────────────────────────────────────────────────────── */}
