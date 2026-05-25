@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   DollarSign, TrendingUp, TrendingDown, AlertTriangle,
@@ -306,6 +306,26 @@ export default function CostCenter() {
     return () => { u1(); u2(); };
   });
 
+  // ── Auto-sync on first load ────────────────────────────────────────────────
+  // When AWS is "connected" but no data has ever been synced, trigger a sync
+  // automatically so the user doesn't have to click "Sync Now" manually.
+  // The ref prevents double-firing in StrictMode or on re-renders.
+  const autoSyncFired = useRef(false);
+  useEffect(() => {
+    if (autoSyncFired.current) return;
+    const sum = summaryQ.data;
+    if (!sum) return;
+    // Trigger only when: credentials valid + no cost data + never synced
+    if (
+      (sum.integration_status === 'connected' || sum.integration_status === 'sync_failed') &&
+      !sum.has_data &&
+      !triggerSync.isPending
+    ) {
+      autoSyncFired.current = true;
+      triggerSync.mutate();
+    }
+  }, [summaryQ.data]);   // re-run when summary loads
+
   // Normalise data
   const summary   = summaryQ.data;
   const breakdown = breakdownQ.data ?? [];
@@ -454,7 +474,40 @@ export default function CostCenter() {
             </div>
           )}
 
-          {/* ── Metric Cards — always shown; $0 / "—" when no data yet ── */}
+          {/* ── Sync-in-progress bar ─────────────────────────────────────────── */}
+          {triggerSync.isPending && (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-300 text-xs">
+              <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+              <span>
+                <strong className="text-blue-200">Fetching cost data from AWS…</strong>{' '}
+                This may take up to 30 seconds. The dashboard will update automatically.
+              </span>
+            </div>
+          )}
+
+          {/* ── No data yet — connected but first sync hasn't finished ── */}
+          {!anyLoading && !triggerSync.isPending &&
+           (intgStatus === 'connected' || intgStatus === 'sync_failed') &&
+           !summary?.has_data && (
+            <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-blue-500/15 bg-blue-500/5 text-blue-300 text-xs">
+              <Cloud className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-400" />
+              <div className="flex-1">
+                <strong className="text-blue-200">No AWS usage data found yet</strong>{' '}
+                — your credentials are valid but no cost records have been pulled.
+                <div className="mt-1.5 text-blue-400/70">
+                  This is normal for new accounts or accounts with zero spend.
+                  If you have existing AWS spend, click{' '}
+                  <button onClick={() => triggerSync.mutate()}
+                    className="underline hover:text-blue-200 font-medium">
+                    Sync Now
+                  </button>
+                  {' '}to fetch the last 3 months of data.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Metric Cards — always shown; $0 when no data yet ─────────── */}
           {anyLoading ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => <MetricCardSkeleton key={i} />)}

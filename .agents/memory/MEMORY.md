@@ -1,1 +1,1 @@
-- [Security Center repo isolation](security-center-isolation.md) — All threat/vuln queries must pass repo_id to prevent cross-repo data leakage; selectedRepo is lifted state in SecurityCenter parent.
+- [FinOps pipeline fixes](finops-pipeline.md) — AWS CE data flow: blocking boto3, auto-sync on connect, smart poll vs fixed delay, has_integration flag.

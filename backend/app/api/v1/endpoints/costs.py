@@ -312,17 +312,22 @@ async def trigger_cost_sync(
     """
     Trigger an immediate AWS cost sync for this tenant.
     Returns immediately — sync runs in the background.
-    Logs: [sync_trigger] integration created → aws validated → sync triggered
+
+    Pipeline:
+      connected / sync_failed → triggers real cost sync
+      pending                 → triggers credential test then sync (if test passes)
+      credentials_invalid     → returns error, no sync attempted
+      no integration          → returns triggered=False
     """
     from app.utils.logger import logger
-    from fastapi import BackgroundTasks
     import asyncio
-
-    logger.info(f"[sync_trigger] Manual cost sync requested by user={current_user.id} tenant={tenant_id[:8]}")
-
-    # Verify at least one active AWS integration exists
     from sqlalchemy import select as _sel
     from app.models.integration import Integration as _Intg
+
+    logger.info(
+        f"[sync_trigger] Manual cost sync requested "
+        f"user={current_user.id} tenant={tenant_id[:8]}"
+    )
 
     intg = (await db.execute(
         _sel(_Intg).where(
@@ -333,32 +338,93 @@ async def trigger_cost_sync(
     )).scalar_one_or_none()
 
     if not intg:
-        logger.warning(f"[sync_trigger] No AWS integration found for tenant={tenant_id[:8]}")
+        logger.warning(
+            f"[sync_trigger] No AWS integration found for tenant={tenant_id[:8]}"
+        )
         return APIResponse(
             data={"triggered": False, "reason": "no_aws_integration"},
-            message="No AWS integration configured",
+            message="No AWS integration configured — connect AWS first",
         )
 
+    intg_status = intg.status
     logger.info(
-        f"[sync_trigger] Found integration={intg.name} status={intg.status} "
-        f"tenant={tenant_id[:8]} — triggering sync"
+        f"[sync_trigger] Found integration={intg.name} id={intg.id[:8]} "
+        f"status={intg_status} tenant={tenant_id[:8]}"
     )
 
-    # Run sync in background so endpoint returns immediately
-    async def _run_sync():
+    # credentials_invalid → cannot sync, tell user to fix credentials
+    if intg_status == "credentials_invalid":
+        logger.warning(
+            f"[sync_trigger] Blocked — credentials_invalid "
+            f"integration={intg.name} tenant={tenant_id[:8]}"
+        )
+        return APIResponse(
+            data={"triggered": False, "reason": "credentials_invalid", "status": intg_status},
+            message="AWS credentials are invalid — update your credentials before syncing",
+        )
+
+    # connected / sync_failed → direct cost sync
+    # pending                 → test credentials first, then sync if ok
+    async def _run_sync_direct():
         try:
             from app.tasks.sync_costs import sync_aws_costs_async
-            logger.info(f"[sync_trigger] sync_triggered tenant={tenant_id[:8]}")
+            logger.info(
+                f"[sync_trigger] Starting cost ingestion "
+                f"integration={intg.name} tenant={tenant_id[:8]}"
+            )
             result = await sync_aws_costs_async(tenant_id=tenant_id)
-            logger.info(f"[sync_trigger] ingestion_completed tenant={tenant_id[:8]} result={result}")
+            logger.info(
+                f"[sync_trigger] Ingestion completed "
+                f"tenant={tenant_id[:8]} result={result}"
+            )
         except Exception as exc:
-            logger.error(f"[sync_trigger] sync failed for tenant={tenant_id[:8]}: {exc}")
+            logger.error(
+                f"[sync_trigger] Ingestion failed "
+                f"tenant={tenant_id[:8]} error={exc}"
+            )
 
-    asyncio.create_task(_run_sync())
+    async def _run_test_then_sync():
+        """For pending integrations: test credentials, then sync if OK."""
+        try:
+            from app.core.database import AsyncSessionLocal
+            from app.services.integration_service import IntegrationService
+
+            async with AsyncSessionLocal() as test_db:
+                svc    = IntegrationService(test_db)
+                result = await svc.test_connection(intg.id)
+                await test_db.commit()
+                logger.info(
+                    f"[sync_trigger] Credential test result: success={result.success} "
+                    f"integration={intg.name}"
+                )
+                if result.success:
+                    await _run_sync_direct()
+                else:
+                    logger.warning(
+                        f"[sync_trigger] Credential test failed — aborting sync "
+                        f"integration={intg.name}: {result.message}"
+                    )
+        except Exception as exc:
+            logger.error(
+                f"[sync_trigger] test_then_sync failed "
+                f"tenant={tenant_id[:8]} error={exc}"
+            )
+
+    if intg_status == "pending":
+        asyncio.create_task(_run_test_then_sync())
+        message = "Testing AWS credentials — sync will start if credentials are valid"
+    else:
+        asyncio.create_task(_run_sync_direct())
+        message = "Cost sync started — data will appear within 30 seconds"
 
     return APIResponse(
-        data={"triggered": True, "integration": intg.name, "status": intg.status},
-        message="Cost sync started — data will appear within a few seconds",
+        data={
+            "triggered": True,
+            "integration": intg.name,
+            "status": intg_status,
+            "last_sync": intg.last_sync.isoformat() if intg.last_sync else None,
+        },
+        message=message,
     )
 
 

@@ -286,30 +286,74 @@ export function useInvalidateAllCostData() {
 }
 
 /**
- * Trigger a real AWS cost sync on the backend (POST /costs/sync).
- * On success, invalidates the full cost cache so all panels refresh.
+ * useTriggerCostSync — trigger a real AWS cost sync (POST /costs/sync).
+ *
+ * After triggering, polls /costs/summary every 5 seconds for up to 90 seconds.
+ * Stops as soon as has_data=true or last_sync changes (new sync completed),
+ * then invalidates all cost queries so the UI shows fresh data.
+ *
+ * Why 90s? AWS Cost Explorer API typically responds in 10–30 seconds.
+ * A fixed 5-second delay was too short — the frontend re-fetched before
+ * the sync had written anything to the database.
  */
 export function useTriggerCostSync() {
   const qc = useQueryClient();
+
   return useMutation({
     mutationFn: () => apiClient.post('/costs/sync'),
+
     onSuccess: (res) => {
-      const triggered = res.data?.data?.triggered;
-      const status    = res.data?.data?.status;
+      const triggered  = res.data?.data?.triggered;
+      const intgStatus = res.data?.data?.status;
+      const message    = res.data?.message;
+
       if (!triggered) {
-        toast.warning(res.data?.message ?? 'No AWS integration configured');
+        toast.warning(message ?? 'No AWS integration configured');
         return;
       }
+
       toast.success(
-        status === 'error'
-          ? 'Sync started — credentials will be re-tested'
-          : 'Cost sync started — data will refresh in a few seconds',
+        intgStatus === 'pending'
+          ? 'Testing credentials — sync will start if valid…'
+          : 'AWS cost sync started — data will appear in ~30 seconds',
       );
-      // Delay re-fetch to give the background sync time to write data
-      setTimeout(() => {
-        qc.invalidateQueries({ queryKey: costKeys.all });
-      }, 5_000);
+
+      // ── Smart poll: check every 5s until data appears or last_sync changes ─
+      const prevLastSync: string | null = res.data?.data?.last_sync ?? null;
+      let attempts = 0;
+      const maxAttempts = 18; // 18 × 5s = 90s max
+
+      const poll = async () => {
+        attempts++;
+        try {
+          const r     = await apiClient.get<{ data: CostSummary }>('/costs/summary');
+          const fresh = r.data?.data;
+          // Stop when we have data, or when last_sync changed (new sync ran)
+          const done  = fresh?.has_data ||
+            (fresh?.last_sync != null && fresh.last_sync !== prevLastSync);
+
+          if (done) {
+            await qc.invalidateQueries({ queryKey: costKeys.all });
+            if (fresh?.has_data) {
+              toast.success('Cost data loaded successfully');
+            }
+            return;
+          }
+        } catch {
+          // ignore transient fetch errors during polling
+        }
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 5_000);
+        } else {
+          // Timed out — do a final invalidation so status badges update
+          await qc.invalidateQueries({ queryKey: costKeys.all });
+        }
+      };
+
+      // First poll after 10s (give the sync task time to call AWS CE API)
+      setTimeout(poll, 10_000);
     },
+
     onError: (err: any) => {
       toast.error(err?.response?.data?.detail ?? 'Failed to trigger cost sync');
     },

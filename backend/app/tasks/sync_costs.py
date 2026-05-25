@@ -92,10 +92,26 @@ async def sync_aws_costs_async(tenant_id: str | None = None) -> dict:
                 explorer = CostExplorer(config)
 
                 # ── 1. Costs ─────────────────────────────────────────────
+                logger.info(
+                    f"[aws_cost_api_call] Calling ce:GetCostAndUsage "
+                    f"integration={integration.name} id={integration.id[:8]}"
+                )
                 cost_items = await explorer.get_costs_by_service(months=3)
+                logger.info(
+                    f"[aws_cost_api_response] integration={integration.name} "
+                    f"line_items_returned={len(cost_items)}"
+                )
+
+                inserted_costs = 0
                 for item in cost_items:
                     await _upsert_cost_metric(db, integration, item)
                     summary["cost_records"] += 1
+                    inserted_costs += 1
+
+                logger.info(
+                    f"[db_insert_count] cost_metrics upserted={inserted_costs} "
+                    f"integration={integration.name} id={integration.id[:8]}"
+                )
 
                 # ── 2. Anomalies ─────────────────────────────────────────
                 anomaly_items = await explorer.get_cost_anomalies()
@@ -105,13 +121,10 @@ async def sync_aws_costs_async(tenant_id: str | None = None) -> dict:
 
                 # ── 3. Savings ───────────────────────────────────────────
                 rightsizing = await explorer.get_rightsizing_recommendations()
-
-                # 🔥 FIX: safe fallback instead of crashing
                 ri_recs = []
                 if hasattr(explorer, "get_reserved_instance_recommendations"):
                     ri_recs = await explorer.get_reserved_instance_recommendations()
 
-                # Rightsizing savings
                 for r in rightsizing:
                     if r.get("monthly_savings", 0) > 0:
                         await _upsert_saving(db, integration, {
@@ -128,7 +141,6 @@ async def sync_aws_costs_async(tenant_id: str | None = None) -> dict:
                         })
                         summary["savings"] += 1
 
-                # Reserved Instances savings (safe now)
                 for r in ri_recs:
                     if r.get("monthly_savings", 0) > 0:
                         await _upsert_saving(db, integration, {
@@ -143,13 +155,18 @@ async def sync_aws_costs_async(tenant_id: str | None = None) -> dict:
                         summary["savings"] += 1
 
                 integration.last_sync = datetime.now(timezone.utc)
+                # Update status to "connected" after a successful sync
+                # (it may have been "sync_failed" from a previous attempt)
+                integration.status = "connected"
+                integration.error_message = None
                 await db.commit()
+
                 logger.info(
-                    f"[sync_costs] ✓ integration={integration.name} "
-                    f"tenant={integration.tenant_id[:8]} "
-                    f"cost_records={len(cost_items)} "
+                    f"[sync_costs_complete] ✓ integration={integration.name} "
+                    f"id={integration.id[:8]} tenant={integration.tenant_id[:8]} "
+                    f"cost_records={inserted_costs} "
                     f"anomalies={len(anomaly_items)} "
-                    f"savings_recs={len(rightsizing)}"
+                    f"savings_recs={len(rightsizing) + len(ri_recs)}"
                 )
 
                 # Invalidate Redis cost cache so next API call returns fresh data
@@ -157,13 +174,13 @@ async def sync_aws_costs_async(tenant_id: str | None = None) -> dict:
                     from app.core.cache import cost_cache_invalidate
                     await cost_cache_invalidate(integration.tenant_id)
                     logger.info(
-                        f"[sync_costs] Cache invalidated for tenant={integration.tenant_id[:8]}"
+                        f"[cache_invalidated] tenant={integration.tenant_id[:8]}"
                     )
                 except Exception as cache_exc:
                     logger.debug(f"[sync_costs] Cache invalidation skipped: {cache_exc}")
 
                 summary["integrations"] += 1
-                logger.info(f"[sync_costs] Summary: {summary}")
+                logger.info(f"[sync_costs_summary] {summary}")
 
             except Exception as e:
                 err_msg = str(e)[:400]
