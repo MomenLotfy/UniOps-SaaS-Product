@@ -131,7 +131,16 @@ async def _sync_github(db, integration, config: dict) -> tuple[int, int]:
             pipelines_synced += 1
 
         # ── Dependabot alerts → vulnerabilities ───────────────────────────
-        alerts = await client.list_dependabot_alerts(owner, repo)
+        # Dependabot may be disabled or the token may lack access — treat as
+        # non-fatal so pipeline data is never lost because of a missing feature.
+        try:
+            alerts = await client.list_dependabot_alerts(owner, repo)
+        except Exception as dep_exc:
+            logger.warning(
+                f"Dependabot alerts skipped for {full_name} "
+                f"(non-fatal): {dep_exc}"
+            )
+            alerts = []
         for alert in alerts:
             cve = alert.get("cve_id")
             pkg = alert.get("package")

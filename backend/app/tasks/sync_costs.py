@@ -304,20 +304,28 @@ def _decrypt_creds(credentials: dict) -> dict:
     from app.utils.encryption import decrypt
 
     result = {}
-    SENSITIVE = {"access_key", "secret_key", "token", "password", "private_key", "api_key"}
+    # Must match IntegrationService.SENSITIVE_FIELDS so encrypted-at-rest
+    # values are properly decrypted before being passed to boto3.
+    SENSITIVE = {
+        "access_key", "access_key_id",        # AWS key ID variants
+        "secret_key", "secret_access_key",     # AWS secret variants
+        "token", "access_token",
+        "password", "private_key",
+        "api_key", "webhook_secret", "client_secret",
+    }
 
     for k, v in (credentials or {}).items():
         if k in SENSITIVE and v:
             try:
                 result[k] = decrypt(str(v))
             except Exception:
-                result[k] = v
+                result[k] = v  # pass through if already plaintext
         else:
             result[k] = v
 
+    # Normalise key names so boto3 always gets access_key_id / secret_access_key
     if "access_key" in result and "access_key_id" not in result:
         result["access_key_id"] = result.pop("access_key")
-
     if "secret_key" in result and "secret_access_key" not in result:
         result["secret_access_key"] = result.pop("secret_key")
 

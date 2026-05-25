@@ -9347,3 +9347,531 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-05-25 16:56:21 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=0
 2026-05-25 16:56:21 | INFO     | app.core.scheduler:115 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
 2026-05-25 16:56:21 | INFO     | app.core.scheduler:124 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-25 16:56:26 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 40s
+2026-05-25 16:56:41 | INFO     | app.services.auth_service:115 - New user registered: jsshpesa123@gmail.com (tenant: Mo'men lotfy's Organization)
+2026-05-25 16:56:41 | INFO     | app.integrations.email.client:31 - [EMAIL — no key] To: jsshpesa123@gmail.com | Subject: Welcome to UniOps, Mo'men! 🚀
+2026-05-25 16:56:41 | INFO     | app.middleware.logging:15 - [6e53348a] POST /api/v1/auth/register → 200 (553.88ms)
+2026-05-25 16:56:41 | INFO     | app.middleware.logging:15 - [c117840e] GET /api/v1/integrations → 200 (13.02ms)
+2026-05-25 16:56:41 | INFO     | app.middleware.logging:15 - [e3cfbb66] GET /api/v1/companies → 200 (7.48ms)
+2026-05-25 16:56:41 | INFO     | app.middleware.logging:15 - [b4f48396] GET /api/v1/companies/stats → 200 (16.84ms)
+2026-05-25 16:56:41 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 16:56:42 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 16:57:06 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 80s
+2026-05-25 16:57:18 | INFO     | app.middleware.logging:15 - [af2be7e4] POST /api/v1/integrations/aws → 201 (26.11ms)
+2026-05-25 16:57:18 | INFO     | app.services.integration_service:229 - [aws_integration_saved] id=57e03a48-ca11-412f-b954-205184fa7386 tenant=f303f01a — running STS verification
+2026-05-25 16:57:18 | INFO     | app.integrations.aws.client:37 - [aws_sts_ok] account=718036735416 arn=arn:aws:iam::718036735416:user/uniops-production
+2026-05-25 16:57:18 | INFO     | app.services.integration_service:236 - [permissions_check_result] id=57e03a48-ca11-412f-b954-205184fa7386 sts_ok=True
+2026-05-25 16:57:18 | INFO     | app.services.integration_service:248 - [aws_connection_verified] id=57e03a48-ca11-412f-b954-205184fa7386 tenant=f303f01a account=718036735416
+2026-05-25 16:57:18 | INFO     | app.api.v1.endpoints.integrations:335 - [bg] AWS connection OK — triggering cost sync for tenant f303f01a-8084-463e-a72c-84d3ebb2ebef
+2026-05-25 16:57:18 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=f303f01a integrations_found=1
+2026-05-25 16:57:18 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=57e03a48 tenant=f303f01a prior_status=connected
+2026-05-25 16:57:18 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=AWS Production id=57e03a48
+2026-05-25 16:57:18 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-02-01 end=2026-05-25 months=3
+2026-05-25 16:57:18 | WARNING  | app.integrations.aws.cost_explorer:99 - [aws_ce] get_costs_by_service failed: An error occurred (UnrecognizedClientException) when calling the GetCostAndUsage operation: The security token included in the request is invalid.
+2026-05-25 16:57:18 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=AWS Production line_items_returned=0
+2026-05-25 16:57:18 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=0 integration=AWS Production id=57e03a48
+2026-05-25 16:57:18 | WARNING  | app.integrations.aws.cost_explorer:134 - [aws_ce] get_cost_anomalies failed: An error occurred (UnrecognizedClientException) when calling the GetAnomalies operation: The security token included in the request is invalid.
+2026-05-25 16:57:19 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: An error occurred (UnrecognizedClientException) when calling the GetRightsizingRecommendation operation: The security token included in the request is invalid.
+2026-05-25 16:57:19 | WARNING  | app.integrations.aws.cost_explorer:326 - [aws_ce] get_ri_recommendations failed: An error occurred (UnrecognizedClientException) when calling the GetReservationPurchaseRecommendation operation: The security token included in the request is invalid.
+2026-05-25 16:57:19 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=AWS Production id=57e03a48 tenant=f303f01a cost_records=0 anomalies=0 savings_recs=0
+2026-05-25 16:57:19 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=f303f01a
+2026-05-25 16:57:19 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-25 16:57:19 | INFO     | app.api.v1.endpoints.integrations:339 - [bg] AWS cost sync completed for tenant f303f01a-8084-463e-a72c-84d3ebb2ebef
+2026-05-25 16:57:38 | INFO     | app.middleware.logging:15 - [17414d2d] GET /api/v1/integrations → 200 (9.05ms)
+2026-05-25 16:57:39 | INFO     | app.middleware.logging:15 - [d8d07463] POST /api/v1/integrations → 201 (14.38ms)
+2026-05-25 16:57:39 | INFO     | app.middleware.logging:15 - [d259e908] PATCH /api/v1/integrations/719b7ced-a1a6-4265-939c-e4f1c975fa24 → 200 (12.11ms)
+2026-05-25 16:57:39 | INFO     | app.middleware.logging:15 - [41a6bde7] POST /api/v1/integrations/719b7ced-a1a6-4265-939c-e4f1c975fa24/test → 200 (159.62ms)
+2026-05-25 16:57:39 | INFO     | app.middleware.logging:15 - [6f275bdc] GET /api/v1/integrations/719b7ced-a1a6-4265-939c-e4f1c975fa24 → 200 (14.75ms)
+2026-05-25 16:57:39 | INFO     | app.api.v1.endpoints.integrations:328 - [bg] Connection test OK + synced 31 repos for integration 719b7ced-a1a6-4265-939c-e4f1c975fa24 (tenant f303f01a-8084-463e-a72c-84d3ebb2ebef)
+2026-05-25 16:57:39 | INFO     | app.api.v1.endpoints.integrations:328 - [bg] Connection test OK + synced 31 repos for integration 719b7ced-a1a6-4265-939c-e4f1c975fa24 (tenant f303f01a-8084-463e-a72c-84d3ebb2ebef)
+2026-05-25 16:57:53 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=f303f01a repo_id=None scan_id=None
+2026-05-25 16:57:53 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=f303f01a
+2026-05-25 16:57:53 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=f303f01a repo_id=None total=0 open=0 critical=0
+2026-05-25 16:57:53 | INFO     | app.middleware.logging:15 - [3503dd20] GET /api/v1/threats/stats → 200 (8.42ms)
+2026-05-25 16:57:54 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=f303f01a intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 16:57:54 | INFO     | app.middleware.logging:15 - [ee356545] GET /api/v1/costs/summary → 200 (15.32ms)
+2026-05-25 16:57:54 | INFO     | app.middleware.logging:15 - [d83fd54a] GET /api/v1/kubernetes/pods/stats → 200 (7.46ms)
+2026-05-25 16:57:54 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=f303f01a repo_id=None scan_id=None
+2026-05-25 16:57:54 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=f303f01a
+2026-05-25 16:57:54 | INFO     | app.middleware.logging:15 - [10ba8ccb] GET /api/v1/ml/stats → 200 (22.27ms)
+2026-05-25 16:57:54 | INFO     | app.middleware.logging:15 - [363abd75] GET /api/v1/alerts → 200 (18.23ms)
+2026-05-25 16:57:54 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=f303f01a repo_id=None total=0 open=0 critical=0
+2026-05-25 16:57:54 | INFO     | app.middleware.logging:15 - [b53fc92f] GET /api/v1/threats/stats → 200 (15.13ms)
+2026-05-25 16:57:54 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=f303f01a intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 16:57:54 | INFO     | app.middleware.logging:15 - [83d26674] GET /api/v1/costs/summary → 200 (13.11ms)
+2026-05-25 16:57:54 | INFO     | app.middleware.logging:15 - [e70990a5] GET /api/v1/kubernetes/pods/stats → 200 (5.16ms)
+2026-05-25 16:57:54 | INFO     | app.middleware.logging:15 - [61d7501f] GET /api/v1/ml/stats → 200 (10.4ms)
+2026-05-25 16:57:54 | INFO     | app.middleware.logging:15 - [8a08aaf2] GET /api/v1/alerts → 200 (9.03ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [7732b283] GET /api/v1/ml/correlations → 200 (19.94ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [74283374] GET /api/v1/ml/models/status → 200 (7.32ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [c07899fe] GET /api/v1/ml/patterns → 200 (24.01ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [37e4c6c0] GET /api/v1/ml/predictions/summary → 200 (20.87ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [86095905] GET /api/v1/ml/predictions → 200 (24.61ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [951881fe] GET /api/v1/ml/recommendations → 200 (21.92ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [da6661ed] GET /api/v1/ml/radar → 200 (14.09ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [c00c0560] GET /api/v1/ml/correlations → 200 (10.4ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [f89cc0b9] GET /api/v1/ml/patterns → 200 (13.56ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [3a4ae820] GET /api/v1/ml/predictions/summary → 200 (10.86ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [15aab794] GET /api/v1/ml/recommendations → 200 (11.09ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [7be113f8] GET /api/v1/ml/predictions → 200 (13.28ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [6cda4897] GET /api/v1/ml/models/status → 200 (1.69ms)
+2026-05-25 16:57:59 | INFO     | app.middleware.logging:15 - [cf5447f2] GET /api/v1/ml/radar → 200 (13.33ms)
+2026-05-25 16:58:21 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 16:58:21 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 16:58:26 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 160s
+2026-05-25 16:59:37 | ERROR    | app.middleware.logging:23 - [b45029eb] GET /api/v1/alerts → ERR (1.24ms): Bearer token required
+2026-05-25 16:59:37 | ERROR    | app.middleware.logging:23 - [18c75383] GET /api/v1/alerts → ERR (2.22ms): Bearer token required
+2026-05-25 17:00:05 | INFO     | app.services.auth_service:115 - New user registered: momen.elpesa123@gmail.com (tenant: Moamen Lotfy's Organization)
+2026-05-25 17:00:05 | INFO     | app.integrations.email.client:31 - [EMAIL — no key] To: momen.elpesa123@gmail.com | Subject: Welcome to UniOps, Moamen! 🚀
+2026-05-25 17:00:05 | INFO     | app.middleware.logging:15 - [8da91d5a] POST /api/v1/auth/register → 200 (344.06ms)
+2026-05-25 17:00:05 | INFO     | app.middleware.logging:15 - [c126942b] GET /api/v1/integrations → 200 (15.31ms)
+2026-05-25 17:00:05 | INFO     | app.middleware.logging:15 - [ab0b9f8f] GET /api/v1/companies → 200 (12.4ms)
+2026-05-25 17:00:05 | INFO     | app.middleware.logging:15 - [7c03b6b2] GET /api/v1/companies/stats → 200 (19.93ms)
+2026-05-25 17:00:06 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-05-25 17:00:06 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 17:00:21 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 17:00:21 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 17:00:30 | INFO     | app.middleware.logging:15 - [385602c9] POST /api/v1/integrations/aws → 201 (14.9ms)
+2026-05-25 17:00:30 | INFO     | app.services.integration_service:229 - [aws_integration_saved] id=b4ba3575-74af-49a9-a31a-69dad86e3ce6 tenant=c7d6943c — running STS verification
+2026-05-25 17:00:30 | INFO     | app.integrations.aws.client:37 - [aws_sts_ok] account=718036735416 arn=arn:aws:iam::718036735416:user/uniops-production
+2026-05-25 17:00:30 | INFO     | app.services.integration_service:236 - [permissions_check_result] id=b4ba3575-74af-49a9-a31a-69dad86e3ce6 sts_ok=True
+2026-05-25 17:00:30 | INFO     | app.services.integration_service:248 - [aws_connection_verified] id=b4ba3575-74af-49a9-a31a-69dad86e3ce6 tenant=c7d6943c account=718036735416
+2026-05-25 17:00:30 | INFO     | app.api.v1.endpoints.integrations:335 - [bg] AWS connection OK — triggering cost sync for tenant c7d6943c-9db4-4866-9dad-2f12aa6e4606
+2026-05-25 17:00:30 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=c7d6943c integrations_found=1
+2026-05-25 17:00:30 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=b4ba3575 tenant=c7d6943c prior_status=connected
+2026-05-25 17:00:30 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=AWS Production id=b4ba3575
+2026-05-25 17:00:30 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-02-01 end=2026-05-25 months=3
+2026-05-25 17:00:30 | WARNING  | app.integrations.aws.cost_explorer:99 - [aws_ce] get_costs_by_service failed: An error occurred (UnrecognizedClientException) when calling the GetCostAndUsage operation: The security token included in the request is invalid.
+2026-05-25 17:00:30 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=AWS Production line_items_returned=0
+2026-05-25 17:00:30 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=0 integration=AWS Production id=b4ba3575
+2026-05-25 17:00:30 | WARNING  | app.integrations.aws.cost_explorer:134 - [aws_ce] get_cost_anomalies failed: An error occurred (UnrecognizedClientException) when calling the GetAnomalies operation: The security token included in the request is invalid.
+2026-05-25 17:00:30 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: An error occurred (UnrecognizedClientException) when calling the GetRightsizingRecommendation operation: The security token included in the request is invalid.
+2026-05-25 17:00:31 | WARNING  | app.integrations.aws.cost_explorer:326 - [aws_ce] get_ri_recommendations failed: An error occurred (UnrecognizedClientException) when calling the GetReservationPurchaseRecommendation operation: The security token included in the request is invalid.
+2026-05-25 17:00:31 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=AWS Production id=b4ba3575 tenant=c7d6943c cost_records=0 anomalies=0 savings_recs=0
+2026-05-25 17:00:31 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=c7d6943c
+2026-05-25 17:00:31 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-25 17:00:31 | INFO     | app.api.v1.endpoints.integrations:339 - [bg] AWS cost sync completed for tenant c7d6943c-9db4-4866-9dad-2f12aa6e4606
+2026-05-25 17:00:44 | INFO     | app.middleware.logging:15 - [1919c39d] GET /api/v1/integrations → 200 (10.73ms)
+2026-05-25 17:00:44 | INFO     | app.middleware.logging:15 - [bad06372] POST /api/v1/integrations → 201 (15.45ms)
+2026-05-25 17:00:45 | INFO     | app.middleware.logging:15 - [30eea4c8] PATCH /api/v1/integrations/1f005b68-7339-4c0e-8b30-56d1412d227f → 200 (11.81ms)
+2026-05-25 17:00:45 | INFO     | app.api.v1.endpoints.integrations:328 - [bg] Connection test OK + synced 31 repos for integration 1f005b68-7339-4c0e-8b30-56d1412d227f (tenant c7d6943c-9db4-4866-9dad-2f12aa6e4606)
+2026-05-25 17:00:45 | INFO     | app.middleware.logging:15 - [a7fed55c] POST /api/v1/integrations/1f005b68-7339-4c0e-8b30-56d1412d227f/test → 200 (164.58ms)
+2026-05-25 17:00:45 | INFO     | app.api.v1.endpoints.integrations:328 - [bg] Connection test OK + synced 31 repos for integration 1f005b68-7339-4c0e-8b30-56d1412d227f (tenant c7d6943c-9db4-4866-9dad-2f12aa6e4606)
+2026-05-25 17:00:45 | INFO     | app.middleware.logging:15 - [a092caad] GET /api/v1/integrations/1f005b68-7339-4c0e-8b30-56d1412d227f → 200 (5.58ms)
+2026-05-25 17:00:54 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=c7d6943c repo_id=None scan_id=None
+2026-05-25 17:00:54 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=c7d6943c
+2026-05-25 17:00:54 | INFO     | app.middleware.logging:15 - [22931baf] GET /api/v1/kubernetes/pods/stats → 200 (19.93ms)
+2026-05-25 17:00:54 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=c7d6943c repo_id=None total=0 open=0 critical=0
+2026-05-25 17:00:54 | INFO     | app.middleware.logging:15 - [97b854de] GET /api/v1/threats/stats → 200 (22.75ms)
+2026-05-25 17:00:54 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=c7d6943c intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 17:00:54 | INFO     | app.middleware.logging:15 - [c0851bc6] GET /api/v1/ml/stats → 200 (26.03ms)
+2026-05-25 17:00:54 | INFO     | app.middleware.logging:15 - [0703035d] GET /api/v1/alerts → 200 (23.47ms)
+2026-05-25 17:00:54 | INFO     | app.middleware.logging:15 - [534976f5] GET /api/v1/costs/summary → 200 (27.24ms)
+2026-05-25 17:00:54 | INFO     | app.middleware.logging:15 - [0f9bbf54] GET /api/v1/kubernetes/pods/stats → 200 (6.03ms)
+2026-05-25 17:00:54 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=c7d6943c repo_id=None scan_id=None
+2026-05-25 17:00:54 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=c7d6943c
+2026-05-25 17:00:54 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=c7d6943c repo_id=None total=0 open=0 critical=0
+2026-05-25 17:00:54 | INFO     | app.middleware.logging:15 - [607620c8] GET /api/v1/threats/stats → 200 (8.2ms)
+2026-05-25 17:00:54 | INFO     | app.middleware.logging:15 - [552dd1c2] GET /api/v1/ml/stats → 200 (9.41ms)
+2026-05-25 17:00:54 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=c7d6943c intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 17:00:54 | INFO     | app.middleware.logging:15 - [c3a4ab33] GET /api/v1/costs/summary → 200 (11.34ms)
+2026-05-25 17:00:54 | INFO     | app.middleware.logging:15 - [faae7f59] GET /api/v1/alerts → 200 (8.5ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [929d457f] GET /api/v1/ml/models/status → 200 (8.06ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [44d4af7b] GET /api/v1/ml/correlations → 200 (21.52ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [a771e986] GET /api/v1/ml/patterns → 200 (20.95ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [fa4962f8] GET /api/v1/ml/predictions/summary → 200 (17.71ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [4a4a7b11] GET /api/v1/ml/predictions → 200 (20.31ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [60076128] GET /api/v1/ml/recommendations → 200 (16.71ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [03ec9a59] GET /api/v1/ml/predictions/summary → 200 (27.23ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [b78c73a1] GET /api/v1/ml/predictions → 200 (26.13ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [6ee4d484] GET /api/v1/ml/patterns → 200 (18.04ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [e06aeb8e] GET /api/v1/ml/correlations → 200 (23.66ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [26293038] GET /api/v1/ml/radar → 200 (39.3ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [91a8b5ca] GET /api/v1/ml/recommendations → 200 (30.85ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [8fbc936b] GET /api/v1/ml/models/status → 200 (1.66ms)
+2026-05-25 17:00:59 | INFO     | app.middleware.logging:15 - [c3b270d2] GET /api/v1/ml/radar → 200 (11.22ms)
+2026-05-25 17:01:06 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-05-25 17:01:13 | INFO     | app.middleware.logging:15 - [ee1c2f75] GET /api/v1/integrations → 200 (9.14ms)
+2026-05-25 17:01:14 | INFO     | app.middleware.logging:15 - [1b2db162] GET /api/v1/integrations → 200 (9.66ms)
+2026-05-25 17:01:19 | INFO     | app.middleware.logging:15 - [6ce4bc46] GET /api/v1/ml/predictions/summary → 200 (16.02ms)
+2026-05-25 17:01:19 | INFO     | app.middleware.logging:15 - [7bb8dfdb] GET /api/v1/ml/models/status → 200 (7.5ms)
+2026-05-25 17:01:19 | INFO     | app.middleware.logging:15 - [84f96c1e] GET /api/v1/ml/correlations → 200 (24.55ms)
+2026-05-25 17:01:19 | INFO     | app.middleware.logging:15 - [2c2a69fc] GET /api/v1/ml/patterns → 200 (22.38ms)
+2026-05-25 17:01:19 | INFO     | app.middleware.logging:15 - [0ba3a071] GET /api/v1/ml/recommendations → 200 (19.2ms)
+2026-05-25 17:01:19 | INFO     | app.middleware.logging:15 - [4ed93cb4] GET /api/v1/ml/predictions → 200 (29.56ms)
+2026-05-25 17:01:19 | INFO     | app.middleware.logging:15 - [455611f1] GET /api/v1/ml/predictions/summary → 200 (10.71ms)
+2026-05-25 17:01:19 | INFO     | app.middleware.logging:15 - [6559a9da] GET /api/v1/ml/patterns → 200 (13.46ms)
+2026-05-25 17:01:19 | INFO     | app.middleware.logging:15 - [ec191506] GET /api/v1/ml/radar → 200 (25.75ms)
+2026-05-25 17:01:19 | INFO     | app.middleware.logging:15 - [72366d8f] GET /api/v1/ml/models/status → 200 (5.02ms)
+2026-05-25 17:01:19 | INFO     | app.middleware.logging:15 - [59040b8b] GET /api/v1/ml/correlations → 200 (15.45ms)
+2026-05-25 17:01:19 | INFO     | app.middleware.logging:15 - [7351cd7c] GET /api/v1/ml/predictions → 200 (10.84ms)
+2026-05-25 17:01:20 | INFO     | app.middleware.logging:15 - [21b04c22] GET /api/v1/ml/recommendations → 200 (6.34ms)
+2026-05-25 17:01:20 | INFO     | app.middleware.logging:15 - [45cef6a8] GET /api/v1/ml/radar → 200 (16.3ms)
+2026-05-25 17:01:21 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-25 17:01:22 | INFO     | app.middleware.logging:15 - [beecb845] GET /api/v1/ml/correlations → 200 (11.57ms)
+2026-05-25 17:01:22 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:01:22 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 719b7ced-a1a6-4265-939c-e4f1c975fa24: Dependabot alerts are disabled for this repository.
+2026-05-25 17:01:22 | WARNING  | app.core.scheduler:108 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-25 17:01:23 | INFO     | app.middleware.logging:15 - [3c7a84eb] GET /api/v1/ml/correlations → 200 (6.09ms)
+2026-05-25 17:02:15 | INFO     | app.middleware.logging:15 - [e01010a1] GET /api/v1/integrations → 200 (9.27ms)
+2026-05-25 17:02:15 | INFO     | app.middleware.logging:15 - [4058d900] GET /api/v1/integrations → 200 (11.5ms)
+2026-05-25 17:02:21 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 17:02:21 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [8e993426] GET /api/v1/ml/models/status → 200 (2.95ms)
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [eb7ffaec] GET /api/v1/ml/patterns → 200 (19.32ms)
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [1fec76c5] GET /api/v1/ml/predictions → 200 (22.49ms)
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [c6517a24] GET /api/v1/ml/recommendations → 200 (18.32ms)
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [a70797cb] GET /api/v1/ml/correlations → 200 (37.16ms)
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [910032df] GET /api/v1/ml/predictions/summary → 200 (44.24ms)
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [6b12628e] GET /api/v1/ml/correlations → 200 (11.41ms)
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [9fbc12c7] GET /api/v1/ml/predictions/summary → 200 (21.45ms)
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [b0415b55] GET /api/v1/ml/predictions → 200 (20.27ms)
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [d650aba4] GET /api/v1/ml/radar → 200 (25.26ms)
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [1e6f6636] GET /api/v1/ml/recommendations → 200 (18.95ms)
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [b705d41c] GET /api/v1/ml/patterns → 200 (17.69ms)
+2026-05-25 17:02:26 | INFO     | app.middleware.logging:15 - [be9a8a57] GET /api/v1/ml/models/status → 200 (2.49ms)
+2026-05-25 17:02:27 | INFO     | app.middleware.logging:15 - [0a9f263c] GET /api/v1/ml/radar → 200 (11.33ms)
+2026-05-25 17:02:29 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=c7d6943c intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 17:02:29 | INFO     | app.middleware.logging:15 - [5d124503] GET /api/v1/costs/breakdown → 200 (30.54ms)
+2026-05-25 17:02:29 | INFO     | app.middleware.logging:15 - [f0b1d89c] GET /api/v1/costs/summary → 200 (34.58ms)
+2026-05-25 17:02:29 | INFO     | app.middleware.logging:15 - [31e1f041] GET /api/v1/savings → 200 (20.21ms)
+2026-05-25 17:02:29 | INFO     | app.middleware.logging:15 - [284c43fe] GET /api/v1/costs/anomalies → 200 (24.45ms)
+2026-05-25 17:02:29 | INFO     | app.middleware.logging:15 - [46d42719] GET /api/v1/costs/forecast → 200 (28.82ms)
+2026-05-25 17:02:30 | ERROR    | app.middleware.logging:23 - [401ef92c] POST /api/v1/costs/sync → ERR (1.48ms): 'dict' object has no attribute 'id'
+2026-05-25 17:02:30 | ERROR    | app.main:149 - Unhandled error: 'dict' object has no attribute 'id'
+2026-05-25 17:02:55 | INFO     | app.middleware.logging:15 - [838afb2d] GET /api/v1/ml/models/status → 200 (6.37ms)
+2026-05-25 17:02:55 | INFO     | app.middleware.logging:15 - [710456be] GET /api/v1/ml/correlations → 200 (21.14ms)
+2026-05-25 17:02:55 | INFO     | app.middleware.logging:15 - [d418ad44] GET /api/v1/ml/predictions/summary → 200 (20.59ms)
+2026-05-25 17:02:55 | INFO     | app.middleware.logging:15 - [880f2efd] GET /api/v1/ml/predictions → 200 (24.55ms)
+2026-05-25 17:02:55 | INFO     | app.middleware.logging:15 - [5149ac94] GET /api/v1/ml/recommendations → 200 (20.69ms)
+2026-05-25 17:02:55 | INFO     | app.middleware.logging:15 - [3c10243a] GET /api/v1/ml/patterns → 200 (18.01ms)
+2026-05-25 17:02:56 | INFO     | app.middleware.logging:15 - [69ae0357] GET /api/v1/ml/predictions → 200 (14.32ms)
+2026-05-25 17:02:56 | INFO     | app.middleware.logging:15 - [15077c38] GET /api/v1/ml/correlations → 200 (13.69ms)
+2026-05-25 17:02:56 | INFO     | app.middleware.logging:15 - [17868238] GET /api/v1/ml/patterns → 200 (14.85ms)
+2026-05-25 17:02:56 | INFO     | app.middleware.logging:15 - [43f8a372] GET /api/v1/ml/radar → 200 (23.08ms)
+2026-05-25 17:02:56 | INFO     | app.middleware.logging:15 - [94b3d26b] GET /api/v1/ml/recommendations → 200 (11.93ms)
+2026-05-25 17:02:56 | INFO     | app.middleware.logging:15 - [9c624c5f] GET /api/v1/ml/predictions/summary → 200 (10.81ms)
+2026-05-25 17:02:56 | INFO     | app.middleware.logging:15 - [63ff90bf] GET /api/v1/ml/models/status → 200 (1.73ms)
+2026-05-25 17:02:56 | INFO     | app.middleware.logging:15 - [5e97fb9d] GET /api/v1/ml/radar → 200 (11.99ms)
+2026-05-25 17:03:11 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=c7d6943c repo_id=None scan_id=None
+2026-05-25 17:03:11 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=c7d6943c
+2026-05-25 17:03:11 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=c7d6943c repo_id=None total=0 open=0 critical=0
+2026-05-25 17:03:11 | INFO     | app.middleware.logging:15 - [3013f8a0] GET /api/v1/threats/stats → 200 (13.37ms)
+2026-05-25 17:03:11 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=c7d6943c intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 17:03:11 | INFO     | app.middleware.logging:15 - [8fd7440f] GET /api/v1/kubernetes/pods/stats → 200 (16.8ms)
+2026-05-25 17:03:11 | INFO     | app.middleware.logging:15 - [bd81d075] GET /api/v1/costs/summary → 200 (23.87ms)
+2026-05-25 17:03:11 | INFO     | app.middleware.logging:15 - [e24aa2ec] GET /api/v1/alerts → 200 (17.61ms)
+2026-05-25 17:03:11 | INFO     | app.middleware.logging:15 - [a952b050] GET /api/v1/ml/stats → 200 (23.98ms)
+2026-05-25 17:03:11 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=c7d6943c repo_id=None scan_id=None
+2026-05-25 17:03:11 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=c7d6943c
+2026-05-25 17:03:11 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=c7d6943c repo_id=None total=0 open=0 critical=0
+2026-05-25 17:03:11 | INFO     | app.middleware.logging:15 - [8dc34bdf] GET /api/v1/threats/stats → 200 (7.66ms)
+2026-05-25 17:03:11 | INFO     | app.middleware.logging:15 - [fe4e0aae] GET /api/v1/kubernetes/pods/stats → 200 (16.27ms)
+2026-05-25 17:03:11 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=c7d6943c intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 17:03:11 | INFO     | app.middleware.logging:15 - [10daeac9] GET /api/v1/ml/stats → 200 (17.94ms)
+2026-05-25 17:03:11 | INFO     | app.middleware.logging:15 - [c871589d] GET /api/v1/alerts → 200 (15.66ms)
+2026-05-25 17:03:11 | INFO     | app.middleware.logging:15 - [ed5e4758] GET /api/v1/costs/summary → 200 (24.96ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [5a5e356e] GET /api/v1/ml/models/status → 200 (3.64ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [3d77b3fd] GET /api/v1/ml/patterns → 200 (19.54ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [667c7c0e] GET /api/v1/ml/correlations → 200 (22.55ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [b5392e90] GET /api/v1/ml/predictions → 200 (18.74ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [5f9ab06c] GET /api/v1/ml/predictions/summary → 200 (17.07ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [4c2a62d9] GET /api/v1/ml/recommendations → 200 (15.15ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [965c9619] GET /api/v1/ml/correlations → 200 (5.91ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [7b6ee510] GET /api/v1/ml/patterns → 200 (10.59ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [a61d5cb9] GET /api/v1/ml/radar → 200 (18.21ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [4fa8f61c] GET /api/v1/ml/predictions/summary → 200 (16.3ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [c4ac5f39] GET /api/v1/ml/models/status → 200 (4.21ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [1444d1f7] GET /api/v1/ml/predictions → 200 (16.13ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [76255858] GET /api/v1/ml/recommendations → 200 (8.54ms)
+2026-05-25 17:03:17 | INFO     | app.middleware.logging:15 - [a3fb1f26] GET /api/v1/ml/radar → 200 (13.02ms)
+2026-05-25 17:03:20 | INFO     | app.middleware.logging:15 - [83e46c44] GET /api/v1/companies/stats → 200 (13.88ms)
+2026-05-25 17:03:20 | INFO     | app.middleware.logging:15 - [54272550] GET /api/v1/companies/stats → 200 (12.88ms)
+2026-05-25 17:03:36 | INFO     | app.middleware.logging:15 - [564e13fa] GET /api/v1/billing/subscription → 200 (7.99ms)
+2026-05-25 17:03:36 | INFO     | app.middleware.logging:15 - [689ca88f] GET /api/v1/billing/invoices → 200 (11.01ms)
+2026-05-25 17:03:36 | INFO     | app.middleware.logging:15 - [cc517c0d] GET /api/v1/billing/invoices → 200 (9.85ms)
+2026-05-25 17:03:36 | INFO     | app.middleware.logging:15 - [395279c9] GET /api/v1/billing/subscription → 200 (9.44ms)
+2026-05-25 17:03:42 | ERROR    | app.middleware.logging:23 - [d604b05c] POST /api/v1/billing/checkout → ERR (2.52ms): Stripe integration error: STRIPE_SECRET_KEY is not configured in .env
+2026-05-25 17:03:49 | INFO     | app.middleware.logging:15 - [b0ed6273] GET /api/v1/companies/stats → 200 (10.17ms)
+2026-05-25 17:03:49 | INFO     | app.middleware.logging:15 - [9add5925] GET /api/v1/companies/stats → 200 (10.43ms)
+2026-05-25 17:03:51 | INFO     | app.middleware.logging:15 - [f1087c0f] GET /api/v1/users → 200 (9.9ms)
+2026-05-25 17:03:52 | INFO     | app.middleware.logging:15 - [ec297c76] GET /api/v1/users → 200 (8.99ms)
+2026-05-25 17:04:14 | INFO     | app.middleware.logging:15 - [22f932ec] POST /api/v1/users/invite → 422 (2.65ms)
+2026-05-25 17:04:21 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 17:04:21 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 17:04:25 | INFO     | app.middleware.logging:15 - [517f4885] GET /api/v1/audit-logs → 200 (11.5ms)
+2026-05-25 17:04:26 | INFO     | app.middleware.logging:15 - [e1a7d2a1] GET /api/v1/audit-logs → 200 (10.11ms)
+2026-05-25 17:04:50 | INFO     | app.middleware.logging:15 - [524b6e71] GET /api/v1/users/me/sessions → 200 (1.5ms)
+2026-05-25 17:04:50 | INFO     | app.middleware.logging:15 - [428af33b] GET /api/v1/users/me/sessions → 200 (1.32ms)
+2026-05-25 17:04:57 | INFO     | app.middleware.logging:15 - [f8a64bb5] GET /api/v1/users/me/sessions → 200 (1.41ms)
+2026-05-25 17:04:57 | INFO     | app.middleware.logging:15 - [c25ef4da] GET /api/v1/users/me/sessions → 200 (1.2ms)
+2026-05-25 17:05:10 | INFO     | app.middleware.logging:15 - [994ab112] GET /api/v1/integrations → 200 (7.91ms)
+2026-05-25 17:05:10 | INFO     | app.middleware.logging:15 - [f019eb30] GET /api/v1/integrations → 200 (6.56ms)
+2026-05-25 17:05:12 | INFO     | app.middleware.logging:15 - [996678fe] GET /api/v1/api-keys → 200 (9.73ms)
+2026-05-25 17:05:12 | INFO     | app.middleware.logging:15 - [8a52dc62] GET /api/v1/api-keys → 200 (6.48ms)
+2026-05-25 17:06:06 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-05-25 17:06:21 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 17:06:21 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 17:06:22 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-25 17:06:23 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:06:23 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 719b7ced-a1a6-4265-939c-e4f1c975fa24: Dependabot alerts are disabled for this repository.
+2026-05-25 17:06:23 | WARNING  | app.core.scheduler:108 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-25 17:08:21 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 17:08:21 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 17:10:21 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 17:10:21 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 17:11:06 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-05-25 17:11:23 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-25 17:11:24 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:11:24 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 719b7ced-a1a6-4265-939c-e4f1c975fa24: Dependabot alerts are disabled for this repository.
+2026-05-25 17:11:24 | WARNING  | app.core.scheduler:108 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-25 17:12:21 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 17:12:21 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 17:13:07 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-25 17:13:07 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-25 17:13:07 | INFO     | app.main:73 - Shutting down...
+2026-05-25 17:13:07 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 17:13:07 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 17:13:08 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 17:13:09 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 17:13:09 | INFO     | app.main:33 - Database initialized
+2026-05-25 17:13:09 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 17:13:09 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-25 17:13:09 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 17:13:09 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 17:13:09 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 17:13:09 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 17:13:09 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-25 17:13:12 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 17:13:13 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 17:13:14 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-05-25 17:13:19 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-25 17:13:19 | INFO     | app.main:73 - Shutting down...
+2026-05-25 17:13:19 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 17:13:19 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 17:13:21 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 17:13:21 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 17:13:21 | INFO     | app.main:33 - Database initialized
+2026-05-25 17:13:21 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 17:13:21 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-25 17:13:21 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 17:13:21 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 17:13:21 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 17:13:21 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 17:13:21 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-25 17:13:25 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 17:13:25 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 17:13:26 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-05-25 17:13:32 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-25 17:13:32 | INFO     | app.main:73 - Shutting down...
+2026-05-25 17:13:32 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 17:13:32 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 17:13:34 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 17:13:34 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 17:13:34 | INFO     | app.main:33 - Database initialized
+2026-05-25 17:13:34 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 17:13:34 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-25 17:13:34 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 17:13:34 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 17:13:34 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 17:13:34 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 17:13:34 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-25 17:13:35 | INFO     | app.middleware.logging:15 - [7a01134c] GET / → 404 (1.22ms)
+2026-05-25 17:13:35 | INFO     | app.middleware.logging:15 - [de9c7e36] GET /favicon.ico → 404 (2.49ms)
+2026-05-25 17:13:37 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 17:13:38 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 17:13:39 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-05-25 17:13:49 | ERROR    | app.middleware.logging:23 - [12f289a2] POST /api/v1/auth/login → ERR (83.94ms): Invalid email or password
+2026-05-25 17:13:49 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 20s
+2026-05-25 17:13:53 | ERROR    | app.middleware.logging:23 - [1fd644c5] POST /api/v1/auth/login → ERR (5.64ms): Invalid email or password
+2026-05-25 17:13:59 | ERROR    | app.middleware.logging:23 - [1536a830] POST /api/v1/auth/login → ERR (5.14ms): Invalid email or password
+2026-05-25 17:14:04 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 17:14:04 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 17:14:04 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-25 17:14:04 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=2
+2026-05-25 17:14:04 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=57e03a48 tenant=f303f01a prior_status=connected
+2026-05-25 17:14:04 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=AWS Production id=57e03a48
+2026-05-25 17:14:04 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-02-01 end=2026-05-25 months=3
+2026-05-25 17:14:04 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-05-25 17:14:05 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-05-25 17:14:05 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: An error occurred (SubscriptionRequiredException) when calling the GetEnabledStandards operation: The AWS Access Key Id needs a subscription for the service
+2026-05-25 17:14:05 | INFO     | app.integrations.aws.cost_explorer:92 - [aws_ce] get_costs_by_service → 2 line items across 4 periods
+2026-05-25 17:14:05 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=AWS Production line_items_returned=2
+2026-05-25 17:14:05 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=2 integration=AWS Production id=57e03a48
+2026-05-25 17:14:05 | INFO     | app.integrations.aws.cost_explorer:130 - [aws_ce] get_cost_anomalies → 2 anomalies
+2026-05-25 17:14:05 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-25 17:14:05 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-05-25 17:14:05 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-05-25 17:14:05 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: An error occurred (SubscriptionRequiredException) when calling the GetEnabledStandards operation: The AWS Access Key Id needs a subscription for the service
+2026-05-25 17:14:05 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: An error occurred (AccessDeniedException) when calling the GetRightsizingRecommendation operation: Rightsizing EC2 recommendation is an opt-in only feature. You can enable this feature from the PAYER account’s Cost Explorer Preferences page. Normally it may take up to 24 hours in order to generate your rightsizing recommendations.
+2026-05-25 17:14:05 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 2, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-25 17:14:05 | INFO     | app.core.scheduler:124 - Scheduled security sync: {'integrations': 2, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-25 17:14:05 | INFO     | app.integrations.aws.cost_explorer:322 - [aws_ce] get_ri_recommendations → 0 recommendations
+2026-05-25 17:14:05 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=AWS Production id=57e03a48 tenant=f303f01a cost_records=2 anomalies=2 savings_recs=0
+2026-05-25 17:14:05 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=f303f01a
+2026-05-25 17:14:05 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 1, 'cost_records': 2, 'anomalies': 2, 'savings': 0}
+2026-05-25 17:14:05 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=b4ba3575 tenant=c7d6943c prior_status=connected
+2026-05-25 17:14:05 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=AWS Production id=b4ba3575
+2026-05-25 17:14:06 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-02-01 end=2026-05-25 months=3
+2026-05-25 17:14:06 | INFO     | app.integrations.aws.cost_explorer:92 - [aws_ce] get_costs_by_service → 2 line items across 4 periods
+2026-05-25 17:14:06 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=AWS Production line_items_returned=2
+2026-05-25 17:14:06 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=2 integration=AWS Production id=b4ba3575
+2026-05-25 17:14:06 | INFO     | app.integrations.aws.cost_explorer:130 - [aws_ce] get_cost_anomalies → 2 anomalies
+2026-05-25 17:14:06 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:06 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-Product (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:06 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: An error occurred (AccessDeniedException) when calling the GetRightsizingRecommendation operation: Rightsizing EC2 recommendation is an opt-in only feature. You can enable this feature from the PAYER account’s Cost Explorer Preferences page. Normally it may take up to 24 hours in order to generate your rightsizing recommendations.
+2026-05-25 17:14:06 | INFO     | app.integrations.aws.cost_explorer:322 - [aws_ce] get_ri_recommendations → 0 recommendations
+2026-05-25 17:14:06 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=AWS Production id=b4ba3575 tenant=c7d6943c cost_records=2 anomalies=2 savings_recs=0
+2026-05-25 17:14:06 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=c7d6943c
+2026-05-25 17:14:06 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 2, 'cost_records': 4, 'anomalies': 4, 'savings': 0}
+2026-05-25 17:14:06 | INFO     | app.core.scheduler:115 - Scheduled cost sync: {'integrations': 2, 'cost_records': 4, 'anomalies': 4, 'savings': 0}
+2026-05-25 17:14:07 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenkins-final-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:07 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenkins-final-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:07 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-Prod/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:07 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-Prod (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:07 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:07 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:08 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-4/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:08 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-4 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:08 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/ansible-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:08 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/ansible-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:08 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:08 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:09 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/cicd-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:09 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/cicd-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:09 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 40s
+2026-05-25 17:14:09 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab2/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:09 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab2 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:09 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenk-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:09 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenk-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:10 | INFO     | app.middleware.logging:15 - [4c205653] POST /api/v1/auth/register → 422 (6.17ms)
+2026-05-25 17:14:10 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:10 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-Product (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:11 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenkins-final-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:11 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenkins-final-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:11 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-Prod/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:11 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-Prod (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:12 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:12 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:12 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-4/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:12 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-4 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:12 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/ansible-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:12 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/ansible-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:13 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:13 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:13 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/cicd-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:13 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/cicd-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:13 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab2/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:13 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab2 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:14 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenk-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:14 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenk-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:19 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-25 17:14:21 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:21 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-Product (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:21 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenkins-final-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:21 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenkins-final-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:22 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-Prod/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:22 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-Prod (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:22 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:22 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:23 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-4/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:23 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-4 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:23 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/ansible-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:23 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/ansible-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:24 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:24 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:24 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/cicd-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:24 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/cicd-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:24 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab2/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:24 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab2 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:25 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenk-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:25 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenk-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:26 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:26 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-Product (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:26 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenkins-final-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:26 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenkins-final-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:27 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-Prod/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:27 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-Prod (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:27 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:27 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:28 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-4/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:28 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-4 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:28 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/ansible-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:28 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/ansible-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:28 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:28 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:29 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/cicd-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:29 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/cicd-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:29 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab2/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:29 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab2 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:30 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenk-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:30 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenk-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:30 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=2
+2026-05-25 17:14:30 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=57e03a48 tenant=f303f01a prior_status=connected
+2026-05-25 17:14:30 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=AWS Production id=57e03a48
+2026-05-25 17:14:31 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-02-01 end=2026-05-25 months=3
+2026-05-25 17:14:31 | INFO     | app.integrations.aws.cost_explorer:92 - [aws_ce] get_costs_by_service → 2 line items across 4 periods
+2026-05-25 17:14:31 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=AWS Production line_items_returned=2
+2026-05-25 17:14:31 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=2 integration=AWS Production id=57e03a48
+2026-05-25 17:14:31 | INFO     | app.integrations.aws.cost_explorer:130 - [aws_ce] get_cost_anomalies → 2 anomalies
+2026-05-25 17:14:32 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: An error occurred (AccessDeniedException) when calling the GetRightsizingRecommendation operation: Rightsizing EC2 recommendation is an opt-in only feature. You can enable this feature from the PAYER account’s Cost Explorer Preferences page. Normally it may take up to 24 hours in order to generate your rightsizing recommendations.
+2026-05-25 17:14:32 | INFO     | app.integrations.aws.cost_explorer:322 - [aws_ce] get_ri_recommendations → 0 recommendations
+2026-05-25 17:14:32 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=AWS Production id=57e03a48 tenant=f303f01a cost_records=2 anomalies=2 savings_recs=0
+2026-05-25 17:14:32 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=f303f01a
+2026-05-25 17:14:32 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 1, 'cost_records': 2, 'anomalies': 2, 'savings': 0}
+2026-05-25 17:14:32 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=b4ba3575 tenant=c7d6943c prior_status=connected
+2026-05-25 17:14:32 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=AWS Production id=b4ba3575
+2026-05-25 17:14:33 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-02-01 end=2026-05-25 months=3
+2026-05-25 17:14:33 | INFO     | app.integrations.aws.cost_explorer:92 - [aws_ce] get_costs_by_service → 2 line items across 4 periods
+2026-05-25 17:14:33 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=AWS Production line_items_returned=2
+2026-05-25 17:14:33 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=2 integration=AWS Production id=b4ba3575
+2026-05-25 17:14:33 | INFO     | app.integrations.aws.cost_explorer:130 - [aws_ce] get_cost_anomalies → 2 anomalies
+2026-05-25 17:14:33 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: An error occurred (AccessDeniedException) when calling the GetRightsizingRecommendation operation: Rightsizing EC2 recommendation is an opt-in only feature. You can enable this feature from the PAYER account’s Cost Explorer Preferences page. Normally it may take up to 24 hours in order to generate your rightsizing recommendations.
+2026-05-25 17:14:34 | INFO     | app.integrations.aws.cost_explorer:322 - [aws_ce] get_ri_recommendations → 0 recommendations
+2026-05-25 17:14:34 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=AWS Production id=b4ba3575 tenant=c7d6943c cost_records=2 anomalies=2 savings_recs=0
+2026-05-25 17:14:34 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=c7d6943c
+2026-05-25 17:14:34 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 2, 'cost_records': 4, 'anomalies': 4, 'savings': 0}
+2026-05-25 17:14:43 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-05-25 17:14:45 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:45 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-Product (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:46 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenkins-final-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:46 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenkins-final-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:46 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-Prod/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:46 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-Prod (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:47 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:47 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:47 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-4/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:47 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-4 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:47 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/ansible-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:47 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/ansible-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:48 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:48 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:48 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/cicd-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:48 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/cicd-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:48 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab2/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:48 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab2 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:49 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenk-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:49 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenk-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:49 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 80s
+2026-05-25 17:14:50 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:50 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-Product (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:50 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenkins-final-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:50 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenkins-final-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:51 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-Prod/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:51 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-Prod (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:51 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:51 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:52 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-4/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:52 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-4 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:52 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/ansible-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:52 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/ansible-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:52 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:52 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:53 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/cicd-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:53 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/cicd-project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:53 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/digi-jenkins-lab2/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:53 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/digi-jenkins-lab2 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:54 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenk-lab/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 17:14:54 | WARNING  | app.tasks.sync_pipelines:139 - Dependabot alerts skipped for MomenLotfy/jenk-lab (non-fatal): Dependabot alerts are disabled for this repository.
+2026-05-25 17:15:01 | ERROR    | app.middleware.logging:23 - [2645a6cc] GET /api/v1/alerts → ERR (3.9ms): Bearer token required
+2026-05-25 17:15:01 | ERROR    | app.middleware.logging:23 - [bce64a80] GET /api/v1/alerts → ERR (1.16ms): Bearer token required
