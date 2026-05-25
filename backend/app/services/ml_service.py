@@ -57,12 +57,17 @@ class MLService(BaseService):
         )
         return [MLPatternResponse.model_validate(i) for i in result.scalars().all()]
 
-    async def list_correlations(self, tenant_id: str) -> list[MLCorrelationResponse]:
-        result = await self.db.execute(
+    async def list_correlations(self, tenant_id: str, days: int = 0) -> list[MLCorrelationResponse]:
+        query = (
             select(MLCorrelation)
             .where(MLCorrelation.tenant_id == tenant_id)
-            .order_by(MLCorrelation.correlation_score.desc())
         )
+        if days > 0:
+            from datetime import timedelta
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            query = query.where(MLCorrelation.updated_at >= cutoff)
+        query = query.order_by(MLCorrelation.correlation_score.desc())
+        result = await self.db.execute(query)
         return [MLCorrelationResponse.model_validate(i) for i in result.scalars().all()]
 
     async def predict_cost(self, tenant_id: str, months_ahead: int = 3) -> MLInsightResponse:

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Brain, Sparkles, TrendingUp, TrendingDown, Network, Lightbulb,
   RefreshCw, ChevronDown, ChevronUp, CheckCircle, XCircle,
-  AlertTriangle, Zap, Clock, BarChart2, Loader2, X,
+  AlertTriangle, Zap, Clock, BarChart2, Loader2, X, Calendar,
 } from 'lucide-react';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -16,6 +16,14 @@ import { useIntegrationsCtx } from '@/contexts/IntegrationsContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 
 type Tab = 'correlations' | 'predictions' | 'patterns' | 'recommendations';
+type DaysFilter = 7 | 30 | 90 | 0;
+
+const DAY_OPTIONS: { label: string; value: DaysFilter }[] = [
+  { label: '7 days',  value: 7  },
+  { label: '30 days', value: 30 },
+  { label: '90 days', value: 90 },
+  { label: 'All time', value: 0 },
+];
 
 const PRIORITY_STYLE: Record<string, { badge: string; dot: string; label: string }> = {
   critical: { badge: 'bg-red-500/15 text-red-400 border border-red-500/25',    dot: 'bg-red-500',    label: 'Critical' },
@@ -87,13 +95,15 @@ function ChartTooltip({ active, payload, label }: any) {
 // ══════════════════════════════════════════════════════════════════════════════
 export default function MLInsights() {
   const [tab, setTab]           = useState<Tab>('correlations');
+  const [corrDays, setCorrDays] = useState<DaysFilter>(30);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [toast, setToast]       = useState<{ ok: boolean; msg: string } | null>(null);
   const [confirm, setConfirm]   = useState<{ title: string; desc: string; confirmLabel: string; danger?: boolean; action: () => Promise<void> } | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [expandedRec, setExpandedRec] = useState<string | null>(null);
 
-  const { data: corrRaw,    loading: corrLoad,  refetch: refetchCorr  } = useApi<any>('/ml/correlations');
+  const corrPath = corrDays > 0 ? `/ml/correlations?days=${corrDays}` : '/ml/correlations';
+  const { data: corrRaw,    loading: corrLoad,  refetch: refetchCorr  } = useApi<any>(corrPath);
   const { data: predsRaw,   loading: predLoad,  refetch: refetchPred  } = useApi<any>('/ml/predictions');
   const { data: predSumRaw, loading: psLoad,    refetch: refetchPS    } = useApi<any>('/ml/predictions/summary');
   const { data: patsRaw,    loading: patLoad,   refetch: refetchPat   } = useApi<any>('/ml/patterns');
@@ -255,6 +265,36 @@ export default function MLInsights() {
               No connected integrations found. This view stays empty until GitHub, AWS, or Kubernetes is connected.
             </div>
           )}
+
+          {/* ── Date-range filter bar ─────────────────────────────────────── */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground flex items-center gap-1.5 mr-1">
+              <Calendar className="w-3.5 h-3.5" />
+              Time window:
+            </span>
+            {DAY_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setCorrDays(opt.value)}
+                className={clsx(
+                  'px-3 py-1 rounded-lg text-xs font-medium border transition-all',
+                  corrDays === opt.value
+                    ? 'bg-purple-500/20 border-purple-500/40 text-purple-300'
+                    : 'bg-transparent border-border text-muted-foreground hover:border-purple-500/30 hover:text-foreground',
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+            {corrLoad && (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground ml-1" />
+            )}
+            <span className="ml-auto text-xs text-muted-foreground">
+              {corrs.length} correlation{corrs.length !== 1 ? 's' : ''}
+              {corrDays > 0 ? ` in last ${corrDays} days` : ' (all time)'}
+            </span>
+          </div>
+
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {/* Scatter plot */}
             <div className="card-base">

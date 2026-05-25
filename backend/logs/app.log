@@ -9268,3 +9268,82 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-05-25 16:49:10 | INFO     | app.core.scheduler:124 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
 2026-05-25 16:49:14 | ERROR    | app.services.ml_service:426 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 40s
 2026-05-25 16:49:54 | ERROR    | app.services.ml_service:426 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 80s
+2026-05-25 16:51:10 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 16:51:10 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 16:51:14 | ERROR    | app.services.ml_service:426 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 160s
+2026-05-25 16:53:10 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 16:53:10 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 16:53:54 | ERROR    | app.services.ml_service:426 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-05-25 16:54:10 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-25 16:54:40 | INFO     | app.main:73 - Shutting down...
+2026-05-25 16:54:40 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 16:54:40 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 16:54:42 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 16:54:42 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 16:54:42 | INFO     | app.main:33 - Database initialized
+2026-05-25 16:54:42 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 16:54:42 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-25 16:54:42 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 16:54:42 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 16:54:42 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 16:54:42 | INFO     | app.services.ml_service:361 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 16:54:42 | ERROR    | app.services.ml_service:426 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-25 16:54:47 | ERROR    | app.services.ml_service:426 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-05-25 16:54:47 | INFO     | app.main:73 - Shutting down...
+2026-05-25 16:54:47 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 16:54:47 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 16:54:49 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 16:54:49 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 16:54:49 | INFO     | app.main:33 - Database initialized
+2026-05-25 16:54:49 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 16:54:49 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-25 16:54:49 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 16:54:49 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 16:54:49 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 16:54:49 | INFO     | app.services.ml_service:367 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 16:54:49 | ERROR    | app.services.ml_service:432 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-25 16:54:54 | ERROR    | app.services.ml_service:432 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-05-25 16:55:04 | ERROR    | app.services.ml_service:432 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 20s
+2026-05-25 16:55:19 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 16:55:19 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 16:55:19 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-25 16:55:19 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=0
+2026-05-25 16:55:19 | INFO     | app.core.scheduler:115 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-25 16:55:19 | INFO     | app.core.scheduler:124 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-25 16:55:24 | ERROR    | app.services.ml_service:432 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 40s
+2026-05-25 16:55:44 | INFO     | app.main:73 - Shutting down...
+2026-05-25 16:55:44 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 16:55:44 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 16:55:45 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 16:55:46 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 16:55:46 | INFO     | app.main:33 - Database initialized
+2026-05-25 16:55:46 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 16:55:46 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-25 16:55:46 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 16:55:46 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 16:55:46 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 16:55:46 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 16:55:46 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-25 16:55:48 | INFO     | app.main:73 - Shutting down...
+2026-05-25 16:55:48 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 16:55:48 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 16:55:50 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 16:55:50 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 16:55:50 | INFO     | app.main:33 - Database initialized
+2026-05-25 16:55:50 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 16:55:51 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-25 16:55:51 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 16:55:51 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 16:55:51 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 16:55:51 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 16:55:51 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-05-25 16:55:55 | ERROR    | app.middleware.logging:23 - [a935636b] GET /api/v1/alerts → ERR (1.87ms): Bearer token required
+2026-05-25 16:55:55 | ERROR    | app.middleware.logging:23 - [feeda6a4] GET /api/v1/alerts → ERR (1.43ms): Bearer token required
+2026-05-25 16:55:56 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-05-25 16:56:06 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 20s
+2026-05-25 16:56:21 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 16:56:21 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 16:56:21 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-25 16:56:21 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=0
+2026-05-25 16:56:21 | INFO     | app.core.scheduler:115 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-25 16:56:21 | INFO     | app.core.scheduler:124 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}

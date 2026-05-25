@@ -38,9 +38,14 @@ async def list_patterns(current_user: CurrentUser, tenant_id: TenantID, db: DBSe
 
 
 @router.get("/correlations")
-async def list_correlations(current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
+async def list_correlations(
+    current_user: CurrentUser,
+    tenant_id: TenantID,
+    db: DBSession,
+    days: int = Query(0, ge=0, description="Filter to correlations updated within the last N days. 0 = all time."),
+):
     svc = MLService(db)
-    correlations = await svc.list_correlations(tenant_id)
+    correlations = await svc.list_correlations(tenant_id, days=days)
     return APIResponse(data=correlations)
 
 
