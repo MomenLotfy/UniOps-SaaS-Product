@@ -126,10 +126,10 @@ async def get_predictions_summary(current_user: CurrentUser, tenant_id: TenantID
         work_action = out.get("action") or work_pred.notes or work_action
 
     return APIResponse(data={
-        "workload": {"action": work_action},
-        "cost":    _summary(cost_pred,  "Random Forest",    415, 485),
-        "deploys": _summary(dep_pred,   "XGBoost",          8,   6),
-        "vulns":   _summary(vuln_pred,  "Isolation Forest", 3,   5),
+        "workload":    {"action": work_action},
+        "cost":        {**_summary(cost_pred,  "Random Forest",    415, 485),  "is_fallback": cost_pred  is None},
+        "deploys":     {**_summary(dep_pred,   "XGBoost",          8,   6),    "is_fallback": dep_pred   is None},
+        "vulns":       {**_summary(vuln_pred,  "Isolation Forest", 3,   5),    "is_fallback": vuln_pred  is None},
     })
 
 
@@ -165,12 +165,13 @@ async def get_ml_radar(current_user: CurrentUser, tenant_id: TenantID, db: DBSes
     def _score(count: int, max_val: int = 20) -> int:
         return min(100, round(count / max_val * 100))
 
+    # "A" is the dataKey expected by the Recharts <Radar dataKey="A" /> on the frontend
     return APIResponse(data=[
-        {"subject": "Patterns",       "score": _score(patterns_count, 15)},
-        {"subject": "Predictions",    "score": _score(preds_count, 20)},
-        {"subject": "Correlations",   "score": _score(corr_count, 10)},
-        {"subject": "Recommendations","score": _score(recs_count, 15)},
-        {"subject": "Accuracy",       "score": round(float(avg_conf))},
+        {"subject": "Patterns",        "A": _score(patterns_count, 15)},
+        {"subject": "Predictions",     "A": _score(preds_count, 20)},
+        {"subject": "Correlations",    "A": _score(corr_count, 10)},
+        {"subject": "Recommendations", "A": _score(recs_count, 15)},
+        {"subject": "Accuracy",        "A": round(float(avg_conf))},
     ])
 
 

@@ -481,6 +481,7 @@ export default function MLInsights() {
                   model: predSum.cost?.model ?? 'Random Forest',
                   accuracy: predSum.cost?.accuracy ?? 94,
                   confidence: predSum.cost?.confidence ?? 'High',
+                  isFallback: predSum.cost?.is_fallback ?? true,
                 },
                 {
                   icon: '🚀', label: 'Deploy Failures',
@@ -490,6 +491,7 @@ export default function MLInsights() {
                   model: predSum.deploys?.model ?? 'XGBoost',
                   accuracy: predSum.deploys?.accuracy ?? 78,
                   confidence: predSum.deploys?.confidence ?? 'Medium',
+                  isFallback: predSum.deploys?.is_fallback ?? true,
                 },
                 {
                   icon: '🔒', label: 'Vulnerabilities',
@@ -499,11 +501,19 @@ export default function MLInsights() {
                   model: predSum.vulns?.model ?? 'Isolation Forest',
                   accuracy: predSum.vulns?.accuracy ?? 85,
                   confidence: predSum.vulns?.confidence ?? 'High',
+                  isFallback: predSum.vulns?.is_fallback ?? true,
                 },
               ].map(p => (
-                <div key={p.label} className="card-base space-y-3">
+                <div key={p.label} className={clsx('card-base space-y-3', p.isFallback && 'border-dashed opacity-70')}>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-foreground">{p.icon} {p.label}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold text-foreground">{p.icon} {p.label}</span>
+                      {p.isFallback && (
+                        <span className="text-[9px] px-1 py-0.5 rounded bg-gray-500/10 text-gray-500 border border-gray-500/20 font-medium">
+                          DEMO
+                        </span>
+                      )}
+                    </div>
                     <span className={clsx('text-xs font-semibold px-1.5 py-0.5 rounded', p.change > 0 ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400')}>
                       {p.change > 0 ? <TrendingUp className="w-3 h-3 inline mr-0.5" /> : <TrendingDown className="w-3 h-3 inline mr-0.5" />}
                       {p.change > 0 ? '+' : ''}{p.change}%

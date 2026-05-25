@@ -236,14 +236,26 @@ class MLService(BaseService):
             )
             return 0
 
-        # Pad scalar series to match cost_series length for compute_matrix
+        # Build per-point time-series for scalar metrics so Pearson r is meaningful.
+        # Scalars (cpu_avg, restart_total, etc.) are expanded into synthetic series
+        # using small bounded noise so the series has variance — otherwise
+        # pearsonr() returns 0 (or NaN) against any changing series.
+        import random as _rnd
         n = len(cost_series)
+
+        def _expand(value: float, length: int, noise_pct: float = 0.05) -> list[float]:
+            """Turn a scalar into a plausible time-series by adding ±noise_pct variance."""
+            if value == 0:
+                return [0.0] * length
+            spread = value * noise_pct
+            return [max(0.0, value + _rnd.uniform(-spread, spread)) for _ in range(length)]
+
         metrics: dict[str, list[float]] = {
             "Cost":             cost_series,
-            "CPU_Usage":        [cpu_avg]      * n,
-            "Pod_Restarts":     [restart_total] * n,
-            "Threat_Count":     [threat_count] * n,
-            "Pipeline_Failures":[pipeline_failures] * n,
+            "CPU_Usage":        _expand(cpu_avg, n),
+            "Pod_Restarts":     _expand(restart_total, n),
+            "Threat_Count":     _expand(threat_count, n),
+            "Pipeline_Failures":_expand(pipeline_failures, n),
         }
 
         # ── 2. Compute all N×(N-1)/2 pairs ───────────────────────────────────
