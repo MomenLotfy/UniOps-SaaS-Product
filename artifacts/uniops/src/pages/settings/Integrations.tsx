@@ -10,6 +10,7 @@ import { formatRelative } from '@/lib/formatters';
 import { clsx } from 'clsx';
 import { useApi, apiPost, apiPatch } from '@/hooks/use-api';
 import { integrationsApi } from '@/services/api/integrations';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 const PROVIDER_META: Record<string, { icon: any; color: string; description: string; category: string }> = {
   aws:        { icon: Cloud,         color: 'text-orange-400', description: 'Monitor EC2, S3, RDS, and 200+ AWS services', category: 'Cloud' },
@@ -805,6 +806,7 @@ export default function Integrations() {
   const [testing, setTesting] = useState<string | null>(null);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [connectModal, setConnectModal] = useState<any | null>(null);
+  const { addNotification } = useNotifications();
 
   const { data, loading, refetch } = useApi<any>('/integrations?page_size=50');
   // useApi already unwraps body.data — result is the array directly
@@ -837,11 +839,22 @@ export default function Integrations() {
     }
   };
 
-  const handleSync = async (id: string) => {
+  const handleSync = async (id: string, name: string) => {
     setSyncing(id);
     try {
       await apiPost(`/integrations/${id}/sync`, {});
-      refetch();
+      addNotification({
+        title: 'Sync started',
+        message: `${name} is syncing in the background. Data will update shortly.`,
+        type: 'success',
+      });
+      setTimeout(refetch, 3000);
+    } catch (e: any) {
+      addNotification({
+        title: 'Sync failed',
+        message: e?.message ?? `Could not start sync for ${name}.`,
+        type: 'error',
+      });
     } finally {
       setSyncing(null);
     }
@@ -945,9 +958,9 @@ export default function Integrations() {
                             className="text-xs px-2.5 py-1.5 rounded-md border border-border hover:bg-accent transition-colors text-muted-foreground">
                             {testing === intg.id ? 'Testing...' : 'Test'}
                           </button>
-                          <button onClick={() => handleSync(intg.id)} disabled={syncing === intg.id}
-                            className="text-xs px-2.5 py-1.5 rounded-md border border-border hover:bg-accent transition-colors text-muted-foreground">
-                            <RefreshCw className={clsx('w-3 h-3 inline mr-1', syncing === intg.id && 'animate-spin')} />
+                          <button onClick={() => handleSync(intg.id, intg.name)} disabled={syncing === intg.id}
+                            className="text-xs px-2.5 py-1.5 rounded-md border border-border hover:bg-accent transition-colors text-muted-foreground flex items-center gap-1">
+                            <RefreshCw className={clsx('w-3 h-3', syncing === intg.id && 'animate-spin')} />
                             {syncing === intg.id ? 'Syncing...' : 'Sync Now'}
                           </button>
                         </>

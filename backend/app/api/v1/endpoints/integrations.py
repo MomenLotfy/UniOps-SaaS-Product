@@ -358,10 +358,8 @@ async def _bg_sync(integration_id: str, integration_type: str) -> None:
             await db.commit()
             logger.info(f"[bg] Sync complete for integration {integration_id}: {result}")
 
-        # For AWS, also persist cost data — svc.sync() calls AWSClient.sync() which
-        # returns counts but does not upsert CostMetric rows.  sync_aws_costs_async
-        # is the function that actually writes cost data to the DB.
-        if integration_type == "aws":
+        # Resolve tenant_id once — used by both AWS and GitHub branches below.
+        if integration_type in ("aws", "github", "gitlab"):
             try:
                 from app.models.integration import Integration as _Intg
                 from sqlalchemy import select as _sel
@@ -371,13 +369,30 @@ async def _bg_sync(integration_id: str, integration_type: str) -> None:
                         _sel(_Intg).where(_Intg.id == integration_id)
                     )).scalar_one_or_none()
                     tenant_id = row.tenant_id if row else None
+            except Exception:
+                tenant_id = None
+        else:
+            tenant_id = None
 
-                if tenant_id:
-                    from app.tasks.sync_costs import sync_aws_costs_async
-                    await sync_aws_costs_async(tenant_id=tenant_id)
-                    logger.info(f"[bg] AWS cost sync completed for integration {integration_id}")
+        # For AWS: persist cost data via sync_aws_costs_async (svc.sync() only
+        # updates metadata, not the CostMetric rows that the UI reads).
+        if integration_type == "aws" and tenant_id:
+            try:
+                from app.tasks.sync_costs import sync_aws_costs_async
+                await sync_aws_costs_async(tenant_id=tenant_id)
+                logger.info(f"[bg] AWS cost sync completed for integration {integration_id}")
             except Exception as cost_exc:
                 logger.warning(f"[bg] AWS cost sync failed (non-fatal): {cost_exc}")
+
+        # For GitHub/GitLab: trigger full pipeline sync so "Sync Now" in the UI
+        # actually pulls fresh CI/CD runs (not just repo metadata).
+        if integration_type in ("github", "gitlab") and tenant_id:
+            try:
+                from app.tasks.sync_pipelines import _sync_pipelines
+                pipeline_result = await _sync_pipelines(tenant_id=tenant_id)
+                logger.info(f"[bg] Pipeline sync completed for integration {integration_id}: {pipeline_result}")
+            except Exception as pipe_exc:
+                logger.warning(f"[bg] Pipeline sync failed (non-fatal): {pipe_exc}")
 
     except Exception as exc:
         logger.error(f"[bg] _bg_sync failed for {integration_id}: {exc}")
