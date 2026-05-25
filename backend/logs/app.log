@@ -9014,3 +9014,156 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-05-25 13:40:15 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=0
 2026-05-25 13:40:15 | INFO     | app.core.scheduler:115 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
 2026-05-25 13:40:20 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 40s
+2026-05-25 13:41:00 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 80s
+2026-05-25 13:41:47 | INFO     | app.services.auth_service:115 - New user registered: momen.elpesghffa123@gmail.com (tenant: Moamen Lotfy's Organization)
+2026-05-25 13:41:47 | INFO     | app.integrations.email.client:31 - [EMAIL — no key] To: momen.elpesghffa123@gmail.com | Subject: Welcome to UniOps, Moamen! 🚀
+2026-05-25 13:41:47 | INFO     | app.middleware.logging:15 - [b5ca3aa9] POST /api/v1/auth/register → 200 (484.03ms)
+2026-05-25 13:41:48 | INFO     | app.middleware.logging:15 - [365d25b2] GET /api/v1/companies → 200 (16.15ms)
+2026-05-25 13:41:48 | INFO     | app.middleware.logging:15 - [084125b7] GET /api/v1/integrations → 200 (28.66ms)
+2026-05-25 13:41:48 | INFO     | app.middleware.logging:15 - [b59d8ccf] GET /api/v1/companies/stats → 200 (28.6ms)
+2026-05-25 13:41:48 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 13:41:48 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 13:42:15 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 13:42:15 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 13:42:20 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 160s
+2026-05-25 13:42:20 | INFO     | app.middleware.logging:15 - [a01ba20d] POST /api/v1/integrations/aws → 201 (17.03ms)
+2026-05-25 13:42:21 | INFO     | app.services.integration_service:229 - [aws_integration_saved] id=dc86b3a5-79b5-4758-a06e-cdc3ce2c593b tenant=963d5a99 — running STS verification
+2026-05-25 13:42:21 | INFO     | app.integrations.aws.client:37 - [aws_sts_ok] account=718036735416 arn=arn:aws:iam::718036735416:user/uniops-production
+2026-05-25 13:42:21 | INFO     | app.services.integration_service:236 - [permissions_check_result] id=dc86b3a5-79b5-4758-a06e-cdc3ce2c593b sts_ok=True
+2026-05-25 13:42:22 | INFO     | app.services.integration_service:248 - [aws_connection_verified] id=dc86b3a5-79b5-4758-a06e-cdc3ce2c593b tenant=963d5a99 account=718036735416
+2026-05-25 13:42:22 | INFO     | app.api.v1.endpoints.integrations:335 - [bg] AWS connection OK — triggering cost sync for tenant 963d5a99-7d9b-49cc-8363-0707e013d5e9
+2026-05-25 13:42:22 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=963d5a99 integrations_found=1
+2026-05-25 13:42:22 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=dc86b3a5 tenant=963d5a99 prior_status=connected
+2026-05-25 13:42:22 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=AWS Production id=dc86b3a5
+2026-05-25 13:42:22 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-02-01 end=2026-05-25 months=3
+2026-05-25 13:42:22 | WARNING  | app.integrations.aws.cost_explorer:99 - [aws_ce] get_costs_by_service failed: An error occurred (UnrecognizedClientException) when calling the GetCostAndUsage operation: The security token included in the request is invalid.
+2026-05-25 13:42:22 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=AWS Production line_items_returned=0
+2026-05-25 13:42:22 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=0 integration=AWS Production id=dc86b3a5
+2026-05-25 13:42:22 | WARNING  | app.integrations.aws.cost_explorer:134 - [aws_ce] get_cost_anomalies failed: An error occurred (UnrecognizedClientException) when calling the GetAnomalies operation: The security token included in the request is invalid.
+2026-05-25 13:42:22 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: An error occurred (UnrecognizedClientException) when calling the GetRightsizingRecommendation operation: The security token included in the request is invalid.
+2026-05-25 13:42:22 | WARNING  | app.integrations.aws.cost_explorer:326 - [aws_ce] get_ri_recommendations failed: An error occurred (UnrecognizedClientException) when calling the GetReservationPurchaseRecommendation operation: The security token included in the request is invalid.
+2026-05-25 13:42:22 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=AWS Production id=dc86b3a5 tenant=963d5a99 cost_records=0 anomalies=0 savings_recs=0
+2026-05-25 13:42:22 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=963d5a99
+2026-05-25 13:42:22 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-25 13:42:22 | INFO     | app.api.v1.endpoints.integrations:339 - [bg] AWS cost sync completed for tenant 963d5a99-7d9b-49cc-8363-0707e013d5e9
+2026-05-25 13:42:41 | INFO     | app.middleware.logging:15 - [00ecfc5a] GET /api/v1/integrations → 200 (8.97ms)
+2026-05-25 13:42:41 | INFO     | app.middleware.logging:15 - [365f2e95] POST /api/v1/integrations → 201 (12.53ms)
+2026-05-25 13:42:41 | INFO     | app.middleware.logging:15 - [b1cfc61e] PATCH /api/v1/integrations/44af2a1b-1f2f-41c3-81db-a0a2da1b0996 → 200 (11.52ms)
+2026-05-25 13:42:42 | INFO     | app.api.v1.endpoints.integrations:328 - [bg] Connection test OK + synced 31 repos for integration 44af2a1b-1f2f-41c3-81db-a0a2da1b0996 (tenant 963d5a99-7d9b-49cc-8363-0707e013d5e9)
+2026-05-25 13:42:42 | INFO     | app.middleware.logging:15 - [ee4082cd] POST /api/v1/integrations/44af2a1b-1f2f-41c3-81db-a0a2da1b0996/test → 200 (162.32ms)
+2026-05-25 13:42:42 | INFO     | app.api.v1.endpoints.integrations:328 - [bg] Connection test OK + synced 31 repos for integration 44af2a1b-1f2f-41c3-81db-a0a2da1b0996 (tenant 963d5a99-7d9b-49cc-8363-0707e013d5e9)
+2026-05-25 13:42:42 | INFO     | app.middleware.logging:15 - [9ab982d9] GET /api/v1/integrations/44af2a1b-1f2f-41c3-81db-a0a2da1b0996 → 200 (4.32ms)
+2026-05-25 13:42:52 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=963d5a99 repo_id=None scan_id=None
+2026-05-25 13:42:52 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=963d5a99
+2026-05-25 13:42:52 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=963d5a99 repo_id=None total=0 open=0 critical=0
+2026-05-25 13:42:52 | INFO     | app.middleware.logging:15 - [40f9ea77] GET /api/v1/threats/stats → 200 (33.7ms)
+2026-05-25 13:42:52 | INFO     | app.middleware.logging:15 - [f2e89545] GET /api/v1/kubernetes/pods/stats → 200 (24.41ms)
+2026-05-25 13:42:52 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=963d5a99 intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 13:42:52 | INFO     | app.middleware.logging:15 - [972f13a7] GET /api/v1/alerts → 200 (29.52ms)
+2026-05-25 13:42:52 | INFO     | app.middleware.logging:15 - [026ca66d] GET /api/v1/ml/stats → 200 (36.32ms)
+2026-05-25 13:42:52 | INFO     | app.middleware.logging:15 - [525bac0d] GET /api/v1/costs/summary → 200 (44.99ms)
+2026-05-25 13:42:52 | INFO     | app.middleware.logging:15 - [1396b51d] GET /api/v1/alerts → 200 (13.48ms)
+2026-05-25 13:42:53 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=963d5a99 intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 13:42:53 | INFO     | app.middleware.logging:15 - [4438e0b4] GET /api/v1/ml/stats → 200 (16.42ms)
+2026-05-25 13:42:53 | INFO     | app.middleware.logging:15 - [c86dab2a] GET /api/v1/costs/summary → 200 (20.11ms)
+2026-05-25 13:42:53 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=963d5a99 repo_id=None scan_id=None
+2026-05-25 13:42:53 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=963d5a99
+2026-05-25 13:42:53 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=963d5a99 repo_id=None total=0 open=0 critical=0
+2026-05-25 13:42:53 | INFO     | app.middleware.logging:15 - [6c507654] GET /api/v1/threats/stats → 200 (7.73ms)
+2026-05-25 13:42:53 | INFO     | app.middleware.logging:15 - [46e69750] GET /api/v1/kubernetes/pods/stats → 200 (6.42ms)
+2026-05-25 13:43:02 | INFO     | app.middleware.logging:15 - [9deb4191] GET /api/v1/kubernetes/pods/stats → 200 (10.74ms)
+2026-05-25 13:43:02 | INFO     | app.middleware.logging:15 - [066e8418] GET /api/v1/kubernetes/pods → 200 (14.53ms)
+2026-05-25 13:43:02 | INFO     | app.middleware.logging:15 - [94cc232f] GET /api/v1/pipelines → 200 (13.77ms)
+2026-05-25 13:43:02 | INFO     | app.middleware.logging:15 - [c16885b7] GET /api/v1/pipelines/stats → 200 (12.03ms)
+2026-05-25 13:43:02 | INFO     | app.middleware.logging:15 - [f6705981] GET /api/v1/kubernetes/pods/stats → 200 (4.9ms)
+2026-05-25 13:43:02 | INFO     | app.middleware.logging:15 - [dba7273c] GET /api/v1/pipelines → 200 (7.61ms)
+2026-05-25 13:43:02 | INFO     | app.middleware.logging:15 - [84b92d44] GET /api/v1/pipelines/stats → 200 (6.65ms)
+2026-05-25 13:43:02 | INFO     | app.middleware.logging:15 - [f3cfc91a] GET /api/v1/kubernetes/pods → 200 (8.33ms)
+2026-05-25 13:43:19 | INFO     | app.middleware.logging:15 - [e4a3f480] GET /api/v1/kubernetes/pods/workloads/deployments → 200 (10.95ms)
+2026-05-25 13:43:19 | INFO     | app.middleware.logging:15 - [359ff518] GET /api/v1/kubernetes/pods/workloads/daemonsets → 200 (10.98ms)
+2026-05-25 13:43:19 | INFO     | app.middleware.logging:15 - [f03637a8] GET /api/v1/kubernetes/pods/workloads/statefulsets → 200 (8.93ms)
+2026-05-25 13:43:30 | INFO     | app.middleware.logging:15 - [f8461a44] GET /api/v1/integrations → 200 (5.92ms)
+2026-05-25 13:43:31 | INFO     | app.middleware.logging:15 - [3c2a0183] GET /api/v1/integrations → 200 (7.47ms)
+2026-05-25 13:43:40 | INFO     | app.middleware.logging:15 - [df1041a8] GET /api/v1/kubernetes/pods/stats → 200 (3.84ms)
+2026-05-25 13:43:40 | INFO     | app.middleware.logging:15 - [c532beca] GET /api/v1/kubernetes/pods → 200 (17.83ms)
+2026-05-25 13:43:40 | INFO     | app.middleware.logging:15 - [38283dd1] GET /api/v1/pipelines/stats → 200 (9.01ms)
+2026-05-25 13:43:40 | INFO     | app.middleware.logging:15 - [f2bffafd] GET /api/v1/pipelines → 200 (9.82ms)
+2026-05-25 13:43:40 | INFO     | app.middleware.logging:15 - [822a3bd9] GET /api/v1/pipelines/stats → 200 (9.98ms)
+2026-05-25 13:43:40 | INFO     | app.middleware.logging:15 - [a52da1dd] GET /api/v1/pipelines → 200 (11.65ms)
+2026-05-25 13:43:40 | INFO     | app.middleware.logging:15 - [87ee4607] GET /api/v1/kubernetes/pods → 200 (9.6ms)
+2026-05-25 13:43:40 | INFO     | app.middleware.logging:15 - [542c5c3d] GET /api/v1/kubernetes/pods/stats → 200 (3.95ms)
+2026-05-25 13:44:15 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 13:44:15 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 13:44:15 | INFO     | app.middleware.logging:15 - [1948e975] GET /api/v1/kubernetes/pods → 200 (8.81ms)
+2026-05-25 13:44:15 | INFO     | app.middleware.logging:15 - [5a32473f] GET /api/v1/kubernetes/pods/stats → 200 (7.19ms)
+2026-05-25 13:45:00 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-05-25 13:45:15 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-25 13:45:16 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenkins-final-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 13:45:16 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 44af2a1b-1f2f-41c3-81db-a0a2da1b0996: Dependabot alerts are disabled for this repository.
+2026-05-25 13:45:44 | ERROR    | app.api.v1.websocket.handlers:50 - WS handler error for tenant unknown: 
+2026-05-25 13:46:15 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 13:46:15 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 13:46:15 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-25 13:47:09 | INFO     | app.middleware.logging:15 - [7baed495] GET /api/v1/alerts → 200 (10.39ms)
+2026-05-25 13:47:09 | INFO     | app.middleware.logging:15 - [4718743c] GET /api/v1/integrations → 200 (6.35ms)
+2026-05-25 13:47:09 | INFO     | app.middleware.logging:15 - [f40c2535] GET /api/v1/companies → 200 (6.02ms)
+2026-05-25 13:47:09 | INFO     | app.middleware.logging:15 - [f21a2def] GET /api/v1/companies/stats → 200 (12.27ms)
+2026-05-25 13:47:09 | INFO     | app.middleware.logging:15 - [e2cf2cd6] GET /api/v1/alerts → 200 (7.09ms)
+2026-05-25 13:47:10 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 13:47:10 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 13:47:11 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=963d5a99 repo_id=None scan_id=None
+2026-05-25 13:47:11 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=963d5a99
+2026-05-25 13:47:11 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=963d5a99 repo_id=None total=0 open=0 critical=0
+2026-05-25 13:47:11 | INFO     | app.middleware.logging:15 - [c5ab8b5f] GET /api/v1/threats/stats → 200 (6.01ms)
+2026-05-25 13:47:11 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=963d5a99 intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 13:47:11 | INFO     | app.middleware.logging:15 - [5ddf0971] GET /api/v1/costs/summary → 200 (9.78ms)
+2026-05-25 13:47:11 | INFO     | app.middleware.logging:15 - [6642e4a8] GET /api/v1/kubernetes/pods/stats → 200 (7.01ms)
+2026-05-25 13:47:11 | INFO     | app.middleware.logging:15 - [d932bd71] GET /api/v1/ml/stats → 200 (11.9ms)
+2026-05-25 13:47:11 | INFO     | app.middleware.logging:15 - [e051842c] GET /api/v1/alerts → 200 (9.77ms)
+2026-05-25 13:47:11 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=963d5a99 repo_id=None scan_id=None
+2026-05-25 13:47:11 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=963d5a99
+2026-05-25 13:47:11 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=963d5a99 repo_id=None total=0 open=0 critical=0
+2026-05-25 13:47:11 | INFO     | app.middleware.logging:15 - [af480576] GET /api/v1/threats/stats → 200 (5.96ms)
+2026-05-25 13:47:11 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=963d5a99 intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 13:47:11 | INFO     | app.middleware.logging:15 - [bfeb3155] GET /api/v1/costs/summary → 200 (9.52ms)
+2026-05-25 13:47:11 | INFO     | app.middleware.logging:15 - [cf0121e1] GET /api/v1/kubernetes/pods/stats → 200 (6.73ms)
+2026-05-25 13:47:11 | INFO     | app.middleware.logging:15 - [ebeb0f35] GET /api/v1/ml/stats → 200 (7.98ms)
+2026-05-25 13:47:11 | INFO     | app.middleware.logging:15 - [de2e34f3] GET /api/v1/alerts → 200 (8.11ms)
+2026-05-25 13:47:47 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-25 13:48:15 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 13:48:15 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 13:50:00 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-05-25 13:50:15 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 13:50:15 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 13:50:16 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-05-25 13:50:17 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/jenkins-final-project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-05-25 13:50:17 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 44af2a1b-1f2f-41c3-81db-a0a2da1b0996: Dependabot alerts are disabled for this repository.
+2026-05-25 13:52:15 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 13:52:15 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 13:52:22 | INFO     | app.middleware.logging:15 - [63b87c99] GET /api/v1/alerts → 200 (10.6ms)
+2026-05-25 13:52:22 | INFO     | app.middleware.logging:15 - [59e2abbc] GET /api/v1/integrations → 200 (6.39ms)
+2026-05-25 13:52:22 | INFO     | app.middleware.logging:15 - [dad0626b] GET /api/v1/companies → 200 (5.41ms)
+2026-05-25 13:52:22 | INFO     | app.middleware.logging:15 - [833302c5] GET /api/v1/companies/stats → 200 (13.47ms)
+2026-05-25 13:52:22 | INFO     | app.middleware.logging:15 - [91c97990] GET /api/v1/alerts → 200 (6.62ms)
+2026-05-25 13:52:23 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=963d5a99 repo_id=None scan_id=None
+2026-05-25 13:52:23 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=963d5a99
+2026-05-25 13:52:23 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=963d5a99 repo_id=None total=0 open=0 critical=0
+2026-05-25 13:52:23 | INFO     | app.middleware.logging:15 - [d2a0851c] GET /api/v1/threats/stats → 200 (12.63ms)
+2026-05-25 13:52:23 | INFO     | app.middleware.logging:15 - [fbcf59fc] GET /api/v1/kubernetes/pods/stats → 200 (8.34ms)
+2026-05-25 13:52:23 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=963d5a99 intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 13:52:23 | INFO     | app.middleware.logging:15 - [be2c6ab8] GET /api/v1/costs/summary → 200 (19.78ms)
+2026-05-25 13:52:23 | INFO     | app.middleware.logging:15 - [9b522120] GET /api/v1/alerts → 200 (9.24ms)
+2026-05-25 13:52:23 | INFO     | app.middleware.logging:15 - [32168c0e] GET /api/v1/ml/stats → 200 (13.09ms)
+2026-05-25 13:52:23 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 13:52:23 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=963d5a99 repo_id=None scan_id=None
+2026-05-25 13:52:23 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=963d5a99
+2026-05-25 13:52:23 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=963d5a99 repo_id=None total=0 open=0 critical=0
+2026-05-25 13:52:23 | INFO     | app.middleware.logging:15 - [1fb664e3] GET /api/v1/threats/stats → 200 (7.62ms)
+2026-05-25 13:52:23 | INFO     | app.middleware.logging:15 - [877c26a1] GET /api/v1/kubernetes/pods/stats → 200 (6.51ms)
+2026-05-25 13:52:23 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=963d5a99 intg_status=connected has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-05-25 13:52:23 | INFO     | app.middleware.logging:15 - [bbe5f4f6] GET /api/v1/alerts → 200 (7.87ms)
+2026-05-25 13:52:23 | INFO     | app.middleware.logging:15 - [9839431e] GET /api/v1/costs/summary → 200 (10.4ms)
+2026-05-25 13:52:23 | INFO     | app.middleware.logging:15 - [a710acd6] GET /api/v1/ml/stats → 200 (5.75ms)
+2026-05-25 13:52:23 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 13:54:15 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-25 13:54:15 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
