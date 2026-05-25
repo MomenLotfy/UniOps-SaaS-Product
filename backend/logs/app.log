@@ -7000,3 +7000,788 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-05-24 17:33:22 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
 2026-05-24 17:33:22 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
 2026-05-24 17:33:22 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-24 17:33:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:33:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:33:47 | INFO     | app.middleware.logging:15 - [06bfe8eb] GET /api/v1/savings → 200 (19.53ms)
+2026-05-24 17:33:47 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=f7385bd6 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-24 17:33:47 | INFO     | app.middleware.logging:15 - [cedcaf32] GET /api/v1/costs/breakdown → 200 (19.62ms)
+2026-05-24 17:33:47 | INFO     | app.middleware.logging:15 - [fbba298b] GET /api/v1/costs/summary → 200 (22.58ms)
+2026-05-24 17:33:47 | INFO     | app.middleware.logging:15 - [c9f5585c] GET /api/v1/costs/anomalies → 200 (36.25ms)
+2026-05-24 17:34:02 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 80s
+2026-05-24 17:34:13 | ERROR    | app.middleware.logging:23 - [9cc646fa] POST /api/v1/costs/sync → ERR (1.39ms): 'dict' object has no attribute 'id'
+2026-05-24 17:34:13 | ERROR    | app.main:149 - Unhandled error: 'dict' object has no attribute 'id'
+2026-05-24 17:34:14 | ERROR    | app.middleware.logging:23 - [f9ec90d4] POST /api/v1/costs/sync → ERR (1.44ms): 'dict' object has no attribute 'id'
+2026-05-24 17:34:14 | ERROR    | app.main:149 - Unhandled error: 'dict' object has no attribute 'id'
+2026-05-24 17:34:16 | ERROR    | app.middleware.logging:23 - [30934f68] POST /api/v1/costs/sync → ERR (1.41ms): 'dict' object has no attribute 'id'
+2026-05-24 17:34:16 | ERROR    | app.main:149 - Unhandled error: 'dict' object has no attribute 'id'
+2026-05-24 17:34:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:34:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:34:17 | INFO     | app.middleware.logging:15 - [c98394a1] GET /api/v1/costs/forecast → 200 (10.45ms)
+2026-05-24 17:34:18 | INFO     | app.middleware.logging:15 - [67cf32ae] GET /api/v1/savings → 200 (5.51ms)
+2026-05-24 17:34:18 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=f7385bd6 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-24 17:34:18 | INFO     | app.middleware.logging:15 - [3f0156a8] GET /api/v1/costs/breakdown → 200 (12.33ms)
+2026-05-24 17:34:18 | INFO     | app.middleware.logging:15 - [a90ed907] GET /api/v1/costs/summary → 200 (11.43ms)
+2026-05-24 17:34:18 | INFO     | app.middleware.logging:15 - [362acea1] GET /api/v1/costs/anomalies → 200 (5.79ms)
+2026-05-24 17:34:40 | INFO     | app.middleware.logging:15 - [6f125ff2] GET /api/v1/integrations → 200 (10.99ms)
+2026-05-24 17:34:40 | INFO     | app.middleware.logging:15 - [e9bf35fc] GET /api/v1/integrations → 200 (9.84ms)
+2026-05-24 17:34:44 | INFO     | app.middleware.logging:15 - [11466a98] GET /api/v1/integrations → 200 (8.43ms)
+2026-05-24 17:34:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:34:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:34:48 | INFO     | app.middleware.logging:15 - [0b316c44] GET /api/v1/ml/correlations → 200 (10.12ms)
+2026-05-24 17:34:48 | INFO     | app.middleware.logging:15 - [1f789340] GET /api/v1/ml/predictions → 200 (20.18ms)
+2026-05-24 17:34:48 | INFO     | app.middleware.logging:15 - [45cb76db] GET /api/v1/ml/models/status → 200 (7.33ms)
+2026-05-24 17:34:48 | INFO     | app.middleware.logging:15 - [908491bc] GET /api/v1/ml/predictions/summary → 200 (20.37ms)
+2026-05-24 17:34:48 | INFO     | app.middleware.logging:15 - [1f1bd97d] GET /api/v1/ml/patterns → 200 (16.61ms)
+2026-05-24 17:34:48 | INFO     | app.middleware.logging:15 - [39f7b15b] GET /api/v1/ml/recommendations → 200 (19.62ms)
+2026-05-24 17:34:48 | INFO     | app.middleware.logging:15 - [f579b79a] GET /api/v1/ml/radar → 200 (19.35ms)
+2026-05-24 17:34:48 | INFO     | app.middleware.logging:15 - [973b7086] GET /api/v1/ml/correlations → 200 (6.69ms)
+2026-05-24 17:34:48 | INFO     | app.middleware.logging:15 - [a54ebbf5] GET /api/v1/ml/recommendations → 200 (12.92ms)
+2026-05-24 17:34:48 | INFO     | app.middleware.logging:15 - [a2b019ce] GET /api/v1/ml/predictions → 200 (16.72ms)
+2026-05-24 17:34:48 | INFO     | app.middleware.logging:15 - [49fc9933] GET /api/v1/ml/predictions/summary → 200 (13.84ms)
+2026-05-24 17:34:48 | INFO     | app.middleware.logging:15 - [2871b630] GET /api/v1/ml/patterns → 200 (12.09ms)
+2026-05-24 17:34:49 | INFO     | app.middleware.logging:15 - [ebffeb3b] GET /api/v1/ml/models/status → 200 (1.78ms)
+2026-05-24 17:34:49 | INFO     | app.middleware.logging:15 - [746a4985] GET /api/v1/ml/radar → 200 (12.68ms)
+2026-05-24 17:34:57 | INFO     | app.services.ml_service:233 - [ML] run_correlations skipped — insufficient cost data for tenant=f7385bd6 (got 0 points)
+2026-05-24 17:34:57 | INFO     | app.middleware.logging:15 - [1b3456c4] POST /api/v1/ml/analyze → 200 (4645.58ms)
+2026-05-24 17:34:57 | INFO     | app.middleware.logging:15 - [e30ee99d] GET /api/v1/ml/correlations → 200 (9.06ms)
+2026-05-24 17:34:57 | INFO     | app.middleware.logging:15 - [ce57abed] GET /api/v1/ml/predictions → 200 (16.0ms)
+2026-05-24 17:34:57 | INFO     | app.middleware.logging:15 - [1fadebdb] GET /api/v1/ml/predictions/summary → 200 (16.33ms)
+2026-05-24 17:34:57 | INFO     | app.middleware.logging:15 - [d6c7f9d9] GET /api/v1/ml/models/status → 200 (4.07ms)
+2026-05-24 17:34:57 | INFO     | app.middleware.logging:15 - [284b113b] GET /api/v1/ml/recommendations → 200 (12.31ms)
+2026-05-24 17:34:57 | INFO     | app.middleware.logging:15 - [c0e6483b] GET /api/v1/ml/patterns → 200 (15.39ms)
+2026-05-24 17:34:57 | INFO     | app.middleware.logging:15 - [7402a0a6] GET /api/v1/ml/radar → 200 (11.9ms)
+2026-05-24 17:35:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:35:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:35:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:35:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:35:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:35:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:35:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:35:22 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 160s
+2026-05-24 17:35:24 | ERROR    | app.middleware.logging:23 - [926a978f] GET /api/v1/alerts → ERR (2.08ms): Bearer token required
+2026-05-24 17:35:24 | ERROR    | app.middleware.logging:23 - [a7355e79] GET /api/v1/alerts → ERR (1.2ms): Bearer token required
+2026-05-24 17:35:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:35:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:36:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:36:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:36:29 | INFO     | app.services.auth_service:115 - New user registered: ekjddj@gmai.com (tenant: Ddd Ddd's Organization)
+2026-05-24 17:36:29 | INFO     | app.integrations.email.client:31 - [EMAIL — no key] To: ekjddj@gmai.com | Subject: Welcome to UniOps, Ddd! 🚀
+2026-05-24 17:36:29 | INFO     | app.middleware.logging:15 - [c17a5447] POST /api/v1/auth/register → 200 (659.38ms)
+2026-05-24 17:36:30 | INFO     | app.middleware.logging:15 - [2483cb84] GET /api/v1/integrations → 200 (10.8ms)
+2026-05-24 17:36:30 | INFO     | app.middleware.logging:15 - [5f097f51] GET /api/v1/companies → 200 (12.18ms)
+2026-05-24 17:36:30 | INFO     | app.middleware.logging:15 - [d5988ea6] GET /api/v1/companies/stats → 200 (19.51ms)
+2026-05-24 17:36:30 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-05-24 17:36:31 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 17:36:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:36:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:36:50 | INFO     | app.middleware.logging:15 - [29d86f87] POST /api/v1/integrations/aws → 201 (16.16ms)
+2026-05-24 17:36:51 | WARNING  | app.integrations.aws.client:34 - AWS STS test failed (will try fallbacks): An error occurred (InvalidClientTokenId) when calling the GetCallerIdentity operation: The security token included in the request is invalid.
+2026-05-24 17:36:51 | WARNING  | app.integrations.aws.client:53 - AWS Cost Explorer test failed (will try EC2): An error occurred (UnrecognizedClientException) when calling the GetCostAndUsage operation: The security token included in the request is invalid.
+2026-05-24 17:36:51 | WARNING  | app.integrations.aws.client:62 - AWS EC2 test failed: An error occurred (AuthFailure) when calling the DescribeRegions operation: AWS was not able to validate the provided access credentials
+2026-05-24 17:36:51 | WARNING  | app.api.v1.endpoints.integrations:343 - [bg] Connection test FAILED for c1674df5-7e91-4882-ba06-abe979e839bf: AWS credentials invalid
+2026-05-24 17:37:06 | INFO     | app.middleware.logging:15 - [c6c07ee9] GET /api/v1/integrations → 200 (7.52ms)
+2026-05-24 17:37:06 | INFO     | app.middleware.logging:15 - [14d24c90] POST /api/v1/integrations → 201 (14.68ms)
+2026-05-24 17:37:07 | INFO     | app.middleware.logging:15 - [5e55cbd2] PATCH /api/v1/integrations/f1eb5260-36b4-4233-b1fc-e4f036585bd7 → 200 (14.13ms)
+2026-05-24 17:37:07 | INFO     | app.api.v1.endpoints.integrations:328 - [bg] Connection test OK + synced 30 repos for integration f1eb5260-36b4-4233-b1fc-e4f036585bd7 (tenant 5e95f5a7-db67-4640-883e-f926994a6351)
+2026-05-24 17:37:07 | INFO     | app.middleware.logging:15 - [be550821] POST /api/v1/integrations/f1eb5260-36b4-4233-b1fc-e4f036585bd7/test → 200 (203.84ms)
+2026-05-24 17:37:07 | INFO     | app.api.v1.endpoints.integrations:328 - [bg] Connection test OK + synced 30 repos for integration f1eb5260-36b4-4233-b1fc-e4f036585bd7 (tenant 5e95f5a7-db67-4640-883e-f926994a6351)
+2026-05-24 17:37:07 | INFO     | app.middleware.logging:15 - [a9f48df1] GET /api/v1/integrations/f1eb5260-36b4-4233-b1fc-e4f036585bd7 → 200 (5.03ms)
+2026-05-24 17:37:14 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=5e95f5a7 repo_id=None scan_id=None
+2026-05-24 17:37:14 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=5e95f5a7
+2026-05-24 17:37:14 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=5e95f5a7 repo_id=None total=0 open=0 critical=0
+2026-05-24 17:37:14 | INFO     | app.middleware.logging:15 - [9f2e261a] GET /api/v1/threats/stats → 200 (23.68ms)
+2026-05-24 17:37:14 | INFO     | app.middleware.logging:15 - [3eabba89] GET /api/v1/kubernetes/pods/stats → 200 (25.94ms)
+2026-05-24 17:37:14 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=5e95f5a7 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-24 17:37:14 | INFO     | app.middleware.logging:15 - [09d8a79d] GET /api/v1/ml/stats → 200 (25.18ms)
+2026-05-24 17:37:14 | INFO     | app.middleware.logging:15 - [ea6ea7d4] GET /api/v1/alerts → 200 (21.0ms)
+2026-05-24 17:37:14 | INFO     | app.middleware.logging:15 - [7e8190a3] GET /api/v1/costs/summary → 200 (32.71ms)
+2026-05-24 17:37:15 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=5e95f5a7 repo_id=None scan_id=None
+2026-05-24 17:37:15 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=5e95f5a7
+2026-05-24 17:37:15 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=5e95f5a7 repo_id=None total=0 open=0 critical=0
+2026-05-24 17:37:15 | INFO     | app.middleware.logging:15 - [9dcb17aa] GET /api/v1/threats/stats → 200 (6.26ms)
+2026-05-24 17:37:15 | INFO     | app.middleware.logging:15 - [0be3d157] GET /api/v1/kubernetes/pods/stats → 200 (6.83ms)
+2026-05-24 17:37:15 | INFO     | app.middleware.logging:15 - [f4457e48] GET /api/v1/ml/stats → 200 (12.61ms)
+2026-05-24 17:37:15 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=5e95f5a7 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-24 17:37:15 | INFO     | app.middleware.logging:15 - [4dc5540f] GET /api/v1/alerts → 200 (14.47ms)
+2026-05-24 17:37:15 | INFO     | app.middleware.logging:15 - [bce5ca64] GET /api/v1/costs/summary → 200 (21.91ms)
+2026-05-24 17:37:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:37:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:37:19 | INFO     | app.middleware.logging:15 - [8488d06f] GET /api/v1/integrations → 200 (7.11ms)
+2026-05-24 17:37:19 | INFO     | app.middleware.logging:15 - [c717042a] GET /api/v1/integrations → 200 (6.99ms)
+2026-05-24 17:37:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:37:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:37:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:37:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:37:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:37:29 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=5e95f5a7 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-24 17:37:29 | INFO     | app.middleware.logging:15 - [e29ad7cf] GET /api/v1/costs/summary → 200 (17.61ms)
+2026-05-24 17:37:29 | INFO     | app.middleware.logging:15 - [03b41d42] GET /api/v1/costs/breakdown → 200 (19.26ms)
+2026-05-24 17:37:29 | INFO     | app.middleware.logging:15 - [91b0d07a] GET /api/v1/costs/anomalies → 200 (12.77ms)
+2026-05-24 17:37:29 | INFO     | app.middleware.logging:15 - [07130ced] GET /api/v1/costs/forecast → 200 (20.64ms)
+2026-05-24 17:37:29 | INFO     | app.middleware.logging:15 - [2036f0b9] GET /api/v1/savings → 200 (9.86ms)
+2026-05-24 17:37:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:37:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:38:02 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 17:38:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:38:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:38:22 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 3 integrations
+2026-05-24 17:38:22 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 8ea3d964-89cb-4f74-969e-6e2c20f05a21: Missing GitHub token
+2026-05-24 17:38:22 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 17:38:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:38:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:38:57 | INFO     | app.middleware.logging:15 - [3677fcfa] GET /api/v1/savings → 200 (12.07ms)
+2026-05-24 17:38:57 | INFO     | app.middleware.logging:15 - [544aa8d3] GET /api/v1/costs/anomalies → 200 (21.32ms)
+2026-05-24 17:38:57 | INFO     | app.middleware.logging:15 - [0c13a711] GET /api/v1/costs/forecast → 200 (28.94ms)
+2026-05-24 17:38:57 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=5e95f5a7 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-24 17:38:57 | INFO     | app.middleware.logging:15 - [e2f1de28] GET /api/v1/costs/summary → 200 (38.69ms)
+2026-05-24 17:38:57 | INFO     | app.middleware.logging:15 - [aba18091] GET /api/v1/costs/breakdown → 200 (31.23ms)
+2026-05-24 17:38:59 | INFO     | app.middleware.logging:15 - [3fa3d164] GET /api/v1/integrations → 200 (7.99ms)
+2026-05-24 17:38:59 | INFO     | app.middleware.logging:15 - [6aebe5e2] GET /api/v1/integrations → 200 (8.3ms)
+2026-05-24 17:39:02 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 17:39:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:39:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:39:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:39:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:39:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:39:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:39:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:39:32 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 17:39:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:39:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:39:54 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 17:39:54 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 17:40:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:40:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:40:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:40:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:41:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:41:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:41:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:41:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:41:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:41:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:41:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:41:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:41:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:42:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:42:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:42:31 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 17:42:37 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 17:42:37 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 17:42:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:42:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:43:02 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 17:43:05 | INFO     | app.middleware.logging:15 - [e506d196] POST /api/v1/integrations/aws → 201 (37.13ms)
+2026-05-24 17:43:06 | WARNING  | app.integrations.aws.client:34 - AWS STS test failed (will try fallbacks): An error occurred (InvalidClientTokenId) when calling the GetCallerIdentity operation: The security token included in the request is invalid.
+2026-05-24 17:43:06 | WARNING  | app.integrations.aws.client:53 - AWS Cost Explorer test failed (will try EC2): An error occurred (UnrecognizedClientException) when calling the GetCostAndUsage operation: The security token included in the request is invalid.
+2026-05-24 17:43:06 | WARNING  | app.integrations.aws.client:62 - AWS EC2 test failed: An error occurred (AuthFailure) when calling the DescribeRegions operation: AWS was not able to validate the provided access credentials
+2026-05-24 17:43:06 | WARNING  | app.api.v1.endpoints.integrations:343 - [bg] Connection test FAILED for c1674df5-7e91-4882-ba06-abe979e839bf: AWS credentials invalid
+2026-05-24 17:43:06 | INFO     | app.middleware.logging:15 - [90c2f0b0] GET /api/v1/integrations → 200 (6.74ms)
+2026-05-24 17:43:09 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 17:43:11 | INFO     | app.middleware.logging:15 - [f4c3563a] GET /api/v1/alerts → 200 (8.31ms)
+2026-05-24 17:43:11 | INFO     | app.middleware.logging:15 - [100867b6] GET /api/v1/companies → 200 (11.23ms)
+2026-05-24 17:43:11 | INFO     | app.middleware.logging:15 - [8acbbe0d] GET /api/v1/integrations → 200 (14.65ms)
+2026-05-24 17:43:11 | INFO     | app.middleware.logging:15 - [05927775] GET /api/v1/companies/stats → 200 (13.24ms)
+2026-05-24 17:43:11 | INFO     | app.middleware.logging:15 - [3389b779] GET /api/v1/alerts → 200 (6.23ms)
+2026-05-24 17:43:11 | INFO     | app.middleware.logging:15 - [396fecfb] GET /api/v1/integrations → 200 (6.82ms)
+2026-05-24 17:43:12 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 17:43:12 | INFO     | app.middleware.logging:15 - [707942cf] GET /api/v1/integrations → 200 (8.0ms)
+2026-05-24 17:43:12 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 17:43:15 | ERROR    | app.middleware.logging:23 - [363e9630] GET /api/v1/alerts → ERR (1.2ms): Bearer token required
+2026-05-24 17:43:15 | ERROR    | app.middleware.logging:23 - [81f916fe] GET /api/v1/alerts → ERR (1.01ms): Bearer token required
+2026-05-24 17:43:16 | ERROR    | app.middleware.logging:23 - [30e2b6c1] GET /api/v1/alerts → ERR (1.16ms): Bearer token required
+2026-05-24 17:43:16 | ERROR    | app.middleware.logging:23 - [dda1bc63] GET /api/v1/alerts → ERR (1.49ms): Bearer token required
+2026-05-24 17:43:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:43:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:43:20 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=5e95f5a7 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-24 17:43:20 | INFO     | app.middleware.logging:15 - [c984e8a2] GET /api/v1/costs/summary → 200 (27.52ms)
+2026-05-24 17:43:20 | INFO     | app.middleware.logging:15 - [78054ff9] GET /api/v1/costs/anomalies → 200 (20.14ms)
+2026-05-24 17:43:20 | INFO     | app.middleware.logging:15 - [bb3ed67c] GET /api/v1/costs/forecast → 200 (31.94ms)
+2026-05-24 17:43:20 | INFO     | app.middleware.logging:15 - [e6419bd4] GET /api/v1/savings → 200 (21.3ms)
+2026-05-24 17:43:20 | INFO     | app.middleware.logging:15 - [55dedcc3] GET /api/v1/costs/breakdown → 200 (28.94ms)
+2026-05-24 17:43:22 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 3 integrations
+2026-05-24 17:43:22 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 8ea3d964-89cb-4f74-969e-6e2c20f05a21: Missing GitHub token
+2026-05-24 17:43:22 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 17:43:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:43:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:43:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:43:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:43:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:43:36 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=5e95f5a7 repo_id=None scan_id=None
+2026-05-24 17:43:36 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=5e95f5a7
+2026-05-24 17:43:36 | INFO     | app.api.v1.endpoints.security_scan:45 - [scan:repos] tenant=5e95f5a7 count=30
+2026-05-24 17:43:36 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=5e95f5a7 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-05-24 17:43:36 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=5e95f5a7
+2026-05-24 17:43:36 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=5e95f5a7 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-05-24 17:43:36 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=5e95f5a7
+2026-05-24 17:43:36 | INFO     | app.middleware.logging:15 - [e940f94f] GET /api/v1/security/repos → 200 (19.17ms)
+2026-05-24 17:43:36 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=5e95f5a7 repo_id=None total=0 open=0 critical=0
+2026-05-24 17:43:36 | INFO     | app.middleware.logging:15 - [a90beac3] GET /api/v1/threats/stats → 200 (22.78ms)
+2026-05-24 17:43:36 | INFO     | app.middleware.logging:15 - [bbb4551a] GET /api/v1/compliance → 200 (12.62ms)
+2026-05-24 17:43:36 | INFO     | app.middleware.logging:15 - [b997db6c] GET /api/v1/compliance/score → 200 (10.88ms)
+2026-05-24 17:43:36 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=None scan_id=None status=open
+2026-05-24 17:43:36 | INFO     | app.middleware.logging:15 - [dd452af2] GET /api/v1/threats → 200 (38.86ms)
+2026-05-24 17:43:36 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-05-24 17:43:36 | INFO     | app.middleware.logging:15 - [45a677e6] GET /api/v1/vulnerabilities → 200 (38.64ms)
+2026-05-24 17:43:37 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=5e95f5a7 repo_id=None scan_id=None
+2026-05-24 17:43:37 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=5e95f5a7
+2026-05-24 17:43:37 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=5e95f5a7 repo_id=None total=0 open=0 critical=0
+2026-05-24 17:43:37 | INFO     | app.middleware.logging:15 - [93ac6774] GET /api/v1/threats/stats → 200 (5.95ms)
+2026-05-24 17:43:37 | INFO     | app.api.v1.endpoints.security_scan:200 - [scan:score] tenant=5e95f5a7 repo_id=None
+2026-05-24 17:43:37 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=5e95f5a7
+2026-05-24 17:43:37 | INFO     | app.api.v1.endpoints.security_scan:175 - [scan:history] tenant=5e95f5a7 repo_id=None limit=20
+2026-05-24 17:43:37 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=5e95f5a7 limit=20
+2026-05-24 17:43:37 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=5e95f5a7 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-05-24 17:43:37 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=5e95f5a7
+2026-05-24 17:43:37 | INFO     | app.api.v1.endpoints.security_scan:45 - [scan:repos] tenant=5e95f5a7 count=30
+2026-05-24 17:43:37 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=None
+2026-05-24 17:43:37 | INFO     | app.middleware.logging:15 - [b7b0046f] GET /api/v1/security/repos → 200 (18.38ms)
+2026-05-24 17:43:37 | INFO     | app.middleware.logging:15 - [094b6091] GET /api/v1/security/score → 200 (23.21ms)
+2026-05-24 17:43:37 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=None
+2026-05-24 17:43:37 | INFO     | app.middleware.logging:15 - [fd1c49ee] GET /api/v1/security/scan-history → 200 (22.4ms)
+2026-05-24 17:43:37 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=None scan_id=None status=open
+2026-05-24 17:43:37 | INFO     | app.middleware.logging:15 - [167cbe74] GET /api/v1/threats → 200 (20.51ms)
+2026-05-24 17:43:37 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=5e95f5a7 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-05-24 17:43:37 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=5e95f5a7
+2026-05-24 17:43:37 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-05-24 17:43:37 | INFO     | app.middleware.logging:15 - [2dd49268] GET /api/v1/vulnerabilities → 200 (15.53ms)
+2026-05-24 17:43:37 | INFO     | app.middleware.logging:15 - [c8a386ff] GET /api/v1/compliance → 200 (8.07ms)
+2026-05-24 17:43:37 | INFO     | app.api.v1.endpoints.security_scan:200 - [scan:score] tenant=5e95f5a7 repo_id=None
+2026-05-24 17:43:37 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=5e95f5a7
+2026-05-24 17:43:37 | INFO     | app.api.v1.endpoints.security_scan:175 - [scan:history] tenant=5e95f5a7 repo_id=None limit=20
+2026-05-24 17:43:37 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=5e95f5a7 limit=20
+2026-05-24 17:43:37 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=None
+2026-05-24 17:43:37 | INFO     | app.middleware.logging:15 - [ef0be186] GET /api/v1/security/score → 200 (8.97ms)
+2026-05-24 17:43:37 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=None
+2026-05-24 17:43:37 | INFO     | app.middleware.logging:15 - [dcc5f399] GET /api/v1/compliance/score → 200 (12.5ms)
+2026-05-24 17:43:37 | INFO     | app.middleware.logging:15 - [06845997] GET /api/v1/security/scan-history → 200 (10.81ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [557004b1] GET /api/v1/ml/correlations → 200 (6.19ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [2ae90906] GET /api/v1/ml/predictions/summary → 200 (13.35ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [bdd40f8f] GET /api/v1/ml/predictions → 200 (17.33ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [73938e9b] GET /api/v1/ml/models/status → 200 (3.94ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [3dece3a5] GET /api/v1/ml/patterns → 200 (12.39ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [5f7bc34a] GET /api/v1/ml/recommendations → 200 (12.47ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [d3f93331] GET /api/v1/ml/radar → 200 (14.32ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [ae328d33] GET /api/v1/ml/correlations → 200 (5.0ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [4d4c277e] GET /api/v1/ml/patterns → 200 (11.26ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [e8cd2295] GET /api/v1/ml/predictions/summary → 200 (13.75ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [a65f8c79] GET /api/v1/ml/predictions → 200 (13.53ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [5a5d3872] GET /api/v1/ml/recommendations → 200 (10.39ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [bc9f1ea7] GET /api/v1/ml/models/status → 200 (1.6ms)
+2026-05-24 17:43:42 | INFO     | app.middleware.logging:15 - [9b42b8ec] GET /api/v1/ml/radar → 200 (14.73ms)
+2026-05-24 17:43:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:43:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:44:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:44:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:44:32 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 17:44:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:44:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:44:53 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-24 17:44:53 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-24 17:45:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:45:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:45:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:45:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:45:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:45:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:45:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:45:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:45:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:46:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:46:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:46:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:46:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:47:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:47:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:47:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:47:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:47:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:47:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:47:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:47:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:47:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:48:02 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 17:48:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:48:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:48:22 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 3 integrations
+2026-05-24 17:48:22 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 8ea3d964-89cb-4f74-969e-6e2c20f05a21: Missing GitHub token
+2026-05-24 17:48:22 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 17:48:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:48:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:49:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:49:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:49:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:49:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:49:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:49:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:49:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:49:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:49:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:50:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:50:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:50:31 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-24 17:50:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:50:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:51:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:51:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:51:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:51:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:51:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:51:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:51:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:51:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:51:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:52:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:52:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:52:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:52:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:53:02 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 17:53:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:53:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:53:22 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 3 integrations
+2026-05-24 17:53:22 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 8ea3d964-89cb-4f74-969e-6e2c20f05a21: Missing GitHub token
+2026-05-24 17:53:22 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 17:53:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:53:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:53:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:53:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:53:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:53:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:53:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:54:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:54:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:54:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:54:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:55:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:55:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:55:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:55:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:55:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:55:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:55:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:55:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:55:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:56:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:56:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:56:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:56:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:57:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:57:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:57:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:57:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:57:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:57:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:57:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:57:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:57:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:58:02 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 17:58:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:58:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:58:22 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 3 integrations
+2026-05-24 17:58:22 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 8ea3d964-89cb-4f74-969e-6e2c20f05a21: Missing GitHub token
+2026-05-24 17:58:22 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 17:58:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:58:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:59:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:59:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 17:59:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 17:59:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:59:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:59:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 17:59:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 17:59:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 17:59:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 18:00:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:00:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 18:00:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:00:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 18:01:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:01:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 18:01:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 18:01:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:01:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:01:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 18:01:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 18:01:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:01:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 18:02:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:02:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 18:02:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:02:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 18:03:02 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 300s
+2026-05-24 18:03:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:03:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 18:03:22 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 3 integrations
+2026-05-24 18:03:22 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 8ea3d964-89cb-4f74-969e-6e2c20f05a21: Missing GitHub token
+2026-05-24 18:03:22 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-24 18:03:22 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-24 18:03:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:03:22 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:03:22 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-24 18:03:22 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-24 18:03:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:03:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 18:04:17 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:04:17 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-24 18:04:47 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-24 18:04:47 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:21:20 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 00:21:20 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 00:21:21 | INFO     | app.main:33 - Database initialized
+2026-05-25 00:21:21 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 00:21:21 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-25 00:21:21 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-25 00:21:21 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 00:21:21 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 00:21:21 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 00:21:23 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=9d23abc5-6c4e-47b4-80ef-6ea5f0f309e3)
+2026-05-25 00:21:23 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:21:23 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:21:23 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 00:21:23 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-25 00:21:28 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-25 00:21:32 | INFO     | app.middleware.logging:15 - [463ffa67] GET /api/v1/alerts → 200 (31.99ms)
+2026-05-25 00:21:32 | INFO     | app.middleware.logging:15 - [88f0715c] GET /api/v1/companies → 200 (26.59ms)
+2026-05-25 00:21:32 | INFO     | app.middleware.logging:15 - [d2753910] GET /api/v1/integrations → 200 (31.38ms)
+2026-05-25 00:21:32 | INFO     | app.middleware.logging:15 - [3f7cf945] GET /api/v1/companies/stats → 200 (46.86ms)
+2026-05-25 00:21:32 | INFO     | app.middleware.logging:15 - [0d7971ac] GET /api/v1/alerts → 200 (7.85ms)
+2026-05-25 00:21:33 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 00:21:33 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 00:21:38 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-25 00:21:41 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=f7385bd6 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-25 00:21:41 | INFO     | app.middleware.logging:15 - [ea352cc7] GET /api/v1/costs/breakdown → 200 (12.88ms)
+2026-05-25 00:21:41 | INFO     | app.middleware.logging:15 - [0bc515c8] GET /api/v1/costs/summary → 200 (19.24ms)
+2026-05-25 00:21:42 | INFO     | app.middleware.logging:15 - [62a87cb7] GET /api/v1/costs/forecast → 200 (15.29ms)
+2026-05-25 00:21:42 | INFO     | app.middleware.logging:15 - [f483cebc] GET /api/v1/costs/anomalies → 200 (14.64ms)
+2026-05-25 00:21:42 | INFO     | app.middleware.logging:15 - [f0449598] GET /api/v1/savings → 200 (9.81ms)
+2026-05-25 00:21:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:21:53 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:21:53 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-25 00:21:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:21:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:21:53 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 3 integrations
+2026-05-25 00:21:53 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 8ea3d964-89cb-4f74-969e-6e2c20f05a21: Missing GitHub token
+2026-05-25 00:21:53 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-25 00:21:53 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-25 00:21:53 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-05-25 00:21:53 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 1 integrations
+2026-05-25 00:21:54 | WARNING  | app.integrations.aws.cost_explorer:66 - CostExplorer.get_costs_by_service failed: Unable to locate credentials
+2026-05-25 00:21:55 | WARNING  | app.integrations.aws.cost_explorer:97 - CostExplorer.get_cost_anomalies failed: Unable to locate credentials
+2026-05-25 00:21:56 | WARNING  | app.integrations.aws.cost_explorer:123 - CostExplorer.get_rightsizing failed: Unable to locate credentials
+2026-05-25 00:21:57 | WARNING  | app.integrations.aws.cost_explorer:295 - CostExplorer.get_ri_recommendations failed: Unable to locate credentials
+2026-05-25 00:21:57 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-25 00:21:57 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-25 00:21:57 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-25 00:21:57 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-25 00:21:57 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 00:21:57 | INFO     | app.tasks.sync_costs:130 - [sync_costs] ✓ integration=AWS Production tenant=9d23abc5 cost_records=0 anomalies=0 savings_recs=0
+2026-05-25 00:21:57 | INFO     | app.tasks.sync_costs:142 - [sync_costs] Cache invalidated for tenant=9d23abc5
+2026-05-25 00:21:57 | INFO     | app.tasks.sync_costs:149 - [sync_costs] Summary: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-25 00:21:57 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-25 00:21:58 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-25 00:22:12 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=f7385bd6 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-25 00:22:12 | INFO     | app.middleware.logging:15 - [74767a9d] GET /api/v1/costs/summary → 200 (19.24ms)
+2026-05-25 00:22:12 | INFO     | app.middleware.logging:15 - [f747b0cd] GET /api/v1/costs/breakdown → 200 (6.76ms)
+2026-05-25 00:22:12 | INFO     | app.middleware.logging:15 - [08b8d9ca] GET /api/v1/costs/anomalies → 200 (7.52ms)
+2026-05-25 00:22:12 | INFO     | app.middleware.logging:15 - [0a812ac3] GET /api/v1/savings → 200 (5.86ms)
+2026-05-25 00:22:23 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:22:23 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:22:38 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 80s
+2026-05-25 00:22:42 | INFO     | app.middleware.logging:15 - [09b29a48] GET /api/v1/costs/forecast → 200 (8.25ms)
+2026-05-25 00:22:42 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=f7385bd6 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-25 00:22:42 | INFO     | app.middleware.logging:15 - [38953d43] GET /api/v1/costs/summary → 200 (8.02ms)
+2026-05-25 00:22:42 | INFO     | app.middleware.logging:15 - [24627fc7] GET /api/v1/costs/breakdown → 200 (5.63ms)
+2026-05-25 00:22:42 | INFO     | app.middleware.logging:15 - [84225686] GET /api/v1/savings → 200 (3.88ms)
+2026-05-25 00:22:42 | INFO     | app.middleware.logging:15 - [a26a4294] GET /api/v1/costs/anomalies → 200 (4.39ms)
+2026-05-25 00:22:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:22:53 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:23:12 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=f7385bd6 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-25 00:23:12 | INFO     | app.middleware.logging:15 - [c94af4f2] GET /api/v1/costs/summary → 200 (10.39ms)
+2026-05-25 00:23:12 | INFO     | app.middleware.logging:15 - [49347a85] GET /api/v1/savings → 200 (4.85ms)
+2026-05-25 00:23:12 | INFO     | app.middleware.logging:15 - [274ae0b5] GET /api/v1/costs/breakdown → 200 (7.58ms)
+2026-05-25 00:23:12 | INFO     | app.middleware.logging:15 - [764efc43] GET /api/v1/costs/anomalies → 200 (3.97ms)
+2026-05-25 00:23:23 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:23:23 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:23:42 | INFO     | app.middleware.logging:15 - [d1828e28] GET /api/v1/costs/forecast → 200 (7.93ms)
+2026-05-25 00:23:43 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=f7385bd6 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-25 00:23:43 | INFO     | app.middleware.logging:15 - [d89e1ccb] GET /api/v1/costs/summary → 200 (8.75ms)
+2026-05-25 00:23:43 | INFO     | app.middleware.logging:15 - [ba1ee0c2] GET /api/v1/savings → 200 (8.34ms)
+2026-05-25 00:23:43 | INFO     | app.middleware.logging:15 - [5a78421c] GET /api/v1/costs/breakdown → 200 (10.98ms)
+2026-05-25 00:23:43 | INFO     | app.middleware.logging:15 - [022a3b17] GET /api/v1/costs/anomalies → 200 (6.07ms)
+2026-05-25 00:23:47 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-25 00:23:50 | INFO     | app.middleware.logging:15 - [8efcbd21] GET /api/v1/alerts → 200 (7.5ms)
+2026-05-25 00:23:50 | INFO     | app.middleware.logging:15 - [afd67ece] GET /api/v1/integrations → 200 (8.23ms)
+2026-05-25 00:23:50 | INFO     | app.middleware.logging:15 - [965cb8fa] GET /api/v1/companies → 200 (6.77ms)
+2026-05-25 00:23:50 | INFO     | app.middleware.logging:15 - [87ec126f] GET /api/v1/companies/stats → 200 (8.19ms)
+2026-05-25 00:23:50 | INFO     | app.middleware.logging:15 - [8026a6c6] GET /api/v1/alerts → 200 (5.35ms)
+2026-05-25 00:23:51 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=f7385bd6 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-25 00:23:51 | INFO     | app.middleware.logging:15 - [e082a768] GET /api/v1/costs/summary → 200 (9.46ms)
+2026-05-25 00:23:51 | INFO     | app.middleware.logging:15 - [b3e24be8] GET /api/v1/costs/breakdown → 200 (13.22ms)
+2026-05-25 00:23:51 | INFO     | app.middleware.logging:15 - [301bb300] GET /api/v1/savings → 200 (9.07ms)
+2026-05-25 00:23:51 | INFO     | app.middleware.logging:15 - [f02150b2] GET /api/v1/costs/anomalies → 200 (8.59ms)
+2026-05-25 00:23:51 | INFO     | app.middleware.logging:15 - [15bef393] GET /api/v1/costs/forecast → 200 (12.67ms)
+2026-05-25 00:23:51 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 00:23:52 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 00:23:53 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:23:53 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:23:57 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-25 00:23:57 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:23:57 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:23:57 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-25 00:23:57 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 00:23:58 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 160s
+2026-05-25 00:24:03 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-25 00:24:07 | INFO     | app.middleware.logging:15 - [df074060] GET /api/v1/alerts → 200 (7.65ms)
+2026-05-25 00:24:07 | INFO     | app.middleware.logging:15 - [54c6184a] GET /api/v1/companies → 200 (8.71ms)
+2026-05-25 00:24:07 | INFO     | app.middleware.logging:15 - [d6754683] GET /api/v1/integrations → 200 (12.56ms)
+2026-05-25 00:24:07 | INFO     | app.middleware.logging:15 - [ba07695d] GET /api/v1/companies/stats → 200 (12.41ms)
+2026-05-25 00:24:07 | INFO     | app.middleware.logging:15 - [b7a4afe7] GET /api/v1/alerts → 200 (4.88ms)
+2026-05-25 00:24:08 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=f7385bd6 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-25 00:24:08 | INFO     | app.middleware.logging:15 - [aff4d27c] GET /api/v1/costs/summary → 200 (8.32ms)
+2026-05-25 00:24:08 | INFO     | app.middleware.logging:15 - [503b6571] GET /api/v1/costs/breakdown → 200 (4.97ms)
+2026-05-25 00:24:08 | INFO     | app.middleware.logging:15 - [b2ec6c37] GET /api/v1/costs/forecast → 200 (10.8ms)
+2026-05-25 00:24:08 | INFO     | app.middleware.logging:15 - [4280586c] GET /api/v1/costs/anomalies → 200 (7.77ms)
+2026-05-25 00:24:08 | INFO     | app.middleware.logging:15 - [5760a3ae] GET /api/v1/savings → 200 (6.91ms)
+2026-05-25 00:24:08 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 00:24:08 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 00:24:23 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:24:23 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:24:38 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=f7385bd6 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-25 00:24:38 | INFO     | app.middleware.logging:15 - [b53166ea] GET /api/v1/costs/summary → 200 (7.99ms)
+2026-05-25 00:24:38 | INFO     | app.middleware.logging:15 - [94a47a12] GET /api/v1/costs/breakdown → 200 (8.48ms)
+2026-05-25 00:24:38 | INFO     | app.middleware.logging:15 - [ede87290] GET /api/v1/savings → 200 (7.08ms)
+2026-05-25 00:24:38 | INFO     | app.middleware.logging:15 - [f348f927] GET /api/v1/costs/anomalies → 200 (5.88ms)
+2026-05-25 00:24:41 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-25 00:24:41 | INFO     | app.main:73 - Shutting down...
+2026-05-25 00:24:41 | INFO     | app.integrations.kubernetes.watcher:45 - K8s watcher cancelled: K8s Cluster
+2026-05-25 00:24:41 | INFO     | app.integrations.kubernetes.watcher:209 - K8s watcher stopped: 389083bb-e746-4f86-928f-774f7371f333
+2026-05-25 00:24:41 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 00:24:41 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 00:24:42 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 00:24:42 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 00:24:42 | INFO     | app.main:33 - Database initialized
+2026-05-25 00:24:42 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 00:24:42 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-25 00:24:42 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-25 00:24:42 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 00:24:42 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 00:24:42 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 00:24:43 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=9d23abc5-6c4e-47b4-80ef-6ea5f0f309e3)
+2026-05-25 00:24:43 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:24:43 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:24:43 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 00:24:43 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-25 00:24:47 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 00:24:47 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 00:24:48 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-25 00:24:58 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-25 00:25:08 | INFO     | app.middleware.logging:15 - [edb0c67a] GET /api/v1/costs/forecast → 200 (13.43ms)
+2026-05-25 00:25:08 | INFO     | app.services.cost_service:142 - [CostSummary] tenant=f7385bd6 intg_status=error has_data=False mtd=0.0 ytd=0.0
+2026-05-25 00:25:08 | INFO     | app.middleware.logging:15 - [99559b47] GET /api/v1/costs/summary → 200 (12.73ms)
+2026-05-25 00:25:09 | INFO     | app.middleware.logging:15 - [b0da274e] GET /api/v1/costs/breakdown → 200 (11.77ms)
+2026-05-25 00:25:09 | INFO     | app.middleware.logging:15 - [b5a4fabf] GET /api/v1/costs/anomalies → 200 (17.27ms)
+2026-05-25 00:25:09 | INFO     | app.middleware.logging:15 - [daf44cfb] GET /api/v1/savings → 200 (16.53ms)
+2026-05-25 00:25:13 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:25:13 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:25:13 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-25 00:25:13 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:25:13 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:25:13 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 3 integrations
+2026-05-25 00:25:13 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 8ea3d964-89cb-4f74-969e-6e2c20f05a21: Missing GitHub token
+2026-05-25 00:25:13 | INFO     | app.tasks.sync_costs:66 - Syncing AWS costs for 1 integrations
+2026-05-25 00:25:13 | WARNING  | app.integrations.aws.cost_explorer:66 - CostExplorer.get_costs_by_service failed: Unable to locate credentials
+2026-05-25 00:25:13 | WARNING  | app.integrations.aws.cost_explorer:97 - CostExplorer.get_cost_anomalies failed: Unable to locate credentials
+2026-05-25 00:25:13 | WARNING  | app.integrations.aws.cost_explorer:123 - CostExplorer.get_rightsizing failed: Unable to locate credentials
+2026-05-25 00:25:14 | WARNING  | app.integrations.aws.cost_explorer:295 - CostExplorer.get_ri_recommendations failed: Unable to locate credentials
+2026-05-25 00:25:14 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-25 00:25:14 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-25 00:25:15 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-25 00:25:16 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-25 00:25:17 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-05-25 00:25:17 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-25 00:25:17 | INFO     | app.tasks.sync_costs:130 - [sync_costs] ✓ integration=AWS Production tenant=9d23abc5 cost_records=0 anomalies=0 savings_recs=0
+2026-05-25 00:25:17 | INFO     | app.main:73 - Shutting down...
+2026-05-25 00:25:17 | INFO     | app.integrations.kubernetes.watcher:45 - K8s watcher cancelled: K8s Cluster
+2026-05-25 00:25:17 | INFO     | app.integrations.kubernetes.watcher:209 - K8s watcher stopped: 389083bb-e746-4f86-928f-774f7371f333
+2026-05-25 00:25:17 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 00:25:17 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 00:25:18 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 00:25:18 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 00:25:18 | INFO     | app.main:33 - Database initialized
+2026-05-25 00:25:18 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 00:25:18 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-25 00:25:18 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-25 00:25:18 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 00:25:18 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 00:25:18 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 00:25:19 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=9d23abc5-6c4e-47b4-80ef-6ea5f0f309e3)
+2026-05-25 00:25:19 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:25:19 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:25:19 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 00:25:19 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-25 00:25:20 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 00:25:20 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 00:25:24 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-25 00:25:28 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-25 00:25:28 | INFO     | app.main:73 - Shutting down...
+2026-05-25 00:25:28 | INFO     | app.integrations.kubernetes.watcher:45 - K8s watcher cancelled: K8s Cluster
+2026-05-25 00:25:28 | INFO     | app.integrations.kubernetes.watcher:209 - K8s watcher stopped: 389083bb-e746-4f86-928f-774f7371f333
+2026-05-25 00:25:28 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 00:25:28 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 00:25:29 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 00:25:29 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 00:25:29 | INFO     | app.main:33 - Database initialized
+2026-05-25 00:25:29 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 00:25:29 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-25 00:25:29 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-25 00:25:29 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 00:25:29 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 00:25:29 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 00:25:30 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=9d23abc5-6c4e-47b4-80ef-6ea5f0f309e3)
+2026-05-25 00:25:30 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:25:30 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:25:30 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 00:25:30 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-25 00:25:35 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-25 00:25:36 | INFO     | app.main:73 - Shutting down...
+2026-05-25 00:25:36 | INFO     | app.integrations.kubernetes.watcher:45 - K8s watcher cancelled: K8s Cluster
+2026-05-25 00:25:36 | INFO     | app.integrations.kubernetes.watcher:209 - K8s watcher stopped: 389083bb-e746-4f86-928f-774f7371f333
+2026-05-25 00:25:36 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 00:25:36 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 00:25:38 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 00:25:38 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 00:25:38 | INFO     | app.main:33 - Database initialized
+2026-05-25 00:25:38 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 00:25:38 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-25 00:25:38 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-25 00:25:38 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 00:25:38 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 00:25:38 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 00:25:38 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=9d23abc5-6c4e-47b4-80ef-6ea5f0f309e3)
+2026-05-25 00:25:38 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:25:38 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:25:38 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 00:25:38 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-25 00:25:43 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-25 00:25:53 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-25 00:26:05 | INFO     | app.main:73 - Shutting down...
+2026-05-25 00:26:05 | INFO     | app.integrations.kubernetes.watcher:45 - K8s watcher cancelled: K8s Cluster
+2026-05-25 00:26:05 | INFO     | app.integrations.kubernetes.watcher:209 - K8s watcher stopped: 389083bb-e746-4f86-928f-774f7371f333
+2026-05-25 00:26:05 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 00:26:05 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 00:26:07 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 00:26:07 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 00:26:07 | INFO     | app.main:33 - Database initialized
+2026-05-25 00:26:07 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 00:26:07 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-25 00:26:07 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-25 00:26:07 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 00:26:07 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 00:26:07 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 00:26:07 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=9d23abc5-6c4e-47b4-80ef-6ea5f0f309e3)
+2026-05-25 00:26:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:26:07 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:26:07 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 00:26:07 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-25 00:26:10 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-05-25 00:26:11 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-05-25 00:26:12 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-25 00:26:22 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-25 00:26:37 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:26:37 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:26:37 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-25 00:26:37 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:26:37 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:26:37 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-25 00:26:37 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=1
+2026-05-25 00:26:37 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=ed3afcf7 tenant=9d23abc5 prior_status=connected
+2026-05-25 00:26:37 | WARNING  | app.integrations.aws.cost_explorer:66 - CostExplorer.get_costs_by_service failed: Unable to locate credentials
+2026-05-25 00:26:37 | WARNING  | app.integrations.aws.cost_explorer:97 - CostExplorer.get_cost_anomalies failed: Unable to locate credentials
+2026-05-25 00:26:37 | WARNING  | app.integrations.aws.cost_explorer:123 - CostExplorer.get_rightsizing failed: Unable to locate credentials
+2026-05-25 00:26:38 | WARNING  | app.integrations.aws.cost_explorer:295 - CostExplorer.get_ri_recommendations failed: Unable to locate credentials
+2026-05-25 00:26:38 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 00:26:38 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 3 integrations
+2026-05-25 00:26:38 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 8ea3d964-89cb-4f74-969e-6e2c20f05a21: Missing GitHub token
+2026-05-25 00:26:39 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-25 00:26:40 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-25 00:26:41 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-05-25 00:26:41 | INFO     | app.tasks.sync_costs:147 - [sync_costs] ✓ integration=AWS Production tenant=9d23abc5 cost_records=0 anomalies=0 savings_recs=0
+2026-05-25 00:26:41 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-25 00:26:41 | INFO     | app.tasks.sync_costs:159 - [sync_costs] Cache invalidated for tenant=9d23abc5
+2026-05-25 00:26:41 | INFO     | app.tasks.sync_costs:166 - [sync_costs] Summary: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-25 00:26:41 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-25 00:26:41 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-25 00:26:41 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-25 00:26:42 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-25 00:26:50 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-05-25 00:27:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:27:07 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:27:22 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 80s
+2026-05-25 00:27:37 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:27:37 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:28:07 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:28:07 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:28:37 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:28:37 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:28:38 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-25 00:28:38 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:28:38 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:28:38 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-25 00:28:38 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 00:28:42 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 160s
+2026-05-25 00:28:43 | INFO     | app.main:73 - Shutting down...
+2026-05-25 00:28:43 | INFO     | app.integrations.kubernetes.watcher:45 - K8s watcher cancelled: K8s Cluster
+2026-05-25 00:28:43 | INFO     | app.integrations.kubernetes.watcher:209 - K8s watcher stopped: 389083bb-e746-4f86-928f-774f7371f333
+2026-05-25 00:28:43 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-25 00:28:43 | INFO     | app.core.scheduler:55 - Scheduler stopped
+2026-05-25 00:28:44 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-25 00:28:44 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-25 00:28:44 | INFO     | app.main:33 - Database initialized
+2026-05-25 00:28:44 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-25 00:28:44 | INFO     | app.integrations.kubernetes.watcher:197 - K8s watcher started: K8s Cluster
+2026-05-25 00:28:44 | INFO     | app.integrations.kubernetes.watcher:241 - Started 1 K8s watchers on startup
+2026-05-25 00:28:44 | INFO     | app.core.scheduler:39 - Scheduler started 5 periodic tasks
+2026-05-25 00:28:44 | INFO     | app.main:39 - Background scheduler started
+2026-05-25 00:28:44 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-25 00:28:45 | INFO     | app.integrations.kubernetes.watcher:24 - K8s watcher starting: K8s Cluster (tenant=9d23abc5-6c4e-47b4-80ef-6ea5f0f309e3)
+2026-05-25 00:28:45 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:28:45 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:28:45 | INFO     | app.services.ml_service:349 - [MLListener] Starting — subscribing to 4 channels
+2026-05-25 00:28:45 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 5s
+2026-05-25 00:28:46 | INFO     | app.middleware.logging:15 - [185cbe8c] GET / → 404 (0.83ms)
+2026-05-25 00:28:46 | INFO     | app.middleware.logging:15 - [132267ae] GET /favicon.ico → 404 (1.77ms)
+2026-05-25 00:28:50 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 10s
+2026-05-25 00:29:00 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 20s
+2026-05-25 00:29:04 | ERROR    | app.middleware.logging:23 - [ac362226] GET /api/v1/alerts → ERR (1.24ms): Bearer token required
+2026-05-25 00:29:04 | ERROR    | app.middleware.logging:23 - [95413d25] GET /api/v1/alerts → ERR (0.96ms): Bearer token required
+2026-05-25 00:29:15 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:29:15 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:29:15 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-05-25 00:29:15 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:29:15 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:29:15 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-05-25 00:29:15 | INFO     | app.core.scheduler:78 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-25 00:29:15 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-25 00:29:15 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-05-25 00:29:15 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-05-25 00:29:15 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=1
+2026-05-25 00:29:15 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=ed3afcf7 tenant=9d23abc5 prior_status=connected
+2026-05-25 00:29:16 | WARNING  | app.integrations.aws.cost_explorer:66 - CostExplorer.get_costs_by_service failed: Unable to locate credentials
+2026-05-25 00:29:17 | WARNING  | app.integrations.aws.cost_explorer:97 - CostExplorer.get_cost_anomalies failed: Unable to locate credentials
+2026-05-25 00:29:18 | WARNING  | app.integrations.aws.cost_explorer:123 - CostExplorer.get_rightsizing failed: Unable to locate credentials
+2026-05-25 00:29:19 | WARNING  | app.integrations.aws.cost_explorer:295 - CostExplorer.get_ri_recommendations failed: Unable to locate credentials
+2026-05-25 00:29:19 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-25 00:29:19 | INFO     | app.core.scheduler:104 - Scheduled security sync: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-25 00:29:19 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 3 integrations
+2026-05-25 00:29:19 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for 8ea3d964-89cb-4f74-969e-6e2c20f05a21: Missing GitHub token
+2026-05-25 00:29:19 | WARNING  | app.core.scheduler:88 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-05-25 00:29:19 | INFO     | app.tasks.sync_costs:147 - [sync_costs] ✓ integration=AWS Production tenant=9d23abc5 cost_records=0 anomalies=0 savings_recs=0
+2026-05-25 00:29:19 | INFO     | app.tasks.sync_costs:159 - [sync_costs] Cache invalidated for tenant=9d23abc5
+2026-05-25 00:29:19 | INFO     | app.tasks.sync_costs:166 - [sync_costs] Summary: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-25 00:29:19 | INFO     | app.core.scheduler:95 - Scheduled cost sync: {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-25 00:29:20 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 40s
+2026-05-25 00:29:45 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:29:45 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s
+2026-05-25 00:30:00 | ERROR    | app.services.ml_service:414 - [MLListener] Connection lost: ConnectionError('Error -2 connecting to redis:6379. -2.') — reconnecting in 80s
+2026-05-25 00:30:15 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-05-25 00:30:15 | WARNING  | app.integrations.kubernetes.watcher:30 - K8s client unavailable for K8s Cluster, retrying in 30s

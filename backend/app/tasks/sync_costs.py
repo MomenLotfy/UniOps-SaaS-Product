@@ -51,10 +51,18 @@ async def sync_aws_costs_async(tenant_id: str | None = None) -> dict:
     }
 
     async with AsyncSessionLocal() as db:
+        # Include both "connected" (verified) and "sync_failed" (credentials OK but
+        # last sync hit a permissions or rate-limit error) so that retrying a sync
+        # attempt doesn't require the user to disconnect and reconnect.
+        # "credentials_invalid" is excluded — we never have valid creds to attempt a sync.
+        from sqlalchemy import or_
         query = select(Integration).where(
             Integration.is_active == True,
-            Integration.status == "connected",
             Integration.type == "aws",
+            or_(
+                Integration.status == "connected",
+                Integration.status == "sync_failed",
+            ),
         )
 
         if tenant_id:
@@ -63,10 +71,19 @@ async def sync_aws_costs_async(tenant_id: str | None = None) -> dict:
         result = await db.execute(query)
         integrations = result.scalars().all()
 
-        logger.info(f"Syncing AWS costs for {len(integrations)} integrations")
+        logger.info(
+            f"[finops_data_load_attempt] "
+            f"tenant={tenant_id[:8] if tenant_id else 'all'} "
+            f"integrations_found={len(integrations)}"
+        )
 
         for integration in integrations:
             try:
+                logger.info(
+                    f"[sync_started] integration={integration.name} "
+                    f"id={integration.id[:8]} tenant={integration.tenant_id[:8]} "
+                    f"prior_status={integration.status}"
+                )
                 creds = _decrypt_creds(integration.credentials)
                 config = {**creds, **integration.config}
 
@@ -149,10 +166,21 @@ async def sync_aws_costs_async(tenant_id: str | None = None) -> dict:
                 logger.info(f"[sync_costs] Summary: {summary}")
 
             except Exception as e:
+                err_msg = str(e)[:400]
                 logger.error(
-                    f"Failed to sync AWS costs for integration {integration.id}: {e}"
+                    f"[sync_failed_reason] integration={integration.name} "
+                    f"id={integration.id[:8]} tenant={integration.tenant_id[:8]} "
+                    f"error={err_msg}"
                 )
-                await db.rollback()
+                # Mark as sync_failed — NOT credentials_invalid.
+                # The integration stays "configured" so the UI shows it and
+                # allows the user to retry without having to re-enter credentials.
+                try:
+                    integration.status = "sync_failed"
+                    integration.error_message = f"Last sync failed: {err_msg[:200]}"
+                    await db.commit()
+                except Exception:
+                    await db.rollback()
 
     return summary
 

@@ -6,7 +6,13 @@ export type IntegrationProvider =
   | 'datadog' | 'grafana' | 'prometheus'
   | 'webhook';
 
-export type IntegrationStatus = 'connected' | 'disconnected' | 'error' | 'pending';
+export type IntegrationStatus =
+  | 'connected'          // credentials verified — all systems go
+  | 'sync_failed'        // credentials valid but last data sync failed (permissions/rate-limit)
+  | 'credentials_invalid' // wrong Access Key / Secret Key
+  | 'pending'            // saved — background test in progress
+  | 'error'              // legacy generic error (mapped to credentials_invalid in UI)
+  | 'disconnected';      // explicitly removed by user
 
 export interface Integration {
   id: string;

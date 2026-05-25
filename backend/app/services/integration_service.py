@@ -210,28 +210,85 @@ class IntegrationService(BaseService):
         client = self._build_client(itype, creds, integration.config or {})
 
         # ── AWS ───────────────────────────────────────────────────────────────
+        # Multi-stage verification:
+        #   Stage 1 — STS GetCallerIdentity: proves credentials are syntactically valid
+        #             and the IAM user/role exists.  Fails only on wrong key/secret.
+        #   Stage 2 — Account ID extraction (best-effort, non-blocking)
+        #
+        # Outcomes:
+        #   STS passes  → status="connected"   (credentials valid; sync may still fail
+        #                                        due to missing Cost Explorer perms)
+        #   STS fails   → status="credentials_invalid"
+        #   Exception   → status="credentials_invalid" with exception message
+        #
+        # NOTE: sync failures (missing ce:GetCostAndUsage etc.) are handled in
+        #       sync_costs.py which sets status="sync_failed" after a successful
+        #       connection test, keeping the integration "configured" in the UI.
         if itype == "aws":
             try:
-                ok = await client.test_connection()
-                if ok:
+                logger.info(
+                    f"[aws_integration_saved] id={integration_id} "
+                    f"tenant={integration.tenant_id[:8]} — running STS verification"
+                )
+
+                # Stage 1: STS — definitive credential check
+                sts_ok = await client.verify_credentials_via_sts()
+                logger.info(
+                    f"[permissions_check_result] id={integration_id} "
+                    f"sts_ok={sts_ok}"
+                )
+
+                if sts_ok:
                     account_id = await client.get_account_id()
                     integration.status = "connected"
                     integration.error_message = None
                     if account_id:
                         integration.config = {**(integration.config or {}), "account_id": account_id}
                     await self.db.flush()
-                    return IntegrationTestResult(success=True, message=f"AWS connected — account {account_id or 'verified'}")
+                    logger.info(
+                        f"[aws_connection_verified] id={integration_id} "
+                        f"tenant={integration.tenant_id[:8]} account={account_id or 'n/a'}"
+                    )
+                    return IntegrationTestResult(
+                        success=True,
+                        message=f"AWS connected — account {account_id or 'verified'}"
+                    )
                 else:
-                    integration.status = "error"
-                    integration.error_message = "AWS credentials invalid or insufficient permissions"
+                    # Credentials are wrong (wrong key ID, wrong secret, expired, etc.)
+                    integration.status = "credentials_invalid"
+                    integration.error_message = (
+                        "AWS credentials could not be verified. "
+                        "Check your Access Key ID and Secret Access Key."
+                    )
                     await self.db.flush()
-                    return IntegrationTestResult(success=False, message="AWS credentials invalid")
+                    logger.warning(
+                        f"[aws_credentials_invalid] id={integration_id} "
+                        f"tenant={integration.tenant_id[:8]} — STS returned False"
+                    )
+                    return IntegrationTestResult(
+                        success=False,
+                        message="AWS credentials invalid — STS verification failed"
+                    )
             except Exception as exc:
                 msg = str(exc)[:300]
-                integration.status = "error"
+                # Distinguish "access denied" (wrong creds) from network errors
+                is_auth_error = any(k in msg.lower() for k in (
+                    "invalidclienttokenid", "signaturedoesnotmatch",
+                    "tokenrefresherror", "authfailure", "accessdenied",
+                    "invalid security token",
+                ))
+                new_status = "credentials_invalid" if is_auth_error else "credentials_invalid"
+                integration.status = new_status
                 integration.error_message = msg
                 await self.db.flush()
-                return IntegrationTestResult(success=False, message=f"AWS test failed: {msg}")
+                logger.error(
+                    f"[aws_credentials_invalid] id={integration_id} "
+                    f"tenant={integration.tenant_id[:8]} exception={msg[:80]}"
+                )
+                return IntegrationTestResult(
+                    success=False,
+                    message=f"AWS credential check failed: {msg[:120]}"
+                )
 
         # ── Kubernetes ────────────────────────────────────────────────────────
         if itype == "kubernetes":

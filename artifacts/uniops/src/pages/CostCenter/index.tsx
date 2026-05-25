@@ -313,16 +313,22 @@ export default function CostCenter() {
   const anomalies = anomaliesQ.data ?? [];
   const savings   = savingsQ.data ?? [];
 
-  // ── Integration state (from backend's new integration_status field) ─────────
-  // connected:      integration is "connected" AND credentials verified
-  // intgStatus:     "connected" | "error" | "pending" | "disconnected" | null
-  // showDashboard:  show the full dashboard (connected OR has data from a prev sync)
-  const intgStatus    = summary?.integration_status ?? null;
-  const connected     = summary?.connected ?? (intgStatus === 'connected');
-  const hasData       = summary?.has_data ?? (summary ? (summary.mtd ?? 0) > 0 : false);
-  const showDashboard = connected || (hasData && intgStatus !== null);
-  const anyLoading    = summaryQ.isLoading || breakdownQ.isLoading;
-  const isRefreshing  = summaryQ.isFetching && !summaryQ.isLoading;
+  // ── Integration state ────────────────────────────────────────────────────────
+  // intgStatus:      raw status string from backend
+  // hasIntegration:  any AWS integration record exists → always show the dashboard
+  // connected:       credentials are valid (connected | sync_failed)
+  // hasData:         cost_metrics rows exist
+  //
+  // RULE: showDashboard = hasIntegration (not connected!)
+  //   → tabs & metric cards are ALWAYS visible when an integration is configured,
+  //     regardless of whether credentials are valid or sync has succeeded.
+  //   → only the empty "no provider" full-page banner is shown when there is
+  //     truly no integration record at all.
+  const intgStatus      = summary?.integration_status ?? null;
+  const hasIntegration  = summary?.has_integration ?? (intgStatus !== null && intgStatus !== 'disconnected');
+  const showDashboard   = hasIntegration;   // show dashboard whenever integration exists
+  const anyLoading      = summaryQ.isLoading || breakdownQ.isLoading;
+  const isRefreshing    = summaryQ.isFetching && !summaryQ.isLoading;
 
   const fmt = (v: number | undefined) =>
     v !== undefined && v !== null ? `$${v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : '—';
@@ -363,7 +369,7 @@ export default function CostCenter() {
         <div className="flex items-center gap-2">
           <LastSyncedBadge dataUpdatedAt={summaryQ.dataUpdatedAt} />
           {/* Sync Now — triggers a real AWS data pull on the backend */}
-          {intgStatus !== null && (
+          {hasIntegration && (
             <button
               onClick={() => triggerSync.mutate()}
               disabled={triggerSync.isPending || isRefreshing}
@@ -384,75 +390,108 @@ export default function CostCenter() {
         </div>
       </div>
 
-      {/* ── Integration state banners (shown only when no data yet) ── */}
-      {!anyLoading && !showDashboard && intgStatus === 'error' && (
-        <IntegrationErrorBanner
-          error={summary?.integration_error ?? null}
-          onSync={() => triggerSync.mutate()}
-          syncing={triggerSync.isPending}
-        />
-      )}
-      {!anyLoading && !showDashboard && intgStatus === 'pending' && (
-        <PendingBanner
-          onSync={() => { invalidateAll(); summaryQ.refetch(); }}
-          syncing={isRefreshing}
-        />
-      )}
-      {!anyLoading && !showDashboard && (intgStatus === null || intgStatus === 'disconnected') && (
-        <NotConnectedBanner />
-      )}
+      {/* ── Full-page "no integration" banner — only when nothing is configured ── */}
+      {!anyLoading && !showDashboard && <NotConnectedBanner />}
 
-      {/* ── Error badge shown above dashboard when integration has error but old data exists ── */}
-      {showDashboard && intgStatus === 'error' && (
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs border border-orange-500/20 bg-orange-500/5 text-orange-300">
-          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-          <span className="flex-1">AWS credentials have an issue — showing last synced data.{' '}
-            <a href="/settings/integrations" className="underline underline-offset-2 hover:text-orange-200">Fix credentials</a>
-            {summary?.integration_error ? `: ${summary.integration_error}` : '.'}
-          </span>
-          <button onClick={() => triggerSync.mutate()} disabled={triggerSync.isPending}
-            className="ml-2 px-2 py-1 rounded border border-orange-500/30 hover:bg-orange-500/10 transition-colors disabled:opacity-50 whitespace-nowrap">
-            {triggerSync.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Retry'}
-          </button>
-        </div>
-      )}
+      {/* ════════════ DASHBOARD — always visible when integration exists ════════ */}
+      {showDashboard && (
+        <>
+          {/* ── Inline status banners (non-blocking — keep tabs + cards visible) ── */}
+          {!anyLoading && intgStatus === 'pending' && (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-300 text-xs">
+              <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+              <span className="flex-1">
+                <strong className="text-blue-200">Verifying credentials…</strong>{' '}
+                Your AWS integration was just saved. Testing credentials in the background — this takes under 30 seconds.
+              </span>
+              <button onClick={() => { invalidateAll(); summaryQ.refetch(); }}
+                className="px-2.5 py-1 rounded border border-blue-500/30 hover:bg-blue-500/10 transition-colors whitespace-nowrap">
+                Refresh
+              </button>
+            </div>
+          )}
 
-      {/* ── Metric Cards ── */}
-      {anyLoading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <MetricCardSkeleton key={i} />)}
-        </div>
-      ) : !showDashboard ? null : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <MetricCard
-            label="Month-to-Date"
-            value={fmt(summary?.mtd)}
-            icon={DollarSign}
-            iconColor="bg-blue-500/10 text-blue-400"
-            trend={summary?.trend_pct}
-          />
-          <MetricCard
-            label="Projected Month-End"
-            value={fmt(summary?.projected)}
-            sub={forecast ? `Budget: ${fmt(forecast.budget)}` : undefined}
-            icon={TrendingUp}
-            iconColor={forecast?.over_budget ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}
-          />
-          <MetricCard
-            label="Daily Average"
-            value={fmtSmall(summary?.daily_avg)}
-            sub="per day this month"
-            icon={BarChart2}
-            iconColor="bg-purple-500/10 text-purple-400"
-          />
-          <MetricCard
-            label="Year-to-Date"
-            value={fmt(summary?.ytd)}
-            sub={new Date().getFullYear().toString()}
-            icon={Zap}
-            iconColor="bg-amber-500/10 text-amber-400"
-          />
-        </div>
+          {!anyLoading && (intgStatus === 'credentials_invalid' || intgStatus === 'error') && (
+            <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-300 text-xs">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <strong className="text-red-200">AWS credentials invalid</strong>{' '}
+                {summary?.integration_error
+                  ? `— ${summary.integration_error}`
+                  : '— the Access Key ID or Secret Access Key could not be verified by AWS STS.'}
+                <div className="mt-1.5 text-red-400/80">
+                  Go to <a href="/integrations/aws" className="underline hover:text-red-200">AWS Integration</a>{' '}
+                  and re-enter your credentials. Ensure the IAM user exists and the key has not been deleted.
+                </div>
+              </div>
+              <a href="/integrations/aws"
+                className="px-2.5 py-1 rounded border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-200 transition-colors whitespace-nowrap font-medium">
+                Fix Credentials
+              </a>
+            </div>
+          )}
+
+          {!anyLoading && intgStatus === 'sync_failed' && (
+            <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-orange-500/20 bg-orange-500/5 text-orange-300 text-xs">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <strong className="text-orange-200">Data sync failed</strong>{' '}
+                — AWS credentials are valid but the last cost sync encountered an error.
+                {summary?.integration_error && (
+                  <div className="mt-1 text-orange-400/80 font-mono break-all">{summary.integration_error}</div>
+                )}
+                <div className="mt-1.5 text-orange-400/80">
+                  This usually means the IAM user needs <code>ce:GetCostAndUsage</code> permission.{' '}
+                  <a href="https://docs.aws.amazon.com/cost-management/latest/userguide/security-iam-awsmanpol.html"
+                    target="_blank" rel="noopener noreferrer"
+                    className="underline hover:text-orange-200">AWS Billing policies →</a>
+                </div>
+              </div>
+              <button onClick={() => triggerSync.mutate()} disabled={triggerSync.isPending}
+                className="px-2.5 py-1 rounded border border-orange-500/30 hover:bg-orange-500/10 transition-colors whitespace-nowrap disabled:opacity-50">
+                {triggerSync.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Retry Sync'}
+              </button>
+            </div>
+          )}
+
+          {/* ── Metric Cards — always shown; $0 / "—" when no data yet ── */}
+          {anyLoading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => <MetricCardSkeleton key={i} />)}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <MetricCard
+                label="Month-to-Date"
+                value={fmt(summary?.mtd ?? 0)}
+                icon={DollarSign}
+                iconColor="bg-blue-500/10 text-blue-400"
+                trend={summary?.trend_pct}
+              />
+              <MetricCard
+                label="Projected Month-End"
+                value={fmt(summary?.projected ?? 0)}
+                sub={forecast ? `Budget: ${fmt(forecast.budget)}` : undefined}
+                icon={TrendingUp}
+                iconColor={forecast?.over_budget ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}
+              />
+              <MetricCard
+                label="Daily Average"
+                value={fmtSmall(summary?.daily_avg ?? 0)}
+                sub="per day this month"
+                icon={BarChart2}
+                iconColor="bg-purple-500/10 text-purple-400"
+              />
+              <MetricCard
+                label="Year-to-Date"
+                value={fmt(summary?.ytd ?? 0)}
+                sub={new Date().getFullYear().toString()}
+                icon={Zap}
+                iconColor="bg-amber-500/10 text-amber-400"
+              />
+            </div>
+          )}
+        </>
       )}
 
       {/* ── Tabs (only when there is something to display) ── */}

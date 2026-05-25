@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Cloud, CheckCircle, XCircle, RefreshCw, ExternalLink, Shield, DollarSign } from 'lucide-react';
-import { useApi, apiPost } from '@/hooks/use-api';
+import { Cloud, CheckCircle, XCircle, RefreshCw, Shield, DollarSign, AlertTriangle } from 'lucide-react';
+import { apiPost } from '@/hooks/use-api';
 import { useIntegrationsCtx } from '@/contexts/IntegrationsContext';
+import { IntegrationStatus } from '@/components/integrations/IntegrationStatus';
 import { clsx } from 'clsx';
 
 export default function AWSIntegration() {
@@ -14,7 +15,10 @@ export default function AWSIntegration() {
   // ── Global context — no extra GET /integrations needed ────────────────────
   const { integrations, refetch } = useIntegrationsCtx();
   const awsIntegrations = integrations.filter((i) => i.provider === 'aws');
-  const connected = awsIntegrations.filter((i) => i.status === 'connected');
+  // An integration is "configured" if it exists and wasn't explicitly disconnected.
+  // We show connected accounts for all non-disconnected statuses so users can see
+  // the integration exists even when credentials are invalid or sync has failed.
+  const configured = awsIntegrations.filter((i) => i.status !== 'disconnected');
 
   const inputCls = 'w-full px-3 py-2.5 rounded-lg text-sm border outline-none focus:ring-2 focus:ring-blue-500/50 text-foreground font-mono';
   const inputStyle = { background: 'hsl(230 18% 9%)', borderColor: 'hsl(230 15% 14%)' } as React.CSSProperties;
@@ -84,24 +88,43 @@ export default function AWSIntegration() {
         ))}
       </div>
 
-      {/* Connected integrations */}
-      {awsIntegrations.length > 0 && (
+      {/* Configured integrations (all non-disconnected statuses) */}
+      {configured.length > 0 && (
         <div className="card-base mb-6">
-          <h2 className="text-sm font-semibold text-foreground mb-3">Connected Accounts</h2>
-          <div className="space-y-2">
-            {awsIntegrations.map((intg: any) => (
-              <div key={intg.id} className="flex items-center gap-3 p-3 rounded-lg bg-surface-1 border border-border/50">
-                <span className={clsx('w-2 h-2 rounded-full', intg.status === 'connected' ? 'bg-green-500' : intg.status === 'error' ? 'bg-red-500' : 'bg-yellow-500')} />
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-foreground">{intg.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {intg.status} · {intg.last_sync ? `Last sync: ${new Date(intg.last_sync).toLocaleString()}` : 'Never synced'}
+          <h2 className="text-sm font-semibold text-foreground mb-3">AWS Accounts</h2>
+          <div className="space-y-3">
+            {configured.map((intg: any) => (
+              <div key={intg.id} className="p-3 rounded-lg border"
+                style={{ background: 'hsl(230 18% 7%)', borderColor: 'hsl(230 15% 14%)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🟠</span>
+                    <div>
+                      <div className="text-sm font-medium text-foreground">{intg.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {intg.last_sync
+                          ? `Last sync: ${new Date(intg.last_sync).toLocaleString()}`
+                          : 'Never synced'}
+                      </div>
+                    </div>
                   </div>
+                  <IntegrationStatus status={intg.status} />
                 </div>
-                <button onClick={() => handleSync(intg.id)} disabled={syncing}
-                  className="text-xs px-3 py-1.5 rounded-md bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20">
-                  {syncing ? <RefreshCw className="w-3 h-3 animate-spin" /> : 'Sync Now'}
-                </button>
+                {/* Error message inline */}
+                {intg.error_message && (intg.status === 'credentials_invalid' || intg.status === 'error' || intg.status === 'sync_failed') && (
+                  <div className={clsx('flex items-start gap-2 mt-2 p-2 rounded text-xs',
+                    intg.status === 'sync_failed' ? 'bg-orange-500/8 text-orange-300' : 'bg-red-500/8 text-red-300')}>
+                    <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                    <span className="break-all">{intg.error_message}</span>
+                  </div>
+                )}
+                <div className="flex gap-2 mt-2.5">
+                  <button onClick={() => handleSync(intg.id)} disabled={syncing}
+                    className="text-xs px-3 py-1.5 rounded-md bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 flex items-center gap-1.5 disabled:opacity-50">
+                    <RefreshCw className={clsx('w-3 h-3', syncing && 'animate-spin')} />
+                    {syncing ? 'Syncing…' : 'Sync Now'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>

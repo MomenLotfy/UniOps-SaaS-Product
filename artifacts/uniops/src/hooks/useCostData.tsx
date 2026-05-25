@@ -20,20 +20,27 @@ import { toast } from 'sonner';
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface CostSummary {
-  // Frontend-facing fields (fixed in backend)
+  // ── Core cost data ────────────────────────────────────────────────────────
   mtd:          number;
   projected:    number;
   daily_avg:    number;
   ytd:          number;
-  connected:    boolean;
-  has_data:     boolean;
   prev_month:   number;
   trend_pct:    number;
-  // Integration health — drives precise UI state
-  integration_status: 'connected' | 'error' | 'pending' | 'disconnected' | null;
+  // ── Integration state flags ───────────────────────────────────────────────
+  // connected:       credentials are cryptographically valid (status=connected|sync_failed)
+  // has_integration: ANY AWS integration record exists for this tenant
+  // has_data:        cost_metrics rows exist (may be from an older successful sync)
+  connected:       boolean;
+  has_integration: boolean;
+  has_data:        boolean;
+  // ── Integration health — drives precise UI state ──────────────────────────
+  // integration_status: "connected"|"sync_failed"|"credentials_invalid"|"pending"|null
+  // integration_error:  human-readable message from last failure
+  integration_status: 'connected' | 'sync_failed' | 'credentials_invalid' | 'error' | 'pending' | 'disconnected' | null;
   integration_error:  string | null;
   last_sync:          string | null;
-  // Legacy fields (kept for backwards compat)
+  // ── Legacy fields (kept for backwards compat) ─────────────────────────────
   total_cost:   number;
   mtd_cost:     number;
   forecast_eom: number;

@@ -135,14 +135,30 @@ class CostService(BaseService):
         )).scalar_one_or_none()
 
         intg_status = intg.status if intg else None
-        has_aws     = intg_status == "connected"
-        # has_data: there IS cost data even if integration is currently in error state
-        has_data    = total_all > 0
+
+        # ── "configured" = any non-null, non-disconnected status ─────────
+        # This drives whether the FinOps dashboard is shown at all.
+        # We intentionally include credentials_invalid and sync_failed:
+        # the user saved credentials → integration exists → show the dashboard.
+        CONFIGURED_STATUSES = {"connected", "sync_failed", "credentials_invalid", "pending", "error"}
+        has_integration = intg_status in CONFIGURED_STATUSES
+
+        # "connected" in the narrower sense: credentials are valid.
+        # sync_failed means credentials worked but AWS CE/EC2 API failed later.
+        VALID_CRED_STATUSES = {"connected", "sync_failed"}
+        has_aws = intg_status in VALID_CRED_STATUSES
+
+        # has_data: non-zero cost records exist (could be from an earlier sync)
+        has_data = total_all > 0
+
+        # error message — only when credentials or sync failed
+        err_statuses = {"credentials_invalid", "sync_failed", "error"}
+        intg_error = intg.error_message if intg and intg_status in err_statuses else None
 
         logger.info(
             f"[CostSummary] tenant={tenant_id[:8]} "
-            f"intg_status={intg_status} has_data={has_data} "
-            f"mtd={round(mtd,2)} ytd={round(ytd,2)}"
+            f"intg_status={intg_status} has_integration={has_integration} "
+            f"has_data={has_data} mtd={round(mtd,2)} ytd={round(ytd,2)}"
         )
 
         return {
@@ -159,14 +175,19 @@ class CostService(BaseService):
             "projected":           round(projected, 2),
             "daily_avg":           round(daily_avg, 4),
             "ytd":                 round(ytd, 2),
-            "connected":           has_aws,
-            "has_data":            has_data,
             "prev_month":          round(prev_month, 2),
+            # ── Integration state flags ───────────────────────────────────
+            # connected:        credentials are valid (status=connected|sync_failed)
+            # has_integration:  any AWS integration exists (show dashboard container)
+            # has_data:         cost_metrics rows exist for this tenant
+            "connected":           has_aws,
+            "has_integration":     has_integration,
+            "has_data":            has_data,
             # ── Integration health — lets frontend show precise state ─────
-            # integration_status: "connected" | "error" | "pending" | None
-            # integration_error:  human-readable error string when status="error"
+            # integration_status: "connected"|"sync_failed"|"credentials_invalid"|"pending"|None
+            # integration_error:  human-readable error string from last failure
             "integration_status":  intg_status,
-            "integration_error":   intg.error_message if intg and intg_status == "error" else None,
+            "integration_error":   intg_error,
             "last_sync":           intg.last_sync.isoformat() if intg and intg.last_sync else None,
         }
 

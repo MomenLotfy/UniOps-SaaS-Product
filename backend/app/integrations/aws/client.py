@@ -20,20 +20,43 @@ class AWSClient(BaseIntegration):
             )
         return self._session
 
-    async def test_connection(self) -> bool:
+    async def verify_credentials_via_sts(self) -> bool:
+        """
+        Primary credential verification using STS GetCallerIdentity.
+        This API call:
+          - Requires ZERO IAM permissions (it always works for valid credentials)
+          - Fails immediately on wrong Access Key ID or Secret Access Key
+          - Should be used as the sole "are credentials valid?" check
+        Returns True only when credentials are cryptographically valid.
+        """
         from app.utils.logger import logger
-
-        # 1. Try STS (fastest, always works for valid credentials with any permissions)
         try:
             sts = self.get_session().client("sts")
             identity = sts.get_caller_identity()
             if identity.get("Account"):
-                logger.info(f"AWS test_connection OK via STS (account={identity['Account']})")
+                logger.info(
+                    f"[aws_sts_ok] account={identity['Account']} "
+                    f"arn={identity.get('Arn','?')[:60]}"
+                )
                 return True
+            return False
         except Exception as e:
-            logger.warning(f"AWS STS test failed (will try fallbacks): {e}")
+            err = str(e)
+            logger.warning(f"[aws_sts_failed] {err[:120]}")
+            return False
 
-        # 2. Try Cost Explorer — works for billing-focused IAM users
+    async def test_connection(self) -> bool:
+        """
+        Backward-compat: tries STS → CE → EC2 in order.
+        Prefer verify_credentials_via_sts() for explicit credential checks.
+        """
+        from app.utils.logger import logger
+
+        # 1. STS — fastest, zero permissions needed
+        if await self.verify_credentials_via_sts():
+            return True
+
+        # 2. Cost Explorer — for billing-focused IAM roles that may lack sts:GetCallerIdentity
         try:
             from datetime import date, timedelta
             ce = self.get_session().client("ce", region_name="us-east-1")
@@ -47,19 +70,19 @@ class AWSClient(BaseIntegration):
                 Granularity="MONTHLY",
                 Metrics=["UnblendedCost"],
             )
-            logger.info("AWS test_connection OK via Cost Explorer")
+            logger.info("[aws_ce_ok] test_connection OK via Cost Explorer")
             return True
         except Exception as e:
-            logger.warning(f"AWS Cost Explorer test failed (will try EC2): {e}")
+            logger.warning(f"[aws_ce_failed] {str(e)[:80]}")
 
-        # 3. Try EC2 DescribeRegions — available to virtually any AWS credential
+        # 3. EC2 DescribeRegions — available to almost any valid credential
         try:
             ec2 = self.get_session().client("ec2", region_name="us-east-1")
             ec2.describe_regions(Filters=[{"Name": "opt-in-status", "Values": ["opt-in-not-required"]}])
-            logger.info("AWS test_connection OK via EC2 DescribeRegions")
+            logger.info("[aws_ec2_ok] test_connection OK via EC2 DescribeRegions")
             return True
         except Exception as e:
-            logger.warning(f"AWS EC2 test failed: {e}")
+            logger.warning(f"[aws_ec2_failed] {str(e)[:80]}")
 
         return False
 
