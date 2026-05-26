@@ -1,6 +1,7 @@
 modules = ["nodejs-24", "python-3.11"]
 [nix]
 channel = "stable-25_05"
+packages = ["cargo", "glibcLocales", "libiconv", "libxcrypt", "openssl", "pkg-config", "postgresql", "rustc"]
 
 [agent]
 expertMode = true
@@ -43,7 +44,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload"
+args = "cd backend && /home/runner/workspace/.pythonlibs/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload"
 waitForPort = 3001
 
 [[ports]]
