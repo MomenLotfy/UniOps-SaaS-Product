@@ -14,7 +14,9 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     FRONTEND_URL: str = "http://localhost:5173"
 
-    DATABASE_URL: str = "postgresql+asyncpg://uniops:password@localhost:5432/uniops_db"
+    # Default uses "db" service name — works in Docker.
+    # Override with DATABASE_URL env var for Replit (sqlite) or production (postgres host).
+    DATABASE_URL: str = "postgresql+asyncpg://uniops:uniops_password@db:5432/uniops_db"
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 40
 
@@ -31,9 +33,11 @@ class Settings(BaseSettings):
                 v = re.sub(r"[?&]sslmode=[^&]*", "", v)
         return v
 
+    # Default uses "redis" service name — works in Docker.
+    # Override with REDIS_URL env var for Replit (localhost) or external Redis.
     REDIS_URL: str = "redis://redis:6379/0"
-    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
-    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
+    CELERY_BROKER_URL: str = "redis://redis:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://redis:6379/2"
 
     JWT_SECRET_KEY: str = "jwt-secret-key"
     JWT_ALGORITHM: str = "HS256"

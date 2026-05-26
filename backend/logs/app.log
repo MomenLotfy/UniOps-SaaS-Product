@@ -13014,3 +13014,76 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-05-26 14:09:56 | INFO     | app.core.scheduler:116 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
 2026-05-26 14:09:56 | INFO     | app.core.scheduler:125 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
 2026-05-26 14:10:00 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 40s
+2026-05-26 14:10:40 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 80s
+2026-05-26 14:11:47 | ERROR    | app.middleware.logging:23 - [80e4da03] GET /api/v1/alerts → ERR (1.09ms): Bearer token required
+2026-05-26 14:11:47 | ERROR    | app.middleware.logging:23 - [439150d3] GET /api/v1/alerts → ERR (1.41ms): Bearer token required
+2026-05-26 14:11:56 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-26 14:11:56 | INFO     | app.core.scheduler:79 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-26 14:12:00 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 160s
+2026-05-26 14:13:56 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-26 14:13:56 | INFO     | app.core.scheduler:79 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-26 14:14:40 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 300s
+2026-05-26 14:14:56 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-26 14:15:56 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-26 14:15:56 | INFO     | app.core.scheduler:79 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-26 14:17:56 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-26 14:17:56 | INFO     | app.core.scheduler:79 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-26 14:19:40 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 300s
+2026-05-26 14:19:56 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-26 14:19:56 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-26 14:19:56 | INFO     | app.core.scheduler:79 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-26 14:20:49 | ERROR    | app.middleware.logging:23 - [549104bc] GET /api/v1/alerts → ERR (1.13ms): Bearer token required
+2026-05-26 14:20:49 | ERROR    | app.middleware.logging:23 - [c8961da4] GET /api/v1/alerts → ERR (1.11ms): Bearer token required
+2026-05-26 14:20:53 | INFO     | app.main:73 - Shutting down...
+2026-05-26 14:20:53 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-26 14:20:53 | INFO     | app.core.scheduler:56 - Scheduler stopped
+2026-05-26 14:20:55 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-26 14:20:55 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-26 14:20:55 | INFO     | app.main:33 - Database initialized
+2026-05-26 14:20:55 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-26 14:20:55 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-26 14:20:55 | INFO     | app.core.scheduler:40 - Scheduler started 6 periodic tasks
+2026-05-26 14:20:55 | INFO     | app.main:39 - Background scheduler started
+2026-05-26 14:20:55 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-26 14:20:55 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-05-26 14:20:55 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 5s
+2026-05-26 14:21:00 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 10s
+2026-05-26 14:21:10 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 20s
+2026-05-26 14:21:25 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-26 14:21:25 | INFO     | app.core.scheduler:79 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-26 14:21:25 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-26 14:21:25 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=0
+2026-05-26 14:21:25 | INFO     | app.core.scheduler:125 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-26 14:21:25 | INFO     | app.core.scheduler:116 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-26 14:21:25 | INFO     | app.tasks.sync_ml_insights:50 - [sync_ml] No tenants found — skipping
+2026-05-26 14:21:25 | INFO     | app.core.scheduler:142 - Scheduled ML sync: {'tenants': 0, 'predictions': 0, 'patterns': 0, 'recommendations': 0}
+2026-05-26 14:21:30 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 40s
+2026-05-26 14:21:52 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-26 14:22:10 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 80s
+2026-05-26 14:23:20 | INFO     | app.main:73 - Shutting down...
+2026-05-26 14:23:20 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-05-26 14:23:20 | INFO     | app.core.scheduler:56 - Scheduler stopped
+2026-05-26 14:23:22 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-26 14:23:23 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-26 14:23:23 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-26 14:23:23 | INFO     | app.main:33 - Database initialized
+2026-05-26 14:23:23 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-26 14:23:23 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-26 14:23:23 | INFO     | app.core.scheduler:40 - Scheduler started 6 periodic tasks
+2026-05-26 14:23:23 | INFO     | app.main:39 - Background scheduler started
+2026-05-26 14:23:23 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-26 14:23:23 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-05-26 14:23:23 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 5s
+2026-05-26 14:23:28 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 10s
+2026-05-26 14:23:38 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 20s
+2026-05-26 14:23:39 | ERROR    | app.middleware.logging:23 - [173b30ce] GET /api/v1/alerts → ERR (5.19ms): Bearer token required
+2026-05-26 14:23:39 | ERROR    | app.middleware.logging:23 - [34dafd8a] GET /api/v1/alerts → ERR (0.99ms): Bearer token required
+2026-05-26 14:23:54 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-26 14:23:54 | INFO     | app.core.scheduler:79 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-26 14:23:54 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-26 14:23:54 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=0
+2026-05-26 14:23:54 | INFO     | app.core.scheduler:116 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-26 14:23:54 | INFO     | app.core.scheduler:125 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-26 14:23:54 | INFO     | app.tasks.sync_ml_insights:50 - [sync_ml] No tenants found — skipping
+2026-05-26 14:23:54 | INFO     | app.core.scheduler:142 - Scheduled ML sync: {'tenants': 0, 'predictions': 0, 'patterns': 0, 'recommendations': 0}
+2026-05-26 14:23:58 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 40s
