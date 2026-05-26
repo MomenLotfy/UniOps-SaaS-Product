@@ -5,13 +5,13 @@ services:
   celery_worker:
 
   celery_beat:
-    profiles: ["disabled"]
+    profiles: [""]
 
   flower:
     profiles: ["disabled"]
 
   prometheus:
-    profiles: ["disabled"]
+    profiles: [""]
 
   grafana:
-    profiles: ["disabled"]
+    profiles: [""]
