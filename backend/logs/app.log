@@ -13087,3 +13087,11 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-05-26 14:23:54 | INFO     | app.tasks.sync_ml_insights:50 - [sync_ml] No tenants found — skipping
 2026-05-26 14:23:54 | INFO     | app.core.scheduler:142 - Scheduled ML sync: {'tenants': 0, 'predictions': 0, 'patterns': 0, 'recommendations': 0}
 2026-05-26 14:23:58 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 40s
+2026-05-26 14:24:38 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 80s
+2026-05-26 14:25:54 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-26 14:25:54 | INFO     | app.core.scheduler:79 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-26 14:25:58 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 160s
+2026-05-26 14:27:54 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-26 14:27:54 | INFO     | app.core.scheduler:79 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-26 14:28:38 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 300s
+2026-05-26 14:28:54 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
