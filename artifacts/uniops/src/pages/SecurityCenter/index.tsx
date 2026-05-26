@@ -585,10 +585,18 @@ export default function SecurityCenter() {
   const [actionLoading, setActionLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
 
-  const showFeedback = (ok: boolean, msg: string) => {
+  // ── Batch scan state ──────────────────────────────────────────────────────
+  interface BatchRepo { scan_id: string; repo_name: string; status: string; critical: number; high: number; score?: number }
+  interface BatchScan { batchId: string; total: number; completed: number; failed: number; active: number; allDone: boolean; repos: BatchRepo[] }
+  const [batchScan, setBatchScan]           = useState<BatchScan | null>(null);
+  const [batchLoading, setBatchLoading]     = useState(false);
+  const [batchPollRef, setBatchPollRef]     = useState<ReturnType<typeof setInterval> | null>(null);
+  const [showBatchPanel, setShowBatchPanel] = useState(false);
+
+  const showFeedback = useCallback((ok: boolean, msg: string) => {
     setFeedback({ ok, msg });
     setTimeout(() => setFeedback(null), 5000);
-  };
+  }, []);
 
   // After scan completes, refetch all repo-scoped queries.
   // Because selectedRepo is in this parent, the paths already include repo_id,
@@ -606,6 +614,59 @@ export default function SecurityCenter() {
     await new Promise(r => setTimeout(r, 800));
     setIsRefreshing(false);
   }, [handleScanComplete]);
+
+  // ── Batch scan handlers (defined after handleScanComplete to avoid TDZ) ───
+  const pollBatch = useCallback(async (batchId: string) => {
+    try {
+      const res = await apiClient.get<any>(`/security/scan/batch/${batchId}`);
+      const d = res?.data ?? res;
+      const parsed: BatchScan = {
+        batchId,
+        total:     d.total     ?? 0,
+        completed: d.completed ?? 0,
+        failed:    d.failed    ?? 0,
+        active:    d.active    ?? 0,
+        allDone:   d.all_done  ?? false,
+        repos:     d.repos     ?? [],
+      };
+      setBatchScan(parsed);
+      if (parsed.allDone) {
+        setBatchPollRef(prev => { if (prev) clearInterval(prev); return null; });
+        showFeedback(true, `Batch scan done — ${parsed.completed}/${parsed.total} repos scanned. Vuln forecast updated.`);
+        setTimeout(handleScanComplete, 1500);
+      }
+    } catch { /* non-fatal poll error */ }
+  }, [handleScanComplete, showFeedback]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleScanAll = useCallback(async () => {
+    setBatchLoading(true);
+    setBatchScan(null);
+    setShowBatchPanel(true);
+    try {
+      const res = await apiPost<any>('/security/scan/batch', { max_repos: 5 });
+      const d = res?.data ?? res;
+      const batchId: string = d.batch_id ?? d.batchId;
+      const total: number   = d.total ?? 0;
+      setBatchScan({
+        batchId, total, completed: 0, failed: 0, active: total, allDone: false,
+        repos: (d.queued ?? []).map((q: any) => ({
+          scan_id: q.scan_id, repo_name: q.repo_name, status: 'queued', critical: 0, high: 0,
+        })),
+      });
+      const interval = setInterval(() => pollBatch(batchId), 6000);
+      setBatchPollRef(interval);
+    } catch (err: any) {
+      showFeedback(false, err?.message ?? 'Failed to start batch scan');
+      setShowBatchPanel(false);
+    } finally {
+      setBatchLoading(false);
+    }
+  }, [pollBatch, showFeedback]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => { if (batchPollRef) clearInterval(batchPollRef); };
+  }, [batchPollRef]);
 
   const handleConfirmThreat = async () => {
     if (!confirmThreat) return;
@@ -726,7 +787,24 @@ export default function SecurityCenter() {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {canAct && (
+            <button
+              onClick={handleScanAll}
+              disabled={batchLoading || (batchScan !== null && !batchScan.allDone)}
+              className={clsx('action-btn-primary flex items-center gap-2 text-xs',
+                (batchLoading || (batchScan !== null && !batchScan.allDone)) && 'opacity-60 cursor-not-allowed')}
+              title="Scan top 5 repos by language priority and update the vuln forecast"
+            >
+              {batchLoading ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" />Starting…</>
+              ) : batchScan && !batchScan.allDone ? (
+                <><Activity className="w-3.5 h-3.5 animate-pulse" />Scanning {batchScan.completed}/{batchScan.total}…</>
+              ) : (
+                <><Zap className="w-3.5 h-3.5" />Scan All Repos</>
+              )}
+            </button>
+          )}
           <button className="action-btn" onClick={() => {
             const csvThreats = [
               ['ID', 'Severity', 'Status', 'Title', 'Repo', 'MITRE', 'Created'],
@@ -758,6 +836,81 @@ export default function SecurityCenter() {
           onViewResults={(t) => setTab(t as Tab)}
         />
       )}
+
+      {/* ── Batch Scan Progress Panel ─────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showBatchPanel && batchScan && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-4 rounded-xl border overflow-hidden"
+            style={{ background: 'hsl(230 15% 8%)', borderColor: 'hsl(230 15% 16%)' }}
+          >
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  {batchScan.allDone
+                    ? <CheckCircle className="w-4 h-4 text-green-400" />
+                    : <Activity className="w-4 h-4 text-blue-400 animate-pulse" />
+                  }
+                  <span className="text-sm font-semibold text-white">
+                    {batchScan.allDone ? 'Batch scan complete' : 'Scanning repositories…'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {batchScan.completed + batchScan.failed}/{batchScan.total} done
+                  </span>
+                </div>
+                <button onClick={() => setShowBatchPanel(false)}
+                  className="text-gray-500 hover:text-white transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Progress bar */}
+              <div className="w-full h-1.5 rounded-full mb-3 overflow-hidden" style={{ background: 'hsl(230 15% 16%)' }}>
+                <motion.div
+                  className={clsx('h-full rounded-full', batchScan.allDone && batchScan.failed === 0 ? 'bg-green-500' : batchScan.allDone ? 'bg-yellow-500' : 'bg-blue-500')}
+                  animate={{ width: `${batchScan.total > 0 ? Math.round(((batchScan.completed + batchScan.failed) / batchScan.total) * 100) : 0}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+
+              {/* Per-repo rows */}
+              <div className="space-y-1.5">
+                {batchScan.repos.map(r => (
+                  <div key={r.scan_id} className="flex items-center gap-3 text-xs">
+                    <div className="w-3.5 h-3.5 flex-shrink-0">
+                      {r.status === 'completed' && <CheckCircle className="w-3.5 h-3.5 text-green-400" />}
+                      {r.status === 'failed'    && <XCircle    className="w-3.5 h-3.5 text-red-400" />}
+                      {!['completed','failed'].includes(r.status) && (
+                        <Loader2 className={clsx('w-3.5 h-3.5', r.status === 'queued' ? 'text-gray-500' : 'text-blue-400 animate-spin')} />
+                      )}
+                    </div>
+                    <span className="flex-1 truncate text-gray-300 font-mono">{r.repo_name}</span>
+                    <span className={clsx('text-xs capitalize', SCAN_STATUS_COLOR[r.status] ?? 'text-gray-400')}>
+                      {SCAN_STATUS_LABEL[r.status] ?? r.status}
+                    </span>
+                    {r.status === 'completed' && (r.critical > 0 || r.high > 0) && (
+                      <span className="flex items-center gap-1 text-gray-500">
+                        {r.critical > 0 && <span className="text-red-400">{r.critical}C</span>}
+                        {r.high    > 0 && <span className="text-orange-400">{r.high}H</span>}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {batchScan.allDone && (
+                <p className="mt-3 text-xs text-green-400 flex items-center gap-1.5">
+                  <Zap className="w-3 h-3" />
+                  ML vuln forecast updated from real scan results
+                </p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Repo isolation banner — shown when all-repo mode is active ──────── */}
       {!selectedRepo && (
