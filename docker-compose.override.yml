@@ -7,11 +7,3 @@ services:
   celery_beat:
     profiles: [""]
 
-  flower:
-    profiles: ["disabled"]
-
-  prometheus:
-    profiles: [""]
-
-  grafana:
-    profiles: [""]

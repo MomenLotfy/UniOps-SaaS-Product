@@ -72,6 +72,21 @@ services:
       - celery_beat_data:/app/beat
     command: ["celery", "-A", "app.tasks.worker", "beat", "--loglevel=info", "--scheduler", "celery.beat.PersistentScheduler", "--schedule", "/app/beat/celerybeat-schedule"]
 
+  # ── Frontend ─────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: artifacts/uniops/Dockerfile
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:8000
+    volumes:
+      - ./artifacts/uniops/src:/app/src
+      - ./artifacts/uniops/public:/app/public
+
 volumes:
   postgres_data:
   models_data:
