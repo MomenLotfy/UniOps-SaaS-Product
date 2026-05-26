@@ -12987,3 +12987,30 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-05-26 04:17:58 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 2 entries repo_id=None
 2026-05-26 04:17:58 | INFO     | app.middleware.logging:15 - [2359e579] GET /api/v1/security/score → 200 (19.45ms)
 2026-05-26 04:17:58 | INFO     | app.middleware.logging:15 - [4ddbff83] GET /api/v1/security/scan-history → 200 (11.04ms)
+2026-05-26 14:08:21 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-26 14:09:22 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-26 14:09:24 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-05-26 14:09:24 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-05-26 14:09:25 | INFO     | app.main:33 - Database initialized
+2026-05-26 14:09:25 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-05-26 14:09:25 | INFO     | app.integrations.kubernetes.watcher:241 - Started 0 K8s watchers on startup
+2026-05-26 14:09:25 | INFO     | app.core.scheduler:40 - Scheduler started 6 periodic tasks
+2026-05-26 14:09:25 | INFO     | app.main:39 - Background scheduler started
+2026-05-26 14:09:25 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-05-26 14:09:25 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-05-26 14:09:25 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 5s
+2026-05-26 14:09:27 | INFO     | app.middleware.logging:15 - [18a9101e] GET / → 404 (0.73ms)
+2026-05-26 14:09:27 | INFO     | app.middleware.logging:15 - [539e676a] GET /favicon.ico → 404 (0.93ms)
+2026-05-26 14:09:30 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 10s
+2026-05-26 14:09:40 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 20s
+2026-05-26 14:09:43 | ERROR    | app.middleware.logging:23 - [d311f6fd] GET /api/v1/alerts → ERR (8.11ms): Bearer token required
+2026-05-26 14:09:43 | ERROR    | app.middleware.logging:23 - [f8e898a5] GET /api/v1/alerts → ERR (1.34ms): Bearer token required
+2026-05-26 14:09:56 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-05-26 14:09:56 | INFO     | app.core.scheduler:79 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-05-26 14:09:56 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-05-26 14:09:56 | INFO     | app.tasks.sync_ml_insights:50 - [sync_ml] No tenants found — skipping
+2026-05-26 14:09:56 | INFO     | app.core.scheduler:142 - Scheduled ML sync: {'tenants': 0, 'predictions': 0, 'patterns': 0, 'recommendations': 0}
+2026-05-26 14:09:56 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=0
+2026-05-26 14:09:56 | INFO     | app.core.scheduler:116 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-05-26 14:09:56 | INFO     | app.core.scheduler:125 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-05-26 14:10:00 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 40s
