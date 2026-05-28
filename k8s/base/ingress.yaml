@@ -31,9 +31,10 @@ metadata:
     # File uploads up to 50MB (scan reports, ML datasets)
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
 spec:
+  ingressClassName: nginx
   # NOTE: TLS section is added by prod overlay via strategic merge patch
   rules:
-    - host: uniops.example.com
+    - host: uniops.local
       http:
         paths:
           - path: /api
