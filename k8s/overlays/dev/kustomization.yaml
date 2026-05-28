@@ -1,112 +1,27 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# ─────────────────────────────────────────────
+# Namespace (single source of truth)
+# ─────────────────────────────────────────────
 namespace: uniops-dev
 
+# ─────────────────────────────────────────────
+# Base resources
+# ─────────────────────────────────────────────
 resources:
   - ../../base
-  - namespace-dev.yaml      # creates the uniops-dev namespace
-
-# Dev: single replica to save resources
-patches:
-  - patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 1
-    target:
-      kind: Deployment
-      name: backend
-  - patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 1
-    target:
-      kind: Deployment
-      name: celery-worker
-  - patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 1
-    target:
-      kind: Deployment
-      name: frontend
-  - patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 1
-    target:
-      kind: Deployment
-      name: node-api
-  # Dev: smaller resource limits
-  - patch: |-
-      - op: replace
-        path: /spec/template/spec/containers/0/resources/limits/memory
-        value: "512Mi"
-      - op: replace
-        path: /spec/template/spec/containers/0/resources/requests/memory
-        value: "256Mi"
-    target:
-      kind: Deployment
-      name: backend
-  # Dev: remove docker socket mount from celery (not needed locally)
-  - patch: |-
-      - op: remove
-        path: /spec/template/spec/volumes/1
-      - op: remove
-        path: /spec/template/spec/containers/0/volumeMounts/1
-    target:
-      kind: Deployment
-      name: celery-worker
-  # Dev ingress: no TLS, no cert-manager, use nip.io for local access
-  - patch: |-
-      - op: remove
-        path: /spec/tls
-      - op: replace
-        path: /metadata/annotations
-        value:
-          kubernetes.io/ingress.class: nginx
-          nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-          nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-          nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
-          nginx.ingress.kubernetes.io/configuration-snippet: |
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-      - op: replace
-        path: /spec/rules/0/host
-        value: "uniops.127.0.0.1.nip.io"
-    target:
-      kind: Ingress
-      name: uniops-ingress
-  # Dev: disable HPA (no metrics-server needed)
-  - patch: |-
-      - op: replace
-        path: /spec/minReplicas
-        value: 1
-      - op: replace
-        path: /spec/maxReplicas
-        value: 1
-    target:
-      kind: HorizontalPodAutoscaler
-  # Dev: ReadWriteOnce for models PVC (ReadWriteMany needs EFS/NFS, not available in minikube/kind)
-  - patch: |-
-      - op: replace
-        path: /spec/accessModes
-        value:
-          - ReadWriteOnce
-    target:
-      kind: PersistentVolumeClaim
-      name: models-pvc
-
-# Dev: use :dev image tags
+# ─────────────────────────────────────────────
+# Images (dev tags)
+# ─────────────────────────────────────────────
 images:
-  - name: ghcr.io/your-org/uniops-backend
+  - name: uniops-backend
     newTag: dev
-  - name: ghcr.io/your-org/uniops-frontend
+  - name: uniops-frontend
     newTag: dev
-  - name: ghcr.io/your-org/uniops-node-api
-    newTag: dev
-
-# Dev: override config values
+# ─────────────────────────────────────────────
+# ConfigMap overrides (FIXED: no namespace here)
+# ─────────────────────────────────────────────
 configMapGenerator:
   - name: uniops-config
     behavior: merge
@@ -114,6 +29,211 @@ configMapGenerator:
       - APP_ENV=development
       - DEBUG=true
       - LOG_LEVEL=DEBUG
-      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://uniops.127.0.0.1.nip.io
+      - CORS_ORIGINS=["http://localhost:5173","http://localhost:3000","http://localhost:8000","http://uniops.127.0.0.1.nip.io"]
       - FRONTEND_URL=http://uniops.127.0.0.1.nip.io
       - RATE_LIMIT_PER_MINUTE=1000
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - REFRESH_TOKEN_EXPIRE_DAYS=30
+      - DATABASE_POOL_SIZE=5
+      - DATABASE_MAX_OVERFLOW=10
+
+# ─────────────────────────────────────────────
+# Strategic patches
+# ─────────────────────────────────────────────
+patches:
+
+  # ── Namespace labels for dev overlay ─────────────────
+  - patch: |-
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: uniops
+        labels:
+          environment: dev
+
+  - patch: |-
+      apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: uniops-migrate
+        namespace: uniops
+      $patch: delete
+    target:
+      kind: Job
+      name: uniops-migrate
+
+  # ── Replicas = 1 for all services ─────────────────────
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: backend
+        namespace: uniops
+      spec:
+        replicas: 1
+
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: frontend
+        namespace: uniops
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: frontend
+                imagePullPolicy: IfNotPresent
+
+
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: celery-worker
+        namespace: uniops
+      spec:
+        replicas: 1
+
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: celery-beat
+        namespace: uniops
+      spec:
+        replicas: 1
+
+  # ── HPA disabled (dev mode) ───────────────────────────
+  - patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: backend-hpa
+        namespace: uniops
+      spec:
+        minReplicas: 1
+        maxReplicas: 1
+
+  - patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: celery-worker-hpa
+        namespace: uniops
+      spec:
+        minReplicas: 1
+        maxReplicas: 1
+
+  # ── PVC tweak for local dev ───────────────────────────
+  - patch: |-
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: models-pvc
+        namespace: uniops
+      spec:
+        accessModes:
+          - ReadWriteOnce
+
+  # ── Backend resources (dev limits) ─────────────────────
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: backend
+        namespace: uniops
+      spec:
+        template:
+          spec:
+            containers:
+              - name: backend
+                imagePullPolicy: IfNotPresent
+                resources:
+                  requests:
+                    cpu: 100m
+                    memory: 256Mi
+                  limits:
+                    cpu: 500m
+                    memory: 512Mi
+
+  # ── Celery worker tuning ──────────────────────────────
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: celery-worker
+        namespace: uniops
+      spec:
+        template:
+          spec:
+            containers:
+              - name: celery-worker
+                imagePullPolicy: IfNotPresent
+                command:
+                  - celery
+                  - -A
+                  - app.tasks.worker
+                  - worker
+                  - --loglevel=debug
+                  - --concurrency=1
+                  - -Q
+                  - default,scans
+                  - --without-heartbeat
+                  - --without-gossip
+                resources:
+                  requests:
+                    cpu: 100m
+                    memory: 256Mi
+                  limits:
+                    cpu: 500m
+                    memory: 512Mi
+
+  # ── Ingress (nip.io local dev) ────────────────────────
+  - patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: uniops-ingress
+        namespace: uniops
+        annotations:
+          kubernetes.io/ingress.class: nginx
+          nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+          nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+          nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+      spec:
+        rules:
+          - host: uniops.127.0.0.1.nip.io
+            http:
+              paths:
+                - path: /api
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: backend
+                      port:
+                        name: http
+                - path: /ws
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: backend
+                      port:
+                        name: http
+                - path: /webhooks
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: backend
+                      port:
+                        name: http
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: frontend
+                      port:
+                        name: http

@@ -1,14 +1,33 @@
-##############################################################################
-# ServiceMonitor — Prometheus Operator scrapes the backend
-# Requires: kube-prometheus-stack in monitoring namespace
-##############################################################################
+################################################################################
+# Monitoring Stack — Prometheus Operator CRDs
+#
+# Prerequisites (install kube-prometheus-stack once per cluster):
+#   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+#   helm repo update
+#   helm upgrade --install kube-prometheus-stack \
+#     prometheus-community/kube-prometheus-stack \
+#     --namespace monitoring --create-namespace \
+#     --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false \
+#     --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+#
+# Apply this file AFTER the main overlay:
+#   kubectl apply -k k8s/monitoring
+################################################################################
+
+################################################################################
+# ServiceMonitor — backend /metrics scraping
+# Prometheus Operator discovers this and auto-configures scrape targets.
+# Backend must expose Prometheus metrics (prometheus-fastapi-instrumentator).
+################################################################################
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: uniops-backend
   namespace: monitoring
   labels:
-    release: prometheus
+    app.kubernetes.io/name: uniops-backend-monitor
+    # This label must match the Prometheus Operator's serviceMonitorSelector
+    release: kube-prometheus-stack
 spec:
   namespaceSelector:
     matchNames:
@@ -20,67 +39,181 @@ spec:
     - port: http
       path: /metrics
       interval: 15s
+      scrapeTimeout: 10s
       scheme: http
 
 ---
-##############################################################################
-# PrometheusRule — alerting rules
-##############################################################################
+################################################################################
+# PrometheusRule — Alert Definitions
+# Prometheus evaluates these every 30s.
+# Alerts fire → Alertmanager routes to Slack/PagerDuty/email.
+################################################################################
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: uniops-alerts
   namespace: monitoring
   labels:
-    release: prometheus
+    app.kubernetes.io/name: uniops-alerts
+    release: kube-prometheus-stack
 spec:
   groups:
-    - name: uniops.backend
+    # ── Group 1: Service Availability ─────────────────────────────────────────
+    - name: uniops.availability
       interval: 30s
       rules:
         - alert: UniOpsBackendDown
-          expr: up{job="uniops-backend"} == 0
+          # up == 0 means Prometheus can't scrape the target
+          expr: up{job="uniops-backend", namespace="uniops"} == 0
           for: 1m
           labels:
             severity: critical
+            team: platform
           annotations:
-            summary: "UniOps backend is DOWN"
-            description: "Backend pod unreachable for > 1 minute"
+            summary: "UniOps Backend is DOWN"
+            description: "Backend pod {{ $labels.pod }} in {{ $labels.namespace }} has been unreachable for > 1 minute."
+            runbook: "https://wiki.yourdomain.com/runbooks/backend-down"
 
+        - alert: UniOpsPostgresDown
+          # kube_statefulset_status_ready_replicas comes from kube-state-metrics
+          expr: kube_statefulset_status_ready_replicas{statefulset="postgres", namespace="uniops"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "UniOps PostgreSQL is DOWN"
+            description: "PostgreSQL StatefulSet has 0 ready replicas for > 1 minute."
+            runbook: "https://wiki.yourdomain.com/runbooks/postgres-down"
+
+        - alert: UniOpsRedisDown
+          expr: kube_statefulset_status_ready_replicas{statefulset="redis", namespace="uniops"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "UniOps Redis is DOWN"
+            description: "Redis StatefulSet has 0 ready replicas for > 1 minute."
+
+        - alert: UniOpsCeleryWorkerDown
+          expr: kube_deployment_status_replicas_ready{deployment="celery-worker", namespace="uniops"} == 0
+          for: 2m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "UniOps Celery workers are DOWN"
+            description: "All Celery worker pods are unavailable. Background tasks are not being processed."
+
+    # ── Group 2: Error Rates ──────────────────────────────────────────────────
+    - name: uniops.errors
+      interval: 30s
+      rules:
         - alert: UniOpsHighErrorRate
+          # 5xx error fraction > 5% sustained for 5 minutes
           expr: |
-            rate(http_requests_total{job="uniops-backend",status=~"5.."}[5m])
-            / rate(http_requests_total{job="uniops-backend"}[5m]) > 0.05
+            (
+              rate(http_requests_total{namespace="uniops", status=~"5.."}[5m])
+              /
+              rate(http_requests_total{namespace="uniops"}[5m])
+            ) > 0.05
           for: 5m
           labels:
             severity: warning
+            team: platform
           annotations:
-            summary: "UniOps error rate > 5%"
-            description: "HTTP 5xx rate is {{ $value | humanizePercentage }}"
+            summary: "UniOps Backend high error rate: {{ $value | humanizePercentage }}"
+            description: "More than 5% of HTTP requests are returning 5xx errors over the last 5 minutes."
 
-        - alert: UniOpsHighLatency
+        - alert: UniOpsVeryHighErrorRate
+          expr: |
+            (
+              rate(http_requests_total{namespace="uniops", status=~"5.."}[5m])
+              /
+              rate(http_requests_total{namespace="uniops"}[5m])
+            ) > 0.20
+          for: 2m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "UniOps Backend CRITICAL error rate: {{ $value | humanizePercentage }}"
+            description: "More than 20% of HTTP requests are returning 5xx errors."
+
+    # ── Group 3: Latency ──────────────────────────────────────────────────────
+    - name: uniops.latency
+      interval: 30s
+      rules:
+        - alert: UniOpsHighLatencyP95
+          # p95 response time > 2 seconds
           expr: |
             histogram_quantile(0.95,
-              rate(http_request_duration_seconds_bucket{job="uniops-backend"}[5m])
+              rate(http_request_duration_seconds_bucket{namespace="uniops"}[5m])
             ) > 2.0
           for: 5m
           labels:
             severity: warning
+            team: platform
           annotations:
-            summary: "UniOps p95 latency > 2s"
+            summary: "UniOps Backend p95 latency is {{ $value | humanizeDuration }}"
+            description: "95th percentile response time exceeds 2 seconds. Users are experiencing slow responses."
 
-        - alert: UniOpsPostgresDown
-          expr: up{job="postgres"} == 0
-          for: 1m
+        - alert: UniOpsHighLatencyP99
+          # p99 response time > 5 seconds
+          expr: |
+            histogram_quantile(0.99,
+              rate(http_request_duration_seconds_bucket{namespace="uniops"}[5m])
+            ) > 5.0
+          for: 5m
           labels:
             severity: critical
+            team: platform
           annotations:
-            summary: "PostgreSQL is unreachable"
+            summary: "UniOps Backend p99 latency is {{ $value | humanizeDuration }}"
+            description: "99th percentile response time exceeds 5 seconds."
 
-        - alert: UniOpsCeleryWorkerDown
-          expr: celery_workers_total == 0
-          for: 2m
+    # ── Group 4: Kubernetes Resources ─────────────────────────────────────────
+    - name: uniops.kubernetes
+      interval: 60s
+      rules:
+        - alert: UniOpsPodCrashLooping
+          expr: |
+            rate(kube_pod_container_status_restarts_total{namespace="uniops"}[15m]) > 0
+          for: 5m
           labels:
             severity: warning
+            team: platform
           annotations:
-            summary: "No Celery workers — scans and sync tasks will not run"
+            summary: "Pod {{ $labels.pod }} is crash-looping"
+            description: "Container {{ $labels.container }} in pod {{ $labels.pod }} has been restarting repeatedly."
+
+        - alert: UniOpsPVCLowSpace
+          # PVC usage > 85%
+          expr: |
+            (
+              kubelet_volume_stats_used_bytes{namespace="uniops"}
+              /
+              kubelet_volume_stats_capacity_bytes{namespace="uniops"}
+            ) > 0.85
+          for: 10m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full"
+            description: "Persistent volume is running low on disk space. Expand the PVC before it fills."
+
+        - alert: UniOpsHPAMaxed
+          # HPA has reached its maximum replica count
+          expr: |
+            kube_horizontalpodautoscaler_status_current_replicas{namespace="uniops"}
+            ==
+            kube_horizontalpodautoscaler_spec_max_replicas{namespace="uniops"}
+          for: 10m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "HPA {{ $labels.horizontalpodautoscaler }} has reached maximum replicas"
+            description: "The autoscaler is maxed out. Consider increasing maxReplicas or investigating the load."

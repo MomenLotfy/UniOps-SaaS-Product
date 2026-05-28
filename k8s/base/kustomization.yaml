@@ -1,22 +1,34 @@
+################################################################################
+# Base Kustomization — Source of truth for ALL UniOps k8s resources
+#
+# Usage: NEVER apply base directly. Always use an overlay:
+#   kubectl apply -k k8s/overlays/dev
+#   kubectl apply -k k8s/overlays/prod
+#
+# Resources are applied in this order by the API server.
+# namespace.yaml must come first — all other resources need it to exist.
+################################################################################
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 namespace: uniops
 
 resources:
-  - namespace.yaml
-  - configmap.yaml
-  - secret.yaml
-  - postgres.yaml
-  - redis.yaml
-  - backend.yaml
-  - node-api.yaml
-  - celery.yaml
-  - frontend.yaml
-  - ingress.yaml
-  - hpa.yaml
-  - network-policy.yaml
+  - namespace.yaml        # 1. Namespace + ResourceQuota + LimitRange
+  - serviceaccount.yaml   # 2. ServiceAccounts + RBAC (Role + RoleBindings)
+  - configmap.yaml        # 3. Non-sensitive runtime config
+  - secret.yaml           # 4. Secret template (replaced by setup-secrets.sh)
+  - postgres.yaml         # 5. StatefulSet + Service
+  - redis.yaml            # 6. StatefulSet + Service
+  - backend.yaml          # 7. Migration Job + Deployment + PVC + Service
+  - celery.yaml           # 9. Worker Deployment + Beat Deployment + PVC
+  - frontend.yaml         # 10. Deployment + Service
+  - ingress.yaml          # 12. Ingress (TLS added by prod overlay)
+  - hpa.yaml              # 12. HPA for backend + celery-worker
+  - pdb.yaml              # 13. PodDisruptionBudgets for all services
+  - network-policy.yaml   # 14. NetworkPolicies (default-deny + whitelists)
 
+# Common labels applied to ALL resources (metadata.labels)
 commonLabels:
   app.kubernetes.io/part-of: uniops
   app.kubernetes.io/managed-by: kustomize

@@ -1,8 +1,18 @@
+################################################################################
+# Monitoring Kustomization
+# Separate Kustomize root — applied independently after the main overlay.
+#
+# Apply: kubectl apply -k k8s/monitoring
+#
+# Requires kube-prometheus-stack installed in the "monitoring" namespace.
+# See monitoring.yaml header for install instructions.
+################################################################################
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Deploy into monitoring namespace (where Prometheus Operator runs)
-namespace: monitoring
-
 resources:
   - monitoring.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: uniops
+  app.kubernetes.io/managed-by: kustomize
