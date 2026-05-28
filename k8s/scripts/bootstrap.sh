@@ -423,7 +423,7 @@ ok "All 3 images built and pushed!"
 # ══════════════════════════════════════════════════════════════════════════════
 step "Creating Kubernetes secrets"
 
-NAMESPACE="uniops-dev"
+NAMESPACE="uniops"
 
 # Create namespace if it doesn't exist
 kubectl get namespace "$NAMESPACE" >/dev/null 2>&1 \
