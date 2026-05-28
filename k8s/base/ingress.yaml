@@ -1,13 +1,19 @@
-##############################################################################
-# Ingress — nginx-ingress-controller (production, TLS via cert-manager)
+################################################################################
+# Ingress — nginx-ingress-controller
 #
-# Prerequisites:
+# Prerequisites (install once per cluster):
 #   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/
-#     controller-v1.10.0/deploy/static/provider/cloud/deploy.yaml
+#     controller-v1.10.1/deploy/static/provider/cloud/deploy.yaml
 #
-# For TLS (prod only): cert-manager.yaml is applied via prod overlay.
-# Dev overlay removes TLS and uses nip.io hostname.
-##############################################################################
+# TLS / cert-manager annotation are added ONLY in the prod overlay.
+# Dev overlay uses nip.io hostname + plain HTTP.
+#
+# Routing:
+#   /api/*      → backend:80 (FastAPI)
+#   /ws/*       → backend:80 (WebSocket — long timeout + Upgrade headers)
+#   /webhooks/* → backend:80 (GitHub / Stripe / GitLab webhooks)
+#   /*          → frontend:80 (React SPA — nginx)
+################################################################################
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -17,21 +23,15 @@ metadata:
     app.kubernetes.io/name: uniops-ingress
   annotations:
     kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # WebSocket support — required for /ws/* routes
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      proxy_set_header Upgrade $http_upgrade;
-      proxy_set_header Connection "upgrade";
+    # File uploads up to 50MB (scan reports, ML datasets)
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
-  tls:
-    - hosts:
-        - uniops.example.com
-      secretName: uniops-tls
+  # NOTE: TLS section is added by prod overlay via strategic merge patch
   rules:
     - host: uniops.example.com
       http:

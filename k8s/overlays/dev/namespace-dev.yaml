@@ -1,3 +1,7 @@
+################################################################################
+# Dev Namespace — separate from prod uniops namespace
+# Allows dev and prod to coexist on the same cluster safely
+################################################################################
 apiVersion: v1
 kind: Namespace
 metadata:

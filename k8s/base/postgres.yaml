@@ -1,6 +1,14 @@
-##############################################################################
-# PostgreSQL — StatefulSet (stable network identity + persistent storage)
-##############################################################################
+################################################################################
+# PostgreSQL 16 — StatefulSet
+# Stable pod identity (postgres-0), persistent volume, graceful shutdown.
+# Headless service provides DNS: postgres-0.postgres.uniops.svc.cluster.local
+#
+# Cloud storageClass options (uncomment ONE in overlays):
+#   EKS:  gp3
+#   GKE:  premium-rwo
+#   AKS:  managed-csi
+#   Kind: standard (default)
+################################################################################
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -22,12 +30,27 @@ spec:
         app.kubernetes.io/component: database
     spec:
       terminationGracePeriodSeconds: 60
+      # postgres user in alpine image is uid/gid 999
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: postgres
           image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5432
               name: postgres
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: false  # postgres writes to PGDATA
           env:
             - name: POSTGRES_USER
               valueFrom:
@@ -46,9 +69,14 @@ spec:
                   key: POSTGRES_DB
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
+            # Tune for container environment
+            - name: POSTGRES_INITDB_ARGS
+              value: "--encoding=UTF8 --locale=C"
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
+            - name: postgres-tmp
+              mountPath: /tmp
           resources:
             requests:
               cpu: 250m
@@ -58,32 +86,60 @@ spec:
               memory: 1Gi
           readinessProbe:
             exec:
-              command: ["sh", "-c", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1
             initialDelaySeconds: 10
             periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
             failureThreshold: 6
           livenessProbe:
             exec:
-              command: ["sh", "-c", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1
             initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
             failureThreshold: 3
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12   # 60s total startup budget
+      volumes:
+        - name: postgres-tmp
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: postgres-data
+        labels:
+          app.kubernetes.io/name: postgres
       spec:
         accessModes: ["ReadWriteOnce"]
         resources:
           requests:
             storage: 20Gi
+        # Uncomment ONE for your cloud (default = cluster default StorageClass):
         # storageClassName: gp3          # AWS EKS
         # storageClassName: premium-rwo  # GKE
         # storageClassName: managed-csi  # AKS
 
 ---
-##############################################################################
-# PostgreSQL — Headless Service (StatefulSet DNS + direct pod access)
-##############################################################################
+################################################################################
+# PostgreSQL — Headless Service
+# clusterIP: None → DNS A records → pod IPs directly (required for StatefulSet)
+# App connects via hostname "postgres" → routes to postgres-0
+################################################################################
 apiVersion: v1
 kind: Service
 metadata:
@@ -100,3 +156,4 @@ spec:
     - port: 5432
       targetPort: 5432
       name: postgres
+      protocol: TCP

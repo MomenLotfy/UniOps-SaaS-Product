@@ -1,3 +1,29 @@
+################################################################################
+# Production Overlay
+#
+# Apply:  kubectl apply -k k8s/overlays/prod
+# Delete: kubectl delete -k k8s/overlays/prod
+#
+# First-time cluster setup (run once):
+#   # 1. Install nginx ingress controller
+#   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.1/deploy/static/provider/cloud/deploy.yaml
+#   # 2. Install cert-manager
+#   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.0/cert-manager.yaml
+#   # 3. Install metrics-server (for HPA)
+#   kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+#   # 4. Create secrets (never committed to git)
+#   bash k8s/scripts/setup-secrets.sh prod
+#   # 5. Deploy
+#   kubectl apply -k k8s/overlays/prod
+#   kubectl apply -k k8s/monitoring
+#
+# Changes from base:
+#   - More replicas for HA
+#   - Pinned image tags (immutable — never run unknown code in prod)
+#   - Higher resource limits
+#   - TLS via cert-manager + Let's Encrypt
+#   - Stricter rate limiting and logging
+################################################################################
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -5,80 +31,221 @@ namespace: uniops
 
 resources:
   - ../../base
-  - ../../base/cert-manager.yaml   # ClusterIssuer — requires cert-manager installed
+  - ../../base/cert-manager.yaml    # ClusterIssuer — prod only
 
-# Prod: high availability replicas
-patches:
-  - patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 3
-    target:
-      kind: Deployment
-      name: backend
-  - patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 3
-    target:
-      kind: Deployment
-      name: celery-worker
-  - patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 2
-    target:
-      kind: Deployment
-      name: frontend
-  - patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 2
-    target:
-      kind: Deployment
-      name: node-api
-  # Prod: higher resource limits for backend
-  - patch: |-
-      - op: replace
-        path: /spec/template/spec/containers/0/resources/limits/memory
-        value: "2Gi"
-      - op: replace
-        path: /spec/template/spec/containers/0/resources/limits/cpu
-        value: "2000m"
-      - op: replace
-        path: /spec/template/spec/containers/0/resources/requests/memory
-        value: "512Mi"
-      - op: replace
-        path: /spec/template/spec/containers/0/resources/requests/cpu
-        value: "500m"
-    target:
-      kind: Deployment
-      name: backend
-  # Prod: pin to Always pull policy
-  - patch: |-
-      - op: replace
-        path: /spec/template/spec/containers/0/imagePullPolicy
-        value: Always
-    target:
-      kind: Deployment
-
-# Prod: pin to specific release tag — update before each release
+# ── Image tags: pinned to immutable release versions ─────────────────────────
+# IMPORTANT: Update these on every release
 images:
   - name: ghcr.io/your-org/uniops-backend
     newTag: "1.0.0"
   - name: ghcr.io/your-org/uniops-frontend
     newTag: "1.0.0"
-  - name: ghcr.io/your-org/uniops-node-api
-    newTag: "1.0.0"
 
-# Prod: production config overrides
+# ── Config overrides for prod ─────────────────────────────────────────────────
 configMapGenerator:
   - name: uniops-config
+    namespace: uniops
     behavior: merge
     literals:
       - APP_ENV=production
       - DEBUG=false
       - LOG_LEVEL=WARNING
+      # IMPORTANT: Replace with your real production domain
+      - CORS_ORIGINS=["https://uniops.yourdomain.com"]
+      - FRONTEND_URL=https://uniops.yourdomain.com
       - RATE_LIMIT_PER_MINUTE=60
-      - CORS_ORIGINS=https://uniops.example.com
-      - FRONTEND_URL=https://uniops.example.com
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - REFRESH_TOKEN_EXPIRE_DAYS=7
+      - DATABASE_POOL_SIZE=10
+      - DATABASE_MAX_OVERFLOW=20
+
+# ── Strategic Merge Patches ───────────────────────────────────────────────────
+patches:
+
+  # ── Backend: 3 replicas + higher resources ──────────────────────────────────
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: backend
+        namespace: uniops
+      spec:
+        replicas: 3
+        template:
+          spec:
+            containers:
+              - name: backend
+                imagePullPolicy: Always
+                resources:
+                  requests:
+                    cpu: 500m
+                    memory: 1Gi
+                  limits:
+                    cpu: 2000m
+                    memory: 2Gi
+
+  # ── Frontend: 2 replicas ────────────────────────────────────────────────────
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: frontend
+        namespace: uniops
+      spec:
+        replicas: 2
+        template:
+          spec:
+            containers:
+              - name: frontend
+                imagePullPolicy: Always
+
+  # ── Celery Worker: 3 replicas ───────────────────────────────────────────────
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: celery-worker
+        namespace: uniops
+      spec:
+        replicas: 3
+        template:
+          spec:
+            containers:
+              - name: celery-worker
+                imagePullPolicy: Always
+                resources:
+                  requests:
+                    cpu: 500m
+                    memory: 1Gi
+                  limits:
+                    cpu: 2000m
+                    memory: 2Gi
+
+  # ── Celery Beat: ensure imagePullPolicy for prod ────────────────────────────
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: celery-beat
+        namespace: uniops
+      spec:
+        template:
+          spec:
+            containers:
+              - name: celery-beat
+                imagePullPolicy: Always
+
+  # ── Ingress: add TLS + cert-manager + HTTPS redirect + real domain ──────────
+  # IMPORTANT: Replace uniops.yourdomain.com with your actual domain
+  - patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: uniops-ingress
+        namespace: uniops
+        annotations:
+          kubernetes.io/ingress.class: nginx
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+          nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+          nginx.ingress.kubernetes.io/ssl-redirect: "true"
+          nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+          nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+          nginx.ingress.kubernetes.io/configuration-snippet: |
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+          nginx.ingress.kubernetes.io/server-snippet: |
+            add_header X-Content-Type-Options nosniff always;
+            add_header X-Frame-Options SAMEORIGIN always;
+            add_header Referrer-Policy strict-origin-when-cross-origin always;
+            add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+      spec:
+        tls:
+          - hosts:
+              - uniops.yourdomain.com
+            secretName: uniops-tls
+        rules:
+          - host: uniops.yourdomain.com
+            http:
+              paths:
+                - path: /api
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: backend
+                      port:
+                        name: http
+                - path: /ws
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: backend
+                      port:
+                        name: http
+                - path: /webhooks
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: backend
+                      port:
+                        name: http
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: frontend
+                      port:
+                        name: http
+
+  # ── HPA: prod scale ranges ──────────────────────────────────────────────────
+  - patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: backend-hpa
+        namespace: uniops
+      spec:
+        minReplicas: 3
+        maxReplicas: 10
+  - patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: celery-worker-hpa
+        namespace: uniops
+      spec:
+        minReplicas: 3
+        maxReplicas: 8
+
+  # ── PostgreSQL: prod storage class + larger storage ─────────────────────────
+  # Uncomment the appropriate storageClassName for your cloud
+  # - patch: |-
+  #     apiVersion: apps/v1
+  #     kind: StatefulSet
+  #     metadata:
+  #       name: postgres
+  #       namespace: uniops
+  #     spec:
+  #       volumeClaimTemplates:
+  #         - metadata:
+  #             name: postgres-data
+  #           spec:
+  #             storageClassName: gp3      # EKS
+  #             resources:
+  #               requests:
+  #                 storage: 50Gi
+
+  # ── models-pvc: prod storage class for RWX ──────────────────────────────────
+  # Uncomment and set appropriate storageClass for your cloud's NFS provider
+  # - patch: |-
+  #     apiVersion: v1
+  #     kind: PersistentVolumeClaim
+  #     metadata:
+  #       name: models-pvc
+  #       namespace: uniops
+  #     spec:
+  #       storageClassName: efs-sc    # EKS with EFS CSI driver
