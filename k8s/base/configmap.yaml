@@ -1,6 +1,3 @@
-################################################################################
-# ConfigMap — non-sensitive runtime configuration
-################################################################################
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,37 +5,23 @@ metadata:
   labels:
     app.kubernetes.io/name: uniops
 data:
-  # ── Application ──────────────────────────────────────────────────────────────
   APP_NAME: "UniOps"
   APP_ENV: "production"
   APP_VERSION: "1.0.0"
   DEBUG: "false"
   LOG_LEVEL: "INFO"
-
-  # ── CORS & Frontend URL ──────────────────────────────────────────────────────
   CORS_ORIGINS: '["https://uniops.example.com"]'
   FRONTEND_URL: "https://uniops.example.com"
-
-  # ── Database pool ────────────────────────────────────────────────────────────
-  DATABASE_POOL_SIZE: "20"           # Increased for threads pool
-  DATABASE_MAX_OVERFLOW: "30"
-  DATABASE_POOL_TIMEOUT: "30"
-  DATABASE_POOL_RECYCLE: "1800"
-
-  # ── Celery Runtime ───────────────────────────────────────────────────────────
-  CELERY_WORKER_POOL: "threads"     # Explicitly set pool
+  DATABASE_POOL_SIZE: "10"
+  DATABASE_MAX_OVERFLOW: "5"
+  DATABASE_POOL_RECYCLE: "300"
+  DATABASE_POOL_PRE_PING: "true"
+  CELERY_WORKER_MAX_TASKS_PER_CHILD: "1"
+  CELERY_WORKER_PREFETCH_MULTIPLIER: "1"
   CELERY_TASK_SERIALIZER: "json"
   CELERY_RESULT_SERIALIZER: "json"
   CELERY_ACCEPT_CONTENT: "json"
   CELERY_TIMEZONE: "UTC"
   CELERY_ENABLE_UTC: "true"
-  CELERY_TASK_TRACK_STARTED: "true"
-  CELERY_TASK_TIME_LIMIT: "3600"
-  CELERY_TASK_SOFT_TIME_LIMIT: "3300"
-  
-  # ── AsyncIO & Runtime ───────────────────────────────────────────────────────
-  PYTHONASYNCIODEBUG: "false"
   PYTHONUNBUFFERED: "1"
-
-  # ── Email ─────────────────────────────────────────────────────────────────────
   EMAIL_FROM: "noreply@uniops.io"
