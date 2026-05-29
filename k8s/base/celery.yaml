@@ -1,10 +1,7 @@
 ################################################################################
 # Celery Worker — Deployment
 # Processes async tasks: scans, cost sync, ML retrain, notifications
-# Queues: default (general) + scans (CPU-heavy security scans)
-# --concurrency=4 → 4 parallel task threads per pod
-# Docker socket REMOVED (critical security fix — was container escape vector)
-# HPA scales 2→6 pods based on CPU (see hpa.yaml)
+# Pool: threads (CRITICAL for asyncio/asyncpg compatibility)
 ################################################################################
 apiVersion: apps/v1
 kind: Deployment
@@ -19,21 +16,13 @@ spec:
   selector:
     matchLabels:
       app: celery-worker
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
   template:
     metadata:
       labels:
         app: celery-worker
         app.kubernetes.io/component: worker
-      annotations:
-        prometheus.io/scrape: "false"   # celery metrics via celery-exporter if needed
     spec:
       serviceAccountName: uniops-worker
-      # 60s grace: worker finishes current task before SIGKILL
       terminationGracePeriodSeconds: 60
       securityContext:
         seccompProfile:
@@ -41,49 +30,22 @@ spec:
       initContainers:
         - name: wait-for-redis
           image: busybox:1.36
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 65534
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
-          command:
-            - sh
-            - -c
-            - |
-              until nc -z redis 6379; do echo "waiting redis..."; sleep 2; done
-              echo "redis ready"
+          command: ["sh", "-c", "until nc -z redis 6379; do sleep 2; done"]
         - name: wait-for-postgres
           image: busybox:1.36
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 65534
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
-          command:
-            - sh
-            - -c
-            - |
-              until nc -z postgres 5432; do echo "waiting postgres..."; sleep 2; done
-              echo "postgres ready"
+          command: ["sh", "-c", "until nc -z postgres 5432; do sleep 2; done"]
       containers:
         - name: celery-worker
           image: uniops-backend:dev
           imagePullPolicy: IfNotPresent
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
           command:
             - celery
             - -A
             - app.tasks.worker
             - worker
             - --loglevel=info
-            - --concurrency=4
+            - --pool=threads
+            - --concurrency=10
             - -Q
             - default,scans
             - --without-heartbeat
@@ -94,14 +56,12 @@ spec:
             - secretRef:
                 name: uniops-secrets
           env:
-            # Authenticated Redis URLs — override plain ConfigMap values
             - name: REDIS_URL
               value: "redis://:$(REDIS_PASSWORD)@redis:6379/0"
             - name: CELERY_BROKER_URL
               value: "redis://:$(REDIS_PASSWORD)@redis:6379/1"
             - name: CELERY_RESULT_BACKEND
               value: "redis://:$(REDIS_PASSWORD)@redis:6379/2"
-            # Async PostgreSQL URL for tasks that use the DB
             - name: DATABASE_URL
               value: "postgresql+asyncpg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
           resources:
@@ -111,41 +71,23 @@ spec:
             limits:
               cpu: 2000m
               memory: 2Gi
-          volumeMounts:
-            - name: models-storage
-              mountPath: /app/models
-            - name: logs-storage
-              mountPath: /app/logs
-          # Liveness: ping THIS specific worker via hostname
-          # If the worker process hangs, restart the pod
           livenessProbe:
             exec:
               command:
                 - sh
                 - -c
-                - celery -A app.tasks.worker inspect ping -d "celery@$HOSTNAME" --timeout 10
+                - celery -A app.tasks.worker inspect ping -d "celery@$HOSTNAME" --timeout 15
             initialDelaySeconds: 45
             periodSeconds: 30
-            timeoutSeconds: 15
+            timeoutSeconds: 20
             failureThreshold: 3
-          # No readinessProbe for workers (they don't serve HTTP traffic)
       volumes:
         - name: models-storage
           persistentVolumeClaim:
             claimName: models-pvc
         - name: logs-storage
           emptyDir: {}
-
 ---
-################################################################################
-# Celery Beat — Deployment (scheduled task dispatcher, like cron for Celery)
-#
-# CRITICAL: replicas MUST be 1. Two Beat instances = every task fires twice.
-# strategy: Recreate ensures zero overlap during deployments.
-#
-# PersistentScheduler stores schedule state on disk (celerybeat-pvc).
-# Without it, Beat re-fires all past-due tasks on every restart.
-################################################################################
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -155,12 +97,12 @@ metadata:
     app.kubernetes.io/name: celery-beat
     app.kubernetes.io/component: scheduler
 spec:
-  replicas: 1          # DO NOT change to > 1
+  replicas: 1
   selector:
     matchLabels:
       app: celery-beat
   strategy:
-    type: Recreate     # Kill old before starting new — prevents dual-dispatch
+    type: Recreate
   template:
     metadata:
       labels:
@@ -168,34 +110,14 @@ spec:
         app.kubernetes.io/component: scheduler
     spec:
       serviceAccountName: uniops-worker
-      terminationGracePeriodSeconds: 30
-      securityContext:
-        seccompProfile:
-          type: RuntimeDefault
       initContainers:
         - name: wait-for-redis
           image: busybox:1.36
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 65534
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
-          command:
-            - sh
-            - -c
-            - |
-              until nc -z redis 6379; do echo "waiting redis..."; sleep 2; done
-              echo "redis ready"
+          command: ["sh", "-c", "until nc -z redis 6379; do sleep 2; done"]
       containers:
         - name: celery-beat
           image: uniops-backend:dev
           imagePullPolicy: IfNotPresent
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
           command:
             - celery
             - -A
@@ -234,35 +156,18 @@ spec:
               mountPath: /app/celerybeat-schedule
             - name: beat-tmp
               mountPath: /tmp
-          livenessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - test -f /tmp/celerybeat.pid && kill -0 "$(cat /tmp/celerybeat.pid)"
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            failureThreshold: 3
       volumes:
         - name: beat-schedule
           persistentVolumeClaim:
             claimName: celerybeat-pvc
         - name: beat-tmp
           emptyDir: {}
-
 ---
-################################################################################
-# Celery Beat — PVC for schedule state
-# ReadWriteOnce: only one Beat pod ever mounts this
-################################################################################
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: celerybeat-pvc
   namespace: uniops
-  labels:
-    app.kubernetes.io/name: celerybeat-pvc
-    app.kubernetes.io/component: scheduler
 spec:
   accessModes: ["ReadWriteOnce"]
   resources:
