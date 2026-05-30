@@ -33,7 +33,7 @@ export default function CommandCenter() {
   const isRefreshing = tLoading || cLoading || pLoading || mLoading;
 
   const handleRefresh = useCallback(() => {
-    refetchT(); refetchC(); refetchP(); refetchM(); refetchA();
+    refetchT(true); refetchC(true); refetchP(true); refetchM(true); refetchA(true);
     setNow(new Date());
   }, [refetchT, refetchC, refetchP, refetchM, refetchA]);
 

@@ -570,13 +570,13 @@ export default function SecurityCenter() {
   const { subscribe } = useWebSocket();
   useEffect(() => {
     const unsubThreat = subscribe('threat.detected', () => {
-      refetchThreats(); refetchStats();
+      refetchThreats(true); refetchStats(true);
     });
     const unsubVuln = subscribe('vulnerability.found', () => {
-      refetchVulns();
+      refetchVulns(true);
     });
     const unsubComp = subscribe('compliance.updated', () => {
-      refetchComp(); refetchScore();
+      refetchComp(true); refetchScore(true);
     });
     return () => { unsubThreat(); unsubVuln(); unsubComp(); };
   }, [subscribe, refetchThreats, refetchStats, refetchVulns, refetchComp, refetchScore]);
@@ -603,8 +603,8 @@ export default function SecurityCenter() {
   // so refetch will return data only for the scanned repository.
   const handleScanComplete = useCallback(() => {
     setTimeout(() => {
-      refetchStats(); refetchThreats(); refetchVulns();
-      refetchComp(); refetchScore(); refetchScanScore(); refetchHistory();
+      refetchStats(true); refetchThreats(true); refetchVulns(true);
+      refetchComp(true); refetchScore(true); refetchScanScore(true); refetchHistory(true);
     }, 600);
   }, [refetchStats, refetchThreats, refetchVulns, refetchComp, refetchScore, refetchScanScore, refetchHistory]);
 
@@ -679,7 +679,7 @@ export default function SecurityCenter() {
           : { reason: 'TOLERATED' }),
       });
       showFeedback(true, res.message ?? `Threat ${action}d successfully`);
-      refetchThreats(); refetchStats();
+      refetchThreats(true); refetchStats(true);
     } catch (err: any) {
       showFeedback(false, err.message ?? `${action} failed`);
     } finally {

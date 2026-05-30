@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, effect, useCallback, useRef } from 'react';
 import apiClient from '@/services/api/client';
 
 export interface ApiState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
-  refetch: () => void;
+  refetch: (force?: boolean) => void;
 }
 
 export function useApi<T>(path: string | null, deps: unknown[] = []): ApiState<T> {
@@ -15,16 +15,19 @@ export function useApi<T>(path: string | null, deps: unknown[] = []): ApiState<T
   const [tick, setTick] = useState(0);
 
   // Track the previous path so we can detect repo/endpoint switches
-  // vs. plain manual refreshes (tick changes). Only clear stale data
-  // when the path itself changes — a tick-only refresh keeps the
-  // existing data visible while the refresh completes (no flash).
+  // vs. plain manual refreshes (tick changes).
   const prevPathRef = useRef<string | null>(null);
 
-  const refetch = useCallback(() => setTick((t) => t + 1), []);
+  const refetch = useCallback((force?: boolean) => {
+    if (force) {
+      setData(null);
+      setError(null);
+    }
+    setTick((t) => t + 1);
+  }, []);
 
-  useEffect(() => {
+  effect(() => {
     if (!path) {
-      // Path became null (e.g. user deselected repo) — clear immediately
       setData(null);
       setLoading(false);
       setError(null);
@@ -34,9 +37,7 @@ export function useApi<T>(path: string | null, deps: unknown[] = []): ApiState<T
 
     let cancelled = false;
 
-    // ── Reset stale data when switching paths (repo change, tab change, etc.) ──
-    // This prevents data from Repo A briefly showing under Repo B's queries.
-    // We do NOT reset on tick-only changes so manual refresh feels smooth.
+    // Reset stale data when switching paths
     if (path !== prevPathRef.current) {
       setData(null);
       setError(null);
@@ -61,7 +62,6 @@ export function useApi<T>(path: string | null, deps: unknown[] = []): ApiState<T
       });
 
     return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, tick, ...deps]);
 
   return { data, loading, error, refetch };
