@@ -28,6 +28,8 @@ spec:
     spec:
       restartPolicy: OnFailure
       serviceAccountName: uniops-backend
+      imagePullSecrets:
+        - name: dockerhub-secret 
       securityContext:
         seccompProfile:
           type: RuntimeDefault
@@ -53,7 +55,7 @@ spec:
               echo "PostgreSQL is ready."
       containers:
         - name: migrate
-          image: uniops-backend:dev
+          image: momenpanda/uniops-backend:latest
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -122,6 +124,8 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       serviceAccountName: uniops-backend
+      imagePullSecrets:
+        - name: dockerhub-secret
       terminationGracePeriodSeconds: 30
       securityContext:
         seccompProfile:
@@ -161,7 +165,7 @@ spec:
               echo "redis ready"
       containers:
         - name: backend
-          image: uniops-backend:dev
+          image: momenpanda/uniops-backend:latest
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false

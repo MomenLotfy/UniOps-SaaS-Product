@@ -29,6 +29,8 @@ spec:
         app.kubernetes.io/component: web
     spec:
       serviceAccountName: uniops-frontend
+      imagePullSecrets:
+        - name: dockerhub-secret  
       securityContext:
         # nginx:1.27-alpine default nginx user runs as uid 101
         runAsUser: 101
@@ -38,7 +40,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: frontend
-          image: uniops-frontend:dev
+          image: momenpanda/uniops-frontend:latest
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false

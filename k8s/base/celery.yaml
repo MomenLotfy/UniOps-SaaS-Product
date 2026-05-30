@@ -16,6 +16,8 @@ spec:
         app: celery-worker
     spec:
       serviceAccountName: uniops-worker
+      imagePullSecrets:
+        - name: dockerhub-secret
       terminationGracePeriodSeconds: 60
       initContainers:
         - name: wait-for-redis
@@ -26,7 +28,7 @@ spec:
           command: ["sh", "-c", "until nc -z postgres 5432; do sleep 2; done"]
       containers:
         - name: celery-worker
-          image: uniops-backend:dev
+          image: momenpanda/uniops-backend:latest
           imagePullPolicy: IfNotPresent
           command:
             - celery
@@ -97,13 +99,15 @@ spec:
         app: celery-beat
     spec:
       serviceAccountName: uniops-worker
+      imagePullSecrets:
+        - name: dockerhub-secret
       initContainers:
         - name: wait-for-redis
           image: busybox:1.36
           command: ["sh", "-c", "until nc -z redis 6379; do sleep 2; done"]
       containers:
         - name: celery-beat
-          image: uniops-backend:dev
+          image: momenpanda/uniops-backend:latest
           command:
             - celery
             - -A
