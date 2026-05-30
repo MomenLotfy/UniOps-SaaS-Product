@@ -132,9 +132,9 @@ async def get_predictions_summary(current_user: CurrentUser, tenant_id: TenantID
 
     return APIResponse(data={
         "workload":    {"action": work_action},
-        "cost":        {**_summary(cost_pred,  "Random Forest",    415, 485),  "is_fallback": cost_pred  is None},
-        "deploys":     {**_summary(dep_pred,   "XGBoost",          8,   6),    "is_fallback": dep_pred   is None},
-        "vulns":       {**_summary(vuln_pred,  "Isolation Forest", 3,   5),    "is_fallback": vuln_pred  is None},
+        "cost":        {**_summary(cost_pred,  "Random Forest",    None, None),  "is_fallback": cost_pred  is None},
+        "deploys":     {**_summary(dep_pred,   "XGBoost",          None, None),    "is_fallback": dep_pred   is None},
+        "vulns":       {**_summary(vuln_pred,  "Isolation Forest", None, None),    "is_fallback": vuln_pred  is None},
     })
 
 

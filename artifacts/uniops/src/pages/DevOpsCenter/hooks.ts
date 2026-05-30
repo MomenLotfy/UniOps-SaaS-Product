@@ -31,7 +31,7 @@ export function useDevOpsIntegrations() {
   return {
     isLoading,
     k8sConnected:   isConnected('kubernetes'),
-    gitConnected:   isConnected('github') || isConnected('gitlab'),
+    gitConnected:   isConnected('github') || isConnected('gitlab'), githubConnected: isConnected('github'), gitlabConnected: isConnected('gitlab'),
     k8sIntegration: k8s ?? null,
     gitIntegration: git ?? null,
   };
@@ -46,15 +46,15 @@ export function usePods(namespace?: string) {
   const { data: stats, refetch: refetchStats } = useApi<PodStats>('/kubernetes/pods/stats');
   const { subscribe, status: wsStatus } = useWebSocket();
 
-  const refetchAll = useCallback(() => {
-    refetch();
-    refetchStats();
+  const refetchAll = useCallback((force?: boolean) => {
+    refetch(force);
+    refetchStats(force);
   }, [refetch, refetchStats]);
 
   // Subscribe to WebSocket pod events — instant updates when WS is connected
   useEffect(() => {
     const unsubs = POD_WS_EVENTS.map((evt) =>
-      subscribe(evt, () => refetchAll())
+      subscribe(evt, () => refetchAll(false))
     );
     return () => unsubs.forEach((u) => u());
   }, [subscribe, refetchAll]);
@@ -71,7 +71,7 @@ export function usePods(namespace?: string) {
     podStats: stats as PodStats | null,
     loading,
     error,
-    refetch:  refetchAll,
+    refetch:  (force?: boolean) => refetchAll(force),
   };
 }
 

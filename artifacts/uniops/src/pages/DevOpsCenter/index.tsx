@@ -59,7 +59,7 @@ export default function DevOpsCenter() {
   const canAct = isAdmin() || hasRole('devops');
 
   // Integration status
-  const { k8sConnected, gitConnected, isLoading: intLoading } = useDevOpsIntegrations();
+  const { k8sConnected, gitConnected, githubConnected, gitlabConnected, isLoading: intLoading } = useDevOpsIntegrations();
 
   // Data
   const { pods, podStats, loading: podsLoading, error: podsError, refetch: refetchPods } = usePods();
@@ -107,8 +107,8 @@ export default function DevOpsCenter() {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    refetchPods();
-    refetchPipes();
+    refetchPods(true);
+    refetchPipes(true);
     await new Promise(r => setTimeout(r, 800));
     setIsRefreshing(false);
   }, [refetchPods, refetchPipes]);
@@ -206,7 +206,7 @@ export default function DevOpsCenter() {
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight">DevOps Center</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Kubernetes · CI/CD Pipelines · Deployments</p>
+          <p className="text-sm text-gray-500 mt-0.5">Kubernetes · CI/CD Pipelines · Deployments · <span class="text-xs text-gray-600">GitHub: </span><span class="text-xs font-semibold" style="color: var(--status-color)">CONNECTED</span></p>
         </div>
         <div className="flex items-center gap-2">
           {/* Real-time status badge */}
@@ -816,7 +816,7 @@ export default function DevOpsCenter() {
           <ScaleDialog
             pod={scalePod}
             onClose={() => setScalePod(null)}
-            onScaled={msg => { showToast(true, msg); refetchPods(); }}
+            onScaled={msg => { showToast(true, msg); refetchPods(true); }}
           />
         )}
       </AnimatePresence>

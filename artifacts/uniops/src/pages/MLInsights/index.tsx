@@ -121,8 +121,8 @@ export default function MLInsights() {
   useEffect(() => {
     // ml.insight → correlations were recalculated by reactive ML pipeline
     const unsubML = subscribe('ml.insight', () => {
-      refetchCorr();
-      refetchRadar();
+      refetchCorr(true);
+      refetchRadar(true);
     });
     return () => { unsubML(); };
   }, [subscribe, refetchCorr, refetchRadar]);
@@ -154,7 +154,7 @@ export default function MLInsights() {
   };
 
   const refetchAll = useCallback(() => {
-    refetchCorr(); refetchPred(); refetchChart(); refetchPS(); refetchPat(); refetchRec(); refetchModels(); refetchRadar();
+    refetchCorr(true); refetchPred(true); refetchChart(true); refetchPS(true); refetchPat(true); refetchRec(true); refetchModels(true); refetchRadar(true);
   }, [refetchCorr, refetchPred, refetchChart, refetchPS, refetchPat, refetchRec, refetchModels, refetchRadar]);
 
   const handleAnalyze = useCallback(async () => {
@@ -568,32 +568,32 @@ export default function MLInsights() {
               {[
                 {
                   icon: '💰', label: 'Cost Forecast',
-                  current: `$${predSum.cost?.current ?? 415}`,
-                  predicted: `$${predSum.cost?.predicted ?? 485}`,
-                  change: predSum.cost?.change_pct ?? 17,
-                  model: predSum.cost?.model ?? 'Random Forest',
-                  accuracy: predSum.cost?.accuracy ?? 94,
-                  confidence: predSum.cost?.confidence ?? 'High',
+                  current: `$${predSum.cost?.current ?? 0}`,
+                  predicted: `$${predSum.cost?.predicted ?? 0}`,
+                  change: predSum.cost?.change_pct ?? 0,
+                  model: predSum.cost?.model ?? '—',
+                  accuracy: predSum.cost?.accuracy ?? 0,
+                  confidence: predSum.cost?.confidence ?? '—',
                   isFallback: predSum.cost?.is_fallback ?? true,
                 },
                 {
                   icon: '🚀', label: 'Deploy Failures',
-                  current: String(predSum.deploys?.current ?? 8),
-                  predicted: String(predSum.deploys?.predicted ?? 6),
-                  change: predSum.deploys?.change_pct ?? -25,
-                  model: predSum.deploys?.model ?? 'XGBoost',
-                  accuracy: predSum.deploys?.accuracy ?? 78,
-                  confidence: predSum.deploys?.confidence ?? 'Medium',
+                  current: String(predSum.deploys?.current ?? 0),
+                  predicted: String(predSum.deploys?.predicted ?? 0),
+                  change: predSum.deploys?.change_pct ?? 0,
+                  model: predSum.deploys?.model ?? '—',
+                  accuracy: predSum.deploys?.accuracy ?? 0,
+                  confidence: predSum.deploys?.confidence ?? '—',
                   isFallback: predSum.deploys?.is_fallback ?? true,
                 },
                 {
                   icon: '🔒', label: 'Vulnerabilities',
-                  current: String(predSum.vulns?.current ?? 3),
-                  predicted: String(predSum.vulns?.predicted ?? 5),
-                  change: predSum.vulns?.change_pct ?? 67,
-                  model: predSum.vulns?.model ?? 'Isolation Forest',
-                  accuracy: predSum.vulns?.accuracy ?? 85,
-                  confidence: predSum.vulns?.confidence ?? 'High',
+                  current: String(predSum.vulns?.current ?? 0),
+                  predicted: String(predSum.vulns?.predicted ?? 0),
+                  change: predSum.vulns?.change_pct ?? 07,
+                  model: predSum.vulns?.model ?? '—',
+                  accuracy: predSum.vulns?.accuracy ?? 05,
+                  confidence: predSum.vulns?.confidence ?? '—',
                   isFallback: predSum.vulns?.is_fallback ?? true,
                 },
               ].map(p => (
@@ -740,7 +740,7 @@ export default function MLInsights() {
                             action: async () => {
                               await apiPost(`/ml/patterns/${p.id}/restart`, {});
                               showToast(true, `Pod restart initiated: ${p.affected_services?.[0]}`);
-                              refetchPat();
+                              refetchPat(true);
                             },
                           })}
                           className="text-xs px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 transition-colors flex items-center gap-1.5">
@@ -761,7 +761,7 @@ export default function MLInsights() {
                                 notify_slack: true,
                               });
                               showToast(true, `Alert rule created: ${p.pattern_type}`);
-                              refetchPat();
+                              refetchPat(true);
                             },
                           })}
                           className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-colors flex items-center gap-1.5">
@@ -779,7 +779,7 @@ export default function MLInsights() {
                           confirmLabel: 'Dismiss', danger: true,
                           action: async () => {
                             await apiPost(`/ml/patterns/${p.id}/dismiss`, {});
-                            refetchPat();
+                            refetchPat(true);
                             showToast(true, `Pattern ${p.id} dismissed`);
                           },
                         })}
@@ -906,7 +906,7 @@ export default function MLInsights() {
                                 confirmLabel: 'Apply Recommendation',
                                 action: async () => {
                                   await apiPost(`/ml/recommendations/${r.id}/apply`, {});
-                                  refetchRec();
+                                  refetchRec(true);
                                   showToast(true, `Recommendation applied: ${r.title}`);
                                 },
                               })}
@@ -920,7 +920,7 @@ export default function MLInsights() {
                                 confirmLabel: 'Dismiss', danger: true,
                                 action: async () => {
                                   await apiPost(`/ml/recommendations/${r.id}/dismiss`, {});
-                                  refetchRec();
+                                  refetchRec(true);
                                   showToast(true, 'Recommendation dismissed');
                                 },
                               })}
