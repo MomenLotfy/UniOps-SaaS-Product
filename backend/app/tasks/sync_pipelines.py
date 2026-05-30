@@ -97,11 +97,11 @@ async def _sync_github(db, integration, config: dict) -> tuple[int, int]:
             existing = await db.execute(
                 select(Pipeline).where(
                     Pipeline.tenant_id     == tenant_id,
-                    Pipeline.external_id   == ext_id,
+                    Pipeline.external_id   == str(ext_id),
                     Pipeline.repository    == full_name,
                 )
             )
-            pipeline = existing.scalar_one_or_none()
+            pipeline = existing.scalars().first()
 
             if pipeline:
                 # Update mutable fields
@@ -134,6 +134,15 @@ async def _sync_github(db, integration, config: dict) -> tuple[int, int]:
         # Dependabot may be disabled or the token may lack access — treat as
         # non-fatal so pipeline data is never lost because of a missing feature.
         try:
+            from app.models.scan import Repository
+            repo_row = (await db.execute(
+                select(Repository.id).where(
+                    Repository.tenant_id == tenant_id,
+                    Repository.full_name == full_name
+                )
+            )).scalars().first()
+            repo_id = repo_row if repo_row else None
+
             alerts = await client.list_dependabot_alerts(owner, repo)
         except Exception as dep_exc:
             logger.warning(
@@ -154,11 +163,12 @@ async def _sync_github(db, integration, config: dict) -> tuple[int, int]:
                     *([Vulnerability.cve_id == cve] if cve else []),
                 )
             )
-            if existing_vuln.scalar_one_or_none():
+            if existing_vuln.scalars().first():
                 continue
 
             db.add(Vulnerability(
                 tenant_id      = tenant_id,
+                repo_id        = repo_id,   # Added for isolation
                 cve_id         = cve,
                 title          = alert["title"][:499],
                 description    = alert.get("description", ""),

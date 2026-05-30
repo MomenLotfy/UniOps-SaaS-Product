@@ -73,9 +73,9 @@ spec:
             - secretRef:
                 name: uniops-secrets
           env:
-            # Override DATABASE_URL: use psycopg2 (sync) for alembic
+            # Override DATABASE_URL: use asyncpg (async) for alembic
             - name: DATABASE_URL
-              value: "postgresql+psycopg2://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
+              value: "postgresql+asyncpg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
           resources:
             requests:
               cpu: 100m
