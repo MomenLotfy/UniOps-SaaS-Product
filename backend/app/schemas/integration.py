@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, Any
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, computed_field
 
 
 class IntegrationCreate(BaseModel):
@@ -30,20 +30,12 @@ class IntegrationUpdate(BaseModel):
     # The `token` convenience field was declared but NEVER moved into credentials
     # by the schema or the service. The service's update() only processes
     # update_data["credentials"] — it never read update_data["token"] at all.
-    # Result: every PATCH with {token: "ghp_..."} silently stored nothing,
-    # the integration kept its old (empty) credentials, test_connection() got
-    # an empty token, GitHub returned 401, status was set to "error" not
-    # "connected", and every subsequent repo-sync query found zero rows.
-    #
-    # Fix: promote token → credentials.token before the dict leaves the schema
-    # so IntegrationService.update() sees it in update_data["credentials"] and
-    # correctly encrypts + merges it.
     # ─────────────────────────────────────────────────────────────────────────
     @model_validator(mode="after")
     def _promote_token_to_credentials(self) -> "IntegrationUpdate":
         if self.token:
             self.credentials = {**(self.credentials or {}), "token": self.token}
-            self.token = None   # don't double-write into the DB column
+            self.token = None
         return self
 
 
@@ -61,6 +53,12 @@ class IntegrationResponse(BaseModel):
     config: dict = {}
     created_at: datetime
     updated_at: datetime
+
+    @computed_field
+    @property
+    def provider(self) -> str:
+        """Frontend expects 'provider' field, but DB uses 'type'."""
+        return self.type
 
 
 class IntegrationTestResult(BaseModel):
