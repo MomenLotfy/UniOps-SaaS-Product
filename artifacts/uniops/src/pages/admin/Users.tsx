@@ -21,7 +21,7 @@ export default function AdminUsers() {
   const roleParam = roleFilter ? `&role=${roleFilter}` : '';
 
   const { data, loading, refetch } = useApi<any>(`/users?page_size=50${searchParam}${roleParam}`);
-  const users = data?.data ?? [];
+  const users = (Array.isArray(data) ? data : data?.data) ?? [];
 
   const statusBadge: Record<string, string> = {
     active: 'text-green-400', inactive: 'text-muted-foreground',

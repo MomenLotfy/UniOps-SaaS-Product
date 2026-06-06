@@ -67,13 +67,11 @@ spec:
               memory: 2Gi
           livenessProbe:
             exec:
-              command:
-                - sh
-                - -c
-                - celery -A app.tasks.worker inspect ping -d "celery@$HOSTNAME" --timeout 15
-            initialDelaySeconds: 45
+              command: ["sh", "-c", "pgrep -f 'celery.*worker' > /dev/null"]
+            initialDelaySeconds: 30
             periodSeconds: 30
-            timeoutSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
       volumes:
         - name: models-storage
           persistentVolumeClaim:

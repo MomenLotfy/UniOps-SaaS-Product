@@ -1,0 +1,72 @@
+################################################################################
+# Catch-all Ingress — no host specified
+#
+# Purpose:
+#   The original uniops-ingress only matches `Host: uniops.local`. When clients
+#   hit the NLB with a public Host header (e.g. the NLB DNS name itself) or no
+#   Host header at all, no rule matches and the request is dropped (404).
+#   This second Ingress adds path-based routing that matches ALL hosts, so
+#   the application is reachable through the NLB DNS name (or any public
+#   hostname pointed at the NLB) without modifying the original ingress.
+#
+# Routing (mirrors uniops-ingress):
+#   /api/*      → backend:80  (FastAPI)
+#   /ws/*       → backend:80  (WebSocket)
+#   /webhooks/* → backend:80
+#   /*          → frontend:80 (React SPA)
+#
+# Ingress class MUST be `nginx` (NGINX Ingress Controller — NLB fronted),
+# NOT `alb` (AWS Load Balancer Controller). The NLB DNS name is the public
+# entry point.
+################################################################################
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: uniops-ingress-catchall
+  namespace: uniops
+  labels:
+    app.kubernetes.io/name: uniops-ingress
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    # WebSocket support — required for /ws/* routes
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    # File uploads up to 50MB (scan reports, ML datasets)
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  ingressClassName: nginx
+  # No `host:` field → rule applies to ALL Host headers (catch-all)
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  name: http
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  name: http
+          - path: /webhooks
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  name: http
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  name: http

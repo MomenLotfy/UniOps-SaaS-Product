@@ -1,0 +1,74 @@
+---
+# ─────────────────────────────────────────────────────────────────────────────
+# Role: backend
+# بيـdeploy الـ FastAPI backend + Celery workers
+# ─────────────────────────────────────────────────────────────────────────────
+
+- name: Create app directory
+  file:
+    path: /opt/uniops
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Copy docker-compose file
+  template:
+    src: docker-compose.prod.yml.j2
+    dest: /opt/uniops/docker-compose.yml
+    owner: ubuntu
+    group: ubuntu
+
+- name: Copy .env file
+  template:
+    src: env.j2
+    dest: /opt/uniops/.env
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'   # secret — readable by owner only
+
+- name: Login to ECR
+  shell: |
+    aws ecr get-login-password --region {{ aws_region }} | \
+    docker login --username AWS --password-stdin {{ ecr_url }}
+  changed_when: false
+
+- name: Pull latest images
+  community.docker.docker_compose_v2:
+    project_src: /opt/uniops
+    pull: always
+    state: present
+
+- name: Run database migrations
+  community.docker.docker_container:
+    name: uniops-migrate
+    image: "{{ ecr_url }}:latest"
+    command: alembic upgrade head
+    env_file: /opt/uniops/.env
+    detach: false
+    cleanup: true
+  register: migration_result
+
+- name: Show migration output
+  debug:
+    msg: "{{ migration_result.container.Output }}"
+
+- name: Start all services
+  community.docker.docker_compose_v2:
+    project_src: /opt/uniops
+    state: present
+    remove_orphans: true
+
+- name: Wait for backend health check
+  uri:
+    url: "http://localhost:8000/api/v1/health"
+    method: GET
+    status_code: 200
+  register: health_check
+  retries: 10
+  delay: 5
+  until: health_check.status == 200
+
+- name: ✅ Backend deployed successfully
+  debug:
+    msg: "UniOps backend is healthy at port 8000"

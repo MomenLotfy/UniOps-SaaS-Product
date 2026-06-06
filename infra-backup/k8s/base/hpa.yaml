@@ -1,0 +1,98 @@
+################################################################################
+# HPA — Backend (FastAPI)
+# Scale 2→8 pods on CPU (70%) + Memory (80%)
+# Requires: metrics-server installed in cluster
+#   kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/
+#     releases/latest/download/components.yaml
+#
+# Scale-up fast (60s window, +2 pods/min): users shouldn't wait
+# Scale-down slow (300s window, -1 pod/min): avoid flapping + in-flight requests
+################################################################################
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: uniops
+  labels:
+    app.kubernetes.io/name: backend-hpa
+    app.kubernetes.io/component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300    # 5 min: wait for traffic to drop sustainably
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60              # remove max 1 pod per minute
+    scaleUp:
+      stabilizationWindowSeconds: 60     # 1 min: respond to spikes quickly
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60              # add max 2 pods per minute
+      selectPolicy: Max
+
+---
+################################################################################
+# HPA — Celery Worker
+# Scale 2→6 pods on CPU (75%)
+#
+# Scale-up VERY fast (30s window): tasks shouldn't queue up
+# Scale-down SLOW (600s window): workers need time to finish current tasks
+# terminationGracePeriodSeconds: 60 on worker pod supports this
+################################################################################
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: celery-worker-hpa
+  namespace: uniops
+  labels:
+    app.kubernetes.io/name: celery-worker-hpa
+    app.kubernetes.io/component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: celery-worker
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 600    # 10 min: let workers finish current tasks
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 30     # 30s: tasks must not wait in queue
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      selectPolicy: Max

@@ -88,7 +88,7 @@ export default function CommandCenter() {
     },
   ];
 
-  const recentEvents = alerts?.data ?? [];
+  const recentEvents = (Array.isArray(alerts) ? alerts : alerts?.data) ?? [];
 
   const eventColors: Record<string, string> = {
     critical: 'text-red-400', high: 'text-red-400',

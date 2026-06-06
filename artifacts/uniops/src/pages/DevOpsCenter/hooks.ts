@@ -101,7 +101,7 @@ export function usePipelines(repository?: string, branch?: string) {
   }, [wsStatus, refetch]);
 
   return {
-    pipelines:     (Array.isArray(data) ? data : data?.data ?? []) as any[],
+    pipelines:     (Array.isArray(data) ? data : data?.data ?? data ?? []) as any[],
     pipelineStats: stats as PipelineStats | null,
     total:         (data as any)?.total ?? 0,
     loading,

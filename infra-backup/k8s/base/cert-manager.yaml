@@ -1,0 +1,43 @@
+################################################################################
+# cert-manager ClusterIssuer — Let's Encrypt Production
+# Applied ONLY via the prod overlay (not in base kustomization.yaml)
+#
+# Prerequisites (install once per cluster):
+#   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/
+#     download/v1.15.0/cert-manager.yaml
+#
+# How it works:
+#   1. Ingress annotation "cert-manager.io/cluster-issuer: letsencrypt-prod"
+#      triggers cert-manager to watch the Ingress
+#   2. cert-manager creates a CertificateRequest to Let's Encrypt via ACME
+#   3. Let's Encrypt sends HTTP-01 challenge to /.well-known/acme-challenge/
+#   4. cert-manager creates a temporary Ingress + pod to serve the challenge
+#   5. On success, TLS cert is stored in Secret "uniops-tls"
+#   6. nginx Ingress uses that Secret for TLS termination
+#   7. cert-manager auto-renews 30 days before expiry
+#
+# IMPORTANT: Replace email below with a real ops email address.
+#            Let's Encrypt sends renewal warnings there.
+################################################################################
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  labels:
+    app.kubernetes.io/name: letsencrypt-prod
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  acme:
+    # Let's Encrypt production endpoint
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # REPLACE with real ops/admin email
+    email: ops@yourdomain.com
+    # Stores the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+            # Optional: use a specific IngressClass name if multiple controllers
+            # ingressClassName: nginx
