@@ -28,7 +28,11 @@ resources:
   - pdb.yaml              # 13. PodDisruptionBudgets for all services
   - network-policy.yaml   # 14. NetworkPolicies (default-deny + whitelists)
 
-# Common labels applied to ALL resources (metadata.labels)
-commonLabels:
-  app.kubernetes.io/part-of: uniops
-  app.kubernetes.io/managed-by: kustomize
+# Common labels (app.kubernetes.io/managed-by, app.kubernetes.io/part-of)
+# are declared directly in the individual resource manifests (namespace.yaml,
+# frontend.yaml) and via monitoring/kustomization.yaml.
+# We intentionally do NOT use a top-level `labels:` block here because kustomize
+# would also stamp those labels into StatefulSet volumeClaimTemplates, and
+# adding labels to a volumeClaimTemplate of a running STS is a forbidden spec
+# mutation. Keeping labels in the manifests themselves keeps selectors and
+# volumeClaimTemplates immutable-clean across `kubectl apply` runs.

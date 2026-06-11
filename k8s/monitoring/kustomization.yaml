@@ -13,6 +13,8 @@ kind: Kustomization
 resources:
   - monitoring.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: uniops
-  app.kubernetes.io/managed-by: kustomize
+labels:
+  - includeSelectors: false
+  - pairs:
+      app.kubernetes.io/part-of: uniops
+      app.kubernetes.io/managed-by: kustomize

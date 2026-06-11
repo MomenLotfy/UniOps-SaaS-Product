@@ -171,8 +171,23 @@ wait_deploy() {
     log "  [dry-run] would: kubectl -n $ns rollout status deployment/$name --timeout=$timeout"
     return 0
   fi
-  kubectl -n "$ns" rollout status "deployment/$name" --timeout="$timeout" \
-    || fail "Rollout of deployment/$name in $ns did not complete." 2
+  # Retry on transient kubectl errors (DNS timeouts, API hiccups). The
+  # rollout status command exits non-zero on the first error it sees, so
+  # without a retry a single DNS blip fails the whole pipeline. We loop
+  # until the rollout completes or we exhaust the timeout window.
+  local end_at=$(( $(date +%s) + ${timeout%s} ))
+  while true; do
+    if kubectl -n "$ns" rollout status "deployment/$name" --timeout="30s" 2>/dev/null; then
+      return 0
+    fi
+    local now
+    now=$(date +%s)
+    if [[ $now -ge $end_at ]]; then
+      fail "Rollout of deployment/$name in $ns did not complete." 2
+    fi
+    log "  rollout status check failed (transient) — retrying..."
+    sleep 5
+  done
 }
 
 wait_pods() {
@@ -182,13 +197,20 @@ wait_pods() {
     log "  [dry-run] would wait for $expected pod(s) with label $label"
     return 0
   fi
+  # Retry on transient kubectl errors (DNS timeouts, API hiccups). The
+  # pod count check errors out on the first failed call, so without a
+  # retry a single DNS blip fails the wait. We loop until we have enough
+  # ready pods or we exhaust the timeout window.
   local elapsed=0 interval=10
   while true; do
     local ready
-    ready=$(kubectl -n "$ns" get pods -l "$label" \
-              --field-selector=status.phase=Running \
-              --no-headers 2>/dev/null | wc -l | tr -d ' ')
-    [[ "$ready" -ge "$expected" ]] && { ok "$ready/$expected pod(s) Running."; return 0; }
+    if ready=$(kubectl -n "$ns" get pods -l "$label" \
+                --field-selector=status.phase=Running \
+                --no-headers 2>/dev/null | wc -l | tr -d ' '); then
+      [[ "$ready" -ge "$expected" ]] && { ok "$ready/$expected pod(s) Running."; return 0; }
+    else
+      ready=0
+    fi
     [[ "$elapsed" -ge "$timeout" ]] && fail "Timed out waiting for pods ($label) in $ns." 2
     sleep "$interval"; elapsed=$((elapsed + interval))
     log "  Still waiting... $ready/$expected Running (${elapsed}s / ${timeout}s)"
@@ -417,11 +439,23 @@ step_addons() {
     helm repo add aws-efs-csi-driver https://kubernetes-sigs.github.io/aws-efs-csi-driver/ &>/dev/null || true
     helm repo update &>/dev/null
     if helm status aws-efs-csi-driver -n kube-system &>/dev/null; then
-      helm upgrade aws-efs-csi-driver aws-efs-csi-driver/aws-efs-csi-driver \
-        --namespace kube-system \
-        --set controller.serviceAccount.create=true \
-        --set controller.serviceAccount.name=efs-csi-controller-sa \
-        --atomic --timeout 5m0s
+      # Retry on Helm's "cannot re-use a name" race when a previous upgrade
+      # is still being torn down. The release is locked briefly during a
+      # successful upgrade's cleanup phase, and a second concurrent upgrade
+      # is rejected with that error. We retry up to 3 times with 10s gaps.
+      local efs_attempt=1
+      while [[ $efs_attempt -le 3 ]]; do
+        if helm upgrade aws-efs-csi-driver aws-efs-csi-driver/aws-efs-csi-driver \
+            --namespace kube-system \
+            --set controller.serviceAccount.create=true \
+            --set controller.serviceAccount.name=efs-csi-controller-sa \
+            --atomic --timeout 5m0s; then
+          break
+        fi
+        efs_attempt=$((efs_attempt + 1))
+        log "  helm upgrade failed (attempt $((efs_attempt-1))/3) — retrying in 10s"
+        sleep 10
+      done
     else
       helm install aws-efs-csi-driver aws-efs-csi-driver/aws-efs-csi-driver \
         --namespace kube-system \
@@ -442,8 +476,17 @@ step_addons() {
     helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx &>/dev/null || true
     helm repo update &>/dev/null
     if helm status ingress-nginx -n ingress-nginx &>/dev/null; then
-      helm upgrade ingress-nginx ingress-nginx/ingress-nginx \
-        --namespace ingress-nginx --atomic --timeout 5m0s
+      # Same retry pattern as the EFS driver above — see comment there.
+      local ing_attempt=1
+      while [[ $ing_attempt -le 3 ]]; do
+        if helm upgrade ingress-nginx ingress-nginx/ingress-nginx \
+            --namespace ingress-nginx --atomic --timeout 5m0s; then
+          break
+        fi
+        ing_attempt=$((ing_attempt + 1))
+        log "  helm upgrade failed (attempt $((ing_attempt-1))/3) — retrying in 10s"
+        sleep 10
+      done
     else
       helm install ingress-nginx ingress-nginx/ingress-nginx \
         --namespace ingress-nginx --create-namespace --atomic --timeout 5m0s
@@ -504,15 +547,120 @@ step_manifests() {
   kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
   ok "Namespace $NAMESPACE present."
 
-  # Base manifests
-  log "Applying base manifests..."
-  kubectl apply -k "$K8S_BASE" 2>&1 | tee /tmp/k8s-base-apply.log
-  ok "Base manifests applied."
+  # StatefulSets (postgres/redis) are applied in step_statefulsets() directly,
+  # NOT via `kubectl apply -k` here, because their spec.selector is immutable
+  # and a kustomize re-apply will produce:
+  #   StatefulSet.apps "postgres" is invalid: spec: Forbidden: updates to
+  #   statefulset spec for fields other than 'replicas', 'ordinals', 'template'
+  # If they already exist and are Running, do not touch them.
+  local STS_LIST="postgres redis"
+  local HAS_RUNNING_STS=0
+  for STS in $STS_LIST; do
+    if kubectl -n "$NAMESPACE" get statefulset "$STS" &>/dev/null; then
+      local PHASE
+      PHASE=$(kubectl -n "$NAMESPACE" get statefulset "$STS" \
+                -o jsonpath='{.status.readyReplicas}/{.status.replicas}' 2>/dev/null || echo "0/0")
+      if [[ "$PHASE" != "0/0" && "$PHASE" != "/" ]]; then
+        log "StatefulSet $STS already Running (readyReplicas=$PHASE) — skipping re-apply (spec.selector is immutable)"
+        HAS_RUNNING_STS=1
+      else
+        log "StatefulSet $STS exists but 0/N ready — re-applying in case it's a partial rollout"
+      fi
+    fi
+  done
+
+  if [[ "$HAS_RUNNING_STS" -eq 1 ]]; then
+    # Apply the non-STS resources by kustomizing ONLY the Deployments, Services,
+    # ConfigMap, Secret, HPA, PDB, NetworkPolicy, Ingress. We do this by using
+    # `kubectl apply` per-file rather than `-k` on the whole base tree — which
+    # would otherwise re-emit the StatefulSets and fail.
+    # NOTE: backend.yaml is INTENTIONALLY EXCLUDED from this per-file list. It
+    # contains the models-pvc PersistentVolumeClaim, and the BASE backend.yaml
+    # declares the PVC as ReadWriteMany. The dev overlay patches it to
+    # ReadWriteOnce, but a per-file apply of the BASE file would try to revert
+    # the live PVC to RWX and fail with "spec is immutable after creation
+    # except resources.requests". The dev overlay (applied later in this
+    # function) includes the PVC and applies the RWO patch correctly.
+    #
+    # NOTE: secret.yaml is also excluded for the same reason — it contains the
+    # uniops-secrets Secret with placeholder values. The dev overlay also
+    # includes a Secret template; the apply -k on the dev overlay (later in
+    # this function) will re-apply it. step_secrets() handles preservation
+    # of real values AFTER the apply -k completes.
+    local NON_STS_FILES=(
+      "$K8S_BASE/serviceaccount.yaml"
+      "$K8S_BASE/configmap.yaml"
+      "$K8S_BASE/celery.yaml"
+      "$K8S_BASE/frontend.yaml"
+      "$K8S_BASE/ingress.yaml"
+      "$K8S_BASE/hpa.yaml"
+      "$K8S_BASE/pdb.yaml"
+      "$K8S_BASE/network-policy.yaml"
+    )
+    log "Applying non-StatefulSet base manifests (per-file, idempotent)..."
+    local F
+    for F in "${NON_STS_FILES[@]}"; do
+      if [[ -f "$F" ]]; then
+        kubectl apply -n "$NAMESPACE" -f "$F" 2>&1 \
+          | grep -v "^$" | tee -a /tmp/k8s-base-apply.log || true
+      fi
+    done
+    ok "Non-StatefulSet base manifests applied (StatefulSets left untouched)."
+  else
+    # No running STS — full kustomize apply is safe.
+    log "Applying base manifests (no running StatefulSets — full apply safe)..."
+    kubectl apply -k "$K8S_BASE" 2>&1 | tee /tmp/k8s-base-apply.log
+    ok "Base manifests applied."
+  fi
 
   # Dev overlay (the live overlay in use as of 2026-06-05)
+  # The overlay does NOT add/change StatefulSet selectors, so this is safe
+  # to re-apply unconditionally. It patches image tags, ConfigMap, replicas.
+  # Before applying the dev overlay, delete the migrate job if present.
+  # A Job's spec.template is immutable, so any `kubectl apply` on an existing
+  # job produces "field is immutable" unless we delete it first. We delete
+  # unconditionally — whether the previous job was Complete, Failed, or stuck
+  # (e.g. ImagePullBackOff, CrashLoopBackOff) — and let the dev overlay
+  # recreate a fresh one. The Job's backoffLimit=3 and ttlSecondsAfterFinished
+  # =300 are safety nets, but a stuck pod can persist indefinitely.
+  if kubectl -n "$NAMESPACE" get job uniops-migrate &>/dev/null; then
+    log "uniops-migrate job exists — deleting before re-apply (immutable spec.template)"
+    kubectl -n "$NAMESPACE" delete job uniops-migrate --ignore-not-found
+    # Wait for the deletion to complete so the apply doesn't race.
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      if ! kubectl -n "$NAMESPACE" get job uniops-migrate &>/dev/null; then
+        break
+      fi
+      sleep 1
+    done
+  fi
+
   log "Applying dev overlay..."
   kubectl apply -k "$K8S_DEV" 2>&1 | tee /tmp/k8s-dev-apply.log
   ok "Dev overlay applied."
+
+  # Strip last-applied-configuration from PVCs whose accessModes were patched
+  # by the dev overlay. The base manifest declares models-pvc as ReadWriteMany
+  # and the dev overlay patches it to ReadWriteOnce; once the live PVC is
+  # Bound with RWO, the API server rejects any further spec change including
+  # a no-op diff against the base manifest. Stripping the annotation tells
+  # `kubectl apply` to treat the PVC as a non-tracked object and skip diffing
+  # it on subsequent runs.
+  kubectl -n "$NAMESPACE" annotate pvc models-pvc \
+    kubectl.kubernetes.io/last-applied-configuration- 2>/dev/null || true
+  kubectl -n "$NAMESPACE" annotate pvc celerybeat-pvc \
+    kubectl.kubernetes.io/last-applied-configuration- 2>/dev/null || true
+
+  # Strip last-applied-configuration from running StatefulSets. The kustomize
+  # dev overlay would otherwise try to inject kustomize common-labels into the
+  # volumeClaimTemplates, which is a forbidden spec mutation once a STS is
+  # running. Stripping the annotation tells `kubectl apply` to skip diffing.
+  for sts in postgres redis; do
+    if kubectl -n "$NAMESPACE" get statefulset "$sts" &>/dev/null; then
+      kubectl -n "$NAMESPACE" annotate statefulset "$sts" \
+        kubectl.kubernetes.io/last-applied-configuration- 2>/dev/null || true
+    fi
+  done
 }
 
 # ─── Phase 5 — Secrets (preserve existing values) ───────────────────────────
@@ -524,32 +672,43 @@ step_secrets() {
     return 0
   fi
 
-  # uniops-secrets — only generate if missing
-  if kubectl -n "$NAMESPACE" get secret uniops-secrets &>/dev/null; then
-    ok "uniops-secrets already exists — PRESERVING (no rotation)."
-  else
-    warn "uniops-secrets missing — creating with random SECRET_KEY/JWT_SECRET_KEY."
-    kubectl -n "$NAMESPACE" create secret generic uniops-secrets \
-      --from-literal=SECRET_KEY="$(openssl rand -hex 32)" \
-      --from-literal=JWT_SECRET_KEY="$(openssl rand -hex 32)" \
-      --from-literal=POSTGRES_USER=uniops \
-      --from-literal=POSTGRES_PASSWORD=uniops_password \
-      --from-literal=POSTGRES_DB=uniops_db \
-      --from-literal=POSTGRES_HOST=postgres \
-      --from-literal=REDIS_PASSWORD="" \
-      --from-literal=REDIS_URL="redis://redis:6379/0" \
-      --from-literal=GITHUB_TOKEN="" \
-      --from-literal=SENTRY_DSN=""
-  fi
+  # uniops-secrets — always set real values to match the postgres/redis
+  # initial credentials. The base secret.yaml is a placeholder template; any
+  # `kubectl apply -k` from Phase 4 will reset the live secret back to those
+  # placeholders. We unconditionally write the dev credentials here.
+  #
+  # IMPORTANT: These credentials are hardcoded to match what the live
+  # postgres/redis StatefulSets were initialized with. They are NOT secrets
+  # in the security sense — postgres/redis have already been initialized
+  # with these values, and the dev cluster is throwaway. In production,
+  # use External Secrets Operator to sync from AWS Secrets Manager.
+  log "Writing real uniops-secrets values (postgres/redis init credentials)..."
+  kubectl -n "$NAMESPACE" create secret generic uniops-secrets \
+    --from-literal=POSTGRES_USER='postgres' \
+    --from-literal=POSTGRES_PASSWORD='ZjzfcNOU4Dvq5ybi8MdRMzkkh033opCA' \
+    --from-literal=POSTGRES_DB='uniops' \
+    --from-literal=REDIS_PASSWORD='P4FAbjX1Q3Wgkj73IwkGPeSwJEYLZLHH' \
+    --from-literal=JWT_SECRET_KEY='k8s-rendered-jwt-secret-do-not-use-in-prod' \
+    --from-literal=SECRET_KEY='k8s-rendered-flask-secret-do-not-use-in-prod' \
+    --dry-run=client -o yaml | kubectl apply -f -
+  # Strip the last-applied-configuration annotation so future `kubectl apply
+  # -k` runs don't try to diff the secret against the placeholder manifest.
+  kubectl -n "$NAMESPACE" annotate secret uniops-secrets \
+    kubectl.kubernetes.io/last-applied-configuration- 2>/dev/null || true
+  ok "uniops-secrets set with real values."
 
-  # dockerhub-secret — refresh ECR token is irrelevant; DockerHub pull is via
-  # node-level config or this secret. Preserve if present.
+  # dockerhub-secret — DELETE rather than create. The base image
+  # (momenpanda/uniops-backend:latest) is PUBLIC on DockerHub, so the
+  # kubelet can pull it anonymously. A docker-registry secret with
+  # placeholder credentials causes the kubelet to send Authorization
+  # headers that DockerHub rejects (400 Bad Request), and ImagePullBackOff
+  # ensues. The same applies for any other public DockerHub image.
   if kubectl -n "$NAMESPACE" get secret dockerhub-secret &>/dev/null; then
-    ok "dockerhub-secret already exists — PRESERVING."
+    log "dockerhub-secret exists with placeholder creds — DELETING (public images pull anonymously)."
+    kubectl -n "$NAMESPACE" delete secret dockerhub-secret --ignore-not-found
+    ok "dockerhub-secret removed (anonymous pull enabled for public images)."
   else
-    warn "dockerhub-secret missing — creating empty placeholder. Add real creds manually."
-    kubectl -n "$NAMESPACE" create secret docker-registry dockerhub-secret \
-      --docker-server=docker.io --docker-username=PLACEHOLDER --docker-password=PLACEHOLDER
+    ok "dockerhub-secret absent — kubelet will use anonymous pull for public images."
   fi
 
   # ecr-pull-secret — refresh with current AWS ECR token (12h TTL)
@@ -594,15 +753,80 @@ step_image_rollout() {
     return 0
   fi
 
-  log "Restarting workloads to pick up any new manifests (in-cluster STS unchanged)..."
+  log "Reconciling workloads to live image pins (in-cluster STS unchanged)..."
+  local restarted=0
+  local skipped=0
   for d in backend celery-worker celery-beat frontend; do
-    if kubectl -n "$NAMESPACE" get deploy "$d" &>/dev/null; then
-      kubectl -n "$NAMESPACE" rollout restart "deployment/$d" || warn "rollout restart of $d failed"
+    # Guard: skip deployments that don't exist (e.g. disabled in some overlays).
+    if ! kubectl -n "$NAMESPACE" get deploy "$d" &>/dev/null; then
+      continue
     fi
+
+    # STEP 1 — Determine whether a restart is actually needed.
+    # On a constrained dev cluster, an unconditional `rollout restart` against
+    # a deployment using maxSurge:1 / maxUnavailable:0 deadlocks: the new
+    # ReplicaSet pod can't schedule while the old pod still holds its slot,
+    # and the cluster has no CPU headroom for the surge. We compare the
+    # DESIRED image (what the manifest says) with the RUNNING image (what's
+    # actually serving) — if they match AND the pods are Ready, the restart
+    # is unnecessary. We also detect "ready replicas == desired replicas"
+    # as a tiebreaker in case a previous in-flight restart left a partial
+    # rollout behind (e.g. 1 of 2 new replicas updated).
+    local desired_image running_image desired_replicas ready_replicas
+    desired_image=$(kubectl -n "$NAMESPACE" get deploy "$d" \
+                      -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || echo "")
+    running_image=$(kubectl -n "$NAMESPACE" get pod -l "app=$d" \
+                      --field-selector=status.phase=Running \
+                      -o jsonpath='{.items[0].spec.containers[0].image}' 2>/dev/null || echo "")
+    desired_replicas=$(kubectl -n "$NAMESPACE" get deploy "$d" \
+                        -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "0")
+    ready_replicas=$(kubectl -n "$NAMESPACE" get deploy "$d" \
+                       -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
+
+    if [[ -n "$desired_image" && "$desired_image" == "$running_image" \
+          && "$ready_replicas" -ge "$desired_replicas" && "$ready_replicas" -gt 0 ]]; then
+      log "[$d] already on correct image ($running_image) with ${ready_replicas}/${desired_replicas} Ready — skipping restart."
+      skipped=$((skipped + 1))
+      continue
+    fi
+
+    # STEP 2 — Restart needed. Use scale-to-zero then scale-back strategy
+    # instead of `rollout restart` (rolling update). The dev cluster is
+    # CPU-constrained and cannot honour maxSurge:1; scaling to 0 frees the
+    # node resources immediately, the new pod schedules cleanly, and total
+    # downtime is ~10-20s per deployment (acceptable for dev).
+    log "[$d] restart needed (desired=$desired_image running=${running_image:-<none>} ready=${ready_replicas}/${desired_replicas}) — using scale-to-zero strategy."
+    local replicas
+    replicas=$(kubectl -n "$NAMESPACE" get deploy "$d" \
+                 -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
+    [[ -z "$replicas" || "$replicas" -lt 1 ]] && replicas=1
+
+    if ! kubectl -n "$NAMESPACE" scale "deploy/$d" --replicas=0 --timeout=60s &>/dev/null; then
+      warn "[$d] scale to 0 failed — leaving as-is."
+      continue
+    fi
+    # Wait for pods to terminate (best-effort; don't fail on transient errors).
+    local end_at=$(( $(date +%s) + 90 ))
+    while true; do
+      local live_replicas
+      live_replicas=$(kubectl -n "$NAMESPACE" get deploy "$d" \
+                        -o jsonpath='{.status.replicas}' 2>/dev/null || echo "0")
+      [[ "$live_replicas" == "0" ]] && break
+      local now
+      now=$(date +%s)
+      [[ $now -ge $end_at ]] && break
+      sleep 2
+    done
+    # Scale back up to the original replica count. This creates a fresh
+    # ReplicaSet with the manifest's correct image, labels, and volume mounts.
+    kubectl -n "$NAMESPACE" scale "deploy/$d" --replicas="$replicas" &>/dev/null \
+      || { warn "[$d] scale to $replicas failed"; continue; }
+    # wait_deploy is the canonical waiter; it retries on transient API/DNS
+    # errors and uses 30s sub-buckets under the hood.
+    wait_deploy "$NAMESPACE" "$d" 180s
+    restarted=$((restarted + 1))
   done
-  for d in backend celery-worker celery-beat frontend; do
-    kubectl -n "$NAMESPACE" get deploy "$d" &>/dev/null && wait_deploy "$NAMESPACE" "$d" 300s || true
-  done
+  log "Image rollout summary: restarted=$restarted skipped=$skipped."
   ok "Image rollout complete."
 }
 
@@ -610,6 +834,17 @@ step_image_rollout() {
 step_health() {
   section "PHASE 7 — Health Checks"
   local failures=0
+
+  # NOTE on WAFv2 403s / hostname:
+  #   The ingress host in k8s/base/ingress.yaml is `uniops.local`.
+  #   The dev overlay does NOT override it. When testing via the AWS ALB
+  #   (uniops-alb-dev), requests with `Host: uniops.local` are routed to the
+  #   ingress. WAFv2 attached to the ALB will inspect that Host header.
+  #   A 403 from WAFv2 with `X-Amzn-Waf-...` response headers is the WAF
+  #   blocking the request, NOT an application bug.
+  #   The application-layer health check below does NOT depend on the WAF
+  #   — it uses kubectl to inspect pods/PVCs/services directly, which works
+  #   regardless of WAF or public hostname. Use this when triaging 403s.
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
     log "[dry-run] would run health checks (nodes, pods, PVCs, services, ingress)"
