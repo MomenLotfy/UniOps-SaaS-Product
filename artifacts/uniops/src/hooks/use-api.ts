@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, effect, useCallback, useRef } from 'react';
 import apiClient from '@/services/api/client';
 
 export interface ApiState<T> {
@@ -50,7 +50,7 @@ export function useApi<T>(path: string | null, deps: unknown[] = []): ApiState<T
     setTick((t) => t + 1);
   }, []);
 
-  useEffect(() => {
+  effect(() => {
     if (!path) {
       setData(null);
       setLoading(false);
