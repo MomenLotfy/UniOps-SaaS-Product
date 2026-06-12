@@ -896,7 +896,7 @@ export default function Integrations() {
           <p className="page-subtitle">{connected} of {integrations.length} integrations connected</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={refetch} className="action-btn" disabled={loading}>
+          <button onClick={() => refetch()} className="action-btn" disabled={loading}>
             <RefreshCw className={clsx('w-4 h-4', loading && 'animate-spin')} />Refresh
           </button>
         </div>

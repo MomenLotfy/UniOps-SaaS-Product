@@ -21,9 +21,9 @@ export default function AuditLogs() {
   const statusParam = filter === 'all' ? '' : `&status=${filter}`;
   const { data, loading, refetch } = useApi<any>(`/audit-logs?page=${page}&page_size=20${statusParam}`);
 
-  const logs = data?.data ?? [];
-  const total = data?.total ?? 0;
-  const pages = data?.pages ?? 1;
+  const logs = (Array.isArray(data) ? data : data?.data) ?? [];
+  const total = Array.isArray(data) ? data.length : (data?.total ?? 0);
+  const pages = Array.isArray(data) ? 1 : (data?.pages ?? 1);
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
@@ -34,7 +34,7 @@ export default function AuditLogs() {
         </div>
         <div className="flex items-center gap-2">
           <button className="action-btn"><Download className="w-4 h-4" />Export</button>
-          <button onClick={refetch} className="action-btn" disabled={loading}>
+          <button onClick={() => refetch()} className="action-btn" disabled={loading}>
             <RefreshCw className={clsx('w-4 h-4', loading && 'animate-spin')} />Refresh
           </button>
         </div>

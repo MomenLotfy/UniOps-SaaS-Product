@@ -10,9 +10,17 @@ interface ListParams {
 }
 
 // FastAPI router: /users/*
+// Response shape: { success, data: { data: User[], total, page, page_size, pages }, message, code }
+function unwrapPaginated<T>(body: any): T[] {
+  if (Array.isArray(body)) return body;
+  if (Array.isArray(body?.data)) return body.data;          // already-unwrapped list
+  if (Array.isArray(body?.data?.data)) return body.data.data; // nested APIResponse → PaginatedResponse
+  return [];
+}
+
 export const usersApi = {
   list: (params?: ListParams) =>
-    apiClient.get<{ data: User[]; total: number }>('/users', { params }).then((r) => r.data),
+    apiClient.get('/users', { params }).then((r) => unwrapPaginated<User>(r.data)),
 
   get: (id: string) =>
     apiClient.get<User>(`/users/${id}`).then((r) => r.data),

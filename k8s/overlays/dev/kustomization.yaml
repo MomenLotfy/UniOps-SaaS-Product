@@ -4,12 +4,15 @@ namespace: uniops
 resources:
   - ../../base
 images:
-  - name: uniops-backend
-    newName: uniops-backend
-    newTag: dev
-  - name: uniops-frontend
-    newName: uniops-frontend
-    newTag: dev
+  # Kustomize `images:` matches by the full image string in the rendered
+  # output. The base manifests use DockerHub images; the dev overlay only
+  # swaps the FRONTEND to the ECR pin (the protected live pin per the
+  # INFRA-REPORT). Backend stays on the base DockerHub image so the script's
+  # Phase 6 image-drift assertion in start-app-infra.sh remains consistent
+  # with what the dev overlay renders.
+  - name: momenpanda/uniops-frontend:latest
+    newName: 180840261837.dkr.ecr.us-east-2.amazonaws.com/uniops-frontend
+    newTag: fix-2026-06-03-full-unwrap
 configMapGenerator:
   - name: uniops-config
     behavior: merge
@@ -19,3 +22,11 @@ configMapGenerator:
       - LOG_LEVEL=DEBUG
       - CORS_ORIGINS=["http://localhost:5173","http://localhost:3000","http://uniops.local"]
       - FRONTEND_URL=http://uniops.local
+patches:
+  - target:
+      kind: PersistentVolumeClaim
+      name: models-pvc
+    patch: |-
+      - op: replace
+        path: /spec/accessModes/0
+        value: ReadWriteOnce

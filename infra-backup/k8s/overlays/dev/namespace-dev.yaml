@@ -1,0 +1,12 @@
+################################################################################
+# Dev Namespace — separate from prod uniops namespace
+# Allows dev and prod to coexist on the same cluster safely
+################################################################################
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: uniops-dev
+  labels:
+    app.kubernetes.io/name: uniops
+    app.kubernetes.io/managed-by: kustomize
+    environment: dev

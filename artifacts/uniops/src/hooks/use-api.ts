@@ -8,6 +8,30 @@ export interface ApiState<T> {
   refetch: (force?: boolean) => void;
 }
 
+/**
+ * Strip the FastAPI envelope from a response body.
+ *
+ * Backend wraps everything in:
+ *   { success, data: ..., message, code }
+ * Paginated endpoints double-wrap:
+ *   { success, data: { success, data: [...], total, page, page_size, pages }, ... }
+ *
+ * This helper unwraps the envelope layer(s) and returns the innermost meaningful
+ * payload, so callers always receive the real data (object, array, or scalar).
+ */
+function unwrap(body: any): any {
+  let cur = body;
+  // Strip outer APIResponse wrapper if present
+  if (cur && typeof cur === 'object' && 'success' in cur && 'data' in cur && 'message' in cur) {
+    cur = cur.data;
+  }
+  // Strip inner PaginatedResponse wrapper if present
+  if (cur && typeof cur === 'object' && Array.isArray(cur.data) && typeof cur.total === 'number') {
+    return cur;
+  }
+  return cur;
+}
+
 export function useApi<T>(path: string | null, deps: unknown[] = []): ApiState<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
@@ -49,8 +73,7 @@ export function useApi<T>(path: string | null, deps: unknown[] = []): ApiState<T
     apiClient.get<any>(path)
       .then((res) => {
         if (!cancelled) {
-          const body = res.data;
-          setData(body?.data !== undefined ? body.data : body);
+          setData(unwrap(res.data) as T);
           setLoading(false);
         }
       })
@@ -69,14 +92,12 @@ export function useApi<T>(path: string | null, deps: unknown[] = []): ApiState<T
 
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   const res = await apiClient.post<any>(path, body);
-  const d = res.data;
-  return (d?.data !== undefined ? d.data : d) as T;
+  return unwrap(res.data) as T;
 }
 
 export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
   const res = await apiClient.patch<any>(path, body);
-  const d = res.data;
-  return (d?.data !== undefined ? d.data : d) as T;
+  return unwrap(res.data) as T;
 }
 
 export async function apiDelete(path: string): Promise<void> {

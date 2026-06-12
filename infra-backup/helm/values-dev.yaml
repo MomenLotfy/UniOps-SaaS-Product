@@ -1,0 +1,54 @@
+environment: dev
+
+frontend:
+  image: "docker.io/robert/uniops-react:dev-latest"
+  replicas: 2
+  port: 80
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+backend:
+  image: "docker.io/robert/uniops-fastapi:dev-latest"
+  replicas: 2
+  port: 8000
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  # These are placeholders; actual values will be injected from ConfigMap/Secrets
+  efsId: "fs-12345678"
+  logBucket: "uniops-logs-dev"
+  backupBucket: "uniops-backups-dev"
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/load-balancer-name: uniops-alb-dev
+  hosts:
+    - host: "uniops-dev.example.com"
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: frontend
+          servicePort: 80
+        - path: /api
+          pathType: Prefix
+          serviceName: backend
+          servicePort: 8000
+
+serviceAccount:
+  create: true
+  name: "uniops-sa"
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/uniops-irsa-role-dev"

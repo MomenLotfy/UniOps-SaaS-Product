@@ -1,0 +1,53 @@
+environment: prod
+
+frontend:
+  image: "docker.io/robert/uniops-react:prod-latest"
+  replicas: 3
+  port: 80
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+
+backend:
+  image: "docker.io/robert/uniops-fastapi:prod-latest"
+  replicas: 3
+  port: 8000
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  efsId: "fs-87654321"
+  logBucket: "uniops-logs-prod"
+  backupBucket: "uniops-backups-prod"
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/load-balancer-name: uniops-alb-prod
+  hosts:
+    - host: "uniops.example.com"
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: frontend
+          servicePort: 80
+        - path: /api
+          pathType: Prefix
+          serviceName: backend
+          servicePort: 8000
+
+serviceAccount:
+  create: true
+  name: "uniops-sa"
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/uniops-irsa-role-prod"

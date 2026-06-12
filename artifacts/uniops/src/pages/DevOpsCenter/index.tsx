@@ -206,7 +206,7 @@ export default function DevOpsCenter() {
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight">DevOps Center</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Kubernetes · CI/CD Pipelines · Deployments · <span class="text-xs text-gray-600">GitHub: </span><span class="text-xs font-semibold" style="color: var(--status-color)">CONNECTED</span></p>
+          <p className="text-sm text-gray-500 mt-0.5">Kubernetes · CI/CD Pipelines · Deployments · <span className="text-xs text-gray-600">GitHub: </span><span className="text-xs font-semibold" style={{ color: 'var(--status-color)' }}>CONNECTED</span></p>
         </div>
         <div className="flex items-center gap-2">
           {/* Real-time status badge */}
@@ -332,7 +332,7 @@ export default function DevOpsCenter() {
             {k8sConnected && !podsLoading && podsError && (
               <div className="flex flex-col items-center gap-3 py-10 text-center">
                 <p className="text-sm text-red-400">{podsError}</p>
-                <button onClick={refetchPods}
+                <button onClick={() => refetchPods()}
                   className="text-xs px-3 py-1.5 rounded-lg text-gray-300 hover:text-white border border-border transition-colors">
                   Retry
                 </button>
@@ -374,8 +374,8 @@ export default function DevOpsCenter() {
       {tab === 'workloads' && (
         <div className="space-y-4">
           {/* Deployments */}
-          <ClusterSection title="Deployments" icon={Layers} count={(deployData?.data ?? []).length} loading={depsLoading}>
-            {(deployData?.data ?? []).map((d: any) => (
+          <ClusterSection title="Deployments" icon={Layers} count={(Array.isArray(deployData) ? deployData : deployData?.data ?? []).length} loading={depsLoading}>
+            {(Array.isArray(deployData) ? deployData : deployData?.data ?? []).map((d: any) => (
               <div key={`${d.namespace}/${d.name}`} className="p-3 rounded-lg border text-xs"
                 style={{ background: 'hsl(230 15% 10%)', borderColor: 'hsl(230 15% 16%)' }}>
                 <div className="flex items-center gap-3">
@@ -576,8 +576,8 @@ export default function DevOpsCenter() {
 
       {/* ── HPA tab ─────────────────────────────────────────────────────────── */}
       {tab === 'hpa' && (
-        <ClusterSection title="Horizontal Pod Autoscalers" icon={Zap} count={(hpaData?.data ?? []).length} loading={hpaLoading}>
-          {(hpaData?.data ?? []).map((hpa: any, i: number) => {
+        <ClusterSection title="Horizontal Pod Autoscalers" icon={Zap} count={(Array.isArray(hpaData) ? hpaData : hpaData?.data ?? []).length} loading={hpaLoading}>
+          {(Array.isArray(hpaData) ? hpaData : hpaData?.data ?? []).map((hpa: any, i: number) => {
             const pct = hpa.current_replicas / hpa.max_replicas * 100;
             return (
               <div key={i} className="p-4 rounded-lg border text-xs"
@@ -661,7 +661,7 @@ export default function DevOpsCenter() {
             {gitConnected && !pipesLoading && pipesError && (
               <div className="flex flex-col items-center gap-3 py-10 text-center">
                 <p className="text-sm text-red-400">{pipesError}</p>
-                <button onClick={refetchPipes}
+                <button onClick={() => refetchPipes()}
                   className="text-xs px-3 py-1.5 rounded-lg text-gray-300 hover:text-white border border-border transition-colors">
                   Retry
                 </button>

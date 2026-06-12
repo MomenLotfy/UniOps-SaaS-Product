@@ -208,7 +208,7 @@ spec:
               value: "postgresql+asyncpg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
           resources:
             requests:
-              cpu: 250m
+              cpu: 150m
               memory: 512Mi
             limits:
               cpu: 1000m

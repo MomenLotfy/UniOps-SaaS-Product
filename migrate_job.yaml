@@ -1,0 +1,81 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"batch/v1","kind":"Job","metadata":{"annotations":{"argocd.argoproj.io/hook":"PreSync","argocd.argoproj.io/hook-delete-policy":"BeforeHookCreation"},"labels":{"app.kubernetes.io/component":"migration","app.kubernetes.io/managed-by":"kustomize","app.kubernetes.io/name":"uniops-migrate","app.kubernetes.io/part-of":"uniops"},"name":"uniops-migrate","namespace":"uniops"},"spec":{"backoffLimit":3,"template":{"metadata":{"labels":{"app":"uniops-migrate","app.kubernetes.io/component":"migration","app.kubernetes.io/managed-by":"kustomize","app.kubernetes.io/part-of":"uniops"}},"spec":{"containers":[{"command":["sh","-c","echo \"Running alembic migrations...\"\nalembic upgrade head\necho \"Migrations complete.\"\n"],"env":[{"name":"DATABASE_URL","value":"postgresql+asyncpg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"}],"envFrom":[{"configMapRef":{"name":"uniops-config"}},{"secretRef":{"name":"uniops-secrets"}}],"image":"momenpanda/uniops-backend:latest","imagePullPolicy":"IfNotPresent","name":"migrate","resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"128Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}}],"imagePullSecrets":[{"name":"dockerhub-secret"}],"initContainers":[{"command":["sh","-c","echo \"Waiting for PostgreSQL at postgres:5432...\"\nuntil nc -z postgres 5432; do\n  echo \"  postgres not ready, retrying in 3s...\"\n  sleep 3\ndone\necho \"PostgreSQL is ready.\"\n"],"image":"busybox:1.36","imagePullPolicy":"IfNotPresent","name":"wait-for-postgres","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"runAsNonRoot":true,"runAsUser":65534}}],"restartPolicy":"OnFailure","securityContext":{"seccompProfile":{"type":"RuntimeDefault"}},"serviceAccountName":"uniops-backend"}},"ttlSecondsAfterFinished":300}}
+  creationTimestamp: "2026-06-01T11:01:41Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/component: migration
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: uniops-migrate
+    app.kubernetes.io/part-of: uniops
+  name: uniops-migrate
+  namespace: uniops
+  resourceVersion: "2247"
+  uid: 052e9ac5-d3f0-442f-ad12-4008981a79a9
+spec:
+  backoffLimit: 3
+  completionMode: NonIndexed
+  completions: 1
+  manualSelector: false
+  parallelism: 1
+  podReplacementPolicy: TerminatingOrFailed
+  selector:
+    matchLabels:
+      batch.kubernetes.io/controller-uid: 052e9ac5-d3f0-442f-ad12-4008981a79a9
+  suspend: false
+  template:
+    metadata:
+      labels:
+        app: uniops-migrate
+        app.kubernetes.io/component: migration
+        app.kubernetes.io/managed-by: kustomize
+        app.kubernetes.io/part-of: uniops
+        batch.kubernetes.io/controller-uid: 052e9ac5-d3f0-442f-ad12-4008981a79a9
+        batch.kubernetes.io/job-name: uniops-migrate
+        controller-uid: 052e9ac5-d3f0-442f-ad12-4008981a79a9
+        job-name: uniops-migrate
+    spec:
+      containers:
+      - command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for PostgreSQL at postgres:5432..."
+          until nc -z postgres 5432; do
+            echo "  postgres not ready, retrying in 3s..."
+            sleep 3
+          done
+          echo "PostgreSQL is ready."
+        image: busybox:1.36
+        imagePullPolicy: IfNotPresent
+        name: wait-for-postgres
+        resources: {}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 65534
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      restartPolicy: OnFailure
+      schedulerName: default-scheduler
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccount: uniops-backend
+      serviceAccountName: uniops-backend
+      terminationGracePeriodSeconds: 30
+  ttlSecondsAfterFinished: 300
+status:
+  active: 1
+  ready: 0
+  startTime: "2026-06-01T11:01:41Z"
+  terminating: 0
+  uncountedTerminatedPods: {}

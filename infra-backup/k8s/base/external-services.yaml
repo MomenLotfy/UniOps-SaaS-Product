@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: uniops
+spec:
+  type: ExternalName
+  externalName: uniops-postgres-dev.czow22y627dw.us-east-2.rds.amazonaws.com
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: uniops
+spec:
+  type: ExternalName
+  externalName: master.uniops-redis-dev.wenqsd.use2.cache.amazonaws.com
