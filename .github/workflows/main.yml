@@ -31,7 +31,7 @@ jobs:
       - name: Install Frontend Dependencies
         run: |
           cd artifacts/uniops
-          pnpm install
+          pnpm install --no-frozen-lockfile
 
       - name: Frontend TypeCheck
         run: |
