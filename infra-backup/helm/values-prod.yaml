@@ -1,7 +1,7 @@
 environment: prod
 
 frontend:
-  image: "docker.io/robert/uniops-react:prod-latest"
+    image: "663476173962.dkr.ecr.us-east-2.amazonaws.com/uniops-frontend:latest"
   replicas: 3
   port: 80
   resources:
@@ -13,7 +13,7 @@ frontend:
       memory: 256Mi
 
 backend:
-  image: "docker.io/robert/uniops-fastapi:prod-latest"
+  image: "663476173962.dkr.ecr.us-east-2.amazonaws.com/uniops-backend:latest"
   replicas: 3
   port: 8000
   resources:
