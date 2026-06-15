@@ -14,6 +14,6 @@ RUN pnpm build:standalone
 # Production stage
 FROM nginx:1.27-alpine
 COPY --from=builder /workspace/artifacts/uniops/dist /usr/share/nginx/html
-COPY artifacts/uniops/nginx.conf /etc/nginx/conf.d/default.conf  # ✅ حدد الـ path
+COPY artifacts/uniops/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
