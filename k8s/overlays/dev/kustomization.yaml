@@ -11,7 +11,7 @@ images:
   # Phase 6 image-drift assertion in start-app-infra.sh remains consistent
   # with what the dev overlay renders.
   - name: momenpanda/uniops-frontend:latest
-    newName: 180840261837.dkr.ecr.us-east-2.amazonaws.com/uniops-frontend
+    newName: 663476173962.dkr.ecr.us-east-2.amazonaws.com/uniops-frontend
     newTag: fix-2026-06-03-full-unwrap
 configMapGenerator:
   - name: uniops-config

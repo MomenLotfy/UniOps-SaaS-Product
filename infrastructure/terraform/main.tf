@@ -26,7 +26,7 @@ terraform {
 
   # Remote state — مش تحفظ الـ state محلياً
   backend "s3" {
-    bucket = "uniops-terraform-state"
+    bucket = "uniops-663476173962-tfstate"
     key    = "prod/terraform.tfstate"
     region = "us-east-1"
     # Locking بـ DynamoDB

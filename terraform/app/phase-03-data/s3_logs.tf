@@ -1,6 +1,6 @@
 # Logs Bucket
 resource "aws_s3_bucket" "logs" {
-  bucket = "uniops-logs-dev-storage"
+  bucket = "uniops-logs-dev-${random_string.suffix.result}"
 
   tags = {
     Name = "uniops-logs-dev"

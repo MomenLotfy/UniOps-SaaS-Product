@@ -36,8 +36,12 @@ terraform {
     }
   }
 
+  # ── FINAL form (post-migration) ─────────────────────────────────────
+  # S3 backend with DynamoDB locking. The local-backend block that was
+  # used during first-apply has been removed and state migrated to S3.
+  # See backend.tf.bak for the local-backend temporary form.
   backend "s3" {
-    bucket         = "uniops-terraform-state"
+    bucket         = "uniops-663476173962-tfstate"
     key            = "bootstrap/terraform.tfstate"
     region         = "us-east-2"
     dynamodb_table = "uniops-terraform-locks"

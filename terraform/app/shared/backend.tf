@@ -2,7 +2,7 @@
 # App-layer state is stored under a separate key in the bootstrap-owned bucket.
 terraform {
   backend "s3" {
-    bucket         = "uniops-terraform-state"
+    bucket         = "uniops-663476173962-tfstate"
     key            = "app/terraform.tfstate"
     region         = "us-east-2"
     dynamodb_table = "uniops-terraform-locks"

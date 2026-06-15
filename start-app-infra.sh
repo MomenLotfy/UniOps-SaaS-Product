@@ -27,7 +27,7 @@
 # SCOPE (what this script NEVER touches — protected)
 #   ✗ terraform/bootstrap/   (managed by bootstrap layer, see terraform/bootstrap/README.md)
 #   ✗ aws_ecr_repository.*   (state bucket is shared, repos are bootstrap-owned)
-#   ✗ aws_s3_bucket.uniops-terraform-state  (bootstrap-owned)
+#   ✗ aws_s3_bucket.uniops-663476173962-tfstate  (bootstrap-owned)
 #   ✗ aws_dynamodb_table.uniops-terraform-locks  (bootstrap-owned)
 #   ✗ aws_eks_cluster.uniops-eks-dev  (lifecycle=managed-out-of-band)
 #   ✗ RDS, ElastiCache, EFS  (provisioned out-of-band; not redeployed)
@@ -110,11 +110,11 @@ NAMESPACE="uniops"
 REGION="${AWS_REGION:-us-east-2}"
 
 # App Terraform layer — owns EKS + all app-layer AWS resources.
-# State lives at s3://uniops-terraform-state/app/terraform.tfstate (a different
+# State lives at s3://uniops-663476173962-tfstate/app/terraform.tfstate (a different
 # key from bootstrap/terraform.tfstate). The bucket and DynamoDB table are
 # owned by the bootstrap layer; we only WRITE to our key.
 TERRAFORM_APP_DIR="$REPO_ROOT/terraform/app"
-TERRAFORM_APP_STATE_BUCKET="uniops-terraform-state"
+TERRAFORM_APP_STATE_BUCKET="uniops-663476173962-tfstate"
 TERRAFORM_APP_STATE_KEY="app/terraform.tfstate"
 TERRAFORM_APP_LOCK_TABLE="uniops-terraform-locks"
 
@@ -127,7 +127,7 @@ TERRAFORM_APP_SOURCE="$REPO_ROOT/infra-backup/infrastructure/terraform"
 # Live, pinned, in-cluster image set.
 # DO NOT change these without an explicit, reviewed change to the deployment
 # manifests. They reflect the running, healthy production state as of 2026-06-05.
-FRONTEND_IMAGE="180840261837.dkr.ecr.us-east-2.amazonaws.com/uniops-frontend:fix-2026-06-03-full-unwrap"
+FRONTEND_IMAGE="663476173962.dkr.ecr.us-east-2.amazonaws.com/uniops-frontend:fix-2026-06-03-full-unwrap"
 BACKEND_IMAGE_DOCKERHUB="momenpanda/uniops-backend:latest"
 FRONTEND_TARGET_PORT=8080   # PRESERVED EXACTLY
 CELERY_PROBE="pgrep -f 'celery.*worker'"   # PRESERVED EXACTLY
@@ -284,7 +284,7 @@ prepare_app_terraform_dir() {
   cp -r "$TERRAFORM_APP_SOURCE" "$TERRAFORM_APP_DIR"
   # Patch the backend config to point at the bootstrap-provided bucket and
   # the app-layer state key. The original bucket name in the legacy tree
-  # (uniops-terraform-state-8j3k9l) does not exist; we rewrite it.
+  # (uniops-663476173962-tfstate-8j3k9l) does not exist; we rewrite it.
   local backend_tf="$TERRAFORM_APP_DIR/shared/backend.tf"
   [[ -f "$backend_tf" ]] || fail "Expected backend config at $backend_tf" 1
   cat > "$backend_tf" <<EOF
