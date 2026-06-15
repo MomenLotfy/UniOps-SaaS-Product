@@ -1,16 +1,20 @@
 // jenkins/Jenkinsfile
-// UniOps Control Tower - Production CI/CD Pipeline
-// Requires Jenkins plugins: Pipeline, Docker, Kubernetes, Slack, SonarQube, Ansible
+// UniOps Control Tower - CI/CD Pipeline
+// Uses: AWS ECR + kubectl (EKS) — No DockerHub, No Ansible
 
 pipeline {
     agent any
 
     environment {
-        // Registry
-        DOCKER_REGISTRY   = 'docker.io'
-        DOCKER_ORG        = 'uniops'
-        FRONTEND_IMAGE    = "${DOCKER_REGISTRY}/${DOCKER_ORG}/uniops-frontend"
-        BACKEND_IMAGE     = "${DOCKER_REGISTRY}/${DOCKER_ORG}/uniops-backend"
+        // AWS & ECR
+        AWS_REGION        = 'us-east-2'
+        AWS_ACCOUNT_ID    = '663476173962'
+        ECR_BACKEND       = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/uniops-backend"
+        ECR_FRONTEND      = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/uniops-frontend"
+
+        // EKS
+        EKS_CLUSTER       = 'uniops-eks-dev'
+        K8S_NAMESPACE     = 'uniops'
 
         // SonarQube
         SONAR_HOST_URL    = 'http://sonarqube:9000'
@@ -18,10 +22,6 @@ pipeline {
 
         // Trivy
         TRIVY_SEVERITY    = 'HIGH,CRITICAL'
-
-        // Ansible
-        ANSIBLE_INVENTORY_DEV  = 'ansible/inventory/dev/hosts.yml'
-        ANSIBLE_INVENTORY_PROD = 'ansible/inventory/prod/hosts.yml'
 
         // Slack
         SLACK_CHANNEL     = '#uniops-ci'
@@ -39,7 +39,14 @@ pipeline {
         // ─── 1. Checkout ──────────────────────────────────────
         stage('Checkout') {
             steps {
-                checkout scm
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/MomenLotfy/UniOps-SaaS-Product.git',
+                        credentialsId: 'github-creds'
+                    ]]
+                ])
                 script {
                     env.GIT_COMMIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                     env.GIT_BRANCH       = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
@@ -54,14 +61,15 @@ pipeline {
             parallel {
                 stage('SonarQube') {
                     steps {
-                        sh '''
-                            echo "🔍 SonarQube SAST + Code Quality"
-                            sonar-scanner \
-                                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                                -Dsonar.sources=./backend,./artifacts/uniops/src \
-                                -Dsonar.host.url=${SONAR_HOST_URL} \
-                                -Dsonar.login=${SONAR_TOKEN}
-                        '''
+                        withSonarQubeEnv('SonarQube') {
+                            sh '''
+                                echo "🔍 SonarQube SAST + Code Quality"
+                                sonar-scanner \
+                                    -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                                    -Dsonar.sources=./backend,./artifacts/uniops/src \
+                                    -Dsonar.host.url=${SONAR_HOST_URL}
+                            '''
+                        }
                     }
                 }
                 stage('Trivy FS') {
@@ -113,9 +121,12 @@ pipeline {
             steps {
                 sh '''
                     echo "🐳 Building Frontend Image"
-                    docker build -t ${FRONTEND_IMAGE}:${BUILD_TAG} -f artifacts/uniops/Dockerfile artifacts/uniops/
+                    docker build -t ${ECR_FRONTEND}:${BUILD_TAG} -t ${ECR_FRONTEND}:latest \
+                        -f artifacts/uniops/Dockerfile artifacts/uniops/
+
                     echo "🐳 Building Backend Image"
-                    docker build -t ${BACKEND_IMAGE}:${BUILD_TAG} -f backend/Dockerfile backend/
+                    docker build -t ${ECR_BACKEND}:${BUILD_TAG} -t ${ECR_BACKEND}:latest \
+                        -f backend/Dockerfile backend/
                 '''
             }
         }
@@ -125,49 +136,84 @@ pipeline {
             steps {
                 sh '''
                     echo "🔒 Scanning Frontend Image"
-                    trivy image --severity ${TRIVY_SEVERITY} --exit-code 1 ${FRONTEND_IMAGE}:${BUILD_TAG}
+                    trivy image --severity ${TRIVY_SEVERITY} --exit-code 1 ${ECR_FRONTEND}:${BUILD_TAG}
                     echo "🔒 Scanning Backend Image"
-                    trivy image --severity ${TRIVY_SEVERITY} --exit-code 1 ${BACKEND_IMAGE}:${BUILD_TAG}
+                    trivy image --severity ${TRIVY_SEVERITY} --exit-code 1 ${ECR_BACKEND}:${BUILD_TAG}
                 '''
             }
         }
 
-        // ─── 6. Push to Registry ──────────────────────────────
-        stage('Push Images') {
+        // ─── 6. Push to ECR ───────────────────────────────────
+        stage('Push to ECR') {
             when { branch 'main' }
             steps {
-                sh '''
-                    docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
-                    docker push ${FRONTEND_IMAGE}:${BUILD_TAG}
-                    docker push ${FRONTEND_IMAGE}:latest
-                    docker push ${BACKEND_IMAGE}:${BUILD_TAG}
-                    docker push ${BACKEND_IMAGE}:latest
-                '''
+                withAWS(credentials: 'aws-ecr-creds', region: "${AWS_REGION}") {
+                    sh '''
+                        echo "🔑 Logging in to ECR"
+                        aws ecr get-login-password --region ${AWS_REGION} | \
+                            docker login --username AWS --password-stdin \
+                            ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+                        echo "📤 Pushing Frontend"
+                        docker push ${ECR_FRONTEND}:${BUILD_TAG}
+                        docker push ${ECR_FRONTEND}:latest
+
+                        echo "📤 Pushing Backend"
+                        docker push ${ECR_BACKEND}:${BUILD_TAG}
+                        docker push ${ECR_BACKEND}:latest
+                    '''
+                }
             }
         }
 
-        // ─── 7. Deploy to Staging via Ansible ─────────────────
-        stage('Deploy to Staging') {
+        // ─── 7. Deploy to EKS (Dev) ───────────────────────────
+        stage('Deploy to EKS Dev') {
             when { branch 'main' }
             steps {
-                sh '''
-                    echo "🚀 Deploying to Staging"
-                    ansible-playbook -i ${ANSIBLE_INVENTORY_DEV} ansible/deploy.yml \
-                        -e "image_tag=${BUILD_TAG}" \
-                        -e "environment=dev"
-                '''
+                withKubeCredentials([[
+                    credentialsId: 'eks-jenkins-token',
+                    serverUrl: 'https://450B0E6A13174336E007089BA22A382E.gr7.us-east-2.eks.amazonaws.com',
+                    namespace: "${K8S_NAMESPACE}"
+                ]]) {
+                    sh '''
+                        echo "🚀 Deploying to EKS Dev Namespace: ${K8S_NAMESPACE}"
+
+                        # Update image tags in manifests
+                        kubectl set image deployment/backend \
+                            backend=${ECR_BACKEND}:${BUILD_TAG} \
+                            -n ${K8S_NAMESPACE}
+
+                        kubectl set image deployment/frontend \
+                            frontend=${ECR_FRONTEND}:${BUILD_TAG} \
+                            -n ${K8S_NAMESPACE}
+
+                        # Wait for rollout
+                        kubectl rollout status deployment/backend -n ${K8S_NAMESPACE} --timeout=120s
+                        kubectl rollout status deployment/frontend -n ${K8S_NAMESPACE} --timeout=120s
+                    '''
+                }
             }
         }
 
-        // ─── 8. Staging Health Checks ─────────────────────────
-        stage('Staging Health') {
+        // ─── 8. Health Check ──────────────────────────────────
+        stage('Health Check') {
             when { branch 'main' }
             steps {
-                sh '''
-                    echo "🏥 Running Staging Health Checks"
-                    ansible-playbook -i ${ANSIBLE_INVENTORY_DEV} ansible/health-check.yml \
-                        -e "environment=dev"
-                '''
+                withKubeCredentials([[
+                    credentialsId: 'eks-jenkins-token',
+                    serverUrl: 'https://450B0E6A13174336E007089BA22A382E.gr7.us-east-2.eks.amazonaws.com',
+                    namespace: "${K8S_NAMESPACE}"
+                ]]) {
+                    sh '''
+                        echo "🏥 Checking Pod Status"
+                        kubectl get pods -n ${K8S_NAMESPACE}
+                        kubectl wait --for=condition=ready pod \
+                            -l app=backend -n ${K8S_NAMESPACE} --timeout=120s
+                        kubectl wait --for=condition=ready pod \
+                            -l app=frontend -n ${K8S_NAMESPACE} --timeout=120s
+                        echo "✅ All pods are healthy"
+                    '''
+                }
             }
         }
 
@@ -180,12 +226,25 @@ pipeline {
                 submitter "admin,devops-lead"
             }
             steps {
-                sh '''
-                    echo "🚀 Deploying to Production"
-                    ansible-playbook -i ${ANSIBLE_INVENTORY_PROD} ansible/deploy.yml \
-                        -e "image_tag=${BUILD_TAG}" \
-                        -e "environment=prod"
-                '''
+                withKubeCredentials([[
+                    credentialsId: 'eks-jenkins-token',
+                    serverUrl: 'https://450B0E6A13174336E007089BA22A382E.gr7.us-east-2.eks.amazonaws.com',
+                    namespace: 'uniops-prod'
+                ]]) {
+                    sh '''
+                        echo "🚀 Deploying to Production"
+                        kubectl set image deployment/backend \
+                            backend=${ECR_BACKEND}:${BUILD_TAG} \
+                            -n uniops-prod
+
+                        kubectl set image deployment/frontend \
+                            frontend=${ECR_FRONTEND}:${BUILD_TAG} \
+                            -n uniops-prod
+
+                        kubectl rollout status deployment/backend -n uniops-prod --timeout=180s
+                        kubectl rollout status deployment/frontend -n uniops-prod --timeout=180s
+                    '''
+                }
             }
         }
 
@@ -193,11 +252,20 @@ pipeline {
         stage('Post-Deploy Verification') {
             when { branch 'main' }
             steps {
-                sh '''
-                    echo "✅ Verifying Production"
-                    ansible-playbook -i ${ANSIBLE_INVENTORY_PROD} ansible/health-check.yml \
-                        -e "environment=prod"
-                '''
+                withKubeCredentials([[
+                    credentialsId: 'eks-jenkins-token',
+                    serverUrl: 'https://450B0E6A13174336E007089BA22A382E.gr7.us-east-2.eks.amazonaws.com',
+                    namespace: 'uniops-prod'
+                ]]) {
+                    sh '''
+                        echo "✅ Verifying Production"
+                        kubectl get pods -n uniops-prod
+                        kubectl wait --for=condition=ready pod \
+                            -l app=backend -n uniops-prod --timeout=180s
+                        kubectl wait --for=condition=ready pod \
+                            -l app=frontend -n uniops-prod --timeout=180s
+                    '''
+                }
             }
         }
     }
@@ -216,6 +284,9 @@ pipeline {
                 color: 'danger',
                 message: "❌ UniOps #${BUILD_NUMBER} FAILED\n📦 ${env.BUILD_TAG}\n🔗 ${env.BUILD_URL}"
             )
+        }
+        always {
+            cleanWs()
         }
     }
 }
