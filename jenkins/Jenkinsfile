@@ -17,8 +17,9 @@ pipeline {
         K8S_NAMESPACE     = 'uniops'
 
         // SonarQube
-        SONAR_HOST_URL    = 'http://172.17.0.1:9000'
-        SONAR_PROJECT_KEY = 'uniops'
+        SONAR_HOST_URL    = 'https://sonarcloud.io'
+        SONAR_PROJECT_KEY = 'MomenLotfy_UniOps-SaaS-Product'
+        SONAR_ORG         = 'momenlotfy'
 
         // Trivy
         TRIVY_SEVERITY    = 'HIGH,CRITICAL'
@@ -63,10 +64,13 @@ pipeline {
                         withSonarQubeEnv('SonarQube') {
                             sh '''
                                 echo "🔍 SonarQube SAST + Code Quality"
-                                sonar-scanner \
+                                
+                                    sonar-scanner \
                                     -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
                                     -Dsonar.sources=./backend,./artifacts/uniops/src \
-                                    -Dsonar.host.url=${SONAR_HOST_URL}
+                                    -Dsonar.host.url=${SONAR_HOST_URL} \
+                                    -Dsonar.organization=${SONAR_ORG} \
+                                    -Dsonar.token=${SONAR_TOKEN}
                             '''
                         }
                     }
