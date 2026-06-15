@@ -61,7 +61,7 @@ pipeline {
             parallel {
                 stage('SonarQube') {
                     steps {
-                        withSonarQubeEnv('SonarQube') {
+                        withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                             sh '''
                                 echo "🔍 SonarQube SAST + Code Quality"
                                 
