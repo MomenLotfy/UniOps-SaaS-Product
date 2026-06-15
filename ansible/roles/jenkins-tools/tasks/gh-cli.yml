@@ -1,0 +1,110 @@
+---
+# File: /home/bisho/ansible/roles/jenkins-tools/tasks/gh-cli.yml
+#
+# Purpose:
+#   Install GitHub CLI (gh) from the official cli.github.com apt repository
+#   using the modern per-repository signing key model
+#   (key in /etc/apt/keyrings/, repo entry references it via signed-by=).
+#
+# Compatibility:
+#   * Ubuntu 22.04 LTS (jammy)
+#   * Ubuntu 24.04 LTS (noble)
+#   * Ubuntu 26.04 LTS (resolute)
+#
+# Why this file is the way it is:
+#   * The previous version used `shell` to curl the key into a dearmored
+#     keyring and a second `shell` to `tee` the .list file. Both have been
+#     replaced with idempotent, ansible-lint-clean modules.
+#   * `get_url` downloads the ASCII armored key, `command` + `gpg --dearmor`
+#     converts it (this is the one step no native Ansible module covers),
+#     `apt_repository` writes the signed repo file.
+#   * No `apt-key` is used anywhere.
+
+- name: gh-cli | Install apt prerequisites (Debian)
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+      - gnupg
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: ansible_os_family == 'Debian'
+  tags: [gh-cli, tools]
+
+- name: gh-cli | Add GitHub CLI yum repository (RedHat/Amazon)
+  ansible.builtin.yum_repository:
+    name: gh-cli
+    description: GitHub CLI
+    baseurl: https://cli.github.com/packages/rpm/
+    enabled: yes
+    gpgcheck: no
+  become: true
+  when: ansible_os_family == 'RedHat' or ansible_distribution == 'Amazon'
+  tags: [gh-cli, tools]
+
+- name: gh-cli | Ensure /etc/apt/keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  when: ansible_os_family == 'Debian'
+  tags: [gh-cli, tools]
+
+- name: gh-cli | Download GitHub CLI public GPG key (binary .gpg)
+  ansible.builtin.get_url:
+    url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
+    dest: /etc/apt/keyrings/githubcli-archive-keyring.gpg
+    owner: root
+    group: root
+    mode: '0644'
+    force: false
+  become: true
+  when: ansible_os_family == 'Debian'
+  tags: [gh-cli, tools]
+
+- name: gh-cli | Add GitHub CLI apt repository (signed-by keyring)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else ('arm64' if ansible_architecture == 'aarch64' else ansible_architecture) }} signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main"
+    filename: github-cli
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_os_family == 'Debian'
+  tags: [gh-cli, tools]
+
+- name: gh-cli | Install gh via apt (Debian)
+  ansible.builtin.apt:
+    name: gh
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: ansible_os_family == 'Debian'
+  tags: [gh-cli, tools]
+
+- name: gh-cli | Install gh via yum (RedHat)
+  ansible.builtin.yum:
+    name: gh
+    state: present
+    update_cache: yes
+  become: true
+  when: ansible_os_family == 'RedHat' or ansible_distribution == 'Amazon'
+  tags: [gh-cli, tools]
+
+- name: gh-cli | Verify gh binary
+  ansible.builtin.command: gh --version
+  register: gh_version_output
+  changed_when: false
+  check_mode: false
+  failed_when: gh_version_output.rc != 0
+  tags: [gh-cli, tools]
+
+- name: gh-cli | Display installed version
+  ansible.builtin.debug:
+    msg: "Installed gh-cli version: {{ gh_version_output.stdout }}"
+  tags: [gh-cli, tools]

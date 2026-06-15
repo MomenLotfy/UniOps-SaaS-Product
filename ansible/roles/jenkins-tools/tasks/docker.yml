@@ -1,0 +1,177 @@
+---
+# File: /home/bisho/ansible/roles/jenkins-tools/tasks/docker.yml
+#
+# Purpose:
+#   Install Docker Engine and Compose from the official Docker apt repository
+#   using the modern per-repository signing key model
+#   (key in /etc/apt/keyrings/, repo entry references it via signed-by=).
+#
+# Variables:
+#   docker_user: (default: "ubuntu") - User to add to the docker group.
+#
+# Compatibility:
+#   * Ubuntu 22.04 LTS (jammy)
+#   * Ubuntu 24.04 LTS (noble)
+#   * Ubuntu 26.04 LTS (resolute)
+#
+# Why this file is the way it is:
+#   * The previous version used `shell` to curl the key into a dearmored
+#     keyring (idempotency was achieved by `creates:`, which is a smell).
+#     The shell+creates pattern has been replaced with explicit `get_url`
+#     + `command` (dearmor) tasks. The `command` task is gated by
+#     `creates:`, so it is idempotent at the filesystem level. We do not
+#     use `apt_key` (deprecated, removed in ansible-core 2.25).
+#   * The repository is declared with `apt_repository` and a `signed-by=`
+#     clause that scopes trust to the per-repo keyring file.
+
+- name: Docker | Install apt prerequisites (Debian)
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: ansible_os_family == 'Debian'
+  tags: [docker, infra]
+
+- name: Docker | Install Docker (Amazon Linux 2)
+  ansible.builtin.yum:
+    name: docker
+    state: present
+  become: true
+  when: ansible_distribution == "Amazon"
+  tags: [docker, infra]
+
+- name: Docker | Ensure /etc/apt/keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  when: ansible_os_family == 'Debian'
+  tags: [docker, infra]
+
+- name: Docker | Download Docker public GPG key (ASCII armored)
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    owner: root
+    group: root
+    mode: '0644'
+    force: false
+  become: true
+  when: ansible_os_family == 'Debian'
+  tags: [docker, infra]
+
+- name: Docker | Dearmor Docker public GPG key to binary keyring
+  ansible.builtin.command:
+    cmd: gpg --dearmor < /etc/apt/keyrings/docker.asc > /etc/apt/keyrings/docker.gpg
+    creates: /etc/apt/keyrings/docker.gpg
+  become: true
+  changed_when: false
+  when: ansible_os_family == 'Debian'
+  tags: [docker, infra]
+
+- name: Docker | Remove the ASCII armored copy (the binary .gpg is what apt uses)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/docker.asc
+    state: absent
+  become: true
+  when: ansible_os_family == 'Debian'
+  tags: [docker, infra]
+
+- name: Docker | Add Docker apt repository (signed-by keyring)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else ('arm64' if ansible_architecture == 'aarch64' else ansible_architecture) }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    filename: docker
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_os_family == 'Debian'
+  tags: [docker, infra]
+
+- name: Docker | Install Docker Engine and plugins (Debian)
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: ansible_os_family == 'Debian'
+  tags: [docker, infra]
+  notify: Restart Docker
+
+- name: Docker | Ensure service is started and enabled
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+  become: true
+  tags: [docker, infra]
+
+- name: Docker | Add user to docker group
+  ansible.builtin.user:
+    name: "{{ docker_user | default('ubuntu' if ansible_os_family == 'Debian' else 'ec2-user') }}"
+    groups: docker
+    append: true
+  become: true
+  tags: [docker, infra]
+  notify: User Group Changed
+
+- name: Docker | Verify docker binary
+  ansible.builtin.command: docker --version
+  register: docker_version_output
+  changed_when: false
+  check_mode: false
+  failed_when: docker_version_output.rc != 0
+  tags: [docker, infra]
+
+- name: Docker | Ensure docker cli-plugins dir exists (RedHat)
+  ansible.builtin.file:
+    path: /usr/local/lib/docker/cli-plugins
+    state: directory
+    mode: '0755'
+  become: true
+  when: ansible_os_family == 'RedHat' or ansible_distribution == 'Amazon'
+  tags: [docker, infra]
+
+- name: Docker | Install Docker Compose V2 binary (RedHat)
+  ansible.builtin.get_url:
+    url: "https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-linux-x86_64"
+    dest: /usr/local/lib/docker/cli-plugins/docker-compose
+    mode: '0755'
+  become: true
+  when: ansible_os_family == 'RedHat' or ansible_distribution == 'Amazon'
+  tags: [docker, infra]
+
+- name: Docker | Install Docker Compose Plugin (Debian)
+  ansible.builtin.apt:
+    name: docker-compose-plugin
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_os_family == 'Debian'
+  tags: [docker, infra]
+
+- name: Docker | Verify docker compose binary
+  ansible.builtin.command: docker compose version
+  register: compose_version_output
+  changed_when: false
+  check_mode: false
+  failed_when: compose_version_output.rc != 0
+  tags: [docker, infra]
+
+- name: Docker | Display versions
+  ansible.builtin.debug:
+    msg: "Docker: {{ docker_version_output.stdout }}, Compose: {{ compose_version_output.stdout }}"
+  tags: [docker, infra]

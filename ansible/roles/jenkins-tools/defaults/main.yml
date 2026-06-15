@@ -1,0 +1,9 @@
+---
+# File: /home/bisho/ansible/roles/jenkins-tools/defaults/main.yml
+#
+# Default variables for the jenkins-tools role.
+# Override per-host, per-group, or per-play as needed.
+
+# Node.js major version to install from the official NodeSource repository.
+# Supported values: "20", "22", "24".
+nodejs_version: "20"

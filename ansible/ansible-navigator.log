@@ -1,0 +1,53 @@
+2026-06-08T14:17:41.091845+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' Image inspection failed, image assumed to be corrupted or missing
+2026-06-08T14:17:41.092154+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stdout: []
+
+2026-06-08T14:17:41.092198+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stderr: Error: registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: image not known
+
+2026-06-08T14:17:45.219712+00:00 ERROR 'ansible_navigator.image_manager.puller._log_message' Execution environment pull failed
+2026-06-08T14:17:50.639136+00:00 ERROR 'ansible_navigator.actions.doc._run_runner' Error occurred while fetching doc for plugin community.general.npm: 'Error: unable to copy from source docker://registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: initializing source docker://registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials. Further instructions can be found here: https://access.redhat.com/RegistryAuthentication
+'
+2026-06-08T14:24:29.382787+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' Image inspection failed, image assumed to be corrupted or missing
+2026-06-08T14:24:29.382972+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stdout: []
+
+2026-06-08T14:24:29.383011+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stderr: Error: registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: image not known
+
+2026-06-08T14:24:31.092168+00:00 ERROR 'ansible_navigator.image_manager.puller._log_message' Execution environment pull failed
+2026-06-08T14:24:32.609614+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Errors were encountered while gathering the inventory:
+2026-06-08T14:24:32.609684+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Error: unable to copy from source docker://registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: initializing source docker://registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials. Further instructions can be found here: https://access.redhat.com/RegistryAuthentication
+2026-06-08T14:24:42.780155+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' Image inspection failed, image assumed to be corrupted or missing
+2026-06-08T14:24:42.780330+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stdout: []
+
+2026-06-08T14:24:42.780368+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stderr: Error: registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: image not known
+
+2026-06-08T14:24:44.601063+00:00 ERROR 'ansible_navigator.image_manager.puller._log_message' Execution environment pull failed
+2026-06-08T14:24:45.965977+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Errors were encountered while gathering the inventory:
+2026-06-08T14:24:45.966049+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Error: unable to copy from source docker://registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: initializing source docker://registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials. Further instructions can be found here: https://access.redhat.com/RegistryAuthentication
+2026-06-08T14:25:21.207193+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' Image inspection failed, image assumed to be corrupted or missing
+2026-06-08T14:25:21.207350+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stdout: []
+
+2026-06-08T14:25:21.207378+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stderr: Error: registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: image not known
+
+2026-06-08T14:25:22.737342+00:00 ERROR 'ansible_navigator.image_manager.puller._log_message' Execution environment pull failed
+2026-06-08T14:25:25.089386+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Errors were encountered while gathering the inventory:
+2026-06-08T14:25:25.089456+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Error: unable to copy from source docker://registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: initializing source docker://registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials. Further instructions can be found here: https://access.redhat.com/RegistryAuthentication
+2026-06-08T14:31:23.852905+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' Image inspection failed, image assumed to be corrupted or missing
+2026-06-08T14:31:23.853073+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stdout: []
+
+2026-06-08T14:31:23.853110+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stderr: Error: registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest: image not known
+
+2026-06-08T14:47:46.103059+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Errors were encountered while gathering the inventory:
+2026-06-08T14:47:46.103422+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Error: OCI runtime error: crun: unknown version specified
+2026-06-08T14:48:01.387865+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Errors were encountered while gathering the inventory:
+2026-06-08T14:48:01.388052+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Error: OCI runtime error: crun: unknown version specified
+2026-06-08T14:48:16.691994+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Errors were encountered while gathering the inventory:
+2026-06-08T14:48:16.692150+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Error: OCI runtime error: crun: unknown version specified
+2026-06-08T14:49:22.807243+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Errors were encountered while gathering the inventory:
+2026-06-08T14:49:22.807406+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Error: OCI runtime error: crun: unknown version specified
+2026-06-08T15:23:36.896453+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Errors were encountered while gathering the inventory:
+2026-06-08T15:23:36.896602+00:00 ERROR 'ansible_navigator.actions.inventory._collect_inventory_details_interactive' Error: OCI runtime error: crun: unknown version specified
+2026-06-08T15:58:20.822632+00:00 CRITICAL 'ansible_navigator.actions.run_playbook._handle_message' Unhandled message from runner queue, discarded: {'event': 'verbose', 'uuid': '1ac463c4-d8bc-4b4e-b3bb-d2460aa6e8d6', 'counter': 1, 'stdout': 'Error: SELinux relabeling of /home/bisho is not allowed', 'start_line': 0, 'end_line': 1, 'runner_ident': 'ce86ee29-3d13-41c7-91c0-4b71299151e8', 'created': '2026-06-08T15:58:20.818179'}
+2026-06-08T17:44:18.182851+00:00 WARNING 'ansible_navigator.runner.base._add_env_vars_to_args' Pass through environment variable `ANSIBLE_NODESOURCE_SKIP_AWS=1` not currently set, discarded
+2026-06-09T15:52:53.182894+00:00 WARNING 'ansible_navigator.run' Dirty exit, killing the pid
+2026-06-09T15:53:16.873050+00:00 WARNING 'ansible_navigator.run' Dirty exit, killing the pid
+2026-06-14T16:05:36.543083+00:00 ERROR 'ansible_navigator.image_manager.puller._log_message' Execution environment pull failed
+2026-06-14T16:06:40.003859+00:00 WARNING 'ansible_navigator.run' Dirty exit, killing the pid
