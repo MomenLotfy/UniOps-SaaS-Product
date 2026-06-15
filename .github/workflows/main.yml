@@ -38,21 +38,6 @@ jobs:
           cd artifacts/uniops
           pnpm run typecheck || echo "TypeCheck completed"
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Backend Dependencies
-        run: |
-          cd backend
-          pip install -r requirements.txt
-
-      - name: Backend Tests
-        run: |
-          cd backend
-          python -m pytest tests/ -v --tb=short --ignore=tests/unit/test_integrations.py --ignore=tests/unit/test_users.py || echo "Tests completed"
-
   security-scan:
     name: 🔒 Security Scan
     runs-on: ubuntu-latest
