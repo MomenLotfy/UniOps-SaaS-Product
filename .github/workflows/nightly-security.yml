@@ -1,0 +1,32 @@
+name: Nightly Security Scan
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # كل يوم الساعة 2 صباحاً
+
+jobs:
+  nightly-scan:
+    name: 🔒 Nightly Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Trivy Full Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH,MEDIUM
+          format: sarif
+          output: trivy-results.sarif
+
+      - name: Upload Results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: Semgrep Full Scan
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: auto
