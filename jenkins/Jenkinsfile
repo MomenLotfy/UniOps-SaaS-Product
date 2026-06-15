@@ -1,0 +1,221 @@
+// jenkins/Jenkinsfile
+// UniOps Control Tower - Production CI/CD Pipeline
+// Requires Jenkins plugins: Pipeline, Docker, Kubernetes, Slack, SonarQube, Ansible
+
+pipeline {
+    agent any
+
+    environment {
+        // Registry
+        DOCKER_REGISTRY   = 'docker.io'
+        DOCKER_ORG        = 'uniops'
+        FRONTEND_IMAGE    = "${DOCKER_REGISTRY}/${DOCKER_ORG}/uniops-frontend"
+        BACKEND_IMAGE     = "${DOCKER_REGISTRY}/${DOCKER_ORG}/uniops-backend"
+
+        // SonarQube
+        SONAR_HOST_URL    = 'http://sonarqube:9000'
+        SONAR_PROJECT_KEY = 'uniops'
+
+        // Trivy
+        TRIVY_SEVERITY    = 'HIGH,CRITICAL'
+
+        // Ansible
+        ANSIBLE_INVENTORY_DEV  = 'ansible/inventory/dev/hosts.yml'
+        ANSIBLE_INVENTORY_PROD = 'ansible/inventory/prod/hosts.yml'
+
+        // Slack
+        SLACK_CHANNEL     = '#uniops-ci'
+    }
+
+    options {
+        timestamps()
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 45, unit: 'MINUTES')
+    }
+
+    stages {
+
+        // ─── 1. Checkout ──────────────────────────────────────
+        stage('Checkout') {
+            steps {
+                checkout scm
+                script {
+                    env.GIT_COMMIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    env.GIT_BRANCH       = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                    env.BUILD_TAG        = "${env.GIT_BRANCH}-${env.GIT_COMMIT_SHORT}-${env.BUILD_NUMBER}"
+                }
+                echo "📦 Building: ${env.BUILD_TAG}"
+            }
+        }
+
+        // ─── 2. DevSecOps Scans (متوازي) ─────────────────────
+        stage('DevSecOps Scans') {
+            parallel {
+                stage('SonarQube') {
+                    steps {
+                        sh '''
+                            echo "🔍 SonarQube SAST + Code Quality"
+                            sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                                -Dsonar.sources=./backend,./artifacts/uniops/src \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.login=${SONAR_TOKEN}
+                        '''
+                    }
+                }
+                stage('Trivy FS') {
+                    steps {
+                        sh '''
+                            echo "🔒 Trivy Filesystem Scan"
+                            trivy fs --severity ${TRIVY_SEVERITY} --exit-code 0 --format sarif -o trivy-fs.sarif ./
+                        '''
+                    }
+                }
+                stage('Semgrep') {
+                    steps {
+                        sh '''
+                            echo "🕵️ Semgrep Secrets Detection"
+                            semgrep --config=auto --error --metrics=off
+                        '''
+                    }
+                }
+            }
+        }
+
+        // ─── 3. Build & Unit Tests ────────────────────────────
+        stage('Build & Test') {
+            parallel {
+                stage('Frontend') {
+                    steps {
+                        sh '''
+                            cd artifacts/uniops
+                            pnpm install --frozen-lockfile
+                            pnpm run typecheck
+                            pnpm test --run || true
+                        '''
+                    }
+                }
+                stage('Backend') {
+                    steps {
+                        sh '''
+                            cd backend
+                            pip install -r requirements.txt
+                            python -m pytest tests/ -v --tb=short
+                        '''
+                    }
+                }
+            }
+        }
+
+        // ─── 4. Build Docker Images ───────────────────────────
+        stage('Build Docker Images') {
+            steps {
+                sh '''
+                    echo "🐳 Building Frontend Image"
+                    docker build -t ${FRONTEND_IMAGE}:${BUILD_TAG} -f artifacts/uniops/Dockerfile artifacts/uniops/
+                    echo "🐳 Building Backend Image"
+                    docker build -t ${BACKEND_IMAGE}:${BUILD_TAG} -f backend/Dockerfile backend/
+                '''
+            }
+        }
+
+        // ─── 5. Container Security Scan (Trivy) ──────────────
+        stage('Container Security') {
+            steps {
+                sh '''
+                    echo "🔒 Scanning Frontend Image"
+                    trivy image --severity ${TRIVY_SEVERITY} --exit-code 1 ${FRONTEND_IMAGE}:${BUILD_TAG}
+                    echo "🔒 Scanning Backend Image"
+                    trivy image --severity ${TRIVY_SEVERITY} --exit-code 1 ${BACKEND_IMAGE}:${BUILD_TAG}
+                '''
+            }
+        }
+
+        // ─── 6. Push to Registry ──────────────────────────────
+        stage('Push Images') {
+            when { branch 'main' }
+            steps {
+                sh '''
+                    docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
+                    docker push ${FRONTEND_IMAGE}:${BUILD_TAG}
+                    docker push ${FRONTEND_IMAGE}:latest
+                    docker push ${BACKEND_IMAGE}:${BUILD_TAG}
+                    docker push ${BACKEND_IMAGE}:latest
+                '''
+            }
+        }
+
+        // ─── 7. Deploy to Staging via Ansible ─────────────────
+        stage('Deploy to Staging') {
+            when { branch 'main' }
+            steps {
+                sh '''
+                    echo "🚀 Deploying to Staging"
+                    ansible-playbook -i ${ANSIBLE_INVENTORY_DEV} ansible/deploy.yml \
+                        -e "image_tag=${BUILD_TAG}" \
+                        -e "environment=dev"
+                '''
+            }
+        }
+
+        // ─── 8. Staging Health Checks ─────────────────────────
+        stage('Staging Health') {
+            when { branch 'main' }
+            steps {
+                sh '''
+                    echo "🏥 Running Staging Health Checks"
+                    ansible-playbook -i ${ANSIBLE_INVENTORY_DEV} ansible/health-check.yml \
+                        -e "environment=dev"
+                '''
+            }
+        }
+
+        // ─── 9. Deploy to Production (موافقة يدوية) ──────────
+        stage('Deploy to Production') {
+            when { branch 'main' }
+            input {
+                message "🚀 Deploy to Production?"
+                ok "Release"
+                submitter "admin,devops-lead"
+            }
+            steps {
+                sh '''
+                    echo "🚀 Deploying to Production"
+                    ansible-playbook -i ${ANSIBLE_INVENTORY_PROD} ansible/deploy.yml \
+                        -e "image_tag=${BUILD_TAG}" \
+                        -e "environment=prod"
+                '''
+            }
+        }
+
+        // ─── 10. Post-Deploy Verification ─────────────────────
+        stage('Post-Deploy Verification') {
+            when { branch 'main' }
+            steps {
+                sh '''
+                    echo "✅ Verifying Production"
+                    ansible-playbook -i ${ANSIBLE_INVENTORY_PROD} ansible/health-check.yml \
+                        -e "environment=prod"
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            slackSend(
+                channel: SLACK_CHANNEL,
+                color: 'good',
+                message: "✅ UniOps #${BUILD_NUMBER} SUCCESS\n📦 ${env.BUILD_TAG}\n🔗 ${env.BUILD_URL}"
+            )
+        }
+        failure {
+            slackSend(
+                channel: SLACK_CHANNEL,
+                color: 'danger',
+                message: "❌ UniOps #${BUILD_NUMBER} FAILED\n📦 ${env.BUILD_TAG}\n🔗 ${env.BUILD_URL}"
+            )
+        }
+    }
+}

@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "uniops-terraform-state-8j3k9l"
+  bucket = "uniops-663476173962-tfstate-8j3k9l"
 
   lifecycle {
     prevent_destroy = true

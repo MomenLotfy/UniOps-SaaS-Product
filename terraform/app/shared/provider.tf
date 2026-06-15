@@ -25,7 +25,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "uniops-terraform-state"
+    bucket         = "uniops-663476173962-tfstate"
     key            = "terraform.tfstate"
     region         = "us-east-2"
     dynamodb_table = "uniops-terraform-locks"

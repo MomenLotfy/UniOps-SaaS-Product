@@ -1,0 +1,22 @@
+---
+# File: /home/bisho/ansible/roles/jenkins-tools/tasks/jq.yml
+# Variables: none
+# Dependencies: none
+
+- name: Install jq package
+  ansible.builtin.package:
+    name: jq
+    state: present
+  become: yes
+  tags: [jq, tools]
+
+- name: Verify jq installation
+  ansible.builtin.command: jq --version
+  register: jq_version_output
+  changed_when: false
+  tags: [jq, tools]
+
+- name: Display jq version
+  ansible.builtin.debug:
+    msg: "Installed jq version: {{ jq_version_output.stdout }}"
+  tags: [jq, tools]

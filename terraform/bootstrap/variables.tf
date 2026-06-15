@@ -11,7 +11,7 @@ variable "aws_region" {
 variable "state_bucket_name" {
   description = "Name of the S3 bucket that stores Terraform state (shared with app layer)"
   type        = string
-  default     = "uniops-terraform-state"
+  default     = "uniops-663476173962-tfstate"
 }
 
 variable "dynamodb_lock_table" {

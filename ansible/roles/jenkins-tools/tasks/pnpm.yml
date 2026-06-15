@@ -1,0 +1,44 @@
+---
+# File: /home/bisho/ansible/roles/jenkins-tools/tasks/pnpm.yml
+#
+# Purpose:
+#   Install pnpm globally via npm. Idempotent: skips reinstall if pnpm
+#   is already on PATH at the requested version.
+#
+# Variables:
+#   pnpm_version: (default: "8") - pnpm version specifier to install.
+#                                        Use "8" (default) or a semver
+#                                        string like "8.15.0".
+#
+# Dependencies:
+#   * nodejs.yml must run first so that `npm` is on PATH.
+
+- name: pnpm | Check current pnpm version (if installed)
+  ansible.builtin.command: pnpm --version
+  register: pnpm_current
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  tags: [pnpm, runtime]
+
+- name: pnpm | Install pnpm globally via npm
+  ansible.builtin.command:
+    cmd: "npm install -g pnpm@{{ pnpm_version | default('8') }}"
+  become: true
+  when:
+    - pnpm_current.rc != 0 or (pnpm_version | default('8')) not in ['8', pnpm_current.stdout]
+  changed_when: true
+  tags: [pnpm, runtime]
+
+- name: pnpm | Verify pnpm installation
+  ansible.builtin.command: pnpm --version
+  register: pnpm_version_output
+  changed_when: false
+  check_mode: false
+  failed_when: pnpm_version_output.rc != 0
+  tags: [pnpm, runtime]
+
+- name: pnpm | Display installed version
+  ansible.builtin.debug:
+    msg: "Installed pnpm version: {{ pnpm_version_output.stdout }}"
+  tags: [pnpm, runtime]

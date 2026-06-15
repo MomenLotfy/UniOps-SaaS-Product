@@ -19,8 +19,8 @@
 #   ✗ terraform/bootstrap/                          (state isolated, key=bootstrap/*)
 #   ✗ aws_ecr_repository.uniops-backend             (bootstrap-owned, prevent_destroy)
 #   ✗ aws_ecr_repository.uniops-frontend            (bootstrap-owned, prevent_destroy)
-#   ✗ aws_s3_bucket.uniops-terraform-state          (bootstrap-owned, prevent_destroy)
-#   ✗ aws_s3_bucket.uniops-terraform-state/*        (state files)
+#   ✗ aws_s3_bucket.uniops-663476173962-tfstate          (bootstrap-owned, prevent_destroy)
+#   ✗ aws_s3_bucket.uniops-663476173962-tfstate/*        (state files)
 #   ✗ aws_dynamodb_table.uniops-terraform-locks     (bootstrap-owned, prevent_destroy)
 #   ✗ aws_eks_cluster.uniops-eks-dev                (out of band)
 #   ✗ RDS db.uniops-postgres-dev                    (out of band)
@@ -105,11 +105,11 @@ NAMESPACE="uniops"
 REGION="${AWS_REGION:-us-east-2}"
 
 # App Terraform layer — owns EKS + all app-layer AWS resources.
-# State lives at s3://uniops-terraform-state/app/terraform.tfstate — a
+# State lives at s3://uniops-663476173962-tfstate/app/terraform.tfstate — a
 # DIFFERENT key from bootstrap/terraform.tfstate. The bucket and DynamoDB
 # table are bootstrap-owned; we destroy against our key only.
 TERRAFORM_APP_DIR="$REPO_ROOT/terraform/app"
-TERRAFORM_APP_STATE_BUCKET="uniops-terraform-state"
+TERRAFORM_APP_STATE_BUCKET="uniops-663476173962-tfstate"
 TERRAFORM_APP_STATE_KEY="app/terraform.tfstate"
 TERRAFORM_APP_LOCK_TABLE="uniops-terraform-locks"
 
@@ -127,7 +127,7 @@ BOOTSTRAP_RESOURCE_TYPES=(
 
 # ─── List of protected resources (asserted negative: they MUST still exist) ──
 PROTECTED_ECR_REPOS=("uniops-backend" "uniops-frontend")
-PROTECTED_S3_BUCKET="uniops-terraform-state"
+PROTECTED_S3_BUCKET="uniops-663476173962-tfstate"
 PROTECTED_DDB_TABLE="uniops-terraform-locks"
 PROTECTED_EKS_CLUSTER_PREFIX="uniops"
 PROTECTED_RDS_ID="uniops-postgres-dev"
@@ -276,7 +276,7 @@ confirm_destruction() {
   echo "  ║                                                                    ║"
   echo "  ║  Will NOT be touched:                                              ║"
   echo "  ║    • ECR repos (uniops-backend, uniops-frontend) AND THEIR IMAGES  ║"
-  echo "  ║    • S3 bucket uniops-terraform-state (and ALL its objects)        ║"
+  echo "  ║    • S3 bucket uniops-663476173962-tfstate (and ALL its objects)        ║"
   echo "  ║    • DynamoDB table uniops-terraform-locks                         ║"
   echo "  ║    • Bootstrap state key (bootstrap/terraform.tfstate)             ║"
   echo "  ║    • Any resource type listed in BOOTSTRAP_RESOURCE_TYPES          ║"

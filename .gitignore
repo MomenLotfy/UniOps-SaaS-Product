@@ -1,7 +1,9 @@
 node_modules
 
 # Terraform
-**/.terraform/
 *.tfstate
-*.tfstate.backup
-*.tfplan
+*.tfstate.*
+.terraform/
+*.pem
+*.bak
+tfplan
