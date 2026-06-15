@@ -1,15 +1,12 @@
 name: UniOps CI/CD Pipeline
-
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
-
 env:
   BUILD_TAG: ${{ github.sha }}-${{ github.run_number }}
-
 jobs:
   build-and-test:
     name: 🔨 Build & Test
@@ -17,27 +14,22 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 9
-
       - name: Install Frontend Dependencies
         run: |
           cd artifacts/uniops
           pnpm install --no-frozen-lockfile
-
       - name: Frontend TypeCheck
         run: |
           cd artifacts/uniops
           pnpm run typecheck || echo "TypeCheck completed"
-
   security-scan:
     name: 🔒 Security Scan
     runs-on: ubuntu-latest
@@ -45,7 +37,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
       - name: Run Trivy Scan
         uses: aquasecurity/trivy-action@master
         with:
@@ -54,13 +45,11 @@ jobs:
           severity: HIGH,CRITICAL
           format: table
         continue-on-error: true
-
       - name: Run Semgrep Scan
         uses: semgrep/semgrep-action@v1
         with:
           config: auto
         continue-on-error: true
-
   build-images:
     name: 🐳 Build Docker Images
     runs-on: ubuntu-latest
@@ -69,23 +58,20 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Build & Push Frontend
         uses: docker/build-push-action@v5
         with:
-          context: ./artifacts/uniops
+          context: .                                        # ✅ التعديل هنا
           file: ./artifacts/uniops/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/uniops-frontend:${{ env.BUILD_TAG }}
             ${{ secrets.DOCKER_USERNAME }}/uniops-frontend:latest
-
       - name: Build & Push Backend
         uses: docker/build-push-action@v5
         with:
@@ -95,7 +81,6 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/uniops-backend:${{ env.BUILD_TAG }}
             ${{ secrets.DOCKER_USERNAME }}/uniops-backend:latest
-
   pipeline-complete:
     name: ✅ Pipeline Complete
     runs-on: ubuntu-latest
