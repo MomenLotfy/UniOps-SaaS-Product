@@ -11,6 +11,7 @@ env:
   BUILD_TAG: ${{ github.sha }}-${{ github.run_number }}
 
 jobs:
+  # ─── 1. Build & Test ─────────────────────────────────
   build-and-test:
     name: 🔨 Build & Test
     runs-on: ubuntu-latest
@@ -23,15 +24,20 @@ jobs:
         with:
           node-version: 20
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
       - name: Install Frontend Dependencies
         run: |
           cd artifacts/uniops
-          npm install --legacy-peer-deps
+          pnpm install
 
       - name: Frontend TypeCheck
         run: |
           cd artifacts/uniops
-          npx tsc --noEmit || echo "TypeCheck completed"
+          pnpm run typecheck || echo "TypeCheck completed"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -48,6 +54,7 @@ jobs:
           cd backend
           python -m pytest tests/ -v --tb=short || echo "Tests completed"
 
+  # ─── 2. Security Scans ───────────────────────────────
   security-scan:
     name: 🔒 Security Scan
     runs-on: ubuntu-latest
@@ -71,6 +78,7 @@ jobs:
           config: auto
         continue-on-error: true
 
+  # ─── 3. Build Docker Images ──────────────────────────
   build-images:
     name: 🐳 Build Docker Images
     runs-on: ubuntu-latest
@@ -106,6 +114,7 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/uniops-backend:${{ env.BUILD_TAG }}
             ${{ secrets.DOCKER_USERNAME }}/uniops-backend:latest
 
+  # ─── 4. Pipeline Complete ────────────────────────────
   pipeline-complete:
     name: ✅ Pipeline Complete
     runs-on: ubuntu-latest
