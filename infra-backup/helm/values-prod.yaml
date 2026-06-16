@@ -1,7 +1,7 @@
 environment: prod
 
 frontend:
-  image: "663476173962.dkr.ecr.us-east-2.amazonaws.com/uniops-frontend:36fb43c0a68e14dca63592a4474ba1105f10e36f-49"
+  image: "663476173962.dkr.ecr.us-east-2.amazonaws.com/uniops-frontend:730ac9677bc4e91d95008f64e3701ed7ca127ce8-50"
   replicas: 3
   port: 80
   resources:
@@ -13,7 +13,7 @@ frontend:
       memory: 256Mi
 
 backend:
-  image: "663476173962.dkr.ecr.us-east-2.amazonaws.com/uniops-backend:36fb43c0a68e14dca63592a4474ba1105f10e36f-49"
+  image: "663476173962.dkr.ecr.us-east-2.amazonaws.com/uniops-backend:730ac9677bc4e91d95008f64e3701ed7ca127ce8-50"
   replicas: 1
   port: 8000
   resources:
