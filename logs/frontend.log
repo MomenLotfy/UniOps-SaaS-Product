@@ -1,0 +1,10 @@
+
+> @workspace/uniops@0.0.0 dev /home/u1/Desktop/devops_project/UniOps-SaaS-Product/artifacts/uniops
+> vite --config vite.config.ts --host 0.0.0.0
+
+
+  VITE v7.3.3  ready in 207 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.148.130:5173/
+  ➜  Network: http://172.18.0.1:5173/

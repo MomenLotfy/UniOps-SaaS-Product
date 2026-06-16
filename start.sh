@@ -31,16 +31,20 @@ echo ""
 cleanup() {
   echo ""
   echo -e "${YELLOW}Shutting down...${NC}"
-  kill $BACKEND_PID 2>/dev/null || true
-  kill $FRONTEND_PID 2>/dev/null || true
+
+  [ ! -z "$BACKEND_PID" ] && kill "$BACKEND_PID" 2>/dev/null || true
+  [ ! -z "$FRONTEND_PID" ] && kill "$FRONTEND_PID" 2>/dev/null || true
+
   echo -e "${GREEN}Stopped. Goodbye!${NC}"
   exit 0
 }
+
 trap cleanup SIGINT SIGTERM
 
-# ── Node check (frontend only) ─────────────────────────────
+# ── Node check ─────────────────────────────────────────────
 echo -e "${BLUE}[1/4]${NC} Checking Node.js..."
-if ! command -v node &>/dev/null; then
+
+if ! command -v node >/dev/null 2>&1; then
   echo -e "${RED}Node.js not found${NC}"
   exit 1
 fi
@@ -48,20 +52,46 @@ fi
 echo -e "    Node.js $(node --version)"
 
 # ── pnpm check ─────────────────────────────────────────────
-if ! command -v pnpm &>/dev/null; then
+if ! command -v pnpm >/dev/null 2>&1; then
   echo -e "${YELLOW}pnpm not found — installing...${NC}"
   npm install -g pnpm
 fi
 
 echo -e "    pnpm $(pnpm --version)"
 
-# ── Backend setup (FastAPI) ────────────────────────────────
-echo -e "${BLUE}[2/4]${NC} Installing backend dependencies..."
+# ── Backend setup ──────────────────────────────────────────
+echo -e "${BLUE}[2/4]${NC} Setting up backend..."
 
 cd "$BACKEND_DIR"
 
+if ! command -v python3 >/dev/null 2>&1; then
+  echo -e "${RED}Python3 not found${NC}"
+  exit 1
+fi
+
+# إنشاء venv لو مش موجود
+if [ ! -d "venv" ]; then
+  echo -e "${YELLOW}Creating virtual environment...${NC}"
+
+  python3 -m venv venv || {
+    echo -e "${RED}Failed to create venv.${NC}"
+    echo -e "${YELLOW}Install it with:${NC}"
+    echo "sudo apt update"
+    echo "sudo apt install python3-venv -y"
+    exit 1
+  }
+fi
+
+# تفعيل البيئة
+source venv/bin/activate
+
+# تحديث pip
+python -m pip install --upgrade pip >/dev/null 2>&1 || true
+
+# تثبيت المتطلبات
 if [ -f requirements.txt ]; then
-  pip install -r requirements.txt >/dev/null 2>&1 || pip install -r requirements.txt
+  echo -e "${YELLOW}Installing backend dependencies...${NC}"
+  pip install -r requirements.txt
 fi
 
 echo -e "    Backend ready"
@@ -70,18 +100,21 @@ echo -e "    Backend ready"
 echo -e "${BLUE}[3/4]${NC} Installing frontend dependencies..."
 
 cd "$ROOT_DIR"
+
 pnpm install --frozen-lockfile 2>/dev/null || pnpm install
 
 echo -e "    Frontend ready"
 
-# ── Start Backend (FASTAPI) ────────────────────────────────
+# ── Start Backend ──────────────────────────────────────────
 echo -e "${BLUE}[4/4]${NC} Starting services..."
 
 cd "$BACKEND_DIR"
 
+source venv/bin/activate
+
 uvicorn app.main:app \
   --host 0.0.0.0 \
-  --port $BACKEND_PORT \
+  --port "$BACKEND_PORT" \
   > "$LOG_DIR/backend.log" 2>&1 &
 
 BACKEND_PID=$!
@@ -89,7 +122,7 @@ BACKEND_PID=$!
 # ── Wait backend ───────────────────────────────────────────
 for i in {1..20}; do
   if curl -sf "http://localhost:$BACKEND_PORT/api/health" >/dev/null 2>&1; then
-    echo -e "    Backend  →  http://localhost:$BACKEND_PORT"
+    echo -e "    Backend  → http://localhost:$BACKEND_PORT"
     break
   fi
   sleep 1
@@ -106,7 +139,7 @@ FRONTEND_PID=$!
 # ── Wait frontend ──────────────────────────────────────────
 for i in {1..30}; do
   if grep -q "Local:\|ready in" "$LOG_DIR/frontend.log" 2>/dev/null; then
-    echo -e "    Frontend →  http://localhost:$FRONTEND_PORT"
+    echo -e "    Frontend → http://localhost:$FRONTEND_PORT"
     break
   fi
   sleep 1
@@ -115,15 +148,15 @@ done
 # ── Done ───────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║  UniOps is running 🚀                                  ║${NC}"
+echo -e "${GREEN}║  UniOps is running 🚀                                 ║${NC}"
 echo -e "${GREEN}╠════════════════════════════════════════════════════════╣${NC}"
-echo -e "${GREEN}║  Dashboard → http://localhost:$FRONTEND_PORT            ║${NC}"
-echo -e "${GREEN}║  API       → http://localhost:$BACKEND_PORT             ║${NC}"
+echo -e "${GREEN}║  Dashboard → http://localhost:$FRONTEND_PORT          ║${NC}"
+echo -e "${GREEN}║  API       → http://localhost:$BACKEND_PORT           ║${NC}"
 echo -e "${GREEN}║                                                        ║${NC}"
-echo -e "${GREEN}║  API Docs  → http://localhost:$BACKEND_PORT/docs        ║${NC}"
+echo -e "${GREEN}║  API Docs  → http://localhost:$BACKEND_PORT/docs      ║${NC}"
 echo -e "${GREEN}║                                                        ║${NC}"
-echo -e "${GREEN}║  Logs: ./logs/backend.log / frontend.log               ║${NC}"
-echo -e "${GREEN}║  Ctrl+C to stop                                        ║${NC}"
+echo -e "${GREEN}║  Logs: ./logs/backend.log / frontend.log             ║${NC}"
+echo -e "${GREEN}║  Ctrl+C to stop                                      ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
