@@ -27,7 +27,6 @@ AsyncSessionLocal = async_sessionmaker(
 # different event loops raises "Future attached to a different loop".
 # NullPool avoids connection reuse entirely — each task gets fresh connections.
 _celery_engine = create_async_engine(
-    poolclass=NullPool,
     settings.DATABASE_URL,
     echo=False,
     future=True,
