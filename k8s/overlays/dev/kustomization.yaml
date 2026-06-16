@@ -12,7 +12,7 @@ images:
   # with what the dev overlay renders.
   - name: momenpanda/uniops-backend:latest
     newName: 663476173962.dkr.ecr.us-east-2.amazonaws.com/uniops-backend
-    newTag: 1c7549808887c803f35417751f3779e987cda6ee-42
+    newTag: 1f10dee9c71d8c875a9f0e32bf33759cdb7b4da9-28
 configMapGenerator:
   - name: uniops-config
     behavior: merge
