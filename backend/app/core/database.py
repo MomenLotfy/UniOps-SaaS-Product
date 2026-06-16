@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import NullPool, AsyncAdaptedQueuePool
 from app.config import settings
 
 # SQLite needs different pool settings than PostgreSQL
@@ -10,12 +10,7 @@ engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
     future=True,
-    # SQLite doesn't support connection pool settings
-    **({} if _is_sqlite else {
-        "pool_size": settings.DATABASE_POOL_SIZE,
-        "max_overflow": settings.DATABASE_MAX_OVERFLOW,
-        "pool_pre_ping": True,
-    })
+    poolclass=NullPool,
 )
 
 AsyncSessionLocal = async_sessionmaker(
@@ -32,6 +27,7 @@ AsyncSessionLocal = async_sessionmaker(
 # different event loops raises "Future attached to a different loop".
 # NullPool avoids connection reuse entirely — each task gets fresh connections.
 _celery_engine = create_async_engine(
+    poolclass=NullPool,
     settings.DATABASE_URL,
     echo=False,
     future=True,
