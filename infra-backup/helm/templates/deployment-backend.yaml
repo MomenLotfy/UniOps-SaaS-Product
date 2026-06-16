@@ -46,13 +46,15 @@ spec:
                   key: BACKUP_BUCKET_NAME
           livenessProbe:
             httpGet:
-              path: /health
+              path: /api/v1/health
               port: http
-            initialDelaySeconds: 15
+            initialDelaySeconds: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /health
+              path: /api/v1/health
               port: http
-            initialDelaySeconds: 15
+            initialDelaySeconds: 30
+            periodSeconds: 10
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}
