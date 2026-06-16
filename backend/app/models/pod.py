@@ -1,4 +1,4 @@
-from sqlalchemy import String, ForeignKey, JSON, Float, Integer
+from sqlalchemy import BigInteger, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import BaseModel
 
@@ -17,9 +17,9 @@ class Pod(BaseModel):
     cpu_request: Mapped[float | None] = mapped_column(Float)
     cpu_limit: Mapped[float | None] = mapped_column(Float)
     cpu_usage: Mapped[float | None] = mapped_column(Float)
-    memory_request: Mapped[int | None] = mapped_column(Integer)
-    memory_limit: Mapped[int | None] = mapped_column(Integer)
-    memory_usage: Mapped[int | None] = mapped_column(Integer)
+    memory_request: Mapped[int | None] = mapped_column(BigInteger)
+    memory_limit: Mapped[int | None] = mapped_column(BigInteger)
+    memory_usage: Mapped[int | None] = mapped_column(BigInteger)
     restart_count: Mapped[int] = mapped_column(Integer, default=0)
     containers: Mapped[list] = mapped_column(JSON, default=list)
     labels: Mapped[dict] = mapped_column(JSON, default=dict)
