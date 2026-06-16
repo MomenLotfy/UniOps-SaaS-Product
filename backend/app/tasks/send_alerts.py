@@ -23,7 +23,7 @@ def process_pending_alerts(self):
 
 
 async def _send_alerts():
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.models.alert import Alert
     from sqlalchemy import select
 

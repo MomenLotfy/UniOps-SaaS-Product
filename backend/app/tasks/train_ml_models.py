@@ -36,7 +36,7 @@ async def _retrain_all():
 
 
 async def _train_cost_predictor():
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.models.cost_metric import CostMetric
     from sqlalchemy import select
     import numpy as np
@@ -76,7 +76,7 @@ async def _train_cost_predictor():
 
 
 async def _train_anomaly_detector():
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.models.cost_metric import CostMetric
     from sqlalchemy import select
     import numpy as np

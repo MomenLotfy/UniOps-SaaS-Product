@@ -24,7 +24,7 @@ def run_full_scan(self):
 
 
 async def _run_scan():
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.models.integration import Integration
     from app.models.vulnerability import Vulnerability
     from app.models.tenant import Tenant

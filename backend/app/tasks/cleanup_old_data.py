@@ -22,7 +22,7 @@ def cleanup(self):
 
 
 async def _cleanup():
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.models.audit_log import AuditLog
     from app.models.alert import Alert
     from app.models.ml_prediction import MLPrediction
@@ -56,7 +56,7 @@ async def _cleanup():
 
 async def cleanup_async():
     """Async version of cleanup for use in BackgroundScheduler."""
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.models.audit_log import AuditLog
     from sqlalchemy import select, delete
     from datetime import datetime, timezone, timedelta

@@ -35,7 +35,7 @@ async def _sync_pods(tenant_id: str | None = None) -> dict:
     Full snapshot sync: list all pods from all K8s integrations and upsert into DB.
     Also enriches with metrics-server data if available.
     """
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.models.integration import Integration
     from app.models.pod import Pod
     from app.utils.encryption import decrypt

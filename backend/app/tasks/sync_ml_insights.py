@@ -31,7 +31,7 @@ async def sync_ml_insights_async(tenant_id: Optional[str] = None) -> dict:
     Run ML insight generation for all active tenants, or just one.
     Safe to call concurrently — each tenant gets its own DB session.
     """
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.models.integration import Integration
     from sqlalchemy import select
 
@@ -68,7 +68,7 @@ async def sync_ml_insights_async(tenant_id: Optional[str] = None) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 
 async def _sync_tenant(tenant_id: str) -> dict:
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.services.ml_service import MLService
 
     async with AsyncSessionLocal() as db:

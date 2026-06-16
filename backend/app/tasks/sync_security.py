@@ -26,7 +26,7 @@ except Exception:
 
 async def sync_aws_security_async(tenant_id: str | None = None) -> dict:
     """Pull findings from AWS Security Hub and save to DB."""
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.models.integration import Integration
     from app.models.threat import Threat
     from app.models.vulnerability import Vulnerability

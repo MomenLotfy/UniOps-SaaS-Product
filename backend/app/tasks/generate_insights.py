@@ -22,7 +22,7 @@ def generate_all_insights(self):
 
 
 async def _generate_insights():
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.models.tenant import Tenant
     from app.models.ml_recommendation import MLRecommendation
     from app.models.cost_metric import CostMetric

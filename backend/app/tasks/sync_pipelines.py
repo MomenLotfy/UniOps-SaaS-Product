@@ -24,7 +24,7 @@ except Exception:
 
 
 async def _sync_pipelines(tenant_id: str | None = None) -> dict:
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.models.integration import Integration
     from app.utils.encryption import decrypt
 

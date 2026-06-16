@@ -36,7 +36,7 @@ async def sync_aws_costs_async(tenant_id: str | None = None) -> dict:
     Sync real AWS costs into the database.
     """
 
-    from app.core.database import AsyncSessionLocal
+    from app.core.database import CelerySessionLocal as AsyncSessionLocal
     from app.models.integration import Integration
     from app.models.cost_metric import CostMetric
     from app.models.cost_anomaly import CostAnomaly
