@@ -10,9 +10,9 @@ images:
   # INFRA-REPORT). Backend stays on the base DockerHub image so the script's
   # Phase 6 image-drift assertion in start-app-infra.sh remains consistent
   # with what the dev overlay renders.
-  - name: momenpanda/uniops-frontend:latest
-    newName: 663476173962.dkr.ecr.us-east-2.amazonaws.com/uniops-frontend
-    newTag: fix-2026-06-03-full-unwrap
+  - name: momenpanda/uniops-backend:latest
+    newName: 663476173962.dkr.ecr.us-east-2.amazonaws.com/uniops-backend
+    newTag: 1c7549808887c803f35417751f3779e987cda6ee-42
 configMapGenerator:
   - name: uniops-config
     behavior: merge
