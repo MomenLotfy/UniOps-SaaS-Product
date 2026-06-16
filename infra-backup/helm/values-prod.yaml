@@ -14,15 +14,15 @@ frontend:
 
 backend:
   image: "663476173962.dkr.ecr.us-east-2.amazonaws.com/uniops-backend:6b204a9249407a4b4da6ebdb9c2957e8900005b2-38"
-  replicas: 3
+  replicas: 1
   port: 8000
   resources:
     limits:
-      cpu: 1000m
-      memory: 1024Mi
-    requests:
       cpu: 500m
       memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
   efsId: "fs-87654321"
   logBucket: "uniops-logs-prod"
   backupBucket: "uniops-backups-prod"
@@ -35,7 +35,7 @@ ingress:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/load-balancer-name: uniops-alb-prod
   hosts:
-    - host: "uniops.example.com"
+    - host: ""
       paths:
         - path: /
           pathType: Prefix
