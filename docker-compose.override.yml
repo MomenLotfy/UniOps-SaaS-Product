@@ -1,9 +1,0 @@
-# Override for local dev — disables heavy optional services
-# backend uses entrypoint.sh (db-wait + alembic + seed + uvicorn)
-services:
-
-  celery_worker:
-
-  celery_beat:
-    profiles: [""]
-
