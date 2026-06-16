@@ -21,12 +21,9 @@ class BackgroundScheduler:
         self._running = True
         logger.info("Background scheduler starting...")
 
-        # Start K8s watchers immediately
-        try:
-            from app.integrations.kubernetes.watcher import start_all_watchers
-            await start_all_watchers()
-        except Exception as e:
-            logger.warning(f"Could not start K8s watchers: {e}")
+        # K8s watchers disabled — causes event loop conflicts with asyncpg
+        # TODO: rewrite watcher to use async K8s client
+        logger.info("K8s watchers disabled (event loop safety)")
 
         # Schedule periodic tasks
         self._tasks = [
