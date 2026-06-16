@@ -42,7 +42,7 @@ class TrivyScanner(BaseIntegration):
                         "cvss_score": v.get("CVSS", {}).get("nvd", {}).get("V3Score"),
                         "package_name": v.get("PkgName"),
                         "package_version": v.get("InstalledVersion"),
-                        "fixed_version": v.get("FixedVersion",
+                        "fixed_version": v.get("FixedVersion", ""),
                         "target": r.get("Target"),
                     })
             return vulnerabilities
