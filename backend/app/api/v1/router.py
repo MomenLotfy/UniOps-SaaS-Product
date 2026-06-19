@@ -3,7 +3,7 @@ from app.api.v1.endpoints import (
     auth, users, companies, integrations, pipelines, pods,
     threats, vulnerabilities, compliance, costs, savings,
     ml, alerts, audit, webhooks, billing, health,
-    security_scan, api_keys,
+    security_scan, api_keys, clusters,
 )
 
 api_router = APIRouter()
@@ -27,3 +27,4 @@ api_router.include_router(audit.router,          prefix="/audit-logs",    tags=[
 api_router.include_router(webhooks.router,       prefix="/webhooks",      tags=["Webhooks"])
 api_router.include_router(billing.router,        prefix="/billing",       tags=["Billing"])
 api_router.include_router(api_keys.router,       prefix="/api-keys",      tags=["API Keys"])
+api_router.include_router(clusters.router,       prefix="/clusters",      tags=["Clusters"])

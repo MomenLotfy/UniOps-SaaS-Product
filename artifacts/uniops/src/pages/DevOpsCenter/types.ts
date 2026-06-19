@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type DevOpsTab =
+  | 'clusters'
   | 'kubernetes'
   | 'workloads'
   | 'network'
@@ -11,6 +12,90 @@ export type DevOpsTab =
   | 'hpa'
   | 'pipelines'
   | 'history';
+
+// ── Cluster ───────────────────────────────────────────────────────────────────
+export type ClusterProvider = 'eks' | 'aks' | 'gke' | 'oke' | 'on-prem';
+export type ClusterStatus   = 'connected' | 'disconnected' | 'error' | 'pending';
+export type ClusterEnv      = 'production' | 'staging' | 'dev' | 'sandbox';
+
+export interface Cluster {
+  id:               string;
+  name:             string;
+  provider:         ClusterProvider;
+  region:           string;
+  environment:      ClusterEnv;
+  api_server_url?:  string;
+  status:           ClusterStatus;
+  k8s_version?:     string;
+  node_count:       number;
+  pod_count:        number;
+  cpu_usage_pct:    number;
+  memory_usage_pct: number;
+  last_health_check?: string;
+  error_message?:   string;
+  created_at:       string;
+}
+
+export interface ClusterNode {
+  name:               string;
+  status:             'Ready' | 'NotReady' | 'Unknown';
+  roles:              string[];
+  cpu_capacity?:      string;
+  memory_capacity?:   string;
+  cpu_allocatable?:   string;
+  memory_allocatable?: string;
+  os_image?:          string;
+  kubelet_version?:   string;
+  conditions:         { type: string; status: string }[];
+  age?:               string;
+}
+
+export interface ClusterNamespace {
+  name:   string;
+  status: string;
+  age?:   string;
+  labels: Record<string, string>;
+}
+
+export interface ClusterDeployment {
+  name:               string;
+  namespace:          string;
+  replicas:           number;
+  ready_replicas:     number;
+  available_replicas: number;
+  image?:             string;
+  age?:               string;
+  status:             'Healthy' | 'Degraded' | 'Progressing';
+}
+
+export interface ClusterService {
+  name:         string;
+  namespace:    string;
+  type:         string;
+  cluster_ip?:  string;
+  external_ip?: string;
+  ports:        string[];
+  age?:         string;
+}
+
+export interface ClusterIngress {
+  name:      string;
+  namespace: string;
+  class_?:   string;
+  hosts:     string[];
+  paths:     string[];
+  tls:       boolean;
+  age?:      string;
+}
+
+export interface ClusterCreatePayload {
+  name:           string;
+  provider:       ClusterProvider;
+  region:         string;
+  environment:    ClusterEnv;
+  api_server_url?: string;
+  kubeconfig?:    string;
+}
 
 // ── Pod ──────────────────────────────────────────────────────────────────────
 export type PodStatus =

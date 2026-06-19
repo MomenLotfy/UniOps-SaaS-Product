@@ -22,11 +22,12 @@ from app.models.audit_log import AuditLog
 from app.models.webhook import Webhook
 from app.models.scan import Scan, Repository   # DevSecOps scan engine
 from app.models.api_key import ApiKey
+from app.models.cluster import Cluster          # Multi-cluster management
 
 __all__ = [
     "BaseModel", "Tenant", "User", "Role", "Permission", "Subscription",
     "Integration", "Pipeline", "Pod", "Threat", "Vulnerability", "Compliance",
     "CostMetric", "CostAnomaly", "Savings", "MLPrediction", "MLPattern",
     "MLRecommendation", "MLCorrelation", "Alert", "AuditLog", "Webhook",
-    "Scan", "Repository", "ApiKey",
+    "Scan", "Repository", "ApiKey", "Cluster",
 ]
