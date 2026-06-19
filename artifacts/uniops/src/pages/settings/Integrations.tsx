@@ -813,6 +813,8 @@ export default function Integrations() {
   const [testing, setTesting] = useState<string | null>(null);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [connectModal, setConnectModal] = useState<any | null>(null);
+  const [disconnectConfirm, setDisconnectConfirm] = useState<any | null>(null);
+  const [disconnecting, setDisconnecting] = useState(false);
   const { addNotification } = useNotifications();
 
   // Use the global IntegrationsContext so this page shares state with
@@ -877,8 +879,17 @@ export default function Integrations() {
 
   const handleDisconnect = async (id: string) => {
     if (id.startsWith('placeholder-')) return;
-    await apiDelete(`/integrations/${id}`);
-    refetch();
+    setDisconnecting(true);
+    try {
+      await apiDelete(`/integrations/${id}`);
+      addNotification({ title: 'Integration disconnected', message: 'The integration has been removed successfully.', type: 'success' });
+      refetch();
+    } catch (e: any) {
+      addNotification({ title: 'Disconnect failed', message: e?.message ?? 'Could not remove integration. Try again.', type: 'error' });
+    } finally {
+      setDisconnecting(false);
+      setDisconnectConfirm(null);
+    }
   };
 
   const handleConnectClick = (intg: any) => {
@@ -993,12 +1004,14 @@ export default function Integrations() {
                         </button>
                       )}
                       <button
-                        onClick={() => isConnected ? handleDisconnect(intg.id) : handleConnectClick(intg)}
-                        className={clsx('text-xs px-3 py-1.5 rounded-md transition-colors ml-auto',
+                        onClick={() => isConnected ? setDisconnectConfirm(intg) : handleConnectClick(intg)}
+                        className={clsx(
+                          'text-xs px-3 py-1.5 rounded-md transition-all ml-auto font-medium flex items-center gap-1.5',
                           isConnected
-                            ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
+                            ? 'bg-red-500/15 text-red-400 hover:bg-red-500/30 border border-red-500/30'
                             : 'bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20'
                         )}>
+                        {isConnected && <XCircle className="w-3 h-3" />}
                         {isConnected ? 'Disconnect' : isError ? 'Reconnect' : 'Connect'}
                       </button>
                     </div>
@@ -1009,6 +1022,45 @@ export default function Integrations() {
           })}
         </div>
       )}
+
+      {/* Disconnect confirmation dialog */}
+      <AnimatePresence>
+        {disconnectConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !disconnecting && setDisconnectConfirm(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-md rounded-2xl border shadow-2xl p-6"
+              style={{ background: 'hsl(230 18% 9%)', borderColor: 'hsl(0 72% 51% / 0.3)' }}>
+              <div className="flex items-start gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                  <XCircle className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white mb-1">Disconnect {disconnectConfirm.name}?</h3>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    This will remove the integration and stop all data syncing.
+                    {providerOf(disconnectConfirm) === 'github' && ' Security scanning and repository access will be disabled.'}
+                    {providerOf(disconnectConfirm) === 'aws' && ' Cost monitoring and AWS security alerts will stop.'}
+                    {' '}You can reconnect at any time.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button onClick={() => setDisconnectConfirm(null)} disabled={disconnecting}
+                  className="px-4 py-2 text-xs rounded-lg border text-gray-400 hover:text-white transition-colors"
+                  style={{ borderColor: 'hsl(230 15% 20%)' }}>
+                  Cancel
+                </button>
+                <button onClick={() => handleDisconnect(disconnectConfirm.id)} disabled={disconnecting}
+                  className="px-4 py-2 text-xs rounded-lg font-semibold bg-red-500 hover:bg-red-600 text-white flex items-center gap-2 transition-all disabled:opacity-60">
+                  {disconnecting && <Loader2 className="w-3 h-3 animate-spin" />}
+                  {disconnecting ? 'Disconnecting…' : 'Yes, Disconnect'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Connect modals */}
       <AnimatePresence>
