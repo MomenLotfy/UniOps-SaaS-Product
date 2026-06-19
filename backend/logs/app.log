@@ -14560,3 +14560,220 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-06-19 09:36:21 | ERROR    | app.middleware.logging:23 - [8ee2a57d] GET /api/v1/alerts → ERR (0.89ms): Bearer token required
 2026-06-19 09:36:22 | ERROR    | app.middleware.logging:23 - [e4619921] GET /api/v1/alerts → ERR (2.39ms): Bearer token required
 2026-06-19 09:36:22 | ERROR    | app.middleware.logging:23 - [4a4cb961] GET /api/v1/alerts → ERR (0.97ms): Bearer token required
+2026-06-19 09:36:37 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 80s
+2026-06-19 09:37:09 | ERROR    | app.middleware.logging:23 - [447d982d] GET /api/v1/alerts → ERR (3.32ms): Bearer token required
+2026-06-19 09:37:09 | ERROR    | app.middleware.logging:23 - [c80b871b] GET /api/v1/alerts → ERR (1.12ms): Bearer token required
+2026-06-19 09:37:11 | ERROR    | app.middleware.logging:23 - [d5761a1b] GET /api/v1/alerts → ERR (1.17ms): Bearer token required
+2026-06-19 09:37:11 | ERROR    | app.middleware.logging:23 - [983425ed] GET /api/v1/alerts → ERR (2.49ms): Bearer token required
+2026-06-19 09:37:52 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 09:37:54 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 09:37:54 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 09:37:54 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 09:37:54 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 09:37:57 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 160s
+2026-06-19 09:39:26 | INFO     | app.services.auth_service:115 - New user registered: momen.elpesa123@gmail.com (tenant: Moamen Lotfy's Organization)
+2026-06-19 09:39:26 | INFO     | app.integrations.email.client:31 - [EMAIL — no key] To: momen.elpesa123@gmail.com | Subject: Welcome to UniOps, Moamen! 🚀
+2026-06-19 09:39:26 | INFO     | app.middleware.logging:15 - [b7d88bd1] POST /api/v1/auth/register → 200 (399.05ms)
+2026-06-19 09:39:27 | INFO     | app.middleware.logging:15 - [808851ae] GET /api/v1/companies → 200 (58.3ms)
+2026-06-19 09:39:27 | INFO     | app.middleware.logging:15 - [b004877c] GET /api/v1/integrations → 200 (74.21ms)
+2026-06-19 09:39:27 | INFO     | app.middleware.logging:15 - [42ff226b] GET /api/v1/companies/stats → 200 (72.92ms)
+2026-06-19 09:39:27 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-19 09:39:27 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 09:39:54 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 09:39:54 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 09:39:54 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 09:39:54 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 09:39:54 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 09:39:57 | ERROR    | app.middleware.logging:23 - [beca034d] GET /api/v1/alerts → ERR (1.15ms): Bearer token required
+2026-06-19 09:39:57 | ERROR    | app.middleware.logging:23 - [b5e5f51f] GET /api/v1/alerts → ERR (0.78ms): Bearer token required
+2026-06-19 09:39:57 | ERROR    | app.middleware.logging:23 - [15e5cceb] GET /api/v1/alerts → ERR (2.95ms): Bearer token required
+2026-06-19 09:39:57 | ERROR    | app.middleware.logging:23 - [86cbf8b2] GET /api/v1/alerts → ERR (3.04ms): Bearer token required
+2026-06-19 09:40:08 | ERROR    | app.api.v1.websocket.handlers:50 - WS handler error for tenant unknown: 
+2026-06-19 09:40:19 | INFO     | app.middleware.logging:15 - [0582d168] GET /api/v1/companies → 200 (46.41ms)
+2026-06-19 09:40:19 | INFO     | app.middleware.logging:15 - [f2d3eafd] GET /api/v1/integrations → 200 (56.28ms)
+2026-06-19 09:40:19 | INFO     | app.middleware.logging:15 - [ff297bd3] GET /api/v1/alerts → 200 (100.22ms)
+2026-06-19 09:40:19 | INFO     | app.middleware.logging:15 - [d7b805c3] GET /api/v1/companies/stats → 200 (62.09ms)
+2026-06-19 09:40:20 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-06-19 09:40:20 | INFO     | app.middleware.logging:15 - [1cbadb0a] GET /api/v1/alerts → 200 (44.3ms)
+2026-06-19 09:40:20 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 09:40:37 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-06-19 09:40:52 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-06-19 09:40:52 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for e69691b1-4b62-4059-acd7-c9c2a0f4db0a: Missing GitHub token
+2026-06-19 09:40:52 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 09:41:20 | ERROR    | app.middleware.logging:23 - [7175ba12] GET /api/v1/alerts → ERR (1.81ms): Bearer token required
+2026-06-19 09:41:20 | ERROR    | app.middleware.logging:23 - [11112436] GET /api/v1/alerts → ERR (0.84ms): Bearer token required
+2026-06-19 09:41:20 | ERROR    | app.middleware.logging:23 - [151bd320] GET /api/v1/alerts → ERR (0.88ms): Bearer token required
+2026-06-19 09:41:20 | ERROR    | app.middleware.logging:23 - [74eedad1] GET /api/v1/alerts → ERR (0.87ms): Bearer token required
+2026-06-19 09:41:54 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 09:41:54 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 09:41:54 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 09:41:54 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 09:41:54 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 09:42:20 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=None scan_id=None
+2026-06-19 09:42:20 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=7d205408
+2026-06-19 09:42:20 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=None total=0 open=0 critical=0
+2026-06-19 09:42:20 | INFO     | app.middleware.logging:15 - [cd9ad223] GET /api/v1/alerts → 200 (252.79ms)
+2026-06-19 09:42:20 | INFO     | app.middleware.logging:15 - [581517c3] GET /api/v1/kubernetes/pods/stats → 200 (262.89ms)
+2026-06-19 09:42:20 | INFO     | app.middleware.logging:15 - [87509fee] GET /api/v1/threats/stats → 200 (321.0ms)
+2026-06-19 09:42:20 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=7d205408 intg_status=None has_integration=False has_data=False mtd=0.0 ytd=0.0
+2026-06-19 09:42:20 | INFO     | app.middleware.logging:15 - [79c47b02] GET /api/v1/ml/stats → 200 (267.35ms)
+2026-06-19 09:42:20 | INFO     | app.middleware.logging:15 - [d4e80b25] GET /api/v1/costs/summary → 200 (291.75ms)
+2026-06-19 09:42:20 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=None scan_id=None
+2026-06-19 09:42:20 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=7d205408
+2026-06-19 09:42:20 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=None total=0 open=0 critical=0
+2026-06-19 09:42:20 | INFO     | app.middleware.logging:15 - [babb81a8] GET /api/v1/threats/stats → 200 (43.8ms)
+2026-06-19 09:42:20 | INFO     | app.middleware.logging:15 - [37c8de17] GET /api/v1/kubernetes/pods/stats → 200 (37.95ms)
+2026-06-19 09:42:20 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=7d205408 intg_status=None has_integration=False has_data=False mtd=0.0 ytd=0.0
+2026-06-19 09:42:20 | INFO     | app.middleware.logging:15 - [39179a27] GET /api/v1/costs/summary → 200 (58.49ms)
+2026-06-19 09:42:20 | INFO     | app.middleware.logging:15 - [fa896800] GET /api/v1/alerts → 200 (62.59ms)
+2026-06-19 09:42:20 | INFO     | app.middleware.logging:15 - [75c1bc8f] GET /api/v1/ml/stats → 200 (49.69ms)
+2026-06-19 09:42:50 | INFO     | app.middleware.logging:15 - [01d7706e] POST /api/v1/integrations/aws → 201 (493.25ms)
+2026-06-19 09:42:51 | INFO     | app.services.integration_service:263 - [aws_integration_saved] id=5b12ec2d-96db-4e05-a1d9-00a31c3c6ef6 tenant=7d205408 — running STS verification
+2026-06-19 09:42:51 | INFO     | app.integrations.aws.client:37 - [aws_sts_ok] account=718036735416 arn=arn:aws:iam::718036735416:user/uniops-production
+2026-06-19 09:42:51 | INFO     | app.services.integration_service:270 - [permissions_check_result] id=5b12ec2d-96db-4e05-a1d9-00a31c3c6ef6 sts_ok=True
+2026-06-19 09:42:52 | INFO     | app.services.integration_service:282 - [aws_connection_verified] id=5b12ec2d-96db-4e05-a1d9-00a31c3c6ef6 tenant=7d205408 account=718036735416
+2026-06-19 09:42:52 | INFO     | app.api.v1.endpoints.integrations:345 - [bg] AWS connection OK — triggering cost sync for tenant 7d205408-bd6f-4382-94a6-6bb5c374d8c4
+2026-06-19 09:42:52 | INFO     | app.middleware.logging:15 - [7cf5fe0f] GET /api/v1/integrations → 200 (42.59ms)
+2026-06-19 09:42:52 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=7d205408 integrations_found=1
+2026-06-19 09:42:52 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=Aws id=5b12ec2d tenant=7d205408 prior_status=connected
+2026-06-19 09:42:52 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=Aws id=5b12ec2d
+2026-06-19 09:42:52 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-03-01 end=2026-06-19 months=3
+2026-06-19 09:42:52 | INFO     | app.integrations.aws.cost_explorer:92 - [aws_ce] get_costs_by_service → 4 line items across 4 periods
+2026-06-19 09:42:52 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=Aws line_items_returned=4
+2026-06-19 09:42:52 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=4 integration=Aws id=5b12ec2d
+2026-06-19 09:42:53 | INFO     | app.integrations.aws.cost_explorer:130 - [aws_ce] get_cost_anomalies → 10 anomalies
+2026-06-19 09:42:53 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: An error occurred (AccessDeniedException) when calling the GetRightsizingRecommendation operation: Rightsizing EC2 recommendation is an opt-in only feature. You can enable this feature from the PAYER account’s Cost Explorer Preferences page. Normally it may take up to 24 hours in order to generate your rightsizing recommendations.
+2026-06-19 09:42:53 | INFO     | app.integrations.aws.cost_explorer:322 - [aws_ce] get_ri_recommendations → 1 recommendations
+2026-06-19 09:42:53 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=Aws id=5b12ec2d tenant=7d205408 cost_records=4 anomalies=10 savings_recs=1
+2026-06-19 09:42:53 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=7d205408
+2026-06-19 09:42:53 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 1, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-19 09:42:53 | INFO     | app.api.v1.endpoints.integrations:349 - [bg] AWS cost sync completed for tenant 7d205408-bd6f-4382-94a6-6bb5c374d8c4
+2026-06-19 09:42:55 | INFO     | app.middleware.logging:15 - [c4b64530] GET /api/v1/integrations → 200 (30.56ms)
+2026-06-19 09:43:00 | INFO     | app.middleware.logging:15 - [e452fc49] GET /api/v1/integrations → 200 (28.55ms)
+2026-06-19 09:43:00 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=None scan_id=None
+2026-06-19 09:43:00 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=7d205408
+2026-06-19 09:43:01 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:43:01 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=7d205408
+2026-06-19 09:43:01 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:43:01 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=7d205408
+2026-06-19 09:43:01 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=7d205408 count=0
+2026-06-19 09:43:01 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=None total=0 open=0 critical=0
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [e255ee45] GET /api/v1/threats/stats → 200 (41.15ms)
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [925627d1] GET /api/v1/security/repos → 200 (52.67ms)
+2026-06-19 09:43:01 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [e4637127] GET /api/v1/threats → 200 (61.71ms)
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [7c723fcd] GET /api/v1/compliance/score → 200 (45.15ms)
+2026-06-19 09:43:01 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [378caf31] GET /api/v1/compliance → 200 (53.18ms)
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [c6932363] GET /api/v1/vulnerabilities → 200 (62.75ms)
+2026-06-19 09:43:01 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=7d205408 repo_id=None
+2026-06-19 09:43:01 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=7d205408
+2026-06-19 09:43:01 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=7d205408 repo_id=None limit=20
+2026-06-19 09:43:01 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=7d205408 limit=20
+2026-06-19 09:43:01 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=None
+2026-06-19 09:43:01 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=None
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [1532a842] GET /api/v1/security/scan-history → 200 (33.18ms)
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [35522a69] GET /api/v1/security/score → 200 (37.41ms)
+2026-06-19 09:43:01 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=None scan_id=None
+2026-06-19 09:43:01 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=7d205408
+2026-06-19 09:43:01 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:43:01 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=7d205408
+2026-06-19 09:43:01 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=7d205408 count=0
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [4453f666] GET /api/v1/security/repos → 200 (28.66ms)
+2026-06-19 09:43:01 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=None total=0 open=0 critical=0
+2026-06-19 09:43:01 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [b240e402] GET /api/v1/threats/stats → 200 (37.94ms)
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [9823fce4] GET /api/v1/threats → 200 (36.31ms)
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [f5c0bc9f] GET /api/v1/compliance → 200 (31.03ms)
+2026-06-19 09:43:01 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:43:01 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=7d205408
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [58f7c81c] GET /api/v1/compliance/score → 200 (24.12ms)
+2026-06-19 09:43:01 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [25363965] GET /api/v1/vulnerabilities → 200 (26.86ms)
+2026-06-19 09:43:01 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=7d205408 repo_id=None
+2026-06-19 09:43:01 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=7d205408
+2026-06-19 09:43:01 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=7d205408 repo_id=None limit=20
+2026-06-19 09:43:01 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=7d205408 limit=20
+2026-06-19 09:43:01 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=None
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [da94dcc2] GET /api/v1/security/score → 200 (23.39ms)
+2026-06-19 09:43:01 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=None
+2026-06-19 09:43:01 | INFO     | app.middleware.logging:15 - [52206f7a] GET /api/v1/security/scan-history → 200 (22.43ms)
+2026-06-19 09:43:04 | INFO     | app.services.integration_service:451 - No active git integrations for tenant 7d205408-bd6f-4382-94a6-6bb5c374d8c4
+2026-06-19 09:43:04 | INFO     | app.api.v1.endpoints.security_scan:79 - [scan:repos/sync] tenant=7d205408 live_synced=0 db_total=0
+2026-06-19 09:43:04 | INFO     | app.middleware.logging:15 - [e23875e5] POST /api/v1/security/repos/sync → 409 (48.34ms)
+2026-06-19 09:43:04 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=7d205408 count=0
+2026-06-19 09:43:04 | INFO     | app.middleware.logging:15 - [77f4dd1d] GET /api/v1/security/repos → 200 (38.42ms)
+2026-06-19 09:43:06 | ERROR    | app.middleware.logging:23 - [e2c4dfb6] GET /api/v1/alerts → ERR (2.04ms): Bearer token required
+2026-06-19 09:43:06 | ERROR    | app.middleware.logging:23 - [608f7ba0] GET /api/v1/alerts → ERR (2.26ms): Bearer token required
+2026-06-19 09:43:07 | ERROR    | app.middleware.logging:23 - [6e096dae] GET /api/v1/alerts → ERR (1.1ms): Bearer token required
+2026-06-19 09:43:07 | ERROR    | app.middleware.logging:23 - [4c9e4dd0] GET /api/v1/alerts → ERR (0.73ms): Bearer token required
+2026-06-19 09:43:07 | INFO     | app.middleware.logging:15 - [1c470565] GET /api/v1/integrations → 200 (47.84ms)
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [338aaafc] GET /api/v1/costs/anomalies → 200 (60.02ms)
+2026-06-19 09:43:13 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=7d205408 intg_status=connected has_integration=True has_data=True mtd=0.28 ytd=0.36
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [8bc1878f] GET /api/v1/savings → 200 (63.14ms)
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [6e6dcc04] GET /api/v1/costs/breakdown → 200 (88.18ms)
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [c2840905] GET /api/v1/costs/summary → 200 (104.99ms)
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [c7856994] GET /api/v1/costs/forecast → 200 (75.76ms)
+2026-06-19 09:43:13 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=7d205408 count=0
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [924b604f] GET /api/v1/security/repos → 200 (22.65ms)
+2026-06-19 09:43:13 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=None scan_id=None
+2026-06-19 09:43:13 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=7d205408
+2026-06-19 09:43:13 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:43:13 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=7d205408
+2026-06-19 09:43:13 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:43:13 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=7d205408
+2026-06-19 09:43:13 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=None total=0 open=0 critical=0
+2026-06-19 09:43:13 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [29413a3a] GET /api/v1/threats/stats → 200 (33.11ms)
+2026-06-19 09:43:13 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [b9e79557] GET /api/v1/threats → 200 (28.51ms)
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [f1a568ec] GET /api/v1/vulnerabilities → 200 (35.26ms)
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [de626e7b] GET /api/v1/compliance → 200 (29.62ms)
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [a7ce6d1b] GET /api/v1/compliance/score → 200 (32.58ms)
+2026-06-19 09:43:13 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=7d205408 repo_id=None
+2026-06-19 09:43:13 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=7d205408
+2026-06-19 09:43:13 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=None
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [95ac29e1] GET /api/v1/security/score → 200 (19.92ms)
+2026-06-19 09:43:13 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=7d205408 repo_id=None limit=20
+2026-06-19 09:43:13 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=7d205408 limit=20
+2026-06-19 09:43:13 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=None scan_id=None
+2026-06-19 09:43:13 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=7d205408
+2026-06-19 09:43:13 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:43:13 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=7d205408
+2026-06-19 09:43:13 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:43:13 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=7d205408
+2026-06-19 09:43:13 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=7d205408 count=0
+2026-06-19 09:43:13 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=None total=0 open=0 critical=0
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [dbea4c2e] GET /api/v1/security/repos → 200 (30.93ms)
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [8de5dd8c] GET /api/v1/threats/stats → 200 (32.03ms)
+2026-06-19 09:43:13 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=None
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [645ad8bf] GET /api/v1/security/scan-history → 200 (46.28ms)
+2026-06-19 09:43:13 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:43:13 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [d298ebab] GET /api/v1/threats → 200 (38.04ms)
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [e098cbcc] GET /api/v1/vulnerabilities → 200 (35.8ms)
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [bd4e6d6e] GET /api/v1/compliance → 200 (16.74ms)
+2026-06-19 09:43:13 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=7d205408 repo_id=None
+2026-06-19 09:43:13 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=7d205408
+2026-06-19 09:43:13 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=7d205408 repo_id=None limit=20
+2026-06-19 09:43:13 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=7d205408 limit=20
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [b7ba869f] GET /api/v1/compliance/score → 200 (25.24ms)
+2026-06-19 09:43:13 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=None
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [f9e7aa03] GET /api/v1/security/score → 200 (23.21ms)
+2026-06-19 09:43:13 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=None
+2026-06-19 09:43:13 | INFO     | app.middleware.logging:15 - [1ae0f517] GET /api/v1/security/scan-history → 200 (22.82ms)
+2026-06-19 09:43:18 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 09:43:27 | ERROR    | app.middleware.logging:23 - [03504517] GET /api/v1/alerts → ERR (25.08ms): Bearer token required
+2026-06-19 09:43:27 | ERROR    | app.middleware.logging:23 - [42c52011] GET /api/v1/alerts → ERR (0.85ms): Bearer token required
+2026-06-19 09:43:27 | ERROR    | app.middleware.logging:23 - [42b5380f] GET /api/v1/alerts → ERR (1.3ms): Bearer token required
+2026-06-19 09:43:27 | ERROR    | app.middleware.logging:23 - [e8433ddc] GET /api/v1/alerts → ERR (0.68ms): Bearer token required
+2026-06-19 09:43:49 | INFO     | app.middleware.logging:15 - [6aa385a4] GET /api/v1/costs/anomalies → 200 (48.93ms)
+2026-06-19 09:43:49 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=7d205408 intg_status=connected has_integration=True has_data=True mtd=0.28 ytd=0.36
+2026-06-19 09:43:49 | INFO     | app.middleware.logging:15 - [1bc496a1] GET /api/v1/savings → 200 (61.96ms)
+2026-06-19 09:43:49 | INFO     | app.middleware.logging:15 - [38f05a98] GET /api/v1/costs/summary → 200 (113.03ms)
+2026-06-19 09:43:49 | INFO     | app.middleware.logging:15 - [e3bb7f99] GET /api/v1/costs/breakdown → 200 (90.52ms)
+2026-06-19 09:43:54 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 09:43:54 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 09:43:54 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 09:43:54 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 09:43:54 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
