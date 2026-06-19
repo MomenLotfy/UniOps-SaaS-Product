@@ -92,10 +92,8 @@ function App() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* ── Root redirect ─────────────────────────────────────────── */}
-        <Route path="/" element={<Navigate to="/command" replace />} />
-
-        {/* ── Landing (public) ──────────────────────────────────────── */}
+        {/* ── Root / Landing (public) ───────────────────────────────── */}
+        <Route path="/"         element={<Home />} />
         <Route path="/landing"  element={<Home />} />
         <Route path="/features" element={<Home />} />
         <Route path="/pricing"  element={<Pricing />} />
