@@ -16,11 +16,14 @@ from app.middleware.audit import AuditMiddleware
 from app.utils.logger import logger
 
 # ── Prometheus metrics (optional — enabled via ENABLE_METRICS=true) ───────────
-try:
-    from prometheus_fastapi_instrumentator import Instrumentator
-    _prometheus_available = True
-except ImportError:
-    _prometheus_available = False
+import os as _os
+_prometheus_available = False
+if _os.getenv("ENABLE_METRICS", "false").lower() == "true":
+    try:
+        from prometheus_fastapi_instrumentator import Instrumentator
+        _prometheus_available = True
+    except ImportError:
+        pass
 
 
 @asynccontextmanager

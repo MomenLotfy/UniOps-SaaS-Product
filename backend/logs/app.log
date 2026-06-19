@@ -13351,3 +13351,141 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-06-16 19:21:16 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
 2026-06-16 19:21:16 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
 2026-06-16 19:23:00 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-06-19 09:02:54 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-06-19 09:03:07 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-06-19 09:03:08 | INFO     | app.main:96 - Prometheus metrics enabled at /metrics
+2026-06-19 09:03:08 | INFO     | app.main:29 - Starting UniOps v1.0.0
+2026-06-19 09:03:11 | INFO     | app.main:33 - Database initialized
+2026-06-19 09:03:11 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-06-19 09:03:11 | INFO     | app.core.scheduler:26 - K8s watchers disabled (event loop safety)
+2026-06-19 09:03:11 | INFO     | app.core.scheduler:37 - Scheduler started 6 periodic tasks
+2026-06-19 09:03:11 | INFO     | app.main:39 - Background scheduler started
+2026-06-19 09:03:11 | INFO     | app.main:51 - ML event listener task started — will retry Redis connection on failures
+2026-06-19 09:03:11 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-06-19 09:03:11 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 5s
+2026-06-19 09:03:11 | ERROR    | app.middleware.logging:23 - [8d4c96e2] POST /api/v1/auth/register → ERR (7.67ms): '_IncludedRouter' object has no attribute 'path'
+2026-06-19 09:03:11 | ERROR    | app.main:149 - Unhandled error: '_IncludedRouter' object has no attribute 'path'
+2026-06-19 09:03:16 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 10s
+2026-06-19 09:03:16 | ERROR    | app.middleware.logging:23 - [b394708f] POST /api/v1/auth/register → ERR (0.29ms): '_IncludedRouter' object has no attribute 'path'
+2026-06-19 09:03:16 | ERROR    | app.main:149 - Unhandled error: '_IncludedRouter' object has no attribute 'path'
+2026-06-19 09:03:17 | ERROR    | app.middleware.logging:23 - [724db753] POST /api/v1/auth/register → ERR (0.34ms): '_IncludedRouter' object has no attribute 'path'
+2026-06-19 09:03:17 | ERROR    | app.main:149 - Unhandled error: '_IncludedRouter' object has no attribute 'path'
+2026-06-19 09:03:26 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 20s
+2026-06-19 09:03:37 | ERROR    | app.middleware.logging:23 - [c51ea457] POST /api/v1/auth/register → ERR (0.4ms): '_IncludedRouter' object has no attribute 'path'
+2026-06-19 09:03:37 | ERROR    | app.main:149 - Unhandled error: '_IncludedRouter' object has no attribute 'path'
+2026-06-19 09:03:41 | WARNING  | app.core.scheduler:132 - Cleanup skipped: 'NoneType' object has no attribute 'task'
+2026-06-19 09:03:41 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-06-19 09:03:41 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=0
+2026-06-19 09:03:41 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-06-19 09:03:41 | INFO     | app.tasks.sync_ml_insights:50 - [sync_ml] No tenants found — skipping
+2026-06-19 09:03:41 | INFO     | app.core.scheduler:139 - Scheduled ML sync: {'tenants': 0, 'predictions': 0, 'patterns': 0, 'recommendations': 0}
+2026-06-19 09:03:41 | INFO     | app.core.scheduler:122 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-19 09:03:41 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 09:03:41 | INFO     | app.core.scheduler:113 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-06-19 09:03:46 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 40s
+2026-06-19 09:03:49 | INFO     | app.main:73 - Shutting down...
+2026-06-19 09:03:49 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-06-19 09:03:49 | INFO     | app.core.scheduler:53 - Scheduler stopped
+2026-06-19 09:03:50 | INFO     | app.main:32 - Starting UniOps v1.0.0
+2026-06-19 09:03:50 | INFO     | app.main:36 - Database initialized
+2026-06-19 09:03:50 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-06-19 09:03:50 | INFO     | app.core.scheduler:26 - K8s watchers disabled (event loop safety)
+2026-06-19 09:03:50 | INFO     | app.core.scheduler:37 - Scheduler started 6 periodic tasks
+2026-06-19 09:03:50 | INFO     | app.main:42 - Background scheduler started
+2026-06-19 09:03:50 | INFO     | app.main:54 - ML event listener task started — will retry Redis connection on failures
+2026-06-19 09:03:50 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-06-19 09:03:50 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 5s
+2026-06-19 09:03:53 | INFO     | app.main:76 - Shutting down...
+2026-06-19 09:03:53 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-06-19 09:03:53 | INFO     | app.core.scheduler:53 - Scheduler stopped
+2026-06-19 09:03:56 | INFO     | app.main:32 - Starting UniOps v1.0.0
+2026-06-19 09:03:56 | INFO     | app.main:36 - Database initialized
+2026-06-19 09:03:56 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-06-19 09:03:56 | INFO     | app.core.scheduler:26 - K8s watchers disabled (event loop safety)
+2026-06-19 09:03:56 | INFO     | app.core.scheduler:37 - Scheduler started 6 periodic tasks
+2026-06-19 09:03:56 | INFO     | app.main:42 - Background scheduler started
+2026-06-19 09:03:56 | INFO     | app.main:54 - ML event listener task started — will retry Redis connection on failures
+2026-06-19 09:03:56 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-06-19 09:03:56 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 5s
+2026-06-19 09:04:01 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 10s
+2026-06-19 09:04:11 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 20s
+2026-06-19 09:04:18 | INFO     | app.middleware.logging:15 - [5916ea70] POST /api/v1/auth/register → 422 (13.17ms)
+2026-06-19 09:04:18 | INFO     | app.middleware.logging:15 - [83ce519c] GET /api/v1/health → 200 (0.98ms)
+2026-06-19 09:04:24 | INFO     | app.services.auth_service:115 - New user registered: momen.elpesa123@gmail.com (tenant: Mo'men lotfy's Organization)
+2026-06-19 09:04:24 | INFO     | app.integrations.email.client:31 - [EMAIL — no key] To: momen.elpesa123@gmail.com | Subject: Welcome to UniOps, Mo'men! 🚀
+2026-06-19 09:04:24 | INFO     | app.middleware.logging:15 - [168555ac] POST /api/v1/auth/register → 200 (382.34ms)
+2026-06-19 09:04:25 | INFO     | app.middleware.logging:15 - [fd619b64] GET /api/v1/companies → 200 (31.61ms)
+2026-06-19 09:04:25 | INFO     | app.middleware.logging:15 - [3a95b617] GET /api/v1/integrations → 200 (118.04ms)
+2026-06-19 09:04:25 | INFO     | app.middleware.logging:15 - [fca1968f] GET /api/v1/companies/stats → 200 (39.15ms)
+2026-06-19 09:04:25 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-19 09:04:26 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 09:04:26 | WARNING  | app.core.scheduler:132 - Cleanup skipped: 'NoneType' object has no attribute 'task'
+2026-06-19 09:04:26 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=0
+2026-06-19 09:04:26 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-06-19 09:04:26 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-06-19 09:04:26 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 09:04:26 | INFO     | app.core.scheduler:122 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-19 09:04:26 | INFO     | app.tasks.sync_ml_insights:50 - [sync_ml] No tenants found — skipping
+2026-06-19 09:04:26 | INFO     | app.core.scheduler:139 - Scheduled ML sync: {'tenants': 0, 'predictions': 0, 'patterns': 0, 'recommendations': 0}
+2026-06-19 09:04:26 | INFO     | app.core.scheduler:113 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-06-19 09:04:31 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 40s
+2026-06-19 09:04:43 | INFO     | app.services.auth_service:115 - New user registered: test@test.com (tenant: Test User's Organization)
+2026-06-19 09:04:43 | INFO     | app.integrations.email.client:31 - [EMAIL — no key] To: test@test.com | Subject: Welcome to UniOps, Test! 🚀
+2026-06-19 09:04:43 | INFO     | app.middleware.logging:15 - [84c8c921] POST /api/v1/auth/register → 200 (323.35ms)
+2026-06-19 09:04:50 | INFO     | app.services.auth_service:62 - User test@test.com logged in successfully
+2026-06-19 09:04:50 | INFO     | app.middleware.logging:15 - [a6322f94] POST /api/v1/auth/login → 200 (315.5ms)
+2026-06-19 09:04:58 | ERROR    | app.middleware.logging:23 - [c647980b] GET /api/v1/alerts → ERR (2.77ms): Bearer token required
+2026-06-19 09:04:58 | ERROR    | app.middleware.logging:23 - [aac98950] GET /api/v1/alerts → ERR (2.23ms): Bearer token required
+2026-06-19 09:05:04 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 09:05:08 | INFO     | app.services.auth_service:115 - New user registered: admin@demo.com (tenant: Demo Company)
+2026-06-19 09:05:08 | INFO     | app.integrations.email.client:31 - [EMAIL — no key] To: admin@demo.com | Subject: Welcome to UniOps, Admin! 🚀
+2026-06-19 09:05:08 | INFO     | app.middleware.logging:15 - [e7f700d8] POST /api/v1/auth/register → 200 (327.07ms)
+2026-06-19 09:05:09 | INFO     | app.middleware.logging:15 - [eb89a0a1] GET /api/v1/alerts → 200 (32.26ms)
+2026-06-19 09:05:09 | INFO     | app.middleware.logging:15 - [71aa80de] GET /api/v1/integrations → 200 (30.23ms)
+2026-06-19 09:05:09 | INFO     | app.middleware.logging:15 - [e77f0468] GET /api/v1/companies → 200 (24.16ms)
+2026-06-19 09:05:09 | INFO     | app.middleware.logging:15 - [8df3ae1d] GET /api/v1/companies/stats → 200 (27.82ms)
+2026-06-19 09:05:09 | INFO     | app.middleware.logging:15 - [cb87909c] GET /api/v1/alerts → 200 (17.89ms)
+2026-06-19 09:05:09 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-19 09:05:09 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 09:05:11 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 80s
+2026-06-19 09:05:13 | ERROR    | app.middleware.logging:23 - [a1014969] GET /api/v1/alerts → ERR (4.24ms): Bearer token required
+2026-06-19 09:05:13 | ERROR    | app.middleware.logging:23 - [9cf8749a] GET /api/v1/alerts → ERR (1.22ms): Bearer token required
+2026-06-19 09:05:22 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 09:05:28 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-19 09:05:28 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 09:05:52 | INFO     | app.middleware.logging:15 - [d3e2eabc] GET /api/v1/alerts → 200 (33.51ms)
+2026-06-19 09:05:52 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=None scan_id=None
+2026-06-19 09:05:52 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=42c1057b
+2026-06-19 09:05:52 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=None total=0 open=0 critical=0
+2026-06-19 09:05:52 | INFO     | app.middleware.logging:15 - [64135728] GET /api/v1/threats/stats → 200 (19.56ms)
+2026-06-19 09:05:52 | INFO     | app.middleware.logging:15 - [cf97a5fd] GET /api/v1/kubernetes/pods/stats → 200 (25.68ms)
+2026-06-19 09:05:52 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=42c1057b intg_status=None has_integration=False has_data=False mtd=0.0 ytd=0.0
+2026-06-19 09:05:52 | INFO     | app.middleware.logging:15 - [b7b515fa] GET /api/v1/costs/summary → 200 (29.1ms)
+2026-06-19 09:05:52 | INFO     | app.middleware.logging:15 - [1da8bc7e] GET /api/v1/ml/stats → 200 (23.58ms)
+2026-06-19 09:05:52 | INFO     | app.middleware.logging:15 - [1eab80e4] GET /api/v1/alerts → 200 (17.75ms)
+2026-06-19 09:05:53 | INFO     | app.middleware.logging:15 - [c2a727bc] GET /api/v1/integrations → 200 (20.7ms)
+2026-06-19 09:05:53 | INFO     | app.middleware.logging:15 - [48a30bd1] GET /api/v1/companies → 200 (19.29ms)
+2026-06-19 09:05:53 | INFO     | app.middleware.logging:15 - [1abf9aa9] GET /api/v1/companies/stats → 200 (20.73ms)
+2026-06-19 09:05:53 | INFO     | app.middleware.logging:15 - [4c140634] GET /api/v1/alerts → 200 (16.86ms)
+2026-06-19 09:05:53 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=None scan_id=None
+2026-06-19 09:05:53 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=42c1057b
+2026-06-19 09:05:53 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=None total=0 open=0 critical=0
+2026-06-19 09:05:53 | INFO     | app.middleware.logging:15 - [aec0eff9] GET /api/v1/threats/stats → 200 (15.08ms)
+2026-06-19 09:05:53 | INFO     | app.middleware.logging:15 - [9f232148] GET /api/v1/kubernetes/pods/stats → 200 (12.86ms)
+2026-06-19 09:05:53 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-06-19 09:05:53 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=42c1057b intg_status=None has_integration=False has_data=False mtd=0.0 ytd=0.0
+2026-06-19 09:05:53 | INFO     | app.middleware.logging:15 - [a1c9ad39] GET /api/v1/costs/summary → 200 (26.49ms)
+2026-06-19 09:05:53 | INFO     | app.middleware.logging:15 - [3bf8d94b] GET /api/v1/ml/stats → 200 (23.49ms)
+2026-06-19 09:05:53 | INFO     | app.middleware.logging:15 - [d9e7ce5c] GET /api/v1/alerts → 200 (21.57ms)
+2026-06-19 09:05:53 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 09:05:56 | ERROR    | app.middleware.logging:23 - [b1413302] GET /api/v1/alerts → ERR (1.98ms): Bearer token required
+2026-06-19 09:05:56 | ERROR    | app.middleware.logging:23 - [5a8a0dd2] GET /api/v1/alerts → ERR (3.29ms): Bearer token required
+2026-06-19 09:05:56 | ERROR    | app.middleware.logging:23 - [9814df64] GET /api/v1/alerts → ERR (1.38ms): Bearer token required
+2026-06-19 09:05:56 | ERROR    | app.middleware.logging:23 - [f5f645c1] GET /api/v1/alerts → ERR (1.11ms): Bearer token required
+2026-06-19 09:06:12 | INFO     | app.middleware.logging:15 - [ab058134] GET /api/v1/integrations → 200 (25.7ms)
+2026-06-19 09:06:12 | INFO     | app.middleware.logging:15 - [9ae74516] GET /api/v1/integrations → 200 (18.69ms)
+2026-06-19 09:06:16 | INFO     | app.middleware.logging:15 - [34ab37f2] GET /api/v1/health → 200 (0.47ms)
+2026-06-19 09:06:16 | INFO     | app.services.auth_service:62 - User admin@demo.com logged in successfully
+2026-06-19 09:06:16 | INFO     | app.middleware.logging:15 - [e1b0b048] POST /api/v1/auth/login → 200 (320.13ms)
+2026-06-19 09:06:26 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-06-19 09:06:26 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
