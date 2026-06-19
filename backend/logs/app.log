@@ -15794,3 +15794,506 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-06-19 10:02:46 | ERROR    | app.middleware.logging:23 - [818f7f68] GET /api/v1/alerts → ERR (1.01ms): Bearer token required
 2026-06-19 10:02:46 | ERROR    | app.middleware.logging:23 - [0f1b22bf] GET /api/v1/alerts → ERR (3.72ms): Bearer token required
 2026-06-19 10:02:46 | ERROR    | app.middleware.logging:23 - [ed0c2110] GET /api/v1/alerts → ERR (1.18ms): Bearer token required
+2026-06-19 10:03:50 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 160s
+2026-06-19 10:03:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 10:03:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:03:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:03:50 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 10:03:50 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 10:04:18 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=f85da858-0d85-4dfc-bd81-132257653439 scan_id=None
+2026-06-19 10:04:18 | DEBUG    | app.services.security_service:245 - [security:threat_stats] repo_id=f85da858
+2026-06-19 10:04:18 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=f85da858-0d85-4dfc-bd81-132257653439 total=0 open=0 critical=0
+2026-06-19 10:04:18 | INFO     | app.middleware.logging:15 - [819834fc] GET /api/v1/threats/stats → 200 (37.16ms)
+2026-06-19 10:04:18 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=7d205408 repo_id=f85da858-0d85-4dfc-bd81-132257653439 scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:04:18 | DEBUG    | app.services.security_service:45 - [security:threats] ISOLATED to repo_id=f85da858 tenant=7d205408
+2026-06-19 10:04:18 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=7d205408 repo_id=f85da858-0d85-4dfc-bd81-132257653439 scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:04:18 | DEBUG    | app.services.security_service:290 - [security:vulns] ISOLATED to repo_id=f85da858 tenant=7d205408
+2026-06-19 10:04:18 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=7d205408 repo_id=f85da858-0d85-4dfc-bd81-132257653439
+2026-06-19 10:04:18 | INFO     | app.services.scan_service:310 - [scan:score] ISOLATED to repo_id=f85da858 tenant=7d205408
+2026-06-19 10:04:18 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=7d205408 repo_id=f85da858-0d85-4dfc-bd81-132257653439 limit=20
+2026-06-19 10:04:18 | INFO     | app.services.scan_service:245 - [scan:history] ISOLATED to repo_id=f85da858 tenant=7d205408 limit=20
+2026-06-19 10:04:18 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=f85da858-0d85-4dfc-bd81-132257653439 scan_id=None status=open
+2026-06-19 10:04:18 | INFO     | app.middleware.logging:15 - [4522c044] GET /api/v1/threats → 200 (56.57ms)
+2026-06-19 10:04:18 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=f85da858-0d85-4dfc-bd81-132257653439 scan_id=None status=open
+2026-06-19 10:04:18 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=f85da858-0d85-4dfc-bd81-132257653439
+2026-06-19 10:04:18 | INFO     | app.middleware.logging:15 - [3f4f5ff6] GET /api/v1/security/score → 200 (41.97ms)
+2026-06-19 10:04:18 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=f85da858-0d85-4dfc-bd81-132257653439
+2026-06-19 10:04:18 | INFO     | app.middleware.logging:15 - [d5ed5c10] GET /api/v1/vulnerabilities → 200 (59.98ms)
+2026-06-19 10:04:18 | INFO     | app.middleware.logging:15 - [d4e141c4] GET /api/v1/security/scan-history → 200 (43.59ms)
+2026-06-19 10:04:19 | INFO     | app.api.v1.endpoints.security_scan:115 - [scan:trigger] repo_id=f85da858 tenant=7d205408 branch=main user=c29cc9a9
+2026-06-19 10:04:19 | INFO     | app.services.scan_service:95 - [scan:create] repo=MomenLotfy/DevOptimus tenant=7d205408 triggered_by=c29cc9a9
+2026-06-19 10:04:19 | WARNING  | app.services.scan_service:384 - Redis lock unavailable for repo f85da858-0d85-4dfc-bd81-132257653439 (Error 111 connecting to localhost:6379. 111.) — falling back to DB-only deduplication check
+2026-06-19 10:04:19 | INFO     | app.services.scan_service:156 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] Queued for repo=MomenLotfy/DevOptimus branch=main triggered_by=c29cc9a9-cb9c-453e-9f93-9b3e79456731
+2026-06-19 10:04:19 | INFO     | app.api.v1.endpoints.security_scan:135 - [scan:trigger] scan_id=c5ecece3-97d1-4d36-a681-5ae8601bb058 queued for repo_id=f85da858
+2026-06-19 10:04:19 | INFO     | app.middleware.logging:15 - [8fde0a8e] POST /api/v1/security/scan → 202 (67.93ms)
+2026-06-19 10:04:22 | INFO     | app.middleware.logging:15 - [9e5eeceb] GET /api/v1/security/scan/c5ecece3-97d1-4d36-a681-5ae8601bb058 → 200 (25.83ms)
+2026-06-19 10:04:25 | INFO     | app.middleware.logging:15 - [aa95bf4e] GET /api/v1/security/scan/c5ecece3-97d1-4d36-a681-5ae8601bb058 → 200 (23.54ms)
+2026-06-19 10:04:25 | INFO     | app.services.scan_service:193 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] No active Celery workers — using inline fallback
+2026-06-19 10:04:25 | INFO     | app.tasks.run_scan:130 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] Status → cloning (repo=MomenLotfy/DevOptimus branch=main has_token=True)
+2026-06-19 10:04:25 | INFO     | app.services.scan_engine:902 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] Cloning https://github.com/MomenLotfy/DevOptimus.git (branch=main provider=github has_token=True)
+2026-06-19 10:04:26 | INFO     | app.services.scan_engine:914 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] Clone successful → /tmp/uniops_scan_enf_5o_n
+2026-06-19 10:04:26 | INFO     | app.tasks.run_scan:156 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] Status → scanning
+2026-06-19 10:04:27 | INFO     | app.services.scan_engine:977 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] Starting scan — lang=unknown dockerfile=False cicd=False docker_available=True
+2026-06-19 10:04:28 | INFO     | app.middleware.logging:15 - [655944de] GET /api/v1/security/scan/c5ecece3-97d1-4d36-a681-5ae8601bb058 → 200 (27.4ms)
+2026-06-19 10:04:32 | INFO     | app.middleware.logging:15 - [88238a8a] GET /api/v1/security/scan/c5ecece3-97d1-4d36-a681-5ae8601bb058 → 200 (47.26ms)
+2026-06-19 10:04:35 | INFO     | app.middleware.logging:15 - [2f1a23ec] GET /api/v1/security/scan/c5ecece3-97d1-4d36-a681-5ae8601bb058 → 200 (34.35ms)
+2026-06-19 10:04:38 | INFO     | app.middleware.logging:15 - [ee4dcee9] GET /api/v1/security/scan/c5ecece3-97d1-4d36-a681-5ae8601bb058 → 200 (24.33ms)
+2026-06-19 10:04:41 | INFO     | app.middleware.logging:15 - [28bf41a2] GET /api/v1/security/scan/c5ecece3-97d1-4d36-a681-5ae8601bb058 → 200 (32.46ms)
+2026-06-19 10:04:44 | INFO     | app.middleware.logging:15 - [cc0e635d] GET /api/v1/security/scan/c5ecece3-97d1-4d36-a681-5ae8601bb058 → 200 (27.46ms)
+2026-06-19 10:04:45 | INFO     | app.middleware.logging:15 - [c7fd18f9] GET /api/v1/companies/stats → 200 (51.8ms)
+2026-06-19 10:04:45 | INFO     | app.middleware.logging:15 - [31d2a00f] GET /api/v1/companies/stats → 200 (36.19ms)
+2026-06-19 10:05:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 10:05:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:05:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:05:50 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 10:05:50 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 10:05:57 | WARNING  | app.services.scan_engine:85 - Command timed out (90s): docker run --rm
+2026-06-19 10:06:27 | WARNING  | app.services.scan_engine:85 - Command timed out (120s): docker run --rm
+2026-06-19 10:06:27 | INFO     | app.services.scan_engine:1001 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] sast → 0 findings
+2026-06-19 10:06:27 | INFO     | app.services.scan_engine:1001 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] secrets → 0 findings
+2026-06-19 10:06:27 | INFO     | app.services.scan_engine:1001 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] deps → 0 findings
+2026-06-19 10:06:27 | INFO     | app.services.scan_engine:1016 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] container → skipped (no Dockerfile)
+2026-06-19 10:06:27 | INFO     | app.services.scan_engine:1031 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] cicd → skipped (no CI config found)
+2026-06-19 10:06:27 | INFO     | app.services.scan_engine:1035 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] Scan complete — 0 findings | critical=0 high=0 medium=0 low=0
+2026-06-19 10:06:27 | INFO     | app.tasks.run_scan:162 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] Status → analyzing (0 findings)
+2026-06-19 10:06:27 | INFO     | app.tasks.run_scan:176 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] Persisting 0 threats, 0 vulnerabilities
+2026-06-19 10:06:27 | INFO     | app.tasks.run_scan:456 - [compliance] Updated 4 frameworks for tenant=7d205408
+2026-06-19 10:06:27 | INFO     | app.tasks.run_scan:229 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] ✓ COMPLETED — score=100.0 findings=0 threats=0 vulns=0 duration=121s
+2026-06-19 10:06:27 | INFO     | app.tasks.run_scan:346 - [ws] emitted scan.completed → tenant=7d205408
+2026-06-19 10:06:27 | INFO     | app.tasks.run_scan:271 - [scan:c5ecece3-97d1-4d36-a681-5ae8601bb058] Temp clone dir removed
+2026-06-19 10:06:30 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-06-19 10:06:50 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-06-19 10:06:50 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for e69691b1-4b62-4059-acd7-c9c2a0f4db0a: Missing GitHub token
+2026-06-19 10:06:50 | WARNING  | app.core.scheduler:106 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-06-19 10:07:18 | INFO     | app.middleware.logging:15 - [b6ae1ced] GET /api/v1/kubernetes/pods/stats → 200 (50.75ms)
+2026-06-19 10:07:18 | INFO     | app.middleware.logging:15 - [2765dc1e] GET /api/v1/pipelines/stats → 200 (56.34ms)
+2026-06-19 10:07:18 | INFO     | app.middleware.logging:15 - [1eb15b30] GET /api/v1/kubernetes/pods → 200 (63.29ms)
+2026-06-19 10:07:18 | INFO     | app.middleware.logging:15 - [ef32932f] GET /api/v1/pipelines → 200 (63.96ms)
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [02d26cb4] GET /api/v1/pipelines/stats → 200 (42.65ms)
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [cc508d7f] GET /api/v1/kubernetes/pods/stats → 200 (54.68ms)
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [6a6cd947] GET /api/v1/pipelines → 200 (52.18ms)
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [2af3c078] GET /api/v1/kubernetes/pods → 200 (47.26ms)
+2026-06-19 10:07:19 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=7d205408 count=37
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [6d3b7e22] GET /api/v1/security/repos → 200 (23.52ms)
+2026-06-19 10:07:19 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=None scan_id=None
+2026-06-19 10:07:19 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=7d205408
+2026-06-19 10:07:19 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:07:19 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=7d205408
+2026-06-19 10:07:19 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:07:19 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=7d205408
+2026-06-19 10:07:19 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=None total=26 open=26 critical=2
+2026-06-19 10:07:19 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [5e590676] GET /api/v1/threats/stats → 200 (36.42ms)
+2026-06-19 10:07:19 | INFO     | app.services.security_service:68 - [security:threats] returned total=26 repo_id=None scan_id=None status=open
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [85db8fab] GET /api/v1/vulnerabilities → 200 (33.48ms)
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [cff4abfc] GET /api/v1/threats → 200 (40.38ms)
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [5af96ff8] GET /api/v1/compliance → 200 (28.03ms)
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [e708acd1] GET /api/v1/compliance/score → 200 (21.99ms)
+2026-06-19 10:07:19 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=7d205408 repo_id=None
+2026-06-19 10:07:19 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=7d205408
+2026-06-19 10:07:19 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=7d205408 repo_id=None limit=20
+2026-06-19 10:07:19 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=7d205408 limit=20
+2026-06-19 10:07:19 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 6 entries repo_id=None
+2026-06-19 10:07:19 | INFO     | app.services.scan_service:329 - [scan:score] score=100.0 repo=MomenLotfy/DevOptimus repo_id=None
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [7527393d] GET /api/v1/security/scan-history → 200 (29.43ms)
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [98c33bb7] GET /api/v1/security/score → 200 (36.5ms)
+2026-06-19 10:07:19 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=None scan_id=None
+2026-06-19 10:07:19 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=7d205408
+2026-06-19 10:07:19 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:07:19 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=7d205408
+2026-06-19 10:07:19 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:07:19 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=7d205408
+2026-06-19 10:07:19 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=7d205408 count=37
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [b9e8eb21] GET /api/v1/security/repos → 200 (51.8ms)
+2026-06-19 10:07:19 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=None total=26 open=26 critical=2
+2026-06-19 10:07:19 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [4a9cb9d3] GET /api/v1/threats/stats → 200 (54.66ms)
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [8020bd9b] GET /api/v1/vulnerabilities → 200 (53.83ms)
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [2c290aa3] GET /api/v1/compliance/score → 200 (44.21ms)
+2026-06-19 10:07:19 | INFO     | app.services.security_service:68 - [security:threats] returned total=26 repo_id=None scan_id=None status=open
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [0a833379] GET /api/v1/compliance → 200 (54.69ms)
+2026-06-19 10:07:19 | INFO     | app.middleware.logging:15 - [d9cb27d0] GET /api/v1/threats → 200 (51.44ms)
+2026-06-19 10:07:20 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=7d205408 repo_id=None
+2026-06-19 10:07:20 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=7d205408
+2026-06-19 10:07:20 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=7d205408 repo_id=None limit=20
+2026-06-19 10:07:20 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=7d205408 limit=20
+2026-06-19 10:07:20 | INFO     | app.services.scan_service:329 - [scan:score] score=100.0 repo=MomenLotfy/DevOptimus repo_id=None
+2026-06-19 10:07:20 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 6 entries repo_id=None
+2026-06-19 10:07:20 | INFO     | app.middleware.logging:15 - [91eda92b] GET /api/v1/security/score → 200 (30.16ms)
+2026-06-19 10:07:20 | INFO     | app.middleware.logging:15 - [5a403f82] GET /api/v1/security/scan-history → 200 (28.17ms)
+2026-06-19 10:07:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 10:07:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:07:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:07:50 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 10:07:50 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 10:09:32 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 scan_id=None
+2026-06-19 10:09:32 | DEBUG    | app.services.security_service:245 - [security:threat_stats] repo_id=130bac37
+2026-06-19 10:09:32 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=7d205408 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:09:32 | DEBUG    | app.services.security_service:45 - [security:threats] ISOLATED to repo_id=130bac37 tenant=7d205408
+2026-06-19 10:09:32 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=7d205408 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 limit=20
+2026-06-19 10:09:32 | INFO     | app.services.scan_service:245 - [scan:history] ISOLATED to repo_id=130bac37 tenant=7d205408 limit=20
+2026-06-19 10:09:32 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=7d205408 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909
+2026-06-19 10:09:32 | INFO     | app.services.scan_service:310 - [scan:score] ISOLATED to repo_id=130bac37 tenant=7d205408
+2026-06-19 10:09:32 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=7d205408 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:09:32 | DEBUG    | app.services.security_service:290 - [security:vulns] ISOLATED to repo_id=130bac37 tenant=7d205408
+2026-06-19 10:09:32 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 total=0 open=0 critical=0
+2026-06-19 10:09:32 | INFO     | app.middleware.logging:15 - [d0d9670f] GET /api/v1/threats/stats → 200 (52.19ms)
+2026-06-19 10:09:32 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 scan_id=None status=open
+2026-06-19 10:09:32 | INFO     | app.middleware.logging:15 - [e541f3fa] GET /api/v1/threats → 200 (59.76ms)
+2026-06-19 10:09:32 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=130bac37-0f37-4026-9fe9-0f52851d0909
+2026-06-19 10:09:32 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 scan_id=None status=open
+2026-06-19 10:09:32 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=130bac37-0f37-4026-9fe9-0f52851d0909
+2026-06-19 10:09:32 | INFO     | app.middleware.logging:15 - [785e7888] GET /api/v1/security/score → 200 (52.5ms)
+2026-06-19 10:09:32 | INFO     | app.middleware.logging:15 - [bf5991d1] GET /api/v1/vulnerabilities → 200 (48.99ms)
+2026-06-19 10:09:32 | INFO     | app.middleware.logging:15 - [8bcecdae] GET /api/v1/security/scan-history → 200 (60.71ms)
+2026-06-19 10:09:33 | INFO     | app.api.v1.endpoints.security_scan:115 - [scan:trigger] repo_id=130bac37 tenant=7d205408 branch=main user=c29cc9a9
+2026-06-19 10:09:33 | INFO     | app.services.scan_service:95 - [scan:create] repo=MomenLotfy/DevOps-Interview-MCQ tenant=7d205408 triggered_by=c29cc9a9
+2026-06-19 10:09:33 | WARNING  | app.services.scan_service:384 - Redis lock unavailable for repo 130bac37-0f37-4026-9fe9-0f52851d0909 (Error 111 connecting to localhost:6379. 111.) — falling back to DB-only deduplication check
+2026-06-19 10:09:33 | INFO     | app.services.scan_service:156 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] Queued for repo=MomenLotfy/DevOps-Interview-MCQ branch=main triggered_by=c29cc9a9-cb9c-453e-9f93-9b3e79456731
+2026-06-19 10:09:33 | INFO     | app.api.v1.endpoints.security_scan:135 - [scan:trigger] scan_id=83206945-d9ad-4c7c-bd34-20aa3dbd5719 queued for repo_id=130bac37
+2026-06-19 10:09:33 | INFO     | app.middleware.logging:15 - [76b23db3] POST /api/v1/security/scan → 202 (100.71ms)
+2026-06-19 10:09:36 | INFO     | app.middleware.logging:15 - [689b1f56] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (23.99ms)
+2026-06-19 10:09:39 | INFO     | app.services.scan_service:193 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] No active Celery workers — using inline fallback
+2026-06-19 10:09:39 | INFO     | app.tasks.run_scan:130 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] Status → cloning (repo=MomenLotfy/DevOps-Interview-MCQ branch=main has_token=True)
+2026-06-19 10:09:39 | INFO     | app.services.scan_engine:902 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] Cloning https://github.com/MomenLotfy/DevOps-Interview-MCQ.git (branch=main provider=github has_token=True)
+2026-06-19 10:09:39 | INFO     | app.services.scan_engine:914 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] Clone successful → /tmp/uniops_scan_exjezf37
+2026-06-19 10:09:40 | INFO     | app.tasks.run_scan:156 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] Status → scanning
+2026-06-19 10:09:40 | INFO     | app.services.scan_engine:977 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] Starting scan — lang=unknown dockerfile=False cicd=False docker_available=True
+2026-06-19 10:09:40 | INFO     | app.middleware.logging:15 - [be9b9986] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (72.77ms)
+2026-06-19 10:09:43 | INFO     | app.middleware.logging:15 - [e5d8eb32] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (25.15ms)
+2026-06-19 10:09:46 | INFO     | app.middleware.logging:15 - [b9183a0a] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (23.75ms)
+2026-06-19 10:09:49 | INFO     | app.middleware.logging:15 - [6117b0df] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (32.32ms)
+2026-06-19 10:09:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 10:09:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:09:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:09:50 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 10:09:50 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 10:09:52 | INFO     | app.middleware.logging:15 - [7a928f7a] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (30.46ms)
+2026-06-19 10:09:55 | INFO     | app.middleware.logging:15 - [787fbe5b] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (24.66ms)
+2026-06-19 10:09:58 | INFO     | app.middleware.logging:15 - [02526262] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (23.89ms)
+2026-06-19 10:10:01 | INFO     | app.middleware.logging:15 - [50dc264d] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (24.89ms)
+2026-06-19 10:10:04 | INFO     | app.middleware.logging:15 - [13727a69] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (25.83ms)
+2026-06-19 10:10:07 | INFO     | app.middleware.logging:15 - [b6bc3716] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (44.29ms)
+2026-06-19 10:10:10 | INFO     | app.middleware.logging:15 - [5fb7f16e] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (23.9ms)
+2026-06-19 10:10:13 | INFO     | app.middleware.logging:15 - [704acf0c] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (28.31ms)
+2026-06-19 10:10:16 | INFO     | app.middleware.logging:15 - [d02a3b1a] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (26.16ms)
+2026-06-19 10:10:19 | INFO     | app.middleware.logging:15 - [01f58ba9] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (26.49ms)
+2026-06-19 10:10:22 | INFO     | app.middleware.logging:15 - [2e008e3d] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (37.31ms)
+2026-06-19 10:10:25 | INFO     | app.middleware.logging:15 - [ab8df29c] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (26.88ms)
+2026-06-19 10:10:28 | INFO     | app.middleware.logging:15 - [d4374873] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (21.01ms)
+2026-06-19 10:10:31 | INFO     | app.middleware.logging:15 - [2ae9266c] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (25.02ms)
+2026-06-19 10:10:34 | INFO     | app.middleware.logging:15 - [11f99183] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (26.88ms)
+2026-06-19 10:10:37 | INFO     | app.middleware.logging:15 - [7a180285] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (24.32ms)
+2026-06-19 10:10:40 | INFO     | app.middleware.logging:15 - [e5c8680f] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (24.32ms)
+2026-06-19 10:10:43 | INFO     | app.middleware.logging:15 - [e674f715] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (23.56ms)
+2026-06-19 10:10:46 | INFO     | app.middleware.logging:15 - [c0893b75] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (25.92ms)
+2026-06-19 10:10:49 | INFO     | app.middleware.logging:15 - [711debff] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (33.96ms)
+2026-06-19 10:10:52 | INFO     | app.middleware.logging:15 - [604d5472] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (27.65ms)
+2026-06-19 10:10:55 | INFO     | app.middleware.logging:15 - [5d9398e4] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (22.13ms)
+2026-06-19 10:10:58 | INFO     | app.middleware.logging:15 - [0f29a8e0] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (23.59ms)
+2026-06-19 10:11:01 | INFO     | app.middleware.logging:15 - [c9e4949c] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (32.3ms)
+2026-06-19 10:11:04 | INFO     | app.middleware.logging:15 - [185a4649] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (46.15ms)
+2026-06-19 10:11:07 | INFO     | app.middleware.logging:15 - [bc261470] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (27.76ms)
+2026-06-19 10:11:10 | WARNING  | app.services.scan_engine:85 - Command timed out (90s): docker run --rm
+2026-06-19 10:11:10 | INFO     | app.services.scan_engine:1001 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] sast → 0 findings
+2026-06-19 10:11:10 | INFO     | app.services.scan_engine:1001 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] secrets → 0 findings
+2026-06-19 10:11:10 | INFO     | app.services.scan_engine:1001 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] deps → 0 findings
+2026-06-19 10:11:10 | INFO     | app.services.scan_engine:1016 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] container → skipped (no Dockerfile)
+2026-06-19 10:11:10 | INFO     | app.services.scan_engine:1031 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] cicd → skipped (no CI config found)
+2026-06-19 10:11:10 | INFO     | app.services.scan_engine:1035 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] Scan complete — 0 findings | critical=0 high=0 medium=0 low=0
+2026-06-19 10:11:10 | INFO     | app.tasks.run_scan:162 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] Status → analyzing (0 findings)
+2026-06-19 10:11:10 | INFO     | app.tasks.run_scan:176 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] Persisting 0 threats, 0 vulnerabilities
+2026-06-19 10:11:10 | INFO     | app.tasks.run_scan:456 - [compliance] Updated 4 frameworks for tenant=7d205408
+2026-06-19 10:11:10 | INFO     | app.tasks.run_scan:229 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] ✓ COMPLETED — score=100.0 findings=0 threats=0 vulns=0 duration=90s
+2026-06-19 10:11:10 | INFO     | app.tasks.run_scan:346 - [ws] emitted scan.completed → tenant=7d205408
+2026-06-19 10:11:10 | INFO     | app.tasks.run_scan:271 - [scan:83206945-d9ad-4c7c-bd34-20aa3dbd5719] Temp clone dir removed
+2026-06-19 10:11:10 | INFO     | app.middleware.logging:15 - [9ab90716] GET /api/v1/security/scan/83206945-d9ad-4c7c-bd34-20aa3dbd5719 → 200 (26.59ms)
+2026-06-19 10:11:12 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 scan_id=None
+2026-06-19 10:11:12 | DEBUG    | app.services.security_service:245 - [security:threat_stats] repo_id=130bac37
+2026-06-19 10:11:12 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 total=0 open=0 critical=0
+2026-06-19 10:11:12 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=7d205408 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:11:12 | DEBUG    | app.services.security_service:45 - [security:threats] ISOLATED to repo_id=130bac37 tenant=7d205408
+2026-06-19 10:11:12 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=7d205408 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:11:12 | DEBUG    | app.services.security_service:290 - [security:vulns] ISOLATED to repo_id=130bac37 tenant=7d205408
+2026-06-19 10:11:12 | INFO     | app.middleware.logging:15 - [9181d7ca] GET /api/v1/threats/stats → 200 (36.08ms)
+2026-06-19 10:11:12 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=7d205408 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909
+2026-06-19 10:11:12 | INFO     | app.services.scan_service:310 - [scan:score] ISOLATED to repo_id=130bac37 tenant=7d205408
+2026-06-19 10:11:12 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 scan_id=None status=open
+2026-06-19 10:11:12 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 scan_id=None status=open
+2026-06-19 10:11:12 | INFO     | app.middleware.logging:15 - [5725f105] GET /api/v1/threats → 200 (55.86ms)
+2026-06-19 10:11:12 | INFO     | app.middleware.logging:15 - [4a1008ca] GET /api/v1/vulnerabilities → 200 (51.88ms)
+2026-06-19 10:11:12 | INFO     | app.services.scan_service:329 - [scan:score] score=100.0 repo=MomenLotfy/DevOps-Interview-MCQ repo_id=130bac37-0f37-4026-9fe9-0f52851d0909
+2026-06-19 10:11:12 | INFO     | app.middleware.logging:15 - [6d531be6] GET /api/v1/compliance → 200 (54.0ms)
+2026-06-19 10:11:12 | INFO     | app.middleware.logging:15 - [108ccc56] GET /api/v1/compliance/score → 200 (52.35ms)
+2026-06-19 10:11:12 | INFO     | app.middleware.logging:15 - [b59ad381] GET /api/v1/security/score → 200 (46.52ms)
+2026-06-19 10:11:12 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=7d205408 repo_id=130bac37-0f37-4026-9fe9-0f52851d0909 limit=20
+2026-06-19 10:11:12 | INFO     | app.services.scan_service:245 - [scan:history] ISOLATED to repo_id=130bac37 tenant=7d205408 limit=20
+2026-06-19 10:11:12 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 1 entries repo_id=130bac37-0f37-4026-9fe9-0f52851d0909
+2026-06-19 10:11:12 | INFO     | app.middleware.logging:15 - [94b80358] GET /api/v1/security/scan-history → 200 (27.77ms)
+2026-06-19 10:11:30 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-06-19 10:11:50 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-06-19 10:11:50 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for e69691b1-4b62-4059-acd7-c9c2a0f4db0a: Missing GitHub token
+2026-06-19 10:11:50 | WARNING  | app.core.scheduler:106 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-06-19 10:11:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 10:11:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:11:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:11:50 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 10:11:50 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 10:13:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 10:13:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:13:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:13:50 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 10:13:50 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 10:15:50 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 10:15:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:15:50 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:15:51 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 10:15:51 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 10:15:59 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 10:16:30 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-06-19 10:16:50 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-06-19 10:16:50 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for e69691b1-4b62-4059-acd7-c9c2a0f4db0a: Missing GitHub token
+2026-06-19 10:16:50 | WARNING  | app.core.scheduler:106 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-06-19 10:17:24 | INFO     | app.middleware.logging:15 - [9f127e9a] GET /api/v1/companies → 200 (58.76ms)
+2026-06-19 10:17:24 | INFO     | app.middleware.logging:15 - [d82399c1] GET /api/v1/alerts → 200 (89.12ms)
+2026-06-19 10:17:24 | INFO     | app.middleware.logging:15 - [36a40b50] GET /api/v1/integrations → 200 (73.43ms)
+2026-06-19 10:17:24 | INFO     | app.middleware.logging:15 - [e939ecde] GET /api/v1/companies/stats → 200 (74.43ms)
+2026-06-19 10:17:25 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-19 10:17:25 | INFO     | app.middleware.logging:15 - [100b7b5e] GET /api/v1/alerts → 200 (28.83ms)
+2026-06-19 10:17:25 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 10:17:30 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=None scan_id=None
+2026-06-19 10:17:30 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=7d205408
+2026-06-19 10:17:30 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=None total=26 open=26 critical=2
+2026-06-19 10:17:30 | INFO     | app.middleware.logging:15 - [8b234348] GET /api/v1/threats/stats → 200 (38.97ms)
+2026-06-19 10:17:30 | INFO     | app.middleware.logging:15 - [ccb31886] GET /api/v1/kubernetes/pods/stats → 200 (45.11ms)
+2026-06-19 10:17:30 | INFO     | app.middleware.logging:15 - [8667fd64] GET /api/v1/ml/stats → 200 (51.89ms)
+2026-06-19 10:17:30 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=7d205408 intg_status=connected has_integration=True has_data=True mtd=0.28 ytd=0.36
+2026-06-19 10:17:30 | INFO     | app.middleware.logging:15 - [c57d968d] GET /api/v1/alerts → 200 (53.21ms)
+2026-06-19 10:17:30 | INFO     | app.middleware.logging:15 - [8585bce2] GET /api/v1/costs/summary → 200 (69.59ms)
+2026-06-19 10:17:31 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=None scan_id=None
+2026-06-19 10:17:31 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=7d205408
+2026-06-19 10:17:31 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=None total=26 open=26 critical=2
+2026-06-19 10:17:31 | INFO     | app.middleware.logging:15 - [7d2bef75] GET /api/v1/threats/stats → 200 (25.59ms)
+2026-06-19 10:17:31 | INFO     | app.middleware.logging:15 - [16fc97b2] GET /api/v1/kubernetes/pods/stats → 200 (43.67ms)
+2026-06-19 10:17:31 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=7d205408 intg_status=connected has_integration=True has_data=True mtd=0.28 ytd=0.36
+2026-06-19 10:17:31 | INFO     | app.middleware.logging:15 - [73bdd325] GET /api/v1/alerts → 200 (49.09ms)
+2026-06-19 10:17:31 | INFO     | app.middleware.logging:15 - [118f3e15] GET /api/v1/costs/summary → 200 (52.93ms)
+2026-06-19 10:17:31 | INFO     | app.middleware.logging:15 - [6409a838] GET /api/v1/ml/stats → 200 (61.4ms)
+2026-06-19 10:17:51 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 10:17:51 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:17:51 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:17:51 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 10:17:51 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 10:17:55 | INFO     | app.middleware.logging:15 - [66f4583e] GET /api/v1/integrations → 200 (29.54ms)
+2026-06-19 10:17:56 | INFO     | app.middleware.logging:15 - [27931385] POST /api/v1/integrations → 201 (38.7ms)
+2026-06-19 10:17:56 | INFO     | app.middleware.logging:15 - [df2a2d5b] PATCH /api/v1/integrations/3dee2200-9e91-4fe1-97d5-4240ea95e50a → 200 (34.27ms)
+2026-06-19 10:17:56 | INFO     | app.middleware.logging:15 - [665a2777] POST /api/v1/integrations/3dee2200-9e91-4fe1-97d5-4240ea95e50a/test → 200 (223.1ms)
+2026-06-19 10:17:57 | INFO     | app.api.v1.endpoints.integrations:328 - [bg] Connection test OK + synced 37 repos for integration 3dee2200-9e91-4fe1-97d5-4240ea95e50a (tenant 7d205408-bd6f-4382-94a6-6bb5c374d8c4)
+2026-06-19 10:17:57 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-06-19 10:17:57 | INFO     | app.api.v1.endpoints.integrations:328 - [bg] Connection test OK + synced 37 repos for integration 3dee2200-9e91-4fe1-97d5-4240ea95e50a (tenant 7d205408-bd6f-4382-94a6-6bb5c374d8c4)
+2026-06-19 10:17:57 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-06-19 10:17:57 | INFO     | app.middleware.logging:15 - [2d78fa8b] GET /api/v1/integrations/3dee2200-9e91-4fe1-97d5-4240ea95e50a → 200 (21.0ms)
+2026-06-19 10:17:57 | INFO     | app.middleware.logging:15 - [a1553771] POST /api/v1/integrations/3dee2200-9e91-4fe1-97d5-4240ea95e50a/sync → 200 (37.04ms)
+2026-06-19 10:17:57 | INFO     | app.api.v1.endpoints.integrations:369 - [bg] Sync complete for integration 3dee2200-9e91-4fe1-97d5-4240ea95e50a: {'repos': 37, 'status': 'synced'}
+2026-06-19 10:17:57 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-06-19 10:17:58 | INFO     | app.api.v1.endpoints.security_scan:79 - [scan:repos/sync] tenant=7d205408 live_synced=37 db_total=37
+2026-06-19 10:17:58 | INFO     | app.middleware.logging:15 - [4309d563] POST /api/v1/security/repos/sync → 200 (439.2ms)
+2026-06-19 10:17:58 | INFO     | app.middleware.logging:15 - [8083f238] GET /api/v1/integrations → 200 (46.26ms)
+2026-06-19 10:17:58 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:58 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-Product (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:58 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:58 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-Product (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:58 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/uniops.t.c/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:58 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/uniops.t.c (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:58 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/uniops.t.c/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:58 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/uniops.t.c (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/Lakatat/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/Lakatat (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/Lakatat/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/Lakatat (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-Product (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/uniops.t.c/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/uniops.t.c (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/FrozenMarket/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/FrozenMarket (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/FrozenMarket/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/FrozenMarket (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/Lakatat/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:17:59 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/Lakatat (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:00 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/nexvault-production00/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:00 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/nexvault-production00 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:00 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/nexvault-production00/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:00 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/nexvault-production00 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:00 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:18:00 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=7d205408
+2026-06-19 10:18:00 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=None scan_id=None
+2026-06-19 10:18:00 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=7d205408
+2026-06-19 10:18:00 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:18:00 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=7d205408
+2026-06-19 10:18:00 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=7d205408 count=37
+2026-06-19 10:18:00 | INFO     | app.middleware.logging:15 - [1b753713] GET /api/v1/security/repos → 200 (49.45ms)
+2026-06-19 10:18:00 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=None total=26 open=26 critical=2
+2026-06-19 10:18:00 | INFO     | app.services.security_service:68 - [security:threats] returned total=26 repo_id=None scan_id=None status=open
+2026-06-19 10:18:00 | INFO     | app.middleware.logging:15 - [b6558c23] GET /api/v1/threats/stats → 200 (52.72ms)
+2026-06-19 10:18:00 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 10:18:00 | INFO     | app.middleware.logging:15 - [49b2bbd8] GET /api/v1/compliance/score → 200 (47.88ms)
+2026-06-19 10:18:00 | INFO     | app.middleware.logging:15 - [a21f2eb1] GET /api/v1/threats → 200 (61.44ms)
+2026-06-19 10:18:00 | INFO     | app.middleware.logging:15 - [b858c150] GET /api/v1/compliance → 200 (53.75ms)
+2026-06-19 10:18:00 | INFO     | app.middleware.logging:15 - [d1a783c7] GET /api/v1/vulnerabilities → 200 (58.98ms)
+2026-06-19 10:18:00 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/FrozenMarket/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:00 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/FrozenMarket (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:00 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:00 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:00 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:00 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:00 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=7d205408 repo_id=None
+2026-06-19 10:18:00 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=7d205408
+2026-06-19 10:18:00 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=7d205408 repo_id=None limit=20
+2026-06-19 10:18:00 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=7d205408 limit=20
+2026-06-19 10:18:00 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=7d205408 repo_id=None scan_id=None
+2026-06-19 10:18:00 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=7d205408
+2026-06-19 10:18:00 | INFO     | app.services.scan_service:329 - [scan:score] score=100.0 repo=MomenLotfy/DevOps-Interview-MCQ repo_id=None
+2026-06-19 10:18:00 | INFO     | app.middleware.logging:15 - [9bfec46e] GET /api/v1/security/score → 200 (66.79ms)
+2026-06-19 10:18:00 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=7d205408 repo_id=None total=26 open=26 critical=2
+2026-06-19 10:18:00 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 7 entries repo_id=None
+2026-06-19 10:18:00 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=7d205408 count=37
+2026-06-19 10:18:00 | INFO     | app.middleware.logging:15 - [fd91572f] GET /api/v1/security/scan-history → 200 (50.43ms)
+2026-06-19 10:18:00 | INFO     | app.middleware.logging:15 - [4ec2fa6a] GET /api/v1/threats/stats → 200 (44.77ms)
+2026-06-19 10:18:00 | INFO     | app.middleware.logging:15 - [c4168793] GET /api/v1/security/repos → 200 (52.04ms)
+2026-06-19 10:18:01 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/nexvault-production00/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/nexvault-production00 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:18:01 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=7d205408
+2026-06-19 10:18:01 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/DevSeOps-SaaS-/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/DevSeOps-SaaS- (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/DevSeOps-SaaS-/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/DevSeOps-SaaS- (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=7d205408 repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 10:18:01 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=7d205408
+2026-06-19 10:18:01 | INFO     | app.services.security_service:68 - [security:threats] returned total=26 repo_id=None scan_id=None status=open
+2026-06-19 10:18:01 | INFO     | app.middleware.logging:15 - [bfa23a91] GET /api/v1/threats → 200 (44.87ms)
+2026-06-19 10:18:01 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 10:18:01 | INFO     | app.middleware.logging:15 - [cd51ffe6] GET /api/v1/vulnerabilities → 200 (33.62ms)
+2026-06-19 10:18:01 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=7d205408 repo_id=None
+2026-06-19 10:18:01 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=7d205408
+2026-06-19 10:18:01 | INFO     | app.middleware.logging:15 - [7a28db4e] GET /api/v1/compliance → 200 (26.6ms)
+2026-06-19 10:18:01 | INFO     | app.services.scan_service:329 - [scan:score] score=100.0 repo=MomenLotfy/DevOps-Interview-MCQ repo_id=None
+2026-06-19 10:18:01 | INFO     | app.middleware.logging:15 - [793a0cf9] GET /api/v1/compliance/score → 200 (26.53ms)
+2026-06-19 10:18:01 | INFO     | app.middleware.logging:15 - [52a83cfd] GET /api/v1/security/score → 200 (24.96ms)
+2026-06-19 10:18:01 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=7d205408 repo_id=None limit=20
+2026-06-19 10:18:01 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=7d205408 limit=20
+2026-06-19 10:18:01 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 7 entries repo_id=None
+2026-06-19 10:18:01 | INFO     | app.middleware.logging:15 - [25ec8b28] GET /api/v1/security/scan-history → 200 (27.75ms)
+2026-06-19 10:18:01 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-4/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-4 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-4/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-4 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | INFO     | app.middleware.logging:15 - [bf91e4a3] GET /api/v1/integrations → 200 (43.23ms)
+2026-06-19 10:18:01 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/DevSeOps-SaaS-/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/DevSeOps-SaaS- (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-Prod/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:01 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/UniOps-Prod (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:02 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-Prod/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:02 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/UniOps-Prod (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:02 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-4/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:02 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-4 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:02 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/gmail-account-creator/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:02 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/gmail-account-creator (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:02 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/gmail-account-creator/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:02 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/gmail-account-creator (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:02 | INFO     | app.api.v1.endpoints.integrations:336 - [bg] Initial pipeline sync: 56 runs for integration 3dee2200-9e91-4fe1-97d5-4240ea95e50a
+2026-06-19 10:18:02 | INFO     | app.api.v1.endpoints.integrations:336 - [bg] Initial pipeline sync: 56 runs for integration 3dee2200-9e91-4fe1-97d5-4240ea95e50a
+2026-06-19 10:18:02 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-Prod/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:02 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/UniOps-Prod (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:03 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/gmail-account-creator/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:03 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/gmail-account-creator (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 10:18:03 | INFO     | app.api.v1.endpoints.integrations:403 - [bg] Pipeline sync completed for integration 3dee2200-9e91-4fe1-97d5-4240ea95e50a: {'integrations': 1, 'pipelines': 56, 'vulnerabilities': 0}
+2026-06-19 10:18:06 | INFO     | app.middleware.logging:15 - [a5acdbe4] GET /api/v1/integrations → 200 (29.44ms)
+2026-06-19 10:18:13 | INFO     | app.middleware.logging:15 - [c5cf2927] GET /api/v1/integrations → 200 (26.56ms)
+2026-06-19 10:18:50 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 10:19:51 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 10:19:51 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:19:51 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:19:51 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 10:19:51 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 10:21:30 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-06-19 10:21:50 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-06-19 10:21:50 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for e69691b1-4b62-4059-acd7-c9c2a0f4db0a: Missing GitHub token
+2026-06-19 10:21:50 | WARNING  | app.core.scheduler:106 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-06-19 10:21:51 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 10:21:51 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:21:51 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:21:51 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 10:21:51 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 10:23:09 | INFO     | app.middleware.logging:15 - [e1bb9ba2] GET /api/v1/alerts → 200 (95.28ms)
+2026-06-19 10:23:10 | INFO     | app.middleware.logging:15 - [7dd4d555] GET /api/v1/integrations → 200 (49.29ms)
+2026-06-19 10:23:10 | INFO     | app.middleware.logging:15 - [8150e246] GET /api/v1/companies → 200 (41.2ms)
+2026-06-19 10:23:10 | INFO     | app.middleware.logging:15 - [bab587be] GET /api/v1/companies/stats → 200 (62.26ms)
+2026-06-19 10:23:10 | INFO     | app.middleware.logging:15 - [6a4a5b86] GET /api/v1/alerts → 200 (31.42ms)
+2026-06-19 10:23:10 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-19 10:23:10 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 10:23:50 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 10:23:51 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 10:23:51 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:23:51 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:23:51 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 10:23:51 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 10:25:17 | INFO     | app.middleware.logging:15 - [de8831ad] GET /api/v1/alerts → 200 (29.25ms)
+2026-06-19 10:25:18 | INFO     | app.middleware.logging:15 - [190a03c8] GET /api/v1/companies → 200 (29.46ms)
+2026-06-19 10:25:18 | INFO     | app.middleware.logging:15 - [ccb0e694] GET /api/v1/integrations → 200 (36.14ms)
+2026-06-19 10:25:18 | INFO     | app.middleware.logging:15 - [2890b331] GET /api/v1/companies/stats → 200 (37.71ms)
+2026-06-19 10:25:18 | INFO     | app.middleware.logging:15 - [2d47d72e] GET /api/v1/alerts → 200 (27.69ms)
+2026-06-19 10:25:18 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-19 10:25:18 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 10:25:51 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-19 10:25:51 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:25:51 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-19 10:25:51 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-19 10:25:51 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 10:26:06 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 10:26:06 | INFO     | app.main:76 - Shutting down...
+2026-06-19 10:26:06 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-06-19 10:26:06 | INFO     | app.core.scheduler:53 - Scheduler stopped
+2026-06-19 10:26:09 | INFO     | app.main:32 - Starting UniOps v1.0.0
+2026-06-19 10:26:09 | INFO     | app.main:36 - Database initialized
+2026-06-19 10:26:09 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-06-19 10:26:09 | INFO     | app.core.scheduler:26 - K8s watchers disabled (event loop safety)
+2026-06-19 10:26:09 | INFO     | app.core.scheduler:37 - Scheduler started 6 periodic tasks
+2026-06-19 10:26:09 | INFO     | app.main:42 - Background scheduler started
+2026-06-19 10:26:09 | INFO     | app.main:54 - ML event listener task started — will retry Redis connection on failures
+2026-06-19 10:26:09 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-06-19 10:26:09 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-06-19 10:26:11 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-19 10:26:12 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 10:26:13 | INFO     | app.middleware.logging:15 - [54e72297] GET / → 404 (0.82ms)
+2026-06-19 10:26:13 | INFO     | app.middleware.logging:15 - [085008da] GET /favicon.ico → 404 (0.72ms)
+2026-06-19 10:26:14 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-06-19 10:26:24 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 20s
+2026-06-19 10:26:40 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-06-19 10:26:40 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-06-19 10:26:40 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-06-19 10:26:40 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=2
+2026-06-19 10:26:40 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=6fd63f6f tenant=9f1f4d28 prior_status=connected
+2026-06-19 10:26:40 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=AWS Production id=6fd63f6f
+2026-06-19 10:26:42 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-03-01 end=2026-06-19 months=3
+2026-06-19 10:26:42 | WARNING  | app.integrations.aws.cost_explorer:99 - [aws_ce] get_costs_by_service failed: Unable to locate credentials
+2026-06-19 10:26:42 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=AWS Production line_items_returned=0
+2026-06-19 10:26:42 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=0 integration=AWS Production id=6fd63f6f
+2026-06-19 10:26:43 | WARNING  | app.integrations.aws.cost_explorer:134 - [aws_ce] get_cost_anomalies failed: Unable to locate credentials
+2026-06-19 10:26:44 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-19 10:26:44 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-06-19 10:26:44 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-06-19 10:26:44 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: An error occurred (SubscriptionRequiredException) when calling the GetEnabledStandards operation: The AWS Access Key Id needs a subscription for the service
+2026-06-19 10:26:44 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: Unable to locate credentials
+2026-06-19 10:26:45 | WARNING  | app.integrations.aws.cost_explorer:326 - [aws_ce] get_ri_recommendations failed: Unable to locate credentials
+2026-06-19 10:26:45 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 40s
+2026-06-19 10:26:45 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=AWS Production id=6fd63f6f tenant=9f1f4d28 cost_records=0 anomalies=0 savings_recs=0
+2026-06-19 10:26:45 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=9f1f4d28
+2026-06-19 10:26:45 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-06-19 10:26:45 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=Aws id=5b12ec2d tenant=7d205408 prior_status=connected
+2026-06-19 10:26:45 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=Aws id=5b12ec2d
+2026-06-19 10:26:45 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-03-01 end=2026-06-19 months=3
+2026-06-19 10:26:45 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
