@@ -28,6 +28,12 @@ class WSEventType(str, Enum):
     VULNERABILITY_FOUND = "vulnerability.found"
     COMPLIANCE_UPDATED = "compliance.updated"
 
+    # Scan lifecycle
+    SCAN_STARTED   = "scan.started"
+    SCAN_COMPLETED = "scan.completed"
+    SCAN_FAILED    = "scan.failed"
+    SCAN_PROGRESS  = "scan.progress"
+
     # Costs
     COST_ANOMALY = "cost.anomaly"
     COST_THRESHOLD_EXCEEDED = "cost.threshold_exceeded"

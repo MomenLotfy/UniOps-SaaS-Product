@@ -232,6 +232,20 @@ async def _run_scan_async(scan_id: str) -> None:
                 f"threats={len(threat_dicts)} vulns={len(vuln_dicts)} duration={duration}s"
             )
 
+            # ── Emit WebSocket event — scan.completed ─────────────────────────
+            await _emit_scan_event(tenant_id, "scan.completed", {
+                "scan_id":        scan_id,
+                "repo_name":      full_name,
+                "repo_id":        repo_id,
+                "security_score": security_score,
+                "critical_count": sum(1 for f in result.findings if f.severity == "critical"),
+                "high_count":     sum(1 for f in result.findings if f.severity == "high"),
+                "medium_count":   sum(1 for f in result.findings if f.severity == "medium"),
+                "secret_count":   sum(1 for f in result.findings if f.scanner == "secrets"),
+                "duration_secs":  duration,
+                "ai_summary":     ai_summary,
+            })
+
         except Exception as exc:
             logger.error(f"[scan:{scan_id}] Scan execution failed: {exc}", exc_info=True)
             await db.rollback()
@@ -240,6 +254,13 @@ async def _run_scan_async(scan_id: str) -> None:
                 error=str(exc)[:1000],
                 completed_at=datetime.now(timezone.utc),
             )
+            # ── Emit WebSocket event — scan.failed ────────────────────────────
+            await _emit_scan_event(tenant_id, "scan.failed", {
+                "scan_id":    scan_id,
+                "repo_name":  full_name,
+                "repo_id":    repo_id,
+                "error":      str(exc)[:500],
+            })
             raise
 
         finally:
@@ -315,6 +336,16 @@ def _safe_decrypt_all(credentials: dict) -> dict:
         except Exception:
             result[k] = v
     return result
+
+
+async def _emit_scan_event(tenant_id: str, event: str, data: dict) -> None:
+    """Broadcast a scan lifecycle event to all connected clients for this tenant."""
+    try:
+        from app.api.v1.websocket.manager import ws_manager
+        await ws_manager.send_to_tenant(tenant_id, {"event": event, "data": data})
+        logger.info(f"[ws] emitted {event} → tenant={tenant_id[:8]}")
+    except Exception as e:
+        logger.warning(f"[ws] failed to emit {event}: {e}")
 
 
 async def _release_scan_lock(repo_id: str) -> None:

@@ -4,6 +4,7 @@ import { Layout } from '@/components/Layout';
 import { CommandPalette } from '@/components/Layout/CommandPalette';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { RoleBasedRoute } from '@/components/auth/RoleBasedRoute';
+import { ScanNotificationListener } from '@/components/ScanNotificationListener';
 
 // Dashboard pages
 const CommandCenter  = lazy(() => import('@/pages/CommandCenter'));
@@ -80,6 +81,7 @@ function AppLayout() {
     <ProtectedRoute>
       <Layout>
         <CommandPalette />
+        <ScanNotificationListener />
         <Suspense fallback={<PageLoader />}>
           <Outlet />
         </Suspense>
