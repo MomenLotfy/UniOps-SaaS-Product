@@ -175,12 +175,46 @@ class IntegrationService(BaseService):
         return IntegrationResponse.model_validate(integration)
 
     async def delete(self, integration_id: str) -> None:
+        """
+        Hard-delete the integration and cascade-clean all related data so a
+        reconnect always starts with a clean slate.
+        """
+        from sqlalchemy import delete as _delete
+        from app.models.scan import Repository
+        from app.models.pipeline import Pipeline
+        from app.models.vulnerability import Vulnerability
+
         integration = await self._get_by_id(Integration, integration_id)
-        integration.is_active = False
-        integration.status = "disconnected"
-        integration.credentials = {}
-        integration.config = {}
-        integration.error_message = None
+        tenant_id = integration.tenant_id
+        intg_type = integration.type
+
+        # 1. Null-out integration_id FK on pipelines / repos (avoid FK violation)
+        await self.db.execute(
+            _delete(Pipeline).where(
+                Pipeline.integration_id == integration_id
+            )
+        )
+
+        # 2. For git providers: remove discovered repositories AND their scans
+        if intg_type in ("github", "gitlab"):
+            repo_rows = (await self.db.execute(
+                select(Repository).where(
+                    Repository.tenant_id == tenant_id,
+                    Repository.integration_id == integration_id,
+                )
+            )).scalars().all()
+            for repo in repo_rows:
+                await self.db.execute(
+                    _delete(Vulnerability).where(Vulnerability.repo_id == repo.id)
+                )
+                from app.models.scan import Scan
+                await self.db.execute(
+                    _delete(Scan).where(Scan.repo_id == repo.id)
+                )
+                await self.db.delete(repo)
+
+        # 3. Delete the integration row itself
+        await self.db.delete(integration)
         await self.db.flush()
 
     # ─────────────────────────────────────────────────────────────────────────

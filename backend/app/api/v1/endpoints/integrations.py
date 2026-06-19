@@ -329,6 +329,16 @@ async def _bg_test_and_sync(
                     f"[bg] Connection test OK + synced {sync_result['synced']} repos "
                     f"for integration {integration_id} (tenant {tenant_id})"
                 )
+                # Also pull CI/CD pipeline runs so DevOps Center shows data immediately
+                try:
+                    from app.tasks.sync_pipelines import _sync_pipelines
+                    pipe_result = await _sync_pipelines(tenant_id=tenant_id)
+                    logger.info(
+                        f"[bg] Initial pipeline sync: {pipe_result['pipelines']} runs "
+                        f"for integration {integration_id}"
+                    )
+                except Exception as pipe_exc:
+                    logger.warning(f"[bg] Initial pipeline sync failed (non-fatal): {pipe_exc}")
             elif result.success and integration_type == "aws":
                 # Trigger AWS cost sync immediately after a successful connection test
                 # so cost data appears without waiting for the hourly beat schedule.

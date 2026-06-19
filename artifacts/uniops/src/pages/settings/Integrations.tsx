@@ -8,7 +8,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { formatRelative } from '@/lib/formatters';
 import { clsx } from 'clsx';
-import { apiPost, apiPatch } from '@/hooks/use-api';
+import { apiPost, apiPatch, apiDelete } from '@/hooks/use-api';
 import { integrationsApi } from '@/services/api/integrations';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { useIntegrationsCtx } from '@/contexts/IntegrationsContext';
@@ -820,11 +820,11 @@ export default function Integrations() {
   const { integrations: rawIntegrations, isLoading: loading, refetch: ctxRefetch } = useIntegrationsCtx();
   const integrations: any[] = rawIntegrations;
 
-  // After a connection/disconnection, refresh global context immediately
-  // AND again after 3 s to pick up the background connection-test result.
+  // Refetch immediately, then retry at 3s / 8s / 15s to catch background test result.
   const refetch = useCallback(async () => {
     await ctxRefetch();
-    setTimeout(ctxRefetch, 3000);
+    const delays = [3000, 8000, 15000];
+    delays.forEach(ms => setTimeout(() => ctxRefetch(), ms));
   }, [ctxRefetch]);
 
   const providerOf = (i: any) => i.provider ?? i.type ?? '';
@@ -876,7 +876,8 @@ export default function Integrations() {
   };
 
   const handleDisconnect = async (id: string) => {
-    await apiPatch(`/integrations/${id}`, { status: 'disconnected', is_active: false });
+    if (id.startsWith('placeholder-')) return;
+    await apiDelete(`/integrations/${id}`);
     refetch();
   };
 
