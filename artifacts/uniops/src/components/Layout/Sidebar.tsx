@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Server, Shield, DollarSign, Brain,
@@ -97,6 +97,13 @@ const NavItem = ({ path, icon: Icon, label, shortcut, isActive, collapsed }: {
   </NavLink>
 );
 
+// Thin wrapper — uses useLocation so active state is reactive to navigation
+const NavItemWrapper = ({ item, collapsed }: { item: { path: string; icon: React.ElementType; label: string; shortcut?: string }; collapsed: boolean }) => {
+  const { pathname } = useLocation();
+  const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
+  return <NavItem path={item.path} icon={item.icon} label={item.label} shortcut={item.shortcut} isActive={isActive} collapsed={collapsed} />;
+};
+
 export const Sidebar = () => {
   const { sidebarCollapsed, toggleSidebar } = useStore();
   const { user, logout } = useAuth();
@@ -158,11 +165,7 @@ export const Sidebar = () => {
               </AnimatePresence>
               <div className="space-y-0.5">
                 {visibleItems.map((item) => (
-                  <NavLink key={item.path} to={item.path}>
-                    {({ isActive }) => (
-                      <NavItem path={item.path} icon={item.icon} label={item.label} shortcut={item.shortcut} isActive={isActive} collapsed={sidebarCollapsed} />
-                    )}
-                  </NavLink>
+                  <NavItemWrapper key={item.path} item={item} collapsed={sidebarCollapsed} />
                 ))}
               </div>
             </div>

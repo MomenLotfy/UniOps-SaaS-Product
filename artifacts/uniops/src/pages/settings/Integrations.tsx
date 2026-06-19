@@ -3,14 +3,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Cloud, GitBranch, Server, MessageSquare, Activity,
   CheckCircle, XCircle, AlertCircle, RefreshCw, X, Eye, EyeOff, Loader2,
-  Key, ExternalLink, ShieldCheck, ArrowRight, Copy, Database,
+  Key, ExternalLink, ShieldCheck, ArrowRight, Copy, Database, Clock,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelative } from '@/lib/formatters';
 import { clsx } from 'clsx';
-import { useApi, apiPost, apiPatch } from '@/hooks/use-api';
+import { apiPost, apiPatch } from '@/hooks/use-api';
 import { integrationsApi } from '@/services/api/integrations';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useIntegrationsCtx } from '@/contexts/IntegrationsContext';
 
 const PROVIDER_META: Record<string, { icon: any; color: string; description: string; category: string }> = {
   aws:        { icon: Cloud,         color: 'text-orange-400', description: 'Monitor EC2, S3, RDS, and 200+ AWS services', category: 'Cloud' },
@@ -40,19 +41,25 @@ const TOKEN_PROVIDERS: Record<string, { label: string; placeholder: string; help
   },
 };
 
-const statusIcon = {
-  connected: CheckCircle,
-  disconnected: XCircle,
-  error: AlertCircle,
-  invalid_token: AlertCircle,
-  testing: Loader2,
+const statusIcon: Record<string, any> = {
+  connected:           CheckCircle,
+  disconnected:        XCircle,
+  error:               AlertCircle,
+  invalid_token:       AlertCircle,
+  credentials_invalid: AlertCircle,
+  sync_failed:         AlertCircle,
+  pending:             Clock,
+  testing:             Loader2,
 };
-const statusColor = {
-  connected: 'text-green-400',
-  disconnected: 'text-muted-foreground',
-  error: 'text-red-400',
-  invalid_token: 'text-red-400',
-  testing: 'text-yellow-400',
+const statusColor: Record<string, string> = {
+  connected:           'text-green-400',
+  disconnected:        'text-muted-foreground',
+  error:               'text-red-400',
+  invalid_token:       'text-red-400',
+  credentials_invalid: 'text-red-400',
+  sync_failed:         'text-yellow-400',
+  pending:             'text-yellow-400',
+  testing:             'text-yellow-400',
 };
 
 // ── AWS Connect Modal ─────────────────────────────────────────────────────────
@@ -808,9 +815,17 @@ export default function Integrations() {
   const [connectModal, setConnectModal] = useState<any | null>(null);
   const { addNotification } = useNotifications();
 
-  const { data, loading, refetch } = useApi<any>('/integrations?page_size=50');
-  // useApi already unwraps body.data — result is the array directly
-  const integrations: any[] = (Array.isArray(data) ? data : data?.data) ?? [];
+  // Use the global IntegrationsContext so this page shares state with
+  // DevOps Center, Security Center, etc. — no duplicate fetches.
+  const { integrations: rawIntegrations, isLoading: loading, refetch: ctxRefetch } = useIntegrationsCtx();
+  const integrations: any[] = rawIntegrations;
+
+  // After a connection/disconnection, refresh global context immediately
+  // AND again after 3 s to pick up the background connection-test result.
+  const refetch = useCallback(async () => {
+    await ctxRefetch();
+    setTimeout(ctxRefetch, 3000);
+  }, [ctxRefetch]);
 
   const providerOf = (i: any) => i.provider ?? i.type ?? '';
 
@@ -922,9 +937,12 @@ export default function Integrations() {
             const p = providerOf(intg);
             const meta = PROVIDER_META[p] ?? { icon: Activity, color: 'text-muted-foreground', description: p, category: 'Other' };
             const Icon = meta.icon;
-            const status: 'connected' | 'disconnected' | 'error' | 'invalid_token' | 'testing' = intg.status ?? 'disconnected';
+            const status: string = intg.status ?? 'disconnected';
             const StatusIcon = statusIcon[status] ?? XCircle;
             const metaLine = renderMeta(intg);
+            const isConnected = status === 'connected';
+            const isPending   = status === 'pending';
+            const isError     = ['error', 'credentials_invalid', 'invalid_token', 'sync_failed'].includes(status);
 
             return (
               <motion.div key={intg.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="card-base">
@@ -936,23 +954,25 @@ export default function Integrations() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <h3 className="text-sm font-semibold text-foreground capitalize">{intg.name}</h3>
-                      <StatusIcon className={clsx('w-3.5 h-3.5 flex-shrink-0', statusColor[status])} />
+                      <StatusIcon className={clsx('w-3.5 h-3.5 flex-shrink-0',
+                        isPending ? 'animate-pulse' : '',
+                        statusColor[status] ?? 'text-muted-foreground')} />
+                      <span className={clsx('text-xs font-medium capitalize', statusColor[status] ?? 'text-muted-foreground')}>
+                        {isPending ? 'Testing…' : status.replace(/_/g, ' ')}
+                      </span>
                     </div>
                     <p className="text-xs text-muted-foreground mb-1">{meta.description}</p>
-                    {status === 'connected' && metaLine && (
+                    {isConnected && metaLine && (
                       <p className="text-xs text-blue-400/80 mb-1 font-mono">{metaLine}</p>
                     )}
-                    {intg.lastSync && (
-                      <p className="text-xs text-muted-foreground">Last sync: {formatRelative(intg.lastSync)}</p>
+                    {(intg.lastSync || intg.last_sync) && (
+                      <p className="text-xs text-muted-foreground">Last sync: {formatRelative(intg.lastSync ?? intg.last_sync)}</p>
                     )}
-                    {!intg.lastSync && intg.last_sync && (
-                      <p className="text-xs text-muted-foreground">Last sync: {formatRelative(intg.last_sync)}</p>
-                    )}
-                    {status !== 'connected' && intg.error && (
-                      <p className="text-xs text-red-400/80 font-mono break-words">{intg.error}</p>
+                    {isError && (intg.error || intg.error_message) && (
+                      <p className="text-xs text-red-400/80 font-mono break-words mt-0.5">{intg.error ?? intg.error_message}</p>
                     )}
                     <div className="flex items-center gap-2 mt-3">
-                      {status === 'connected' && (
+                      {isConnected && (
                         <>
                           <button onClick={() => handleTest(intg.id)} disabled={testing === intg.id}
                             className="text-xs px-2.5 py-1.5 rounded-md border border-border hover:bg-accent transition-colors text-muted-foreground">
@@ -965,14 +985,20 @@ export default function Integrations() {
                           </button>
                         </>
                       )}
+                      {isError && (
+                        <button onClick={() => handleTest(intg.id)} disabled={testing === intg.id}
+                          className="text-xs px-2.5 py-1.5 rounded-md border border-orange-500/20 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition-colors">
+                          {testing === intg.id ? 'Retrying...' : 'Retry Connection'}
+                        </button>
+                      )}
                       <button
-                        onClick={() => status === 'connected' ? handleDisconnect(intg.id) : handleConnectClick(intg)}
+                        onClick={() => isConnected ? handleDisconnect(intg.id) : handleConnectClick(intg)}
                         className={clsx('text-xs px-3 py-1.5 rounded-md transition-colors ml-auto',
-                          status === 'connected'
+                          isConnected
                             ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
                             : 'bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20'
                         )}>
-                        {status === 'connected' ? 'Disconnect' : 'Connect'}
+                        {isConnected ? 'Disconnect' : isError ? 'Reconnect' : 'Connect'}
                       </button>
                     </div>
                   </div>

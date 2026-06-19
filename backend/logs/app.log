@@ -13489,3 +13489,479 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-06-19 09:06:16 | INFO     | app.middleware.logging:15 - [e1b0b048] POST /api/v1/auth/login → 200 (320.13ms)
 2026-06-19 09:06:26 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
 2026-06-19 09:06:26 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 09:06:31 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 160s
+2026-06-19 09:06:42 | INFO     | app.middleware.logging:15 - [66ed0bec] POST /api/v1/integrations/aws → 201 (94.06ms)
+2026-06-19 09:06:42 | ERROR    | app.api.v1.endpoints.integrations:347 - [bg] _bg_test_and_sync failed for 059ff361-a12a-4f32-9989-c5b6ae857eda: No module named 'boto3'
+2026-06-19 09:06:42 | INFO     | app.middleware.logging:15 - [f619cb32] GET /api/v1/integrations → 200 (37.48ms)
+2026-06-19 09:07:06 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 09:07:20 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 09:07:26 | INFO     | app.middleware.logging:15 - [088d1369] GET /api/v1/alerts → 200 (52.93ms)
+2026-06-19 09:07:26 | INFO     | app.middleware.logging:15 - [5cb2dbf1] GET /api/v1/integrations → 200 (33.17ms)
+2026-06-19 09:07:26 | INFO     | app.middleware.logging:15 - [5e747ad6] GET /api/v1/companies → 200 (40.97ms)
+2026-06-19 09:07:26 | INFO     | app.middleware.logging:15 - [7128fb41] GET /api/v1/companies/stats → 200 (44.51ms)
+2026-06-19 09:07:26 | INFO     | app.middleware.logging:15 - [7e8b7c20] GET /api/v1/alerts → 200 (21.58ms)
+2026-06-19 09:07:26 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-19 09:07:26 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 09:07:33 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=None scan_id=None
+2026-06-19 09:07:33 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=42c1057b
+2026-06-19 09:07:33 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=None total=0 open=0 critical=0
+2026-06-19 09:07:33 | INFO     | app.middleware.logging:15 - [09842d0a] GET /api/v1/threats/stats → 200 (32.88ms)
+2026-06-19 09:07:33 | INFO     | app.middleware.logging:15 - [1d2fecbf] GET /api/v1/kubernetes/pods/stats → 200 (34.68ms)
+2026-06-19 09:07:33 | INFO     | app.middleware.logging:15 - [d848b18b] GET /api/v1/ml/stats → 200 (36.27ms)
+2026-06-19 09:07:33 | INFO     | app.middleware.logging:15 - [d2575b35] GET /api/v1/alerts → 200 (37.55ms)
+2026-06-19 09:07:33 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=42c1057b intg_status=pending has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-06-19 09:07:33 | INFO     | app.middleware.logging:15 - [51d68ce5] GET /api/v1/costs/summary → 200 (42.59ms)
+2026-06-19 09:07:34 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=None scan_id=None
+2026-06-19 09:07:34 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=42c1057b
+2026-06-19 09:07:34 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=None total=0 open=0 critical=0
+2026-06-19 09:07:34 | INFO     | app.middleware.logging:15 - [ab075aea] GET /api/v1/threats/stats → 200 (17.76ms)
+2026-06-19 09:07:34 | INFO     | app.middleware.logging:15 - [4fb06cac] GET /api/v1/kubernetes/pods/stats → 200 (22.05ms)
+2026-06-19 09:07:34 | INFO     | app.middleware.logging:15 - [15f46246] GET /api/v1/ml/stats → 200 (39.02ms)
+2026-06-19 09:07:34 | INFO     | app.middleware.logging:15 - [e5b4689c] GET /api/v1/alerts → 200 (32.43ms)
+2026-06-19 09:07:34 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=42c1057b intg_status=pending has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-06-19 09:07:34 | INFO     | app.middleware.logging:15 - [f0066061] GET /api/v1/costs/summary → 200 (45.32ms)
+2026-06-19 09:07:37 | INFO     | app.middleware.logging:15 - [7c6fb299] GET /api/v1/integrations → 200 (19.5ms)
+2026-06-19 09:07:37 | INFO     | app.middleware.logging:15 - [43c57b38] GET /api/v1/integrations → 200 (26.57ms)
+2026-06-19 09:07:51 | INFO     | app.middleware.logging:15 - [dade3902] GET /api/v1/integrations → 200 (31.86ms)
+2026-06-19 09:07:52 | INFO     | app.middleware.logging:15 - [c0f8d549] POST /api/v1/integrations → 201 (64.48ms)
+2026-06-19 09:07:52 | INFO     | app.middleware.logging:15 - [3dd700dc] PATCH /api/v1/integrations/308cf8a2-f089-46f2-85d0-f8df6f442ec5 → 200 (36.23ms)
+2026-06-19 09:07:52 | INFO     | app.middleware.logging:15 - [5278dfa1] POST /api/v1/integrations/308cf8a2-f089-46f2-85d0-f8df6f442ec5/test → 200 (243.9ms)
+2026-06-19 09:07:53 | INFO     | app.middleware.logging:15 - [43786204] GET /api/v1/integrations/308cf8a2-f089-46f2-85d0-f8df6f442ec5 → 200 (16.62ms)
+2026-06-19 09:07:53 | INFO     | app.middleware.logging:15 - [951ef395] POST /api/v1/integrations/308cf8a2-f089-46f2-85d0-f8df6f442ec5/sync → 200 (24.59ms)
+2026-06-19 09:07:53 | INFO     | app.api.v1.endpoints.integrations:328 - [bg] Connection test OK + synced 37 repos for integration 308cf8a2-f089-46f2-85d0-f8df6f442ec5 (tenant 42c1057b-a2b4-47aa-9bd8-03646a1f1876)
+2026-06-19 09:07:53 | INFO     | app.api.v1.endpoints.integrations:328 - [bg] Connection test OK + synced 37 repos for integration 308cf8a2-f089-46f2-85d0-f8df6f442ec5 (tenant 42c1057b-a2b4-47aa-9bd8-03646a1f1876)
+2026-06-19 09:07:53 | INFO     | app.api.v1.endpoints.integrations:359 - [bg] Sync complete for integration 308cf8a2-f089-46f2-85d0-f8df6f442ec5: {'repos': 37, 'status': 'synced'}
+2026-06-19 09:07:53 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 1 integrations
+2026-06-19 09:07:54 | WARNING  | app.services.integration_service:463 - Repo sync failed for integration 308cf8a2-f089-46f2-85d0-f8df6f442ec5: Multiple rows were found when one or none was required
+2026-06-19 09:07:54 | INFO     | app.api.v1.endpoints.security_scan:79 - [scan:repos/sync] tenant=42c1057b live_synced=0 db_total=74
+2026-06-19 09:07:54 | INFO     | app.middleware.logging:15 - [f83bc1d3] POST /api/v1/security/repos/sync → 200 (436.65ms)
+2026-06-19 09:07:54 | INFO     | app.middleware.logging:15 - [3c85eda9] GET /api/v1/integrations → 200 (21.83ms)
+2026-06-19 09:07:55 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-Product/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:55 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-Product (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:56 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/uniops.t.c/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:56 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/uniops.t.c (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:56 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/Lakatat/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:56 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/Lakatat (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:57 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/FrozenMarket/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:57 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/FrozenMarket (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:58 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/nexvault-production00/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:58 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/nexvault-production00 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:58 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:58 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:58 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/DevSeOps-SaaS-/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:58 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/DevSeOps-SaaS- (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:59 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=None scan_id=None
+2026-06-19 09:07:59 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=42c1057b
+2026-06-19 09:07:59 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=42c1057b repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:07:59 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=42c1057b
+2026-06-19 09:07:59 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=42c1057b repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:07:59 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=42c1057b
+2026-06-19 09:07:59 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=42c1057b count=74
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [4ec3a92e] GET /api/v1/security/repos → 200 (54.02ms)
+2026-06-19 09:07:59 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=None total=0 open=0 critical=0
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [5b80ae8f] GET /api/v1/threats/stats → 200 (43.96ms)
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [871e5243] GET /api/v1/compliance/score → 200 (39.71ms)
+2026-06-19 09:07:59 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [6204188b] GET /api/v1/vulnerabilities → 200 (54.91ms)
+2026-06-19 09:07:59 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [8f28f065] GET /api/v1/compliance → 200 (46.84ms)
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [d35f7014] GET /api/v1/threats → 200 (62.72ms)
+2026-06-19 09:07:59 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=42c1057b repo_id=None
+2026-06-19 09:07:59 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=42c1057b
+2026-06-19 09:07:59 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=None
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [d13cd968] GET /api/v1/security/score → 200 (23.84ms)
+2026-06-19 09:07:59 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=42c1057b repo_id=None limit=20
+2026-06-19 09:07:59 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=42c1057b limit=20
+2026-06-19 09:07:59 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=None scan_id=None
+2026-06-19 09:07:59 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=42c1057b
+2026-06-19 09:07:59 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=42c1057b repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:07:59 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=42c1057b
+2026-06-19 09:07:59 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=42c1057b count=74
+2026-06-19 09:07:59 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=None
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [9458ff61] GET /api/v1/security/repos → 200 (31.78ms)
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [e26efa60] GET /api/v1/security/scan-history → 200 (40.09ms)
+2026-06-19 09:07:59 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=None total=0 open=0 critical=0
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [1495c0b7] GET /api/v1/threats/stats → 200 (39.53ms)
+2026-06-19 09:07:59 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [678a55c1] GET /api/v1/threats → 200 (36.0ms)
+2026-06-19 09:07:59 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=42c1057b repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:07:59 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=42c1057b
+2026-06-19 09:07:59 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-SaaS-4/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:59 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/UniOps-SaaS-4 (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 09:07:59 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [c9133056] GET /api/v1/vulnerabilities → 200 (29.59ms)
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [7ce85570] GET /api/v1/compliance → 200 (16.45ms)
+2026-06-19 09:07:59 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=42c1057b repo_id=None
+2026-06-19 09:07:59 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=42c1057b
+2026-06-19 09:07:59 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=42c1057b repo_id=None limit=20
+2026-06-19 09:07:59 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=42c1057b limit=20
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [7ad4f85e] GET /api/v1/compliance/score → 200 (23.9ms)
+2026-06-19 09:07:59 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=None
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [eb305930] GET /api/v1/security/scan-history → 200 (23.1ms)
+2026-06-19 09:07:59 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=None
+2026-06-19 09:07:59 | INFO     | app.middleware.logging:15 - [0d761732] GET /api/v1/security/score → 200 (29.72ms)
+2026-06-19 09:08:00 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/UniOps-Prod/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 09:08:00 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/UniOps-Prod (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 09:08:00 | WARNING  | app.integrations.github.client:46 - GitHub API /repos/MomenLotfy/gmail-account-creator/dependabot/alerts → 403: Dependabot alerts are disabled for this repository.
+2026-06-19 09:08:00 | WARNING  | app.tasks.sync_pipelines:148 - Dependabot alerts skipped for MomenLotfy/gmail-account-creator (non-fatal): Dependabot alerts are disabled for this repository.
+2026-06-19 09:08:00 | INFO     | app.api.v1.endpoints.integrations:393 - [bg] Pipeline sync completed for integration 308cf8a2-f089-46f2-85d0-f8df6f442ec5: {'integrations': 1, 'pipelines': 56, 'vulnerabilities': 0}
+2026-06-19 09:08:02 | INFO     | app.middleware.logging:15 - [6e862b3d] GET /api/v1/integrations → 200 (18.47ms)
+2026-06-19 09:08:03 | INFO     | app.middleware.logging:15 - [876a6d21] GET /api/v1/integrations → 200 (23.94ms)
+2026-06-19 09:08:09 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=42c1057b repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:08:09 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=42c1057b
+2026-06-19 09:08:09 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=42c1057b repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:08:09 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=42c1057b
+2026-06-19 09:08:09 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=None scan_id=None
+2026-06-19 09:08:09 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=42c1057b
+2026-06-19 09:08:09 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=42c1057b count=74
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [b9b36d74] GET /api/v1/compliance/score → 200 (41.58ms)
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [e0113a9d] GET /api/v1/security/repos → 200 (70.09ms)
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [3870edcf] GET /api/v1/compliance → 200 (44.78ms)
+2026-06-19 09:08:09 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=None total=0 open=0 critical=0
+2026-06-19 09:08:09 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:08:09 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [8bfbe6ac] GET /api/v1/threats/stats → 200 (52.15ms)
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [a243f677] GET /api/v1/threats → 200 (61.27ms)
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [72f228d8] GET /api/v1/vulnerabilities → 200 (56.39ms)
+2026-06-19 09:08:09 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=42c1057b repo_id=None
+2026-06-19 09:08:09 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=42c1057b
+2026-06-19 09:08:09 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=42c1057b repo_id=None limit=20
+2026-06-19 09:08:09 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=42c1057b limit=20
+2026-06-19 09:08:09 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=42c1057b repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:08:09 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=42c1057b
+2026-06-19 09:08:09 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=None
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [4d875de1] GET /api/v1/security/score → 200 (30.22ms)
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [30968c94] GET /api/v1/compliance/score → 200 (22.1ms)
+2026-06-19 09:08:09 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=42c1057b count=74
+2026-06-19 09:08:09 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=None
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [2391d50e] GET /api/v1/security/repos → 200 (34.85ms)
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [f41cba24] GET /api/v1/security/scan-history → 200 (41.0ms)
+2026-06-19 09:08:09 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [3bfc0298] GET /api/v1/threats → 200 (35.25ms)
+2026-06-19 09:08:09 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=None scan_id=None
+2026-06-19 09:08:09 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=42c1057b
+2026-06-19 09:08:09 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=42c1057b repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:08:09 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=42c1057b
+2026-06-19 09:08:09 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=42c1057b repo_id=None
+2026-06-19 09:08:09 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=42c1057b
+2026-06-19 09:08:09 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=None total=0 open=0 critical=0
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [148e3f65] GET /api/v1/threats/stats → 200 (29.93ms)
+2026-06-19 09:08:09 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=None scan_id=None status=open
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [6cae1f05] GET /api/v1/vulnerabilities → 200 (31.61ms)
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [37fe7801] GET /api/v1/compliance → 200 (27.47ms)
+2026-06-19 09:08:09 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=None
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [345ba4e4] GET /api/v1/security/score → 200 (23.7ms)
+2026-06-19 09:08:09 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=42c1057b repo_id=None limit=20
+2026-06-19 09:08:09 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=42c1057b limit=20
+2026-06-19 09:08:09 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=None
+2026-06-19 09:08:09 | INFO     | app.middleware.logging:15 - [f24333e9] GET /api/v1/security/scan-history → 200 (21.59ms)
+2026-06-19 09:08:12 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 scan_id=None
+2026-06-19 09:08:12 | DEBUG    | app.services.security_service:245 - [security:threat_stats] repo_id=c7d49509
+2026-06-19 09:08:12 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=42c1057b repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:08:12 | DEBUG    | app.services.security_service:45 - [security:threats] ISOLATED to repo_id=c7d49509 tenant=42c1057b
+2026-06-19 09:08:12 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=42c1057b repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:08:12 | DEBUG    | app.services.security_service:290 - [security:vulns] ISOLATED to repo_id=c7d49509 tenant=42c1057b
+2026-06-19 09:08:12 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=42c1057b repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109
+2026-06-19 09:08:12 | INFO     | app.services.scan_service:310 - [scan:score] ISOLATED to repo_id=c7d49509 tenant=42c1057b
+2026-06-19 09:08:12 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=42c1057b repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 limit=20
+2026-06-19 09:08:12 | INFO     | app.services.scan_service:245 - [scan:history] ISOLATED to repo_id=c7d49509 tenant=42c1057b limit=20
+2026-06-19 09:08:12 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 total=0 open=0 critical=0
+2026-06-19 09:08:12 | INFO     | app.middleware.logging:15 - [ce7e1fab] GET /api/v1/threats/stats → 200 (36.81ms)
+2026-06-19 09:08:12 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 scan_id=None status=open
+2026-06-19 09:08:12 | INFO     | app.middleware.logging:15 - [b583c520] GET /api/v1/threats → 200 (36.41ms)
+2026-06-19 09:08:12 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 scan_id=None status=open
+2026-06-19 09:08:12 | INFO     | app.middleware.logging:15 - [1880a4a7] GET /api/v1/vulnerabilities → 200 (42.5ms)
+2026-06-19 09:08:12 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109
+2026-06-19 09:08:12 | INFO     | app.middleware.logging:15 - [032a87cb] GET /api/v1/security/scan-history → 200 (35.12ms)
+2026-06-19 09:08:12 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109
+2026-06-19 09:08:12 | INFO     | app.middleware.logging:15 - [31df6ab4] GET /api/v1/security/score → 200 (42.28ms)
+2026-06-19 09:08:13 | INFO     | app.services.scan_service:95 - [scan:create] repo=MomenLotfy/cicd-project tenant=42c1057b triggered_by=45190cb4
+2026-06-19 09:08:13 | WARNING  | app.services.scan_service:384 - Redis lock unavailable for repo 5008201c-ee13-4254-8cc6-241d6db66d49 (Error 111 connecting to localhost:6379. Connection refused.) — falling back to DB-only deduplication check
+2026-06-19 09:08:13 | INFO     | app.services.scan_service:156 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Queued for repo=MomenLotfy/cicd-project branch=main triggered_by=45190cb4-b9e3-4bc0-876c-2acff75751d4
+2026-06-19 09:08:13 | INFO     | app.api.v1.endpoints.security_scan:320 - [batch:f299d4db] Queued MomenLotfy/cicd-project → scan 06371915
+2026-06-19 09:08:13 | INFO     | app.services.scan_service:95 - [scan:create] repo=MomenLotfy/UniOps-SaaS-Product tenant=42c1057b triggered_by=45190cb4
+2026-06-19 09:08:13 | WARNING  | app.services.scan_service:384 - Redis lock unavailable for repo 4db85243-5ba1-4841-86aa-9eca285ba830 (Error 111 connecting to localhost:6379. Connection refused.) — falling back to DB-only deduplication check
+2026-06-19 09:08:13 | INFO     | app.services.scan_service:156 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Queued for repo=MomenLotfy/UniOps-SaaS-Product branch=main triggered_by=45190cb4-b9e3-4bc0-876c-2acff75751d4
+2026-06-19 09:08:13 | INFO     | app.api.v1.endpoints.security_scan:320 - [batch:f299d4db] Queued MomenLotfy/UniOps-SaaS-Product → scan 25073c25
+2026-06-19 09:08:13 | INFO     | app.services.scan_service:95 - [scan:create] repo=MomenLotfy/Lakatat tenant=42c1057b triggered_by=45190cb4
+2026-06-19 09:08:13 | WARNING  | app.services.scan_service:384 - Redis lock unavailable for repo 332aedd4-aa0c-4578-883d-917ee3c84c02 (Error 111 connecting to localhost:6379. Connection refused.) — falling back to DB-only deduplication check
+2026-06-19 09:08:13 | INFO     | app.services.scan_service:156 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Queued for repo=MomenLotfy/Lakatat branch=main triggered_by=45190cb4-b9e3-4bc0-876c-2acff75751d4
+2026-06-19 09:08:13 | INFO     | app.api.v1.endpoints.security_scan:320 - [batch:f299d4db] Queued MomenLotfy/Lakatat → scan ab0fac50
+2026-06-19 09:08:13 | INFO     | app.services.scan_service:95 - [scan:create] repo=MomenLotfy/nexvault-production00 tenant=42c1057b triggered_by=45190cb4
+2026-06-19 09:08:13 | WARNING  | app.services.scan_service:384 - Redis lock unavailable for repo 743b9ca0-e8c2-4b36-a8bd-71807afb1e53 (Error 111 connecting to localhost:6379. Connection refused.) — falling back to DB-only deduplication check
+2026-06-19 09:08:13 | INFO     | app.services.scan_service:156 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] Queued for repo=MomenLotfy/nexvault-production00 branch=main triggered_by=45190cb4-b9e3-4bc0-876c-2acff75751d4
+2026-06-19 09:08:13 | INFO     | app.api.v1.endpoints.security_scan:320 - [batch:f299d4db] Queued MomenLotfy/nexvault-production00 → scan df5b866f
+2026-06-19 09:08:13 | INFO     | app.services.scan_service:95 - [scan:create] repo=MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project tenant=42c1057b triggered_by=45190cb4
+2026-06-19 09:08:13 | WARNING  | app.services.scan_service:384 - Redis lock unavailable for repo 951abd77-2707-49c8-9bbd-4d2bddd58024 (Error 111 connecting to localhost:6379. Connection refused.) — falling back to DB-only deduplication check
+2026-06-19 09:08:13 | INFO     | app.services.scan_service:156 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] Queued for repo=MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project branch=main triggered_by=45190cb4-b9e3-4bc0-876c-2acff75751d4
+2026-06-19 09:08:13 | INFO     | app.api.v1.endpoints.security_scan:320 - [batch:f299d4db] Queued MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project → scan 67031e0b
+2026-06-19 09:08:13 | INFO     | app.api.v1.endpoints.security_scan:339 - [batch:f299d4db] Started — tenant=42c1057b repos=5/74
+2026-06-19 09:08:13 | INFO     | app.middleware.logging:15 - [c0c5f772] POST /api/v1/security/scan/batch → 202 (156.59ms)
+2026-06-19 09:08:13 | WARNING  | app.services.scan_service:196 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Celery unavailable (cannot import name 'run_security_scan' from 'app.tasks.run_scan' (/home/runner/workspace/backend/app/tasks/run_scan.py)) — falling back to inline async execution
+2026-06-19 09:08:13 | WARNING  | app.services.scan_service:196 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Celery unavailable (cannot import name 'run_security_scan' from 'app.tasks.run_scan' (/home/runner/workspace/backend/app/tasks/run_scan.py)) — falling back to inline async execution
+2026-06-19 09:08:13 | WARNING  | app.services.scan_service:196 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Celery unavailable (cannot import name 'run_security_scan' from 'app.tasks.run_scan' (/home/runner/workspace/backend/app/tasks/run_scan.py)) — falling back to inline async execution
+2026-06-19 09:08:13 | WARNING  | app.services.scan_service:196 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] Celery unavailable (cannot import name 'run_security_scan' from 'app.tasks.run_scan' (/home/runner/workspace/backend/app/tasks/run_scan.py)) — falling back to inline async execution
+2026-06-19 09:08:13 | WARNING  | app.services.scan_service:196 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] Celery unavailable (cannot import name 'run_security_scan' from 'app.tasks.run_scan' (/home/runner/workspace/backend/app/tasks/run_scan.py)) — falling back to inline async execution
+2026-06-19 09:08:14 | INFO     | app.tasks.run_scan:130 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Status → cloning (repo=MomenLotfy/Lakatat branch=main has_token=True)
+2026-06-19 09:08:14 | INFO     | app.services.scan_engine:902 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Cloning https://github.com/MomenLotfy/Lakatat.git (branch=main provider=github has_token=True)
+2026-06-19 09:08:14 | INFO     | app.tasks.run_scan:130 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Status → cloning (repo=MomenLotfy/cicd-project branch=main has_token=True)
+2026-06-19 09:08:14 | INFO     | app.services.scan_engine:902 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Cloning https://github.com/MomenLotfy/cicd-project.git (branch=main provider=github has_token=True)
+2026-06-19 09:08:14 | INFO     | app.tasks.run_scan:130 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] Status → cloning (repo=MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project branch=main has_token=True)
+2026-06-19 09:08:14 | INFO     | app.services.scan_engine:902 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] Cloning https://github.com/MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project.git (branch=main provider=github has_token=True)
+2026-06-19 09:08:14 | INFO     | app.tasks.run_scan:130 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] Status → cloning (repo=MomenLotfy/nexvault-production00 branch=main has_token=True)
+2026-06-19 09:08:14 | INFO     | app.services.scan_engine:902 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] Cloning https://github.com/MomenLotfy/nexvault-production00.git (branch=main provider=github has_token=True)
+2026-06-19 09:08:14 | INFO     | app.tasks.run_scan:130 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Status → cloning (repo=MomenLotfy/UniOps-SaaS-Product branch=main has_token=True)
+2026-06-19 09:08:14 | INFO     | app.services.scan_engine:902 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Cloning https://github.com/MomenLotfy/UniOps-SaaS-Product.git (branch=main provider=github has_token=True)
+2026-06-19 09:08:14 | INFO     | app.services.scan_engine:914 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Clone successful → /tmp/uniops_scan_tbx9uy06
+2026-06-19 09:08:14 | INFO     | app.tasks.run_scan:156 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Status → scanning
+2026-06-19 09:08:17 | WARNING  | app.services.scan_engine:121 - Docker not available — using lightweight fallback scanners
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:977 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Starting scan — lang=javascript dockerfile=True cicd=True docker_available=False
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:914 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] Clone successful → /tmp/uniops_scan_6w5luxn7
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:914 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] Clone successful → /tmp/uniops_scan_txibg7dg
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:914 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Clone successful → /tmp/uniops_scan_8nf67yn9
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:156 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] Status → scanning
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:977 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] Starting scan — lang=unknown dockerfile=False cicd=False docker_available=False
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:1001 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] sast → 0 findings
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:1001 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] secrets → 8 findings
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:1001 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] deps → 0 findings
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:1016 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] container → skipped (no Dockerfile)
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:1031 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] cicd → skipped (no CI config found)
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:1035 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] Scan complete — 8 findings | critical=8 high=0 medium=0 low=0
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:162 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] Status → analyzing (8 findings)
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:176 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] Persisting 8 threats, 0 vulnerabilities
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:156 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] Status → scanning
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:977 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] Starting scan — lang=unknown dockerfile=False cicd=True docker_available=False
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:156 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Status → scanning
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:977 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Starting scan — lang=python dockerfile=False cicd=False docker_available=False
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:1001 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] sast → 0 findings
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:1001 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] secrets → 1 findings
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:1001 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] deps → 0 findings
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:1016 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] container → skipped (no Dockerfile)
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:1025 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] cicd → 12 findings
+2026-06-19 09:08:17 | INFO     | app.services.scan_engine:1035 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] Scan complete — 13 findings | critical=1 high=8 medium=0 low=4
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:162 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] Status → analyzing (13 findings)
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:176 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] Persisting 13 threats, 0 vulnerabilities
+2026-06-19 09:08:17 | WARNING  | app.services.scan_engine:840 - AI analysis failed (non-fatal): 'content'
+2026-06-19 09:08:17 | WARNING  | app.services.scan_engine:840 - AI analysis failed (non-fatal): 'content'
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:425 - [compliance] Updated 4 frameworks for tenant=42c1057b
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:229 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] ✓ COMPLETED — score=5.0 findings=13 threats=13 vulns=0 duration=3s
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:250 - [scan:67031e0b-8643-426f-96be-f5fd28c63b00] Temp clone dir removed
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:425 - [compliance] Updated 4 frameworks for tenant=42c1057b
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:229 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] ✓ COMPLETED — score=10.0 findings=8 threats=8 vulns=0 duration=3s
+2026-06-19 09:08:17 | INFO     | app.tasks.run_scan:250 - [scan:df5b866f-2c8c-47c9-8baf-895b9d488727] Temp clone dir removed
+2026-06-19 09:08:18 | INFO     | app.services.scan_engine:1001 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] sast → 0 findings
+2026-06-19 09:08:18 | INFO     | app.services.scan_engine:1001 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] secrets → 1 findings
+2026-06-19 09:08:18 | INFO     | app.services.scan_engine:1001 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] deps → 0 findings
+2026-06-19 09:08:18 | INFO     | app.services.scan_engine:1010 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] container → 1 findings
+2026-06-19 09:08:18 | INFO     | app.services.scan_engine:1025 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] cicd → 3 findings
+2026-06-19 09:08:18 | INFO     | app.services.scan_engine:1035 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Scan complete — 5 findings | critical=1 high=1 medium=1 low=2
+2026-06-19 09:08:18 | INFO     | app.tasks.run_scan:162 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Status → analyzing (5 findings)
+2026-06-19 09:08:18 | INFO     | app.tasks.run_scan:176 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Persisting 5 threats, 1 vulnerabilities
+2026-06-19 09:08:18 | WARNING  | app.services.scan_engine:840 - AI analysis failed (non-fatal): 'content'
+2026-06-19 09:08:18 | ERROR    | app.tasks.run_scan:236 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Scan execution failed: Multiple rows were found when one or none was required
+2026-06-19 09:08:18 | INFO     | app.tasks.run_scan:250 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Temp clone dir removed
+2026-06-19 09:08:18 | ERROR    | app.services.scan_service:211 - [scan:06371915-1468-4fcd-961a-d94ae24f5039] Inline execution failed: Multiple rows were found when one or none was required
+2026-06-19 09:08:19 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 scan_id=None
+2026-06-19 09:08:19 | DEBUG    | app.services.security_service:245 - [security:threat_stats] repo_id=c7d49509
+2026-06-19 09:08:19 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 total=0 open=0 critical=0
+2026-06-19 09:08:19 | INFO     | app.middleware.logging:15 - [3738aba5] GET /api/v1/threats/stats → 200 (22.73ms)
+2026-06-19 09:08:19 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=42c1057b repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:08:19 | DEBUG    | app.services.security_service:45 - [security:threats] ISOLATED to repo_id=c7d49509 tenant=42c1057b
+2026-06-19 09:08:19 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=42c1057b repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:08:19 | DEBUG    | app.services.security_service:290 - [security:vulns] ISOLATED to repo_id=c7d49509 tenant=42c1057b
+2026-06-19 09:08:19 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=42c1057b repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109
+2026-06-19 09:08:19 | INFO     | app.services.scan_service:310 - [scan:score] ISOLATED to repo_id=c7d49509 tenant=42c1057b
+2026-06-19 09:08:19 | INFO     | app.middleware.logging:15 - [aad8dbe3] GET /api/v1/compliance → 200 (40.21ms)
+2026-06-19 09:08:19 | INFO     | app.services.security_service:315 - [security:vulns] returned total=0 repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 scan_id=None status=open
+2026-06-19 09:08:19 | INFO     | app.middleware.logging:15 - [3cce904d] GET /api/v1/vulnerabilities → 200 (48.89ms)
+2026-06-19 09:08:19 | INFO     | app.services.security_service:68 - [security:threats] returned total=0 repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 scan_id=None status=open
+2026-06-19 09:08:19 | INFO     | app.middleware.logging:15 - [b33a7d82] GET /api/v1/threats → 200 (57.39ms)
+2026-06-19 09:08:19 | INFO     | app.services.scan_service:329 - [scan:score] score=None repo=None repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109
+2026-06-19 09:08:19 | INFO     | app.middleware.logging:15 - [38db7533] GET /api/v1/security/score → 200 (37.07ms)
+2026-06-19 09:08:19 | INFO     | app.middleware.logging:15 - [132061a6] GET /api/v1/compliance/score → 200 (50.88ms)
+2026-06-19 09:08:19 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=42c1057b repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109 limit=20
+2026-06-19 09:08:19 | INFO     | app.services.scan_service:245 - [scan:history] ISOLATED to repo_id=c7d49509 tenant=42c1057b limit=20
+2026-06-19 09:08:19 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 0 entries repo_id=c7d49509-8654-41d0-a017-3cc6cab6e109
+2026-06-19 09:08:19 | INFO     | app.middleware.logging:15 - [dad7cea6] GET /api/v1/security/scan-history → 200 (22.07ms)
+2026-06-19 09:08:20 | INFO     | app.middleware.logging:15 - [4f8079ab] GET /api/v1/security/scan/batch/f299d4db-c087-4c0c-ac44-8b47f8b57838 → 200 (20.3ms)
+2026-06-19 09:08:24 | INFO     | app.services.scan_engine:914 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Clone successful → /tmp/uniops_scan_eeoiw3v8
+2026-06-19 09:08:24 | INFO     | app.tasks.run_scan:156 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Status → scanning
+2026-06-19 09:08:24 | INFO     | app.services.scan_engine:977 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Starting scan — lang=python dockerfile=False cicd=True docker_available=False
+2026-06-19 09:08:26 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-06-19 09:08:26 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 09:08:26 | INFO     | app.middleware.logging:15 - [597f5fe9] GET /api/v1/security/scan/batch/f299d4db-c087-4c0c-ac44-8b47f8b57838 → 200 (28.2ms)
+2026-06-19 09:08:27 | INFO     | app.api.v1.endpoints.security_scan:115 - [scan:trigger] repo_id=c7d49509 tenant=42c1057b branch=main user=45190cb4
+2026-06-19 09:08:27 | INFO     | app.services.scan_service:95 - [scan:create] repo=MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project tenant=42c1057b triggered_by=45190cb4
+2026-06-19 09:08:27 | WARNING  | app.services.scan_service:384 - Redis lock unavailable for repo c7d49509-8654-41d0-a017-3cc6cab6e109 (Error 111 connecting to localhost:6379. Connection refused.) — falling back to DB-only deduplication check
+2026-06-19 09:08:27 | INFO     | app.services.scan_service:156 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Queued for repo=MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project branch=main triggered_by=45190cb4-b9e3-4bc0-876c-2acff75751d4
+2026-06-19 09:08:27 | INFO     | app.api.v1.endpoints.security_scan:135 - [scan:trigger] scan_id=bbbdbd0a-953a-499b-9eff-e65ed5514c8a queued for repo_id=c7d49509
+2026-06-19 09:08:27 | INFO     | app.middleware.logging:15 - [5b66370f] POST /api/v1/security/scan → 202 (99.46ms)
+2026-06-19 09:08:27 | WARNING  | app.services.scan_service:196 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Celery unavailable (cannot import name 'run_security_scan' from 'app.tasks.run_scan' (/home/runner/workspace/backend/app/tasks/run_scan.py)) — falling back to inline async execution
+2026-06-19 09:08:27 | INFO     | app.tasks.run_scan:130 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Status → cloning (repo=MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project branch=main has_token=True)
+2026-06-19 09:08:27 | INFO     | app.services.scan_engine:902 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Cloning https://github.com/MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project.git (branch=main provider=github has_token=True)
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:914 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Clone successful → /tmp/uniops_scan_k_mf1h5r
+2026-06-19 09:08:28 | INFO     | app.tasks.run_scan:156 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Status → scanning
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:977 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Starting scan — lang=unknown dockerfile=False cicd=True docker_available=False
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1001 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] sast → 0 findings
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1001 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] secrets → 1 findings
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1001 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] deps → 0 findings
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1016 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] container → skipped (no Dockerfile)
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1025 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] cicd → 12 findings
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1035 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Scan complete — 13 findings | critical=1 high=8 medium=0 low=4
+2026-06-19 09:08:28 | INFO     | app.tasks.run_scan:162 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Status → analyzing (13 findings)
+2026-06-19 09:08:28 | INFO     | app.tasks.run_scan:176 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Persisting 13 threats, 0 vulnerabilities
+2026-06-19 09:08:28 | WARNING  | app.services.scan_engine:840 - AI analysis failed (non-fatal): 'content'
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1001 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] sast → 0 findings
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1001 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] secrets → 14 findings
+2026-06-19 09:08:28 | WARNING  | app.services.scan_engine:995 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] deps scanner error: 'str' object has no attribute 'get'
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1016 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] container → skipped (no Dockerfile)
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1025 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] cicd → 6 findings
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1035 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Scan complete — 20 findings | critical=14 high=4 medium=0 low=2
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1001 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] sast → 0 findings
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1001 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] secrets → 14 findings
+2026-06-19 09:08:28 | WARNING  | app.services.scan_engine:995 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] deps scanner error: 'str' object has no attribute 'get'
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1016 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] container → skipped (no Dockerfile)
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1031 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] cicd → skipped (no CI config found)
+2026-06-19 09:08:28 | INFO     | app.services.scan_engine:1035 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Scan complete — 14 findings | critical=14 high=0 medium=0 low=0
+2026-06-19 09:08:28 | INFO     | app.tasks.run_scan:162 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Status → analyzing (20 findings)
+2026-06-19 09:08:28 | INFO     | app.tasks.run_scan:176 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Persisting 20 threats, 0 vulnerabilities
+2026-06-19 09:08:28 | INFO     | app.tasks.run_scan:162 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Status → analyzing (14 findings)
+2026-06-19 09:08:28 | INFO     | app.tasks.run_scan:176 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Persisting 14 threats, 0 vulnerabilities
+2026-06-19 09:08:28 | ERROR    | app.tasks.run_scan:236 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Scan execution failed: Multiple rows were found when one or none was required
+2026-06-19 09:08:28 | INFO     | app.tasks.run_scan:250 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Temp clone dir removed
+2026-06-19 09:08:28 | ERROR    | app.services.scan_service:211 - [scan:bbbdbd0a-953a-499b-9eff-e65ed5514c8a] Inline execution failed: Multiple rows were found when one or none was required
+2026-06-19 09:08:28 | WARNING  | app.services.scan_engine:840 - AI analysis failed (non-fatal): 'content'
+2026-06-19 09:08:28 | WARNING  | app.services.scan_engine:840 - AI analysis failed (non-fatal): 'content'
+2026-06-19 09:08:28 | ERROR    | app.tasks.run_scan:236 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Scan execution failed: Multiple rows were found when one or none was required
+2026-06-19 09:08:28 | ERROR    | app.tasks.run_scan:236 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Scan execution failed: Multiple rows were found when one or none was required
+2026-06-19 09:08:28 | INFO     | app.tasks.run_scan:250 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Temp clone dir removed
+2026-06-19 09:08:28 | ERROR    | app.services.scan_service:211 - [scan:ab0fac50-a376-4c62-ae03-2c7c06fc9215] Inline execution failed: Multiple rows were found when one or none was required
+2026-06-19 09:08:29 | INFO     | app.tasks.run_scan:250 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Temp clone dir removed
+2026-06-19 09:08:29 | ERROR    | app.services.scan_service:211 - [scan:25073c25-4a58-4044-a8d0-8b9523021b06] Inline execution failed: Multiple rows were found when one or none was required
+2026-06-19 09:08:30 | INFO     | app.middleware.logging:15 - [2b6e17e3] GET /api/v1/security/scan/bbbdbd0a-953a-499b-9eff-e65ed5514c8a → 200 (27.09ms)
+2026-06-19 09:08:32 | INFO     | app.api.v1.endpoints.security_scan:414 - [batch:f299d4db] All scans done (completed=2 failed=3) — triggering ML sync
+2026-06-19 09:08:32 | INFO     | app.middleware.logging:15 - [4cbf4db4] GET /api/v1/security/scan/batch/f299d4db-c087-4c0c-ac44-8b47f8b57838 → 200 (17.13ms)
+2026-06-19 09:08:32 | ERROR    | app.tasks.sync_ml_insights:60 - [sync_ml] tenant=42c1057b failed: ModuleNotFoundError("No module named 'numpy'")
+2026-06-19 09:08:32 | INFO     | app.tasks.sync_ml_insights:62 - [sync_ml] Done — {'tenants': 1, 'predictions': 0, 'patterns': 0, 'recommendations': 0}
+2026-06-19 09:08:32 | INFO     | app.api.v1.endpoints.security_scan:423 - [batch:f299d4db] ML sync complete: {'tenants': 1, 'predictions': 0, 'patterns': 0, 'recommendations': 0}
+2026-06-19 09:08:38 | INFO     | app.middleware.logging:15 - [fd5c3e57] GET /api/v1/security/scan/batch/f299d4db-c087-4c0c-ac44-8b47f8b57838 → 200 (18.75ms)
+2026-06-19 09:08:44 | INFO     | app.middleware.logging:15 - [3895f5d2] GET /api/v1/security/scan/batch/f299d4db-c087-4c0c-ac44-8b47f8b57838 → 200 (17.2ms)
+2026-06-19 09:08:44 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 09:08:47 | INFO     | app.middleware.logging:15 - [884e0fa8] GET /api/v1/alerts → 200 (25.63ms)
+2026-06-19 09:08:47 | INFO     | app.middleware.logging:15 - [ac193711] GET /api/v1/integrations → 200 (17.71ms)
+2026-06-19 09:08:47 | INFO     | app.middleware.logging:15 - [231d6055] GET /api/v1/companies → 200 (17.44ms)
+2026-06-19 09:08:47 | INFO     | app.middleware.logging:15 - [f7e94750] GET /api/v1/companies/stats → 200 (24.1ms)
+2026-06-19 09:08:48 | INFO     | app.middleware.logging:15 - [22d497ec] GET /api/v1/alerts → 200 (18.84ms)
+2026-06-19 09:08:48 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-19 09:08:48 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 09:09:00 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=None scan_id=None
+2026-06-19 09:09:00 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=42c1057b
+2026-06-19 09:09:00 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=None total=73 open=73 critical=39
+2026-06-19 09:09:00 | INFO     | app.middleware.logging:15 - [f09c1b54] GET /api/v1/kubernetes/pods/stats → 200 (53.36ms)
+2026-06-19 09:09:00 | INFO     | app.middleware.logging:15 - [7fcd0f58] GET /api/v1/threats/stats → 200 (74.27ms)
+2026-06-19 09:09:00 | INFO     | app.middleware.logging:15 - [d7a63b23] GET /api/v1/alerts → 200 (53.59ms)
+2026-06-19 09:09:00 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=42c1057b intg_status=pending has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-06-19 09:09:00 | INFO     | app.middleware.logging:15 - [4e6eef7c] GET /api/v1/ml/stats → 200 (61.46ms)
+2026-06-19 09:09:00 | INFO     | app.middleware.logging:15 - [e047e3b8] GET /api/v1/costs/summary → 200 (68.42ms)
+2026-06-19 09:09:00 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=None scan_id=None
+2026-06-19 09:09:00 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=42c1057b
+2026-06-19 09:09:00 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=None total=73 open=73 critical=39
+2026-06-19 09:09:00 | INFO     | app.middleware.logging:15 - [f37531a3] GET /api/v1/threats/stats → 200 (20.91ms)
+2026-06-19 09:09:00 | INFO     | app.middleware.logging:15 - [3e7e26e4] GET /api/v1/kubernetes/pods/stats → 200 (22.25ms)
+2026-06-19 09:09:00 | INFO     | app.middleware.logging:15 - [7c65bfb9] GET /api/v1/ml/stats → 200 (31.17ms)
+2026-06-19 09:09:00 | INFO     | app.middleware.logging:15 - [2396c65d] GET /api/v1/alerts → 200 (28.17ms)
+2026-06-19 09:09:00 | INFO     | app.services.cost_service:158 - [CostSummary] tenant=42c1057b intg_status=pending has_integration=True has_data=False mtd=0.0 ytd=0.0
+2026-06-19 09:09:00 | INFO     | app.middleware.logging:15 - [4e055f20] GET /api/v1/costs/summary → 200 (34.78ms)
+2026-06-19 09:09:03 | INFO     | app.middleware.logging:15 - [6994b2ff] GET /api/v1/integrations → 200 (42.6ms)
+2026-06-19 09:09:03 | INFO     | app.middleware.logging:15 - [ada9a001] GET /api/v1/integrations → 200 (21.36ms)
+2026-06-19 09:09:08 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=42c1057b count=74
+2026-06-19 09:09:08 | INFO     | app.middleware.logging:15 - [7949066b] GET /api/v1/security/repos → 200 (39.19ms)
+2026-06-19 09:09:08 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=None scan_id=None
+2026-06-19 09:09:08 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=42c1057b
+2026-06-19 09:09:08 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=42c1057b repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:09:08 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=42c1057b
+2026-06-19 09:09:08 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=42c1057b repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:09:08 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=42c1057b
+2026-06-19 09:09:08 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=None total=73 open=73 critical=39
+2026-06-19 09:09:08 | INFO     | app.middleware.logging:15 - [d0971615] GET /api/v1/threats/stats → 200 (27.68ms)
+2026-06-19 09:09:08 | INFO     | app.middleware.logging:15 - [a914b357] GET /api/v1/compliance → 200 (23.47ms)
+2026-06-19 09:09:08 | INFO     | app.services.security_service:315 - [security:vulns] returned total=1 repo_id=None scan_id=None status=open
+2026-06-19 09:09:08 | INFO     | app.middleware.logging:15 - [548669f5] GET /api/v1/vulnerabilities → 200 (37.99ms)
+2026-06-19 09:09:08 | INFO     | app.services.security_service:68 - [security:threats] returned total=73 repo_id=None scan_id=None status=open
+2026-06-19 09:09:08 | INFO     | app.middleware.logging:15 - [a13be37d] GET /api/v1/threats → 200 (38.1ms)
+2026-06-19 09:09:08 | INFO     | app.middleware.logging:15 - [a7f5537d] GET /api/v1/compliance/score → 200 (14.67ms)
+2026-06-19 09:09:09 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=42c1057b repo_id=None
+2026-06-19 09:09:09 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=42c1057b
+2026-06-19 09:09:09 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=42c1057b repo_id=None limit=20
+2026-06-19 09:09:09 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=42c1057b limit=20
+2026-06-19 09:09:09 | INFO     | app.services.scan_service:329 - [scan:score] score=5.0 repo=MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project repo_id=None
+2026-06-19 09:09:09 | INFO     | app.middleware.logging:15 - [d62fd332] GET /api/v1/security/score → 200 (20.38ms)
+2026-06-19 09:09:09 | INFO     | app.api.v1.endpoints.threats:44 - [threats:stats] tenant=42c1057b repo_id=None scan_id=None
+2026-06-19 09:09:09 | DEBUG    | app.services.security_service:250 - [security:threat_stats] WARNING — no repo/scan filter, aggregating ALL threats for tenant=42c1057b
+2026-06-19 09:09:09 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 2 entries repo_id=None
+2026-06-19 09:09:09 | INFO     | app.api.v1.endpoints.security_scan:54 - [scan:repos] tenant=42c1057b count=74
+2026-06-19 09:09:09 | INFO     | app.middleware.logging:15 - [f0cbe76b] GET /api/v1/security/scan-history → 200 (31.15ms)
+2026-06-19 09:09:09 | INFO     | app.middleware.logging:15 - [c6962575] GET /api/v1/security/repos → 200 (26.62ms)
+2026-06-19 09:09:09 | INFO     | app.services.security_service:266 - [security:threat_stats] tenant=42c1057b repo_id=None total=73 open=73 critical=39
+2026-06-19 09:09:09 | INFO     | app.middleware.logging:15 - [cff0337f] GET /api/v1/threats/stats → 200 (23.45ms)
+2026-06-19 09:09:09 | INFO     | app.api.v1.endpoints.threats:25 - [threats:list] tenant=42c1057b repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:09:09 | DEBUG    | app.services.security_service:56 - [security:threats] WARNING — no repo/scan filter, returning ALL threats for tenant=42c1057b
+2026-06-19 09:09:09 | INFO     | app.api.v1.endpoints.vulnerabilities:24 - [vulns:list] tenant=42c1057b repo_id=None scan_id=None severity=None status=open page=1 page_size=50
+2026-06-19 09:09:09 | DEBUG    | app.services.security_service:301 - [security:vulns] WARNING — no repo/scan filter, returning ALL vulns for tenant=42c1057b
+2026-06-19 09:09:09 | INFO     | app.services.security_service:315 - [security:vulns] returned total=1 repo_id=None scan_id=None status=open
+2026-06-19 09:09:09 | INFO     | app.middleware.logging:15 - [d93cc2e6] GET /api/v1/vulnerabilities → 200 (26.14ms)
+2026-06-19 09:09:09 | INFO     | app.services.security_service:68 - [security:threats] returned total=73 repo_id=None scan_id=None status=open
+2026-06-19 09:09:09 | INFO     | app.middleware.logging:15 - [518af436] GET /api/v1/compliance → 200 (29.14ms)
+2026-06-19 09:09:09 | INFO     | app.middleware.logging:15 - [dca4f5b2] GET /api/v1/threats → 200 (37.7ms)
+2026-06-19 09:09:09 | INFO     | app.middleware.logging:15 - [6a021eab] GET /api/v1/compliance/score → 200 (27.89ms)
+2026-06-19 09:09:09 | INFO     | app.api.v1.endpoints.security_scan:209 - [scan:score] tenant=42c1057b repo_id=None
+2026-06-19 09:09:09 | INFO     | app.services.scan_service:315 - [scan:score] Latest across all repos for tenant=42c1057b
+2026-06-19 09:09:09 | INFO     | app.services.scan_service:329 - [scan:score] score=5.0 repo=MomenLotfy/-End-to-End-DevSecOps-Kubernetes-Project repo_id=None
+2026-06-19 09:09:09 | INFO     | app.middleware.logging:15 - [4111332f] GET /api/v1/security/score → 200 (15.85ms)
+2026-06-19 09:09:09 | INFO     | app.api.v1.endpoints.security_scan:184 - [scan:history] tenant=42c1057b repo_id=None limit=20
+2026-06-19 09:09:09 | INFO     | app.services.scan_service:250 - [scan:history] All repos for tenant=42c1057b limit=20
+2026-06-19 09:09:09 | DEBUG    | app.services.scan_service:277 - [scan:history] returned 2 entries repo_id=None
+2026-06-19 09:09:09 | INFO     | app.middleware.logging:15 - [6dc47ecf] GET /api/v1/security/scan-history → 200 (14.8ms)
+2026-06-19 09:09:11 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 300s
+2026-06-19 09:09:26 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-06-19 09:09:45 | INFO     | app.middleware.logging:15 - [8caf0fd6] GET /api/v1/integrations → 200 (23.16ms)
+2026-06-19 09:09:46 | INFO     | app.middleware.logging:15 - [c2f96f09] GET /api/v1/integrations → 200 (25.21ms)
+2026-06-19 09:10:26 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-06-19 09:10:26 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 09:12:01 | INFO     | app.middleware.logging:15 - [d0909f52] GET /api/v1/integrations → 200 (29.71ms)
+2026-06-19 09:12:26 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-06-19 09:12:26 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 09:13:54 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 09:14:00 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-19 09:14:00 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 09:14:01 | INFO     | app.middleware.logging:15 - [3e84cc3b] GET /api/v1/alerts → 200 (36.32ms)
+2026-06-19 09:14:01 | INFO     | app.middleware.logging:15 - [c79caa77] GET /api/v1/alerts → 200 (23.88ms)
+2026-06-19 09:14:11 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 300s
+2026-06-19 09:14:12 | INFO     | app.middleware.logging:15 - [b34b66a1] GET /api/v1/alerts → 200 (27.75ms)
+2026-06-19 09:14:13 | INFO     | app.middleware.logging:15 - [bfcba133] GET /api/v1/integrations → 200 (26.6ms)
+2026-06-19 09:14:13 | INFO     | app.middleware.logging:15 - [cd5fcb5f] GET /api/v1/companies → 200 (14.27ms)
+2026-06-19 09:14:13 | INFO     | app.middleware.logging:15 - [27497a5f] GET /api/v1/companies/stats → 200 (24.96ms)
+2026-06-19 09:14:13 | INFO     | app.middleware.logging:15 - [97466722] GET /api/v1/alerts → 200 (19.72ms)
+2026-06-19 09:14:13 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-06-19 09:14:13 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 09:14:26 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-06-19 09:14:26 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-06-19 09:14:26 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 09:15:34 | ERROR    | app.middleware.logging:23 - [b3db947f] GET /api/v1/alerts → ERR (3.64ms): Bearer token required
+2026-06-19 09:15:34 | ERROR    | app.middleware.logging:23 - [7b3d58a1] GET /api/v1/alerts → ERR (1.8ms): Bearer token required
+2026-06-19 09:16:14 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-19 09:16:20 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=2
+2026-06-19 09:16:20 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 09:16:21 | INFO     | app.middleware.logging:15 - [e1544667] GET /api/v1/alerts → 200 (33.41ms)
+2026-06-19 09:16:21 | INFO     | app.middleware.logging:15 - [3f2e0b0c] GET /api/v1/integrations → 200 (20.88ms)
+2026-06-19 09:16:21 | INFO     | app.middleware.logging:15 - [ffd159ec] GET /api/v1/companies → 200 (15.24ms)
+2026-06-19 09:16:21 | INFO     | app.middleware.logging:15 - [7cdb9db0] GET /api/v1/companies/stats → 200 (37.39ms)
+2026-06-19 09:16:21 | INFO     | app.middleware.logging:15 - [f8262f1d] GET /api/v1/alerts → 200 (18.9ms)
+2026-06-19 09:16:21 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=3
+2026-06-19 09:16:22 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-19 09:16:26 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-06-19 09:16:26 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 09:17:00 | ERROR    | app.middleware.logging:23 - [776ce6dc] GET /api/v1/alerts → ERR (1.74ms): Bearer token required
+2026-06-19 09:17:00 | ERROR    | app.middleware.logging:23 - [222e0f78] GET /api/v1/alerts → ERR (1.51ms): Bearer token required
+2026-06-19 09:17:00 | ERROR    | app.middleware.logging:23 - [82643908] GET /api/v1/alerts → ERR (1.4ms): Bearer token required
+2026-06-19 09:17:00 | ERROR    | app.middleware.logging:23 - [03128242] GET /api/v1/alerts → ERR (1.35ms): Bearer token required

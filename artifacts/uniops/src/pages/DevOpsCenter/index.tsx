@@ -206,7 +206,7 @@ export default function DevOpsCenter() {
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight">DevOps Center</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Kubernetes · CI/CD Pipelines · Deployments · <span className="text-xs text-gray-600">GitHub: </span><span className="text-xs font-semibold" style={{ color: 'var(--status-color)' }}>CONNECTED</span></p>
+          <p className="text-sm text-gray-500 mt-0.5">Kubernetes · CI/CD Pipelines · Deployments · <span className="text-xs text-gray-600">GitHub: </span><span className={`text-xs font-semibold ${githubConnected ? 'text-green-400' : 'text-gray-500'}`}>{githubConnected ? 'CONNECTED' : 'NOT CONNECTED'}</span></p>
         </div>
         <div className="flex items-center gap-2">
           {/* Real-time status badge */}
