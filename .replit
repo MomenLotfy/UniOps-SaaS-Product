@@ -62,3 +62,14 @@ externalPort = 3000
 [[ports]]
 localPort = 8000
 externalPort = 8000
+
+[userenv]
+
+[userenv.shared]
+APP_ENV = "development"
+DEBUG = "true"
+SECRET_KEY = "uniops-replit-dev-secret-key-change-in-prod"
+JWT_SECRET_KEY = "uniops-jwt-secret-key-change-in-prod"
+FRONTEND_URL = "http://localhost:5000"
+CORS_ORIGINS = "[\"*\"]"
+ENABLE_METRICS = "false"

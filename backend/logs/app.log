@@ -14530,3 +14530,33 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-06-19 09:29:46 | ERROR    | app.middleware.logging:23 - [67743f70] GET /api/v1/alerts → ERR (4.33ms): Bearer token required
 2026-06-19 09:29:46 | ERROR    | app.middleware.logging:23 - [f9e6242e] GET /api/v1/alerts → ERR (1.54ms): Bearer token required
 2026-06-19 09:29:50 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: network:ConnectionError — reconnecting in 80s
+2026-06-19 09:35:20 | INFO     | app.main:32 - Starting UniOps v1.0.0
+2026-06-19 09:35:22 | INFO     | app.main:36 - Database initialized
+2026-06-19 09:35:22 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-06-19 09:35:22 | INFO     | app.core.scheduler:26 - K8s watchers disabled (event loop safety)
+2026-06-19 09:35:22 | INFO     | app.core.scheduler:37 - Scheduler started 6 periodic tasks
+2026-06-19 09:35:22 | INFO     | app.main:42 - Background scheduler started
+2026-06-19 09:35:22 | INFO     | app.main:54 - ML event listener task started — will retry Redis connection on failures
+2026-06-19 09:35:22 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-06-19 09:35:22 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-06-19 09:35:24 | INFO     | app.middleware.logging:15 - [290bc801] GET / → 404 (0.74ms)
+2026-06-19 09:35:24 | INFO     | app.middleware.logging:15 - [b2bdc776] GET /favicon.ico → 404 (0.98ms)
+2026-06-19 09:35:27 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-06-19 09:35:37 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 20s
+2026-06-19 09:35:45 | ERROR    | app.middleware.logging:23 - [aeb340e5] GET /api/v1/alerts → ERR (4.12ms): Bearer token required
+2026-06-19 09:35:45 | ERROR    | app.middleware.logging:23 - [b50cc2ae] GET /api/v1/alerts → ERR (2.37ms): Bearer token required
+2026-06-19 09:35:45 | ERROR    | app.middleware.logging:23 - [093bd5b5] GET /api/v1/alerts → ERR (1.76ms): Bearer token required
+2026-06-19 09:35:45 | ERROR    | app.middleware.logging:23 - [ab57172d] GET /api/v1/alerts → ERR (0.94ms): Bearer token required
+2026-06-19 09:35:52 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=0
+2026-06-19 09:35:52 | INFO     | app.core.scheduler:113 - Scheduled cost sync: {'integrations': 0, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-06-19 09:35:52 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 0 integrations
+2026-06-19 09:35:52 | INFO     | app.core.scheduler:122 - Scheduled security sync: {'integrations': 0, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-19 09:35:52 | INFO     | app.tasks.sync_ml_insights:50 - [sync_ml] No tenants found — skipping
+2026-06-19 09:35:52 | INFO     | app.core.scheduler:139 - Scheduled ML sync: {'tenants': 0, 'predictions': 0, 'patterns': 0, 'recommendations': 0}
+2026-06-19 09:35:52 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 0 K8s integrations
+2026-06-19 09:35:52 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 0, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-19 09:35:57 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 40s
+2026-06-19 09:36:21 | ERROR    | app.middleware.logging:23 - [63632f5b] GET /api/v1/alerts → ERR (3.05ms): Bearer token required
+2026-06-19 09:36:21 | ERROR    | app.middleware.logging:23 - [8ee2a57d] GET /api/v1/alerts → ERR (0.89ms): Bearer token required
+2026-06-19 09:36:22 | ERROR    | app.middleware.logging:23 - [e4619921] GET /api/v1/alerts → ERR (2.39ms): Bearer token required
+2026-06-19 09:36:22 | ERROR    | app.middleware.logging:23 - [4a4cb961] GET /api/v1/alerts → ERR (0.97ms): Bearer token required
