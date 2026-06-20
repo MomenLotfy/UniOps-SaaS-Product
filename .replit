@@ -27,25 +27,52 @@ args = "Backend API"
 name = "Start application"
 author = "agent"
 
-[workflows.workflow.metadata]
-outputType = "webview"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "PORT=5000 BASE_PATH=/ pnpm --filter @workspace/uniops run dev"
 waitForPort = 5000
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow]]
 name = "Backend API"
 author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd backend && /home/runner/workspace/.pythonlibs/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload"
 waitForPort = 3001
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "git log --oneline -10"
+mode = "sequential"
+author = 57818029
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git log --oneline -10"
+
+[[workflows.workflow]]
+name = "git push origin main"
+mode = "sequential"
+author = 57818029
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git push origin main "
+
+[[workflows.workflow]]
+name = "Fetch"
+mode = "sequential"
+author = 57818029
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git fetch origin git status git log --oneline --decorate --graph --all -20"
 
 [[ports]]
 localPort = 3001
@@ -53,15 +80,7 @@ externalPort = 3001
 
 [[ports]]
 localPort = 5000
-externalPort = 5000
-
-[[ports]]
-localPort = 5001
-externalPort = 3000
-
-[[ports]]
-localPort = 8000
-externalPort = 8000
+externalPort = 80
 
 [userenv]
 
