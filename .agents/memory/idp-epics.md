@@ -40,9 +40,12 @@ description: Status of each IDP epic — what's done, what's pending, key constr
 **Migration pattern:** PYTHONPATH=/home/runner/workspace/backend python3 scripts/init_db.py (runs Base.metadata.create_all)
 
 ## Epic 5 — GitOps (ArgoCD)
-**Status: Pending.**
-- New tab: GitOps inside DevOps Center
-- ArgoCD API proxy endpoints; app sync/rollback actions
+**Status: ✅ Complete.**
+- DB tables: `gitops_apps` (source, health/sync status, revision, ArgoCD link) + `gitops_history` (per-deployment audit trail)
+- Backend: endpoints/gitops.py → /api/v1/gitops (CRUD + /sync /rollback /history + /stats/summary)
+- ArgoCD proxy: reads 'argocd' integration type (server_url + token in credentials), calls live ArgoCD API if connected; falls back to local state
+- Frontend: GitOpsTab.tsx — stats strip (Healthy/Degraded/Synced/OutOfSync + ArgoCD live badge), filter pills, app cards (health/sync badges, repo, revision, last-synced), Sync / Hard Sync / Rollback / History actions, History panel (timeline with status colors), Add App dialog (git/helm/kustomize source types), Rollback dialog (select from history)
+- Wired into DevOpsCenter TABS (4th position)
 
 ## Epic 6 — Self-Service Catalog
 **Status: Pending.**

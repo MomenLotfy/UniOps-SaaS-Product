@@ -33,6 +33,7 @@ import {
 import { ClusterTab } from './ClusterTab';
 import { ObservabilityTab } from './ObservabilityTab';
 import { AlertsTab } from './AlertsTab';
+import { GitOpsTab } from './GitOpsTab';
 
 import type { PodRow, PipelineRow, DevOpsTab } from './types';
 
@@ -41,6 +42,7 @@ const TABS: { id: DevOpsTab; label: string; icon: React.ElementType }[] = [
   { id: 'clusters',      label: 'Clusters',      icon: Server    },
   { id: 'observability', label: 'Observability', icon: Activity  },
   { id: 'alerts',        label: 'Alerts',        icon: Bell      },
+  { id: 'gitops',        label: 'GitOps',        icon: GitBranch },
   { id: 'kubernetes',    label: 'Pods',          icon: Layers    },
   { id: 'workloads',     label: 'Workloads',     icon: Layers    },
   { id: 'network',       label: 'Network',       icon: Network   },
@@ -311,6 +313,11 @@ export default function DevOpsCenter() {
       {/* ── Alerts tab ──────────────────────────────────────────────────────── */}
       {tab === 'alerts' && (
         <AlertsTab showToast={showToast} />
+      )}
+
+      {/* ── GitOps tab ──────────────────────────────────────────────────────── */}
+      {tab === 'gitops' && (
+        <GitOpsTab showToast={showToast} />
       )}
 
       {/* ── Kubernetes Pods tab ─────────────────────────────────────────────── */}

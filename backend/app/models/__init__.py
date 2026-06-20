@@ -23,7 +23,9 @@ from app.models.webhook import Webhook
 from app.models.scan import Scan, Repository   # DevSecOps scan engine
 from app.models.api_key import ApiKey
 from app.models.cluster import Cluster          # Multi-cluster management
-from app.models.devops_alert import DevOpsAlert # Alert center (Epic 4)
+from app.models.devops_alert import DevOpsAlert  # Alert center (Epic 4)
+from app.models.gitops_app import GitOpsApp        # GitOps apps (Epic 5)
+from app.models.gitops_history import GitOpsHistory # GitOps history (Epic 5)
 
 __all__ = [
     "BaseModel", "Tenant", "User", "Role", "Permission", "Subscription",
@@ -31,4 +33,5 @@ __all__ = [
     "CostMetric", "CostAnomaly", "Savings", "MLPrediction", "MLPattern",
     "MLRecommendation", "MLCorrelation", "Alert", "AuditLog", "Webhook",
     "Scan", "Repository", "ApiKey", "Cluster", "DevOpsAlert",
+    "GitOpsApp", "GitOpsHistory",
 ]

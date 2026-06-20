@@ -17432,3 +17432,323 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-06-20 04:50:15 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=9f1f4d28
 2026-06-20 04:50:15 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 2, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
 2026-06-20 04:50:15 | INFO     | app.core.scheduler:113 - Scheduled cost sync: {'integrations': 2, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-20 04:50:53 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 80s
+2026-06-20 04:52:05 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-20 04:52:05 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 04:52:05 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 04:52:05 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-20 04:52:05 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-20 04:52:06 | INFO     | app.middleware.logging:15 - [8186c786] GET /api/v1/kubernetes/pods/stats → 200 (27.07ms)
+2026-06-20 04:52:06 | INFO     | app.middleware.logging:15 - [20d6fcaf] GET /api/v1/kubernetes/pods → 200 (44.58ms)
+2026-06-20 04:52:13 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 160s
+2026-06-20 04:52:36 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-20 04:52:36 | INFO     | app.main:76 - Shutting down...
+2026-06-20 04:52:36 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-06-20 04:52:36 | INFO     | app.core.scheduler:53 - Scheduler stopped
+2026-06-20 04:52:41 | INFO     | app.main:32 - Starting UniOps v1.0.0
+2026-06-20 04:52:41 | INFO     | app.main:36 - Database initialized
+2026-06-20 04:52:41 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-06-20 04:52:41 | INFO     | app.core.scheduler:26 - K8s watchers disabled (event loop safety)
+2026-06-20 04:52:41 | INFO     | app.core.scheduler:37 - Scheduler started 6 periodic tasks
+2026-06-20 04:52:41 | INFO     | app.main:42 - Background scheduler started
+2026-06-20 04:52:41 | INFO     | app.main:54 - ML event listener task started — will retry Redis connection on failures
+2026-06-20 04:52:41 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-06-20 04:52:43 | INFO     | app.main:32 - Starting UniOps v1.0.0
+2026-06-20 04:52:43 | INFO     | app.main:36 - Database initialized
+2026-06-20 04:52:43 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-06-20 04:52:43 | INFO     | app.core.scheduler:26 - K8s watchers disabled (event loop safety)
+2026-06-20 04:52:43 | INFO     | app.core.scheduler:37 - Scheduler started 6 periodic tasks
+2026-06-20 04:52:43 | INFO     | app.main:42 - Background scheduler started
+2026-06-20 04:52:43 | INFO     | app.main:54 - ML event listener task started — will retry Redis connection on failures
+2026-06-20 04:52:43 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-06-20 04:52:43 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-20 04:52:43 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-06-20 04:52:43 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-20 04:52:48 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-06-20 04:52:58 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 20s
+2026-06-20 04:53:13 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-20 04:53:14 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 04:53:14 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 04:53:14 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-06-20 04:53:14 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for e69691b1-4b62-4059-acd7-c9c2a0f4db0a: Missing GitHub token
+2026-06-20 04:53:14 | WARNING  | app.core.scheduler:106 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-06-20 04:53:14 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-20 04:53:14 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-20 04:53:14 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=2
+2026-06-20 04:53:14 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=Aws id=5b12ec2d tenant=7d205408 prior_status=connected
+2026-06-20 04:53:14 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=Aws id=5b12ec2d
+2026-06-20 04:53:14 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-03-01 end=2026-06-20 months=3
+2026-06-20 04:53:14 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-06-20 04:53:14 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-06-20 04:53:14 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: An error occurred (SubscriptionRequiredException) when calling the GetEnabledStandards operation: The AWS Access Key Id needs a subscription for the service
+2026-06-20 04:53:14 | INFO     | app.tasks.sync_security:162 - AWS security sync done for Aws: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-20 04:53:14 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-06-20 04:53:14 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-06-20 04:53:14 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-06-20 04:53:14 | INFO     | app.integrations.aws.cost_explorer:92 - [aws_ce] get_costs_by_service → 4 line items across 4 periods
+2026-06-20 04:53:14 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=Aws line_items_returned=4
+2026-06-20 04:53:14 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=4 integration=Aws id=5b12ec2d
+2026-06-20 04:53:14 | INFO     | app.middleware.logging:15 - [adb7f505] GET /api/v1/kubernetes/pods/stats → 200 (208.71ms)
+2026-06-20 04:53:16 | INFO     | app.integrations.aws.cost_explorer:130 - [aws_ce] get_cost_anomalies → 10 anomalies
+2026-06-20 04:53:16 | INFO     | app.middleware.logging:15 - [69a1ba26] GET /api/v1/kubernetes/pods → 200 (1692.9ms)
+2026-06-20 04:53:16 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 2, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-20 04:53:16 | INFO     | app.core.scheduler:122 - Scheduled security sync: {'integrations': 2, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-20 04:53:16 | INFO     | app.services.ml_service:310 - [ML] run_correlations complete — tenant=7d205408 pairs_written=3
+2026-06-20 04:53:16 | INFO     | app.tasks.sync_ml_insights:94 - [sync_ml] tenant=7d205408 → {'predictions': 4, 'patterns': 3, 'recommendations': 2}
+2026-06-20 04:53:16 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: An error occurred (AccessDeniedException) when calling the GetRightsizingRecommendation operation: Rightsizing EC2 recommendation is an opt-in only feature. You can enable this feature from the PAYER account’s Cost Explorer Preferences page. Normally it may take up to 24 hours in order to generate your rightsizing recommendations.
+2026-06-20 04:53:16 | INFO     | app.services.ml_service:310 - [ML] run_correlations complete — tenant=9f1f4d28 pairs_written=7
+2026-06-20 04:53:16 | INFO     | app.tasks.sync_ml_insights:94 - [sync_ml] tenant=9f1f4d28 → {'predictions': 4, 'patterns': 1, 'recommendations': 2}
+2026-06-20 04:53:16 | INFO     | app.tasks.sync_ml_insights:62 - [sync_ml] Done — {'tenants': 2, 'predictions': 8, 'patterns': 4, 'recommendations': 4}
+2026-06-20 04:53:16 | INFO     | app.core.scheduler:139 - Scheduled ML sync: {'tenants': 2, 'predictions': 8, 'patterns': 4, 'recommendations': 4}
+2026-06-20 04:53:16 | INFO     | app.integrations.aws.cost_explorer:322 - [aws_ce] get_ri_recommendations → 1 recommendations
+2026-06-20 04:53:16 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=Aws id=5b12ec2d tenant=7d205408 cost_records=4 anomalies=10 savings_recs=1
+2026-06-20 04:53:16 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=7d205408
+2026-06-20 04:53:16 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 1, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-20 04:53:16 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=6fd63f6f tenant=9f1f4d28 prior_status=connected
+2026-06-20 04:53:16 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=AWS Production id=6fd63f6f
+2026-06-20 04:53:16 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-03-01 end=2026-06-20 months=3
+2026-06-20 04:53:16 | WARNING  | app.integrations.aws.cost_explorer:99 - [aws_ce] get_costs_by_service failed: Unable to locate credentials
+2026-06-20 04:53:16 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=AWS Production line_items_returned=0
+2026-06-20 04:53:16 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=0 integration=AWS Production id=6fd63f6f
+2026-06-20 04:53:17 | WARNING  | app.integrations.aws.cost_explorer:134 - [aws_ce] get_cost_anomalies failed: Unable to locate credentials
+2026-06-20 04:53:18 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: Unable to locate credentials
+2026-06-20 04:53:19 | WARNING  | app.integrations.aws.cost_explorer:326 - [aws_ce] get_ri_recommendations failed: Unable to locate credentials
+2026-06-20 04:53:19 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 40s
+2026-06-20 04:53:19 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=AWS Production id=6fd63f6f tenant=9f1f4d28 cost_records=0 anomalies=0 savings_recs=0
+2026-06-20 04:53:19 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=9f1f4d28
+2026-06-20 04:53:19 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 2, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-20 04:53:19 | INFO     | app.core.scheduler:113 - Scheduled cost sync: {'integrations': 2, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-20 04:53:29 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-20 04:53:29 | INFO     | app.main:76 - Shutting down...
+2026-06-20 04:53:29 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-06-20 04:53:29 | INFO     | app.core.scheduler:53 - Scheduler stopped
+2026-06-20 04:53:31 | INFO     | app.main:32 - Starting UniOps v1.0.0
+2026-06-20 04:53:31 | INFO     | app.main:36 - Database initialized
+2026-06-20 04:53:31 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-06-20 04:53:31 | INFO     | app.core.scheduler:26 - K8s watchers disabled (event loop safety)
+2026-06-20 04:53:31 | INFO     | app.core.scheduler:37 - Scheduler started 6 periodic tasks
+2026-06-20 04:53:31 | INFO     | app.main:42 - Background scheduler started
+2026-06-20 04:53:31 | INFO     | app.main:54 - ML event listener task started — will retry Redis connection on failures
+2026-06-20 04:53:31 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-06-20 04:53:31 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-06-20 04:53:35 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-20 04:53:35 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-20 04:53:36 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-06-20 04:53:46 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 20s
+2026-06-20 04:54:01 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-06-20 04:54:01 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for e69691b1-4b62-4059-acd7-c9c2a0f4db0a: Missing GitHub token
+2026-06-20 04:54:01 | WARNING  | app.core.scheduler:106 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-06-20 04:54:01 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-06-20 04:54:01 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-06-20 04:54:02 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: An error occurred (SubscriptionRequiredException) when calling the GetEnabledStandards operation: The AWS Access Key Id needs a subscription for the service
+2026-06-20 04:54:02 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=2
+2026-06-20 04:54:02 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=Aws id=5b12ec2d tenant=7d205408 prior_status=connected
+2026-06-20 04:54:02 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=Aws id=5b12ec2d
+2026-06-20 04:54:02 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-03-01 end=2026-06-20 months=3
+2026-06-20 04:54:02 | INFO     | app.tasks.sync_security:162 - AWS security sync done for Aws: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-20 04:54:02 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-06-20 04:54:02 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-06-20 04:54:02 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-06-20 04:54:02 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-20 04:54:02 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 04:54:02 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 04:54:02 | INFO     | app.integrations.aws.cost_explorer:92 - [aws_ce] get_costs_by_service → 4 line items across 4 periods
+2026-06-20 04:54:02 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=Aws line_items_returned=4
+2026-06-20 04:54:02 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=4 integration=Aws id=5b12ec2d
+2026-06-20 04:54:02 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-20 04:54:02 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-20 04:54:02 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 2, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-20 04:54:02 | INFO     | app.core.scheduler:122 - Scheduled security sync: {'integrations': 2, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-20 04:54:04 | INFO     | app.integrations.aws.cost_explorer:130 - [aws_ce] get_cost_anomalies → 10 anomalies
+2026-06-20 04:54:04 | INFO     | app.middleware.logging:15 - [8b0467cb] GET /api/v1/kubernetes/pods/stats → 200 (48.64ms)
+2026-06-20 04:54:04 | INFO     | app.middleware.logging:15 - [52faef3a] GET /api/v1/kubernetes/pods → 200 (56.43ms)
+2026-06-20 04:54:04 | INFO     | app.services.ml_service:310 - [ML] run_correlations complete — tenant=7d205408 pairs_written=3
+2026-06-20 04:54:04 | INFO     | app.tasks.sync_ml_insights:94 - [sync_ml] tenant=7d205408 → {'predictions': 4, 'patterns': 3, 'recommendations': 2}
+2026-06-20 04:54:04 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: An error occurred (AccessDeniedException) when calling the GetRightsizingRecommendation operation: Rightsizing EC2 recommendation is an opt-in only feature. You can enable this feature from the PAYER account’s Cost Explorer Preferences page. Normally it may take up to 24 hours in order to generate your rightsizing recommendations.
+2026-06-20 04:54:04 | INFO     | app.services.ml_service:310 - [ML] run_correlations complete — tenant=9f1f4d28 pairs_written=4
+2026-06-20 04:54:04 | INFO     | app.tasks.sync_ml_insights:94 - [sync_ml] tenant=9f1f4d28 → {'predictions': 4, 'patterns': 1, 'recommendations': 2}
+2026-06-20 04:54:04 | INFO     | app.tasks.sync_ml_insights:62 - [sync_ml] Done — {'tenants': 2, 'predictions': 8, 'patterns': 4, 'recommendations': 4}
+2026-06-20 04:54:04 | INFO     | app.core.scheduler:139 - Scheduled ML sync: {'tenants': 2, 'predictions': 8, 'patterns': 4, 'recommendations': 4}
+2026-06-20 04:54:04 | INFO     | app.integrations.aws.cost_explorer:322 - [aws_ce] get_ri_recommendations → 1 recommendations
+2026-06-20 04:54:04 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=Aws id=5b12ec2d tenant=7d205408 cost_records=4 anomalies=10 savings_recs=1
+2026-06-20 04:54:04 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=7d205408
+2026-06-20 04:54:04 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 1, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-20 04:54:04 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=6fd63f6f tenant=9f1f4d28 prior_status=connected
+2026-06-20 04:54:04 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=AWS Production id=6fd63f6f
+2026-06-20 04:54:04 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-03-01 end=2026-06-20 months=3
+2026-06-20 04:54:04 | WARNING  | app.integrations.aws.cost_explorer:99 - [aws_ce] get_costs_by_service failed: Unable to locate credentials
+2026-06-20 04:54:04 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=AWS Production line_items_returned=0
+2026-06-20 04:54:04 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=0 integration=AWS Production id=6fd63f6f
+2026-06-20 04:54:05 | WARNING  | app.integrations.aws.cost_explorer:134 - [aws_ce] get_cost_anomalies failed: Unable to locate credentials
+2026-06-20 04:54:06 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: Unable to locate credentials
+2026-06-20 04:54:07 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 40s
+2026-06-20 04:54:07 | WARNING  | app.integrations.aws.cost_explorer:326 - [aws_ce] get_ri_recommendations failed: Unable to locate credentials
+2026-06-20 04:54:07 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=AWS Production id=6fd63f6f tenant=9f1f4d28 cost_records=0 anomalies=0 savings_recs=0
+2026-06-20 04:54:07 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=9f1f4d28
+2026-06-20 04:54:07 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 2, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-20 04:54:07 | INFO     | app.core.scheduler:113 - Scheduled cost sync: {'integrations': 2, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-20 04:54:47 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 80s
+2026-06-20 04:55:31 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-20 04:55:31 | INFO     | app.main:76 - Shutting down...
+2026-06-20 04:55:31 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-06-20 04:55:31 | INFO     | app.core.scheduler:53 - Scheduler stopped
+2026-06-20 04:55:34 | INFO     | app.main:32 - Starting UniOps v1.0.0
+2026-06-20 04:55:34 | INFO     | app.main:36 - Database initialized
+2026-06-20 04:55:34 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-06-20 04:55:34 | INFO     | app.core.scheduler:26 - K8s watchers disabled (event loop safety)
+2026-06-20 04:55:34 | INFO     | app.core.scheduler:37 - Scheduler started 6 periodic tasks
+2026-06-20 04:55:34 | INFO     | app.main:42 - Background scheduler started
+2026-06-20 04:55:34 | INFO     | app.main:54 - ML event listener task started — will retry Redis connection on failures
+2026-06-20 04:55:34 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-06-20 04:55:34 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-06-20 04:55:37 | INFO     | app.main:76 - Shutting down...
+2026-06-20 04:55:37 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-06-20 04:55:37 | INFO     | app.core.scheduler:53 - Scheduler stopped
+2026-06-20 04:55:39 | INFO     | app.main:32 - Starting UniOps v1.0.0
+2026-06-20 04:55:39 | INFO     | app.main:36 - Database initialized
+2026-06-20 04:55:39 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-06-20 04:55:39 | INFO     | app.core.scheduler:26 - K8s watchers disabled (event loop safety)
+2026-06-20 04:55:39 | INFO     | app.core.scheduler:37 - Scheduler started 6 periodic tasks
+2026-06-20 04:55:39 | INFO     | app.main:42 - Background scheduler started
+2026-06-20 04:55:39 | INFO     | app.main:54 - ML event listener task started — will retry Redis connection on failures
+2026-06-20 04:55:39 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-06-20 04:55:39 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-20 04:55:39 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-06-20 04:55:39 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-20 04:55:44 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-06-20 04:55:44 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-20 04:55:44 | INFO     | app.main:76 - Shutting down...
+2026-06-20 04:55:44 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-06-20 04:55:44 | INFO     | app.core.scheduler:53 - Scheduler stopped
+2026-06-20 04:55:46 | INFO     | app.main:32 - Starting UniOps v1.0.0
+2026-06-20 04:55:46 | INFO     | app.main:36 - Database initialized
+2026-06-20 04:55:46 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-06-20 04:55:47 | INFO     | app.core.scheduler:26 - K8s watchers disabled (event loop safety)
+2026-06-20 04:55:47 | INFO     | app.core.scheduler:37 - Scheduler started 6 periodic tasks
+2026-06-20 04:55:47 | INFO     | app.main:42 - Background scheduler started
+2026-06-20 04:55:47 | INFO     | app.main:54 - ML event listener task started — will retry Redis connection on failures
+2026-06-20 04:55:47 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-06-20 04:55:47 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-06-20 04:55:52 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-06-20 04:55:53 | INFO     | app.middleware.logging:15 - [30398163] GET /api/v1/alerts → 200 (71.36ms)
+2026-06-20 04:55:53 | INFO     | app.middleware.logging:15 - [b9b1e3a4] GET /api/v1/companies → 200 (31.33ms)
+2026-06-20 04:55:53 | INFO     | app.middleware.logging:15 - [b68190d5] GET /api/v1/integrations → 200 (51.28ms)
+2026-06-20 04:55:53 | INFO     | app.middleware.logging:15 - [387b6a2f] GET /api/v1/companies/stats → 200 (46.05ms)
+2026-06-20 04:55:53 | INFO     | app.middleware.logging:15 - [00e41656] GET /api/v1/alerts → 200 (44.32ms)
+2026-06-20 04:55:54 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-20 04:55:54 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-20 04:55:54 | INFO     | app.middleware.logging:15 - [8b9e8d2f] GET /api/v1/kubernetes/pods/stats → 200 (45.36ms)
+2026-06-20 04:55:54 | INFO     | app.middleware.logging:15 - [b191489e] GET /api/v1/clusters → 200 (42.8ms)
+2026-06-20 04:55:54 | INFO     | app.middleware.logging:15 - [cb8c772a] GET /api/v1/pipelines → 200 (52.18ms)
+2026-06-20 04:55:54 | INFO     | app.middleware.logging:15 - [0bcbb918] GET /api/v1/kubernetes/pods → 200 (57.08ms)
+2026-06-20 04:55:54 | INFO     | app.middleware.logging:15 - [9cacae8f] GET /api/v1/pipelines/stats → 200 (50.05ms)
+2026-06-20 04:55:54 | INFO     | app.middleware.logging:15 - [90d6f646] GET /api/v1/kubernetes/pods/stats → 200 (22.63ms)
+2026-06-20 04:55:54 | INFO     | app.middleware.logging:15 - [65004ae7] GET /api/v1/clusters → 200 (20.16ms)
+2026-06-20 04:55:54 | INFO     | app.middleware.logging:15 - [b0275066] GET /api/v1/pipelines/stats → 200 (25.76ms)
+2026-06-20 04:55:54 | INFO     | app.middleware.logging:15 - [6fa44370] GET /api/v1/kubernetes/pods → 200 (34.57ms)
+2026-06-20 04:55:54 | INFO     | app.middleware.logging:15 - [a5555f34] GET /api/v1/pipelines → 200 (36.01ms)
+2026-06-20 04:56:02 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 20s
+2026-06-20 04:56:17 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-06-20 04:56:17 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-06-20 04:56:17 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: An error occurred (SubscriptionRequiredException) when calling the GetEnabledStandards operation: The AWS Access Key Id needs a subscription for the service
+2026-06-20 04:56:17 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=2
+2026-06-20 04:56:17 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=Aws id=5b12ec2d tenant=7d205408 prior_status=connected
+2026-06-20 04:56:17 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=Aws id=5b12ec2d
+2026-06-20 04:56:17 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-03-01 end=2026-06-20 months=3
+2026-06-20 04:56:17 | INFO     | app.tasks.sync_security:162 - AWS security sync done for Aws: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-20 04:56:17 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-06-20 04:56:17 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-06-20 04:56:17 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-06-20 04:56:17 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-06-20 04:56:17 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for e69691b1-4b62-4059-acd7-c9c2a0f4db0a: Missing GitHub token
+2026-06-20 04:56:17 | WARNING  | app.core.scheduler:106 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-06-20 04:56:17 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-20 04:56:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 04:56:18 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 04:56:18 | INFO     | app.integrations.aws.cost_explorer:92 - [aws_ce] get_costs_by_service → 4 line items across 4 periods
+2026-06-20 04:56:18 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=Aws line_items_returned=4
+2026-06-20 04:56:18 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=4 integration=Aws id=5b12ec2d
+2026-06-20 04:56:18 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-20 04:56:18 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-20 04:56:18 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 2, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-20 04:56:18 | INFO     | app.core.scheduler:122 - Scheduled security sync: {'integrations': 2, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-20 04:56:19 | INFO     | app.integrations.aws.cost_explorer:130 - [aws_ce] get_cost_anomalies → 10 anomalies
+2026-06-20 04:56:19 | INFO     | app.middleware.logging:15 - [d7e84f0c] GET /api/v1/kubernetes/pods → 200 (62.85ms)
+2026-06-20 04:56:19 | INFO     | app.middleware.logging:15 - [e578d6ef] GET /api/v1/kubernetes/pods/stats → 200 (65.32ms)
+2026-06-20 04:56:19 | INFO     | app.services.ml_service:310 - [ML] run_correlations complete — tenant=7d205408 pairs_written=3
+2026-06-20 04:56:19 | INFO     | app.tasks.sync_ml_insights:94 - [sync_ml] tenant=7d205408 → {'predictions': 4, 'patterns': 3, 'recommendations': 2}
+2026-06-20 04:56:20 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: An error occurred (AccessDeniedException) when calling the GetRightsizingRecommendation operation: Rightsizing EC2 recommendation is an opt-in only feature. You can enable this feature from the PAYER account’s Cost Explorer Preferences page. Normally it may take up to 24 hours in order to generate your rightsizing recommendations.
+2026-06-20 04:56:20 | INFO     | app.services.ml_service:310 - [ML] run_correlations complete — tenant=9f1f4d28 pairs_written=6
+2026-06-20 04:56:20 | INFO     | app.tasks.sync_ml_insights:94 - [sync_ml] tenant=9f1f4d28 → {'predictions': 4, 'patterns': 1, 'recommendations': 2}
+2026-06-20 04:56:20 | INFO     | app.tasks.sync_ml_insights:62 - [sync_ml] Done — {'tenants': 2, 'predictions': 8, 'patterns': 4, 'recommendations': 4}
+2026-06-20 04:56:20 | INFO     | app.core.scheduler:139 - Scheduled ML sync: {'tenants': 2, 'predictions': 8, 'patterns': 4, 'recommendations': 4}
+2026-06-20 04:56:20 | INFO     | app.integrations.aws.cost_explorer:322 - [aws_ce] get_ri_recommendations → 1 recommendations
+2026-06-20 04:56:20 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=Aws id=5b12ec2d tenant=7d205408 cost_records=4 anomalies=10 savings_recs=1
+2026-06-20 04:56:20 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=7d205408
+2026-06-20 04:56:20 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 1, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-20 04:56:20 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=6fd63f6f tenant=9f1f4d28 prior_status=connected
+2026-06-20 04:56:20 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=AWS Production id=6fd63f6f
+2026-06-20 04:56:20 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-03-01 end=2026-06-20 months=3
+2026-06-20 04:56:20 | WARNING  | app.integrations.aws.cost_explorer:99 - [aws_ce] get_costs_by_service failed: Unable to locate credentials
+2026-06-20 04:56:20 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=AWS Production line_items_returned=0
+2026-06-20 04:56:20 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=0 integration=AWS Production id=6fd63f6f
+2026-06-20 04:56:22 | WARNING  | app.integrations.aws.cost_explorer:134 - [aws_ce] get_cost_anomalies failed: Unable to locate credentials
+2026-06-20 04:56:23 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: Unable to locate credentials
+2026-06-20 04:56:24 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 40s
+2026-06-20 04:56:24 | WARNING  | app.integrations.aws.cost_explorer:326 - [aws_ce] get_ri_recommendations failed: Unable to locate credentials
+2026-06-20 04:56:24 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=AWS Production id=6fd63f6f tenant=9f1f4d28 cost_records=0 anomalies=0 savings_recs=0
+2026-06-20 04:56:24 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=9f1f4d28
+2026-06-20 04:56:24 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 2, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-20 04:56:24 | INFO     | app.core.scheduler:113 - Scheduled cost sync: {'integrations': 2, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-20 04:56:27 | INFO     | app.api.v1.websocket.manager:30 - WS disconnected: tenant=unknown
+2026-06-20 04:56:27 | INFO     | app.main:76 - Shutting down...
+2026-06-20 04:56:27 | INFO     | app.integrations.kubernetes.watcher:252 - All K8s watchers stopped
+2026-06-20 04:56:27 | INFO     | app.core.scheduler:53 - Scheduler stopped
+2026-06-20 04:56:30 | INFO     | app.main:32 - Starting UniOps v1.0.0
+2026-06-20 04:56:30 | INFO     | app.main:36 - Database initialized
+2026-06-20 04:56:30 | INFO     | app.core.scheduler:22 - Background scheduler starting...
+2026-06-20 04:56:30 | INFO     | app.core.scheduler:26 - K8s watchers disabled (event loop safety)
+2026-06-20 04:56:30 | INFO     | app.core.scheduler:37 - Scheduler started 6 periodic tasks
+2026-06-20 04:56:30 | INFO     | app.main:42 - Background scheduler started
+2026-06-20 04:56:30 | INFO     | app.main:54 - ML event listener task started — will retry Redis connection on failures
+2026-06-20 04:56:30 | INFO     | app.services.ml_service:366 - [MLListener] Starting — subscribing to 4 channels
+2026-06-20 04:56:30 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 5s
+2026-06-20 04:56:33 | INFO     | app.api.v1.websocket.manager:19 - WS connected: tenant=unknown, connections=1
+2026-06-20 04:56:33 | DEBUG    | app.api.v1.websocket.handlers:21 - Tenant unknown subscribing to: ['pods', 'pipelines', 'threats', 'costs', 'ml', 'alerts']
+2026-06-20 04:56:35 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 10s
+2026-06-20 04:56:45 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 20s
+2026-06-20 04:57:00 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-20 04:57:01 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 04:57:01 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 04:57:01 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-06-20 04:57:01 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: An error occurred (SubscriptionRequiredException) when calling the GetFindings operation: The AWS Access Key Id needs a subscription for the service
+2026-06-20 04:57:01 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: An error occurred (SubscriptionRequiredException) when calling the GetEnabledStandards operation: The AWS Access Key Id needs a subscription for the service
+2026-06-20 04:57:01 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-06-20 04:57:01 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for e69691b1-4b62-4059-acd7-c9c2a0f4db0a: Missing GitHub token
+2026-06-20 04:57:01 | WARNING  | app.core.scheduler:106 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-06-20 04:57:01 | INFO     | app.tasks.sync_security:162 - AWS security sync done for Aws: {'integrations': 1, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-20 04:57:01 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-06-20 04:57:01 | WARNING  | app.integrations.aws.security_hub:40 - SecurityHub.get_findings failed: Unable to locate credentials
+2026-06-20 04:57:01 | WARNING  | app.integrations.aws.security_hub:149 - SecurityHub.get_compliance_status failed: Unable to locate credentials
+2026-06-20 04:57:01 | INFO     | app.tasks.sync_costs:74 - [finops_data_load_attempt] tenant=all integrations_found=2
+2026-06-20 04:57:01 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=AWS Production id=6fd63f6f tenant=9f1f4d28 prior_status=connected
+2026-06-20 04:57:01 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=AWS Production id=6fd63f6f
+2026-06-20 04:57:02 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-03-01 end=2026-06-20 months=3
+2026-06-20 04:57:02 | WARNING  | app.integrations.aws.cost_explorer:99 - [aws_ce] get_costs_by_service failed: Unable to locate credentials
+2026-06-20 04:57:02 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=AWS Production line_items_returned=0
+2026-06-20 04:57:02 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=0 integration=AWS Production id=6fd63f6f
+2026-06-20 04:57:03 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-20 04:57:03 | WARNING  | app.integrations.aws.cost_explorer:134 - [aws_ce] get_cost_anomalies failed: Unable to locate credentials
+2026-06-20 04:57:04 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-20 04:57:04 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: Unable to locate credentials
+2026-06-20 04:57:05 | WARNING  | app.integrations.aws.cost_explorer:326 - [aws_ce] get_ri_recommendations failed: Unable to locate credentials
+2026-06-20 04:57:05 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 40s
+2026-06-20 04:57:05 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=AWS Production id=6fd63f6f tenant=9f1f4d28 cost_records=0 anomalies=0 savings_recs=0
+2026-06-20 04:57:05 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=9f1f4d28
+2026-06-20 04:57:05 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 1, 'cost_records': 0, 'anomalies': 0, 'savings': 0}
+2026-06-20 04:57:05 | INFO     | app.tasks.sync_costs:82 - [sync_started] integration=Aws id=5b12ec2d tenant=7d205408 prior_status=connected
+2026-06-20 04:57:05 | INFO     | app.tasks.sync_costs:95 - [aws_cost_api_call] Calling ce:GetCostAndUsage integration=Aws id=5b12ec2d
+2026-06-20 04:57:05 | INFO     | app.integrations.aws.cost_explorer:63 - [aws_ce] get_costs_by_service start=2026-03-01 end=2026-06-20 months=3
+2026-06-20 04:57:05 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 2, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-20 04:57:05 | INFO     | app.core.scheduler:122 - Scheduled security sync: {'integrations': 2, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
+2026-06-20 04:57:05 | INFO     | app.middleware.logging:15 - [b83a672c] GET /api/v1/kubernetes/pods/stats → 200 (89.74ms)

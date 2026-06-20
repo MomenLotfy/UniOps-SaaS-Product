@@ -3,7 +3,7 @@ from app.api.v1.endpoints import (
     auth, users, companies, integrations, pipelines, pods,
     threats, vulnerabilities, compliance, costs, savings,
     ml, alerts, audit, webhooks, billing, health,
-    security_scan, api_keys, clusters, observability, devops_alerts,
+    security_scan, api_keys, clusters, observability, devops_alerts, gitops,
 )
 
 api_router = APIRouter()
@@ -30,3 +30,4 @@ api_router.include_router(api_keys.router,       prefix="/api-keys",      tags=[
 api_router.include_router(clusters.router,       prefix="/clusters",      tags=["Clusters"])
 api_router.include_router(observability.router,  prefix="/observability", tags=["Observability"])
 api_router.include_router(devops_alerts.router,  prefix="/devops-alerts", tags=["DevOps Alerts"])
+api_router.include_router(gitops.router,         prefix="/gitops",        tags=["GitOps"])
