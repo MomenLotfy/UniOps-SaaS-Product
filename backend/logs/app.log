@@ -17752,3 +17752,33 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-06-20 04:57:05 | INFO     | app.tasks.sync_security:162 - AWS security sync done for AWS Production: {'integrations': 2, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
 2026-06-20 04:57:05 | INFO     | app.core.scheduler:122 - Scheduled security sync: {'integrations': 2, 'threats': 0, 'vulnerabilities': 0, 'compliance': 0}
 2026-06-20 04:57:05 | INFO     | app.middleware.logging:15 - [b83a672c] GET /api/v1/kubernetes/pods/stats → 200 (89.74ms)
+2026-06-20 04:57:07 | INFO     | app.integrations.aws.cost_explorer:92 - [aws_ce] get_costs_by_service → 4 line items across 4 periods
+2026-06-20 04:57:07 | INFO     | app.tasks.sync_costs:100 - [aws_cost_api_response] integration=Aws line_items_returned=4
+2026-06-20 04:57:07 | INFO     | app.middleware.logging:15 - [5907472b] GET /api/v1/kubernetes/pods → 200 (1515.4ms)
+2026-06-20 04:57:07 | INFO     | app.tasks.sync_costs:111 - [db_insert_count] cost_metrics upserted=4 integration=Aws id=5b12ec2d
+2026-06-20 04:57:07 | INFO     | app.services.ml_service:310 - [ML] run_correlations complete — tenant=7d205408 pairs_written=3
+2026-06-20 04:57:07 | INFO     | app.tasks.sync_ml_insights:94 - [sync_ml] tenant=7d205408 → {'predictions': 4, 'patterns': 3, 'recommendations': 2}
+2026-06-20 04:57:07 | INFO     | app.integrations.aws.cost_explorer:130 - [aws_ce] get_cost_anomalies → 10 anomalies
+2026-06-20 04:57:07 | INFO     | app.services.ml_service:310 - [ML] run_correlations complete — tenant=9f1f4d28 pairs_written=6
+2026-06-20 04:57:07 | INFO     | app.tasks.sync_ml_insights:94 - [sync_ml] tenant=9f1f4d28 → {'predictions': 4, 'patterns': 1, 'recommendations': 2}
+2026-06-20 04:57:07 | INFO     | app.tasks.sync_ml_insights:62 - [sync_ml] Done — {'tenants': 2, 'predictions': 8, 'patterns': 4, 'recommendations': 4}
+2026-06-20 04:57:07 | INFO     | app.core.scheduler:139 - Scheduled ML sync: {'tenants': 2, 'predictions': 8, 'patterns': 4, 'recommendations': 4}
+2026-06-20 04:57:07 | WARNING  | app.integrations.aws.cost_explorer:179 - [aws_ce] get_rightsizing failed: An error occurred (AccessDeniedException) when calling the GetRightsizingRecommendation operation: Rightsizing EC2 recommendation is an opt-in only feature. You can enable this feature from the PAYER account’s Cost Explorer Preferences page. Normally it may take up to 24 hours in order to generate your rightsizing recommendations.
+2026-06-20 04:57:07 | INFO     | app.integrations.aws.cost_explorer:322 - [aws_ce] get_ri_recommendations → 1 recommendations
+2026-06-20 04:57:07 | INFO     | app.tasks.sync_costs:164 - [sync_costs_complete] ✓ integration=Aws id=5b12ec2d tenant=7d205408 cost_records=4 anomalies=10 savings_recs=1
+2026-06-20 04:57:07 | INFO     | app.tasks.sync_costs:176 - [cache_invalidated] tenant=7d205408
+2026-06-20 04:57:07 | INFO     | app.tasks.sync_costs:183 - [sync_costs_summary] {'integrations': 2, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-20 04:57:07 | INFO     | app.core.scheduler:113 - Scheduled cost sync: {'integrations': 2, 'cost_records': 4, 'anomalies': 10, 'savings': 1}
+2026-06-20 04:57:45 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 80s
+2026-06-20 04:58:32 | INFO     | app.middleware.logging:15 - [6e6af946] GET /api/v1/gitops → 200 (56.43ms)
+2026-06-20 04:58:32 | INFO     | app.middleware.logging:15 - [47a37898] GET /api/v1/gitops/stats/summary → 200 (37.62ms)
+2026-06-20 04:58:32 | INFO     | app.middleware.logging:15 - [62ae8f97] GET /api/v1/gitops → 200 (35.9ms)
+2026-06-20 04:58:32 | INFO     | app.middleware.logging:15 - [fe78f374] GET /api/v1/gitops/stats/summary → 200 (38.08ms)
+2026-06-20 04:59:04 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-20 04:59:04 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 04:59:04 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 04:59:04 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-20 04:59:04 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-20 04:59:05 | INFO     | app.middleware.logging:15 - [0ed8040b] GET /api/v1/kubernetes/pods/stats → 200 (28.29ms)
+2026-06-20 04:59:05 | INFO     | app.middleware.logging:15 - [cf5c3433] GET /api/v1/kubernetes/pods → 200 (34.58ms)
+2026-06-20 04:59:05 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 160s
