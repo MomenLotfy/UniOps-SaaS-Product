@@ -17782,3 +17782,28 @@ WHERE threats.tenant_id = $1::VARCHAR AND threats.repo_id = $2::VARCHAR AND thre
 2026-06-20 04:59:05 | INFO     | app.middleware.logging:15 - [0ed8040b] GET /api/v1/kubernetes/pods/stats → 200 (28.29ms)
 2026-06-20 04:59:05 | INFO     | app.middleware.logging:15 - [cf5c3433] GET /api/v1/kubernetes/pods → 200 (34.58ms)
 2026-06-20 04:59:05 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 160s
+2026-06-20 05:01:04 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-20 05:01:04 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 05:01:04 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 05:01:04 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-20 05:01:04 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-20 05:01:05 | INFO     | app.middleware.logging:15 - [f70782dd] GET /api/v1/kubernetes/pods → 200 (28.74ms)
+2026-06-20 05:01:05 | INFO     | app.middleware.logging:15 - [c17bcf8f] GET /api/v1/kubernetes/pods/stats → 200 (27.5ms)
+2026-06-20 05:01:45 | ERROR    | app.services.ml_service:431 - [MLListener] Connection lost: ConnectionError('Error 111 connecting to localhost:6379. 111.') — reconnecting in 300s
+2026-06-20 05:02:01 | INFO     | app.tasks.sync_pipelines:44 - Syncing pipelines for 2 integrations
+2026-06-20 05:02:01 | ERROR    | app.tasks.sync_pipelines:64 - Pipeline sync failed for e69691b1-4b62-4059-acd7-c9c2a0f4db0a: Missing GitHub token
+2026-06-20 05:02:01 | WARNING  | app.core.scheduler:106 - Pipeline sync skipped: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2026-06-20 05:03:04 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-20 05:03:04 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 05:03:04 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 05:03:05 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-20 05:03:05 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-20 05:03:05 | INFO     | app.middleware.logging:15 - [0b36a54e] GET /api/v1/kubernetes/pods/stats → 200 (24.2ms)
+2026-06-20 05:03:05 | INFO     | app.middleware.logging:15 - [4528e279] GET /api/v1/kubernetes/pods → 200 (32.53ms)
+2026-06-20 05:05:05 | INFO     | app.tasks.sync_pods:56 - Snapshot sync: 1 K8s integrations
+2026-06-20 05:05:05 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 05:05:05 | WARNING  | app.integrations.kubernetes.client:70 - K8s client init failed: Service host/port is not set.
+2026-06-20 05:05:05 | INFO     | app.tasks.sync_pods:125 - Synced 0 pods for K8s Cluster
+2026-06-20 05:05:05 | INFO     | app.core.scheduler:76 - Scheduled pod sync: {'integrations': 1, 'pods_synced': 0, 'pods_deleted': 0}
+2026-06-20 05:05:06 | INFO     | app.middleware.logging:15 - [1f584fb8] GET /api/v1/kubernetes/pods/stats → 200 (24.84ms)
+2026-06-20 05:05:06 | INFO     | app.middleware.logging:15 - [6de62e2d] GET /api/v1/kubernetes/pods → 200 (28.63ms)
