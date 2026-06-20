@@ -2,6 +2,12 @@
 // DevOpsCenter — shared types
 // ─────────────────────────────────────────────────────────────────────────────
 
+export type DevOpsSection =
+  | 'control-plane'
+  | 'observability'
+  | 'delivery'
+  | 'catalog';
+
 export type DevOpsTab =
   | 'clusters'
   | 'observability'
@@ -205,4 +211,40 @@ export interface PipelineStats {
 export interface LogLine {
   timestamp?: string;
   text: string;
+}
+
+// ── Service Catalog (Epic 6) ──────────────────────────────────────────────────
+export type ServiceType   = 'Microservice' | 'Database' | 'Worker' | 'Queue' | 'Gateway';
+export type ServiceStatus = 'Running' | 'Failed' | 'Deploying' | 'Pending' | 'Stopped';
+export type TechStack     =
+  | 'Node.js' | 'Python' | 'Go' | 'Java' | 'Rust'
+  | 'React' | 'Next.js' | 'FastAPI' | 'Django' | 'Spring Boot' | 'Other';
+
+export interface CatalogService {
+  id:               string;
+  name:             string;
+  type:             ServiceType;
+  status:           ServiceStatus;
+  tech_stack:       TechStack;
+  cluster:          string;
+  namespace:        string;
+  git_repo?:        string;
+  last_deployment?: string;
+  replicas:         number;
+  created_at:       string;
+  owner?:           string;
+  description?:     string;
+  tags:             string[];
+}
+
+export interface CreateServicePayload {
+  name:         string;
+  type:         ServiceType;
+  tech_stack:   TechStack;
+  git_repo:     string;
+  cluster:      string;
+  namespace:    string;
+  replicas:     number;
+  description?: string;
+  tags:         string[];
 }

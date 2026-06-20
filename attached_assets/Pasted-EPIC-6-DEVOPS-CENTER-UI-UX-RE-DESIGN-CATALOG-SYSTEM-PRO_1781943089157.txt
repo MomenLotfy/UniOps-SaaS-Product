@@ -1,0 +1,154 @@
+EPIC 6 — DEVOPS CENTER UI/UX RE-DESIGN + CATALOG SYSTEM (PRODUCTION SaaS LEVEL)
+You are working on an existing production system:
+UniOps Control Tower — DevOps Platform (Multi-page SaaS)
+⚠️ IMPORTANT:
+This is NOT a new project
+DO NOT reset UI structure
+DO NOT delete existing tabs
+DO NOT break DevOps Center functionality
+ONLY enhance + restructure UI + add Epic 6 (Catalog)
+🎯 OBJECTIVE
+Transform DevOps Center from a simple dashboard into a:
+🔥 Enterprise-grade DevOps Operating System UI (like Rancher + Datadog + ArgoCD + Port.io combined)
+🧭 STEP 1 — UI ARCHITECTURE REDESIGN (IMPORTANT)
+Current DevOps Center tabs:
+Clusters
+Observability
+Alerts
+GitOps
+Pods
+Workloads
+Network
+Jobs
+Config
+Autoscaling
+CI/CD
+History
+🧠 NEW REQUIRED UI STRUCTURE (MANDATORY CHANGE)
+You MUST reorganize UI into 3 MAIN SECTIONS ONLY:
+🟦 SECTION 1: CLUSTER CONTROL PLANE
+This section groups all Kubernetes operational tabs.
+Inside it create a sub-tab system (nested tabs UI):
+Sub-tabs:
+Pods
+Workloads
+Network
+Jobs
+Config
+Autoscaling
+UI REQUIREMENT:
+Instead of separate pages, they must become:
+👉 ONE unified “Cluster Operations Panel”
+Layout:
+┌──────────────────────────────┐ │ Cluster Control Plane        │ │ [ Pods | Workloads | ... ]  │ ├──────────────────────────────┤ │ Dynamic Content Area         │ └──────────────────────────────┘
+🟩 SECTION 2: PLATFORM OBSERVABILITY
+Includes:
+Observability
+Alerts
+Metrics (if exists)
+This section is for:
+Monitoring
+Performance
+Alerting
+System health
+UI style:
+Datadog-like dashboards
+Charts + timelines + alerts feed
+🟨 SECTION 3: DELIVERY & GITOPS
+Includes:
+GitOps
+CI/CD
+History
+This section represents:
+Deployment pipelines
+Release tracking
+Rollback history
+UI style:
+ArgoCD-like sync views
+Pipeline timelines
+Deployment history table
+🧠 IMPORTANT UI RULE
+DO NOT flatten all tabs.
+You must:
+✔ Group by domain (Control / Observability / Delivery)
+✔ Keep existing functionality intact
+✔ Improve navigation only
+✔ Make it feel like a real SaaS platform
+🚀 STEP 2 — EPIC 6: CATALOG SYSTEM (NEW FEATURE)
+Add a NEW MAIN SECTION:
+🟪 SECTION 4: SELF-SERVICE CATALOG
+This is the most important Epic 6 feature.
+📦 Catalog Concept
+This turns the platform into:
+Internal Developer Platform (IDP) like Port.io + Backstage
+🧱 FEATURES
+1. Catalog Page
+Route:
+/devops-center/catalog
+2. Service Types:
+Microservice
+Database
+Worker
+Queue (Kafka/RabbitMQ)
+Namespace
+3. Service Card UI:
+Each service must show:
+Name
+Type
+Status (Running / Failed / Deploying)
+Cluster
+Namespace
+Git repo
+Last deployment
+4. Create Service Wizard (CRITICAL)
+Wizard Steps:
+Step 1: Service Type
+Step 2: Tech Stack
+Step 3: Git Repository Setup
+Step 4: Deployment Config (Cluster, Namespace, Replicas)
+Step 5: Review
+Step 6: Deploy (GitOps Trigger)
+🔥 AUTOMATION REQUIREMENT
+On service creation system MUST:
+Create Git repository
+Generate Dockerfile
+Generate CI/CD pipeline
+Generate Helm chart
+Register service in DB
+Trigger GitOps deployment (ArgoCD integration)
+Emit WebSocket events
+⚡ STEP 3 — WEB SOCKET INTEGRATION
+Use existing WebSocket system.
+Emit events:
+service.created
+service.deployed
+service.failed
+UI must update in real-time.
+🧠 STEP 4 — DESIGN RULES (VERY IMPORTANT)
+This must look like a SaaS product:
+✔ Clean spacing
+✔ Card-based UI
+✔ Dark mode first
+✔ Smooth transitions (Framer Motion)
+✔ No clutter
+✔ Enterprise dashboard style
+🚨 STEP 5 — SAFETY RULES
+DO NOT:
+Remove existing tabs
+Break APIs
+Change authentication system
+Modify other pages outside DevOps Center
+ONLY:
+Refactor UI structure
+Add Catalog module
+Enhance UX
+📦 OUTPUT EXPECTATION
+Before coding:
+Show new UI architecture
+Show folder structure changes
+Show new components
+Show affected files
+Then implement step-by-step.
+🧠 FINAL GOAL
+Turn UniOps DevOps Center into:
+🚀 A full Internal Developer Platform (IDP) combining Rancher + ArgoCD + Port.io + Datadog UX
