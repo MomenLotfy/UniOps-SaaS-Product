@@ -1,0 +1,144 @@
+
+🚀 Epic 8 — Production Hardening (DevOps Center Scoped Only)
+🎯 Scope Rule (VERY IMPORTANT)
+This Epic ONLY modifies: 👉 DevOps Center module
+It MUST NOT:
+modify other pages
+break existing APIs
+remove current features
+refactor global architecture
+All changes must be additive only.
+🧱 Module 1 — SSO Integration (Frontend + Auth Hook only)
+🎯 Goal
+Enable login-aware DevOps Center with:
+tenant-aware UI
+role-aware rendering
+🔧 Tasks
+Update frontend auth context:
+TypeScript
+user = {
+  id,
+  tenant_id,
+  role: "admin | devops | developer | viewer",
+  org
+}
+🧠 DevOps Center Behavior
+Hide actions if role != devops/admin
+Disable buttons instead of removing them
+Show tooltip "Access Denied"
+🥈 Module 2 — RBAC Enforcement (UI Level)
+🎯 Rules
+Apply RBAC ONLY inside:
+Pods tab actions
+Pipelines actions
+Catalog deploy button
+🔐 Matrix
+Action
+Admin
+DevOps
+Dev
+Viewer
+Restart Pod
+✅
+✅
+❌
+❌
+Scale Service
+✅
+✅
+❌
+❌
+View Logs
+✅
+✅
+✅
+❌
+Create Service
+✅
+✅
+❌
+❌
+🥉 Module 3 — Multi-Cluster UI (DevOps Center only)
+🎯 Add cluster selector (TOP BAR)
+Plain text
+Cluster: [ production-aws ▼ ]
+         [ staging-azure  ]
+         [ dev-local      ]
+🔧 Behavior
+All DevOps Center API calls MUST include:
+
+?cluster_id=xxx
+📊 Module 4 — Observability Tab Upgrade
+🎯 Inside PlatformObservability tab ONLY
+Add:
+CPU chart (time series)
+Memory chart
+Error rate indicator
+Pod restart spikes
+📡 Data Source
+Use existing API only:
+
+GET /metrics (already exists or mock-safe)
+🔔 Module 5 — Alerting UI (NO backend changes)
+🎯 Add Alerts section UI
+Show:
+PodCrashLoopBackOff
+High CPU
+Pipeline Failed
+📡 UI Flow
+Plain text
+Alert triggered → show toast + add to alert list UI
+🔄 Module 6 — GitOps UI Enhancements
+Inside Delivery & GitOps tab:
+Add:
+1. Deployment status badge
+Synced
+OutOfSync
+Degraded
+2. Rollback button (UI mock only if API missing)
+📦 Module 7 — Catalog Marketplace Upgrade
+Inside CatalogTab ONLY:
+Add:
+Service Templates grid
+Quick deploy button
+Wizard improvements UI
+Templates:
+Node.js Microservice
+Python API
+Database
+Queue Service
+🔐 Module 8 — Security UI Hardening
+🎯 UI-only improvements:
+Mask sensitive fields
+Disable inspect actions for secrets
+Show "hidden value 🔒"
+🧠 Architecture Rule (IMPORTANT)
+DevOps Center must follow:
+Plain text
+NO direct backend rewrite
+NO DB schema changes
+NO breaking existing endpoints
+ONLY UI + API consumption layer changes
+🚀 FINAL OUTPUT REQUIREMENTS
+After implementation:
+DevOps Center must include:
+Multi-cluster selector
+RBAC-aware UI
+Observability charts
+Alerts UI
+GitOps status view
+Marketplace catalog
+Fully integrated with existing APIs
+⚠️ SAFETY CHECK
+Before finishing:
+[ ] No existing tab removed
+[ ] No backend core modified
+[ ] No breaking API changes
+[ ] All features fallback gracefully
+[ ] UI works with mock data if API missing
+🧠 WHY THIS VERSION IS CORRECT
+✔ scoped على DevOps Center فقط
+✔ يمنع تدمير المشروع
+✔ قابل للتنفيذ على Replit
+✔ production-style constraints
+✔ يفصل UI عن backend engineering

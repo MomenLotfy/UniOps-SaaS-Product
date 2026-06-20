@@ -239,6 +239,97 @@ function MetricsPane({ k8sConnected }: { k8sConnected: boolean }) {
         </div>
       )}
 
+      {/* Module 4 — Error Rate + Restart Spikes (Epic 8) */}
+      {!clusterLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Error Rate indicator */}
+          {(() => {
+            const total   = podsData.length;
+            const failed  = podsData.filter((p: PodMetric) => p.status !== 'Running').length;
+            const errPct  = total > 0 ? (failed / total) * 100 : 0;
+            const color   = errPct >= 20 ? 'text-red-400' : errPct >= 5 ? 'text-yellow-400' : 'text-green-400';
+            const barColor = errPct >= 20 ? 'bg-red-500' : errPct >= 5 ? 'bg-yellow-500' : 'bg-green-500';
+            return (
+              <div className="rounded-xl border p-4"
+                style={{ background: 'hsl(230 18% 9%)', borderColor: 'hsl(230 15% 15%)' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-gray-400">Error Rate</span>
+                  <span className={clsx('text-lg font-bold tabular-nums', color)}>{errPct.toFixed(1)}%</span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden mb-3">
+                  <motion.div
+                    className={clsx('h-full rounded-full', barColor)}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(errPct, 100)}%` }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="text-center">
+                    <p className="text-gray-500 mb-0.5">Total Pods</p>
+                    <p className="font-semibold text-white">{total}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-gray-500 mb-0.5">Non-Running</p>
+                    <p className={clsx('font-semibold', failed > 0 ? 'text-red-400' : 'text-green-400')}>{failed}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-gray-500 mb-0.5">Healthy</p>
+                    <p className="font-semibold text-green-400">{total - failed}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Restart Spikes bar */}
+          {(() => {
+            const withRestarts = podsData
+              .filter((p: PodMetric & { restart_count?: number }) => (p as any).restart_count > 0)
+              .sort((a: any, b: any) => (b.restart_count ?? 0) - (a.restart_count ?? 0))
+              .slice(0, 5);
+            const maxR = Math.max(...withRestarts.map((p: any) => p.restart_count ?? 0), 1);
+            return (
+              <div className="rounded-xl border p-4"
+                style={{ background: 'hsl(230 18% 9%)', borderColor: 'hsl(230 15% 15%)' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-gray-400">Restart Spikes</span>
+                  <span className="text-xs text-gray-600">Top 5 pods</span>
+                </div>
+                {withRestarts.length === 0 ? (
+                  <p className="text-xs text-gray-600 text-center py-4">No restart events detected</p>
+                ) : (
+                  <div className="space-y-2">
+                    {withRestarts.map((p: any) => {
+                      const pct  = ((p.restart_count ?? 0) / maxR) * 100;
+                      const color = p.restart_count >= 10 ? 'bg-red-500' : p.restart_count >= 3 ? 'bg-yellow-500' : 'bg-blue-500';
+                      return (
+                        <div key={`${p.namespace}/${p.name}`}>
+                          <div className="flex items-center justify-between text-xs mb-0.5">
+                            <span className="text-gray-400 truncate max-w-[140px]">{p.name}</span>
+                            <span className={clsx('font-mono font-bold flex-shrink-0 ml-2',
+                              p.restart_count >= 10 ? 'text-red-400' : p.restart_count >= 3 ? 'text-yellow-400' : 'text-blue-400',
+                            )}>{p.restart_count}×</span>
+                          </div>
+                          <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+                            <motion.div
+                              className={clsx('h-full rounded-full', color)}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${pct}%` }}
+                              transition={{ duration: 0.5, ease: 'easeOut' }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
       {/* Namespace breakdown */}
       {nsData.length > 0 && <NamespaceChart data={nsData} />}
 

@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useApi, apiPost, apiDelete } from '@/hooks/use-api';
 import { useIntegrationsCtx } from '@/contexts/IntegrationsContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
+import { usePermissions } from '@/hooks/use-permissions';
 import type { PodStats, PipelineStats, LogLine } from './types';
 
 // Safety-net fallback interval — only fires if WebSocket is disconnected
@@ -210,6 +211,53 @@ export function usePodActions(refetchPods: () => void) {
   }, [refetchPods]);
 
   return { loading, error, restart, forceDelete };
+}
+
+// ── RBAC gates (Module 2 — Epic 8) ───────────────────────────────────────────
+export function useDevOpsRBAC() {
+  const { isAdmin, hasRole, role } = usePermissions();
+
+  const canAct        = isAdmin() || hasRole('devops');
+  const canViewLogs   = canAct || hasRole('security') || hasRole('finops');
+  const canCreateSvc  = canAct;
+  const canRestartPod = canAct;
+  const canScale      = canAct;
+
+  return { canAct, canViewLogs, canCreateSvc, canRestartPod, canScale, role };
+}
+
+// ── Catalog services — Epic 7 backend wiring ─────────────────────────────────
+export function useCatalogServices(opts?: { status?: string; type?: string; search?: string }) {
+  const qs = new URLSearchParams({ page_size: '50' });
+  if (opts?.status) qs.set('status', opts.status);
+  if (opts?.type)   qs.set('type',   opts.type);
+  if (opts?.search) qs.set('search', opts.search);
+
+  const { data, loading, error, refetch } = useApi<any>(`/catalog/services?${qs}`);
+  const { data: statsRaw }                = useApi<any>('/catalog/stats');
+  const { subscribe, status: wsStatus }   = useWebSocket();
+
+  const services = (data?.data ?? data ?? []) as any[];
+  const stats    = statsRaw?.data ?? null;
+
+  // Subscribe to WS catalog events to trigger live refresh
+  useEffect(() => {
+    const CATALOG_EVENTS = [
+      'service.created', 'service.repo_created', 'service.building',
+      'service.deploying', 'service.deployed', 'service.failed', 'service.synced',
+    ];
+    const unsubs = CATALOG_EVENTS.map(evt => subscribe(evt, () => refetch()));
+    return () => unsubs.forEach(u => u());
+  }, [subscribe, refetch]);
+
+  // Fallback polling when WS is offline
+  useEffect(() => {
+    if (wsStatus === 'connected') return;
+    const id = setInterval(refetch, FALLBACK_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [wsStatus, refetch]);
+
+  return { services, stats, loading, error, refetch };
 }
 
 // ── Pipeline actions ──────────────────────────────────────────────────────────

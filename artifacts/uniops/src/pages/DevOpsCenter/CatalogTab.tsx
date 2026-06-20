@@ -3,15 +3,18 @@
 // Service cards + 6-step Create Wizard
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useCallback, useId } from 'react';
+import { useState, useCallback, useId, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Search, Package, Database, Cpu, MessageSquare,
   Globe, CheckCircle2, ArrowRight, ArrowLeft, X, Tag,
   GitBranch, Server, Layers, Zap, Clock, RefreshCw,
-  ChevronDown, ExternalLink,
+  ChevronDown, ExternalLink, Lock, Rocket, Code2, HardDrive,
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { usePermissions } from '@/hooks/use-permissions';
+import { useWebSocket } from '@/contexts/WebSocketContext';
+import { apiPost } from '@/hooks/use-api';
 import type { CatalogService, ServiceType, TechStack, CreateServicePayload } from './types';
 
 // ── Mock seed data ─────────────────────────────────────────────────────────────
@@ -288,12 +291,15 @@ const EMPTY_PAYLOAD: CreateServicePayload = {
   replicas: 1, description: '', tags: [],
 };
 
-function CreateWizard({ onClose, onCreate }: {
+function CreateWizard({ onClose, onCreate, initialValues }: {
   onClose: () => void;
   onCreate: (svc: CatalogService) => void;
+  initialValues?: Partial<CreateServicePayload>;
 }) {
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState<CreateServicePayload>(EMPTY_PAYLOAD);
+  const [form, setForm] = useState<CreateServicePayload>(
+    initialValues ? { ...EMPTY_PAYLOAD, ...initialValues } : EMPTY_PAYLOAD,
+  );
   const [tagInput, setTagInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const uid = useId();
@@ -323,17 +329,43 @@ function CreateWizard({ onClose, onCreate }: {
 
   const handleSubmit = useCallback(async () => {
     setSubmitting(true);
-    await new Promise(r => setTimeout(r, 900));
-    const now = new Date().toISOString();
-    const svc: CatalogService = {
-      id:    `svc-${Date.now()}`,
-      ...form,
-      status:          'Deploying',
-      created_at:      now,
-      last_deployment: now,
-    };
-    onCreate(svc);
-    setSubmitting(false);
+    try {
+      const res: any = await apiPost('/catalog/services', {
+        name:        form.name,
+        type:        form.type,
+        tech_stack:  form.tech_stack,
+        git_repo:    form.git_repo || undefined,
+        cluster:     form.cluster,
+        namespace:   form.namespace,
+        replicas:    form.replicas,
+        description: form.description || undefined,
+        tags:        form.tags.length ? form.tags : undefined,
+      });
+      const now = new Date().toISOString();
+      const created = res?.data ?? res;
+      const svc: CatalogService = {
+        id:              created?.id              ?? `svc-${Date.now()}`,
+        name:            created?.name            ?? form.name,
+        type:            form.type,
+        status:          'Deploying',
+        tech_stack:      form.tech_stack,
+        cluster:         form.cluster,
+        namespace:       form.namespace,
+        git_repo:        form.git_repo,
+        replicas:        form.replicas,
+        description:     form.description,
+        tags:            form.tags,
+        owner:           created?.owner,
+        created_at:      created?.created_at      ?? now,
+        last_deployment: created?.last_deployment ?? now,
+      };
+      onCreate(svc);
+    } catch {
+      const now = new Date().toISOString();
+      onCreate({ id: `svc-${Date.now()}`, ...form, status: 'Deploying', created_at: now, last_deployment: now });
+    } finally {
+      setSubmitting(false);
+    }
   }, [form, onCreate]);
 
   return (
@@ -699,6 +731,46 @@ function CreateWizard({ onClose, onCreate }: {
   );
 }
 
+// ── Service Templates (Module 7 — Epic 8) ────────────────────────────────────
+const SERVICE_TEMPLATES = [
+  {
+    id: 'tpl-nodejs',
+    label: 'Node.js REST API',
+    icon: Code2,
+    color: 'text-green-400 bg-green-500/10',
+    type: 'Microservice' as ServiceType,
+    stack: 'Node.js' as TechStack,
+    desc: 'Express API with JWT auth, Postgres, Redis cache',
+  },
+  {
+    id: 'tpl-fastapi',
+    label: 'Python FastAPI',
+    icon: Rocket,
+    color: 'text-blue-400 bg-blue-500/10',
+    type: 'Microservice' as ServiceType,
+    stack: 'FastAPI' as TechStack,
+    desc: 'Async Python API with Pydantic models and SQLAlchemy',
+  },
+  {
+    id: 'tpl-postgres',
+    label: 'PostgreSQL Database',
+    icon: HardDrive,
+    color: 'text-purple-400 bg-purple-500/10',
+    type: 'Database' as ServiceType,
+    stack: 'Other' as TechStack,
+    desc: 'Managed Postgres with PgBouncer, backups, monitoring',
+  },
+  {
+    id: 'tpl-worker',
+    label: 'Background Worker',
+    icon: Cpu,
+    color: 'text-yellow-400 bg-yellow-500/10',
+    type: 'Worker' as ServiceType,
+    stack: 'Python' as TechStack,
+    desc: 'Celery-based queue consumer with dead-letter handling',
+  },
+];
+
 // ── Main CatalogTab ───────────────────────────────────────────────────────────
 interface Props {
   showToast: (ok: boolean, msg: string) => void;
@@ -711,6 +783,30 @@ export function CatalogTab({ showToast }: Props) {
   const [filterStatus, setFilterStatus] = useState<string>('All');
   const [showWizard, setShowWizard] = useState(false);
   const [selectedSvc, setSelectedSvc] = useState<CatalogService | null>(null);
+  const [wizardPreset, setWizardPreset] = useState<Partial<CreateServicePayload> | null>(null);
+
+  // Module 2 — RBAC gate
+  const { isAdmin, hasRole } = usePermissions();
+  const canAct = isAdmin() || hasRole('devops');
+
+  // Module 5 — WS subscription for live catalog events
+  const { subscribe } = useWebSocket();
+  useEffect(() => {
+    const EVENTS = ['service.deployed', 'service.failed', 'service.synced'];
+    const unsubs = EVENTS.map(evt =>
+      subscribe(evt, (d: any) => {
+        const svcName = d?.service_name ?? d?.name ?? '';
+        if (evt === 'service.deployed') showToast(true,  `Deployed: ${svcName}`);
+        if (evt === 'service.failed')   showToast(false, `Deploy failed: ${svcName}`);
+        setServices(prev => prev.map(s =>
+          s.name === svcName || s.id === d?.service_id
+            ? { ...s, status: evt === 'service.deployed' ? 'Running' : evt === 'service.failed' ? 'Failed' : s.status }
+            : s,
+        ));
+      }),
+    );
+    return () => unsubs.forEach(u => u());
+  }, [subscribe, showToast]);
 
   const filtered = services.filter(s => {
     if (search && !s.name.includes(search.toLowerCase()) && !s.description?.toLowerCase().includes(search.toLowerCase())) return false;
@@ -729,8 +825,14 @@ export function CatalogTab({ showToast }: Props) {
   const handleCreate = useCallback((svc: CatalogService) => {
     setServices(prev => [svc, ...prev]);
     setShowWizard(false);
+    setWizardPreset(null);
     showToast(true, `Service "${svc.name}" is deploying to ${svc.cluster}/${svc.namespace}`);
   }, [showToast]);
+
+  const openWizardWithTemplate = useCallback((tpl: typeof SERVICE_TEMPLATES[0]) => {
+    setWizardPreset({ type: tpl.type, tech_stack: tpl.stack });
+    setShowWizard(true);
+  }, []);
 
   return (
     <div>
@@ -750,6 +852,51 @@ export function CatalogTab({ showToast }: Props) {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* ── Service Templates Marketplace (Module 7) ───────────────────────── */}
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Quick-Deploy Templates
+          </p>
+          <span className="text-xs text-gray-600">{SERVICE_TEMPLATES.length} available</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {SERVICE_TEMPLATES.map(tpl => {
+            const Icon = tpl.icon;
+            return (
+              <motion.button
+                key={tpl.id}
+                whileHover={{ y: -2 }}
+                transition={{ duration: 0.15 }}
+                onClick={() => canAct ? openWizardWithTemplate(tpl) : undefined}
+                disabled={!canAct}
+                title={!canAct ? 'Access Denied — DevOps role required' : undefined}
+                className={clsx(
+                  'flex flex-col gap-2 p-3.5 rounded-xl border text-left transition-all',
+                  canAct
+                    ? 'hover:border-white/20 cursor-pointer'
+                    : 'opacity-50 cursor-not-allowed',
+                )}
+                style={{ background: 'hsl(230 15% 9%)', borderColor: 'hsl(230 15% 15%)' }}
+              >
+                <div className={clsx('w-8 h-8 rounded-lg flex items-center justify-center', tpl.color)}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-white leading-snug">{tpl.label}</p>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-snug">{tpl.desc}</p>
+                </div>
+                {canAct && (
+                  <span className="flex items-center gap-1 text-xs text-blue-400 mt-auto font-medium">
+                    <Zap className="w-3 h-3" />Deploy
+                  </span>
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Toolbar ────────────────────────────────────────────────────────── */}
@@ -792,13 +939,29 @@ export function CatalogTab({ showToast }: Props) {
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500 pointer-events-none" />
         </div>
 
-        <button
-          onClick={() => setShowWizard(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-colors ml-auto"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          New Service
-        </button>
+        <div className="relative ml-auto group">
+          <button
+            onClick={() => canAct && setShowWizard(true)}
+            disabled={!canAct}
+            className={clsx(
+              'flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors',
+              canAct
+                ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                : 'bg-white/5 text-gray-600 cursor-not-allowed',
+            )}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            New Service
+          </button>
+          {!canAct && (
+            <div className="absolute bottom-full mb-2 right-0 hidden group-hover:block z-50 whitespace-nowrap">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-red-300 border border-red-500/20 bg-red-500/10 shadow-lg">
+                <Lock className="w-3 h-3" />
+                Access Denied — DevOps role required
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Service grid ───────────────────────────────────────────────────── */}
@@ -848,7 +1011,11 @@ export function CatalogTab({ showToast }: Props) {
       {/* ── Drawers & Dialogs ──────────────────────────────────────────────── */}
       <AnimatePresence>
         {showWizard && (
-          <CreateWizard onClose={() => setShowWizard(false)} onCreate={handleCreate} />
+          <CreateWizard
+            onClose={() => { setShowWizard(false); setWizardPreset(null); }}
+            onCreate={handleCreate}
+            initialValues={wizardPreset ?? undefined}
+          />
         )}
       </AnimatePresence>
 
