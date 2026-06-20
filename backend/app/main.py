@@ -59,6 +59,14 @@ async def lifespan(app: FastAPI):
             f"ML event listener not started (non-fatal): {e}"
         )
 
+    # 4. Start Deployment Engine background worker (Epic 7)
+    try:
+        from app.core.deployment_engine.worker import run_deployment_worker
+        asyncio.create_task(run_deployment_worker(), name="deployment-worker")
+        logger.info("Deployment Engine worker started")
+    except Exception as e:
+        logger.warning(f"Deployment Engine worker not started (non-fatal): {e}")
+
     # 3. Register Celery webhook routes if available
     try:
         from app.api.webhooks import github as github_wh, stripe as stripe_wh

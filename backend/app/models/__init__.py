@@ -26,6 +26,8 @@ from app.models.cluster import Cluster          # Multi-cluster management
 from app.models.devops_alert import DevOpsAlert  # Alert center (Epic 4)
 from app.models.gitops_app import GitOpsApp        # GitOps apps (Epic 5)
 from app.models.gitops_history import GitOpsHistory # GitOps history (Epic 5)
+from app.models.service import CatalogService        # Self-Service Catalog (Epic 6/7)
+from app.models.deployment_log import DeploymentLog  # Deployment Engine logs (Epic 7)
 
 __all__ = [
     "BaseModel", "Tenant", "User", "Role", "Permission", "Subscription",
@@ -34,4 +36,5 @@ __all__ = [
     "MLRecommendation", "MLCorrelation", "Alert", "AuditLog", "Webhook",
     "Scan", "Repository", "ApiKey", "Cluster", "DevOpsAlert",
     "GitOpsApp", "GitOpsHistory",
+    "CatalogService", "DeploymentLog",
 ]

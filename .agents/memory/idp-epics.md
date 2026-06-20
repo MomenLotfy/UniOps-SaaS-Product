@@ -48,11 +48,20 @@ description: Status of each IDP epic — what's done, what's pending, key constr
 - Wired into DevOpsCenter TABS (4th position)
 
 ## Epic 6 — Self-Service Catalog
-**Status: Pending.**
-- New tab: Catalog inside DevOps Center
-- Service templates wizard
+**Status: ✅ Complete.**
+- DevOps Center restructured into 4 sections: ClusterControlPlane, PlatformObservability, DeliveryGitOps, CatalogTab
+- CatalogTab.tsx: service cards, filter/search, 6-step Create Wizard (Info→Tech→Git→Infra→Pipeline→Review)
+- Frontend uses local seed data; backend wiring is Epic 7.
 
-## Epic 7 — Audit (expanded)
-**Status: Pending.**
-- Before/After/Reason fields on audit_logs
-- Timeline view UI
+## Epic 7 — Platform Engineering Core (Deployment Engine)
+**Status: ✅ Complete.**
+- DB tables: `catalog_services` + `deployment_logs`
+- Deployment Engine: backend/app/core/deployment_engine/ (generators.py, git_provider.py, argocd.py, service.py, worker.py)
+- Pipeline: Validate → DB record → Git repo → Scaffold+Dockerfile → CI/CD yaml → Helm chart → ArgoCD manifest → ArgoCD API → Sync → Track
+- Git: GitHubProvider + GitLabProvider (async httpx, graceful no-op if no integration)
+- ArgoCD: ArgoCDClient (direct API + manifest mode; graceful no-op if no integration)
+- Generators: Dockerfile, GitHub Actions / GitLab CI, full Helm chart (Chart.yaml, values.yaml, deployment.yaml, service.yaml, _helpers.tpl), ArgoCD Application manifest
+- WS events: service.created, service.repo_created, service.building, service.deploying, service.deployed, service.failed, service.synced, service.rolled_back
+- Worker: asyncio background task; resumes stuck services on restart, polls ArgoCD for Deploying services
+- API: GET/POST/GET/PATCH/DELETE /api/v1/catalog/services, /logs, /stats
+- Router: /api/v1/catalog registered; worker started in lifespan
