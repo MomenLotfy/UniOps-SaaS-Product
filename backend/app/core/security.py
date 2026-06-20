@@ -16,15 +16,17 @@ try:
 except Exception:
     pass
 
-from jose import JWTError, jwt, ExpiredSignatureError
+import jwt as PyJWT
 from passlib.context import CryptContext
 from app.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+JWTError = PyJWT.exceptions.PyJWTError
+ExpiredSignatureError = PyJWT.exceptions.ExpiredSignatureError
+
 
 def hash_password(password: str) -> str:
-    # bcrypt has a 72-byte limit
     return pwd_context.hash(password[:72])
 
 
@@ -54,7 +56,7 @@ def create_access_token(
     }
     if extra_claims:
         payload.update(extra_claims)
-    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    return PyJWT.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 
 def create_refresh_token(user_id: str) -> str:
@@ -65,14 +67,14 @@ def create_refresh_token(user_id: str) -> str:
         "iat": datetime.now(timezone.utc),
         "type": "refresh",
     }
-    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    return PyJWT.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 
 def decode_token(token: str) -> dict[str, Any]:
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        payload = PyJWT.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         return payload
-    except ExpiredSignatureError:
+    except PyJWT.exceptions.ExpiredSignatureError:
         raise ValueError("Token has expired")
-    except JWTError as e:
+    except PyJWT.exceptions.PyJWTError as e:
         raise ValueError(f"Invalid or expired token: {e}")
