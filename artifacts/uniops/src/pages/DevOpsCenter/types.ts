@@ -4,6 +4,8 @@
 
 export type DevOpsTab =
   | 'clusters'
+  | 'observability'
+  | 'alerts'
   | 'kubernetes'
   | 'workloads'
   | 'network'

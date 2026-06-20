@@ -23,11 +23,12 @@ from app.models.webhook import Webhook
 from app.models.scan import Scan, Repository   # DevSecOps scan engine
 from app.models.api_key import ApiKey
 from app.models.cluster import Cluster          # Multi-cluster management
+from app.models.devops_alert import DevOpsAlert # Alert center (Epic 4)
 
 __all__ = [
     "BaseModel", "Tenant", "User", "Role", "Permission", "Subscription",
     "Integration", "Pipeline", "Pod", "Threat", "Vulnerability", "Compliance",
     "CostMetric", "CostAnomaly", "Savings", "MLPrediction", "MLPattern",
     "MLRecommendation", "MLCorrelation", "Alert", "AuditLog", "Webhook",
-    "Scan", "Repository", "ApiKey", "Cluster",
+    "Scan", "Repository", "ApiKey", "Cluster", "DevOpsAlert",
 ]

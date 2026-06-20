@@ -1,1 +1,2 @@
 - [FinOps pipeline fixes](finops-pipeline.md) — AWS CE data flow: blocking boto3, auto-sync on connect, smart poll vs fixed delay, has_integration flag.
+- [IDP Epic roadmap](idp-epics.md) — UniOps IDP epic status: Epic 1 (WS) already done, Epic 2 (Multi-Cluster) complete, Epics 3-7 pending.

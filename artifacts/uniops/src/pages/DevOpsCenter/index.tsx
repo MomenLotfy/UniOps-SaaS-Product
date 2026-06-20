@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   RefreshCw, Server, GitBranch, History,
   Plug, CheckCircle, Layers, Network,
-  Clock, Settings2, Zap, Shield, Wifi, WifiOff,
+  Clock, Settings2, Zap, Shield, Wifi, WifiOff, Activity, Bell,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -30,24 +30,30 @@ import {
   ExecTerminalDialog, ScaleDialog,
   ClusterSection,
 } from './components';
+import { ClusterTab } from './ClusterTab';
+import { ObservabilityTab } from './ObservabilityTab';
+import { AlertsTab } from './AlertsTab';
 
 import type { PodRow, PipelineRow, DevOpsTab } from './types';
 
 // ── Tab config ────────────────────────────────────────────────────────────────
 const TABS: { id: DevOpsTab; label: string; icon: React.ElementType }[] = [
-  { id: 'kubernetes',   label: 'Pods',          icon: Server    },
-  { id: 'workloads',    label: 'Workloads',      icon: Layers    },
-  { id: 'network',      label: 'Network',        icon: Network   },
-  { id: 'jobs',         label: 'Jobs',           icon: Clock     },
-  { id: 'config',       label: 'Config',         icon: Settings2 },
-  { id: 'hpa',          label: 'Autoscaling',    icon: Zap       },
-  { id: 'pipelines',    label: 'CI/CD',          icon: GitBranch },
-  { id: 'history',      label: 'History',        icon: History   },
+  { id: 'clusters',      label: 'Clusters',      icon: Server    },
+  { id: 'observability', label: 'Observability', icon: Activity  },
+  { id: 'alerts',        label: 'Alerts',        icon: Bell      },
+  { id: 'kubernetes',    label: 'Pods',          icon: Layers    },
+  { id: 'workloads',     label: 'Workloads',     icon: Layers    },
+  { id: 'network',       label: 'Network',       icon: Network   },
+  { id: 'jobs',          label: 'Jobs',          icon: Clock     },
+  { id: 'config',        label: 'Config',        icon: Settings2 },
+  { id: 'hpa',           label: 'Autoscaling',   icon: Zap       },
+  { id: 'pipelines',     label: 'CI/CD',         icon: GitBranch },
+  { id: 'history',       label: 'History',       icon: History   },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function DevOpsCenter() {
-  const [tab, setTab]           = useState<DevOpsTab>('kubernetes');
+  const [tab, setTab]           = useState<DevOpsTab>('clusters');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // WebSocket status
@@ -291,6 +297,21 @@ export default function DevOpsCenter() {
           </button>
         ))}
       </div>
+
+      {/* ── Clusters tab ────────────────────────────────────────────────────── */}
+      {tab === 'clusters' && (
+        <ClusterTab showToast={showToast} />
+      )}
+
+      {/* ── Observability tab ───────────────────────────────────────────────── */}
+      {tab === 'observability' && (
+        <ObservabilityTab k8sConnected={k8sConnected} pods={pods} />
+      )}
+
+      {/* ── Alerts tab ──────────────────────────────────────────────────────── */}
+      {tab === 'alerts' && (
+        <AlertsTab showToast={showToast} />
+      )}
 
       {/* ── Kubernetes Pods tab ─────────────────────────────────────────────── */}
       {tab === 'kubernetes' && (
