@@ -67,6 +67,22 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Deployment Engine worker not started (non-fatal): {e}")
 
+    # 5. Start in-process Event Bus + WebSocket bridge (Epic 9)
+    try:
+        from app.core.events.event_bus import event_bus
+        event_bus.enable_ws_bridge()
+        logger.info("Event Bus WebSocket bridge enabled")
+    except Exception as e:
+        logger.warning(f"Event Bus not started (non-fatal): {e}")
+
+    # 6. Bootstrap Kubernetes cluster watchers (Epic 9)
+    try:
+        from app.core.events.k8s_watcher import bootstrap_watchers
+        asyncio.create_task(bootstrap_watchers(), name="k8s-watcher-bootstrap")
+        logger.info("Kubernetes cluster watcher bootstrap started")
+    except Exception as e:
+        logger.warning(f"K8s watcher bootstrap not started (non-fatal): {e}")
+
     # 3. Register Celery webhook routes if available
     try:
         from app.api.webhooks import github as github_wh, stripe as stripe_wh

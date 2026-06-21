@@ -399,3 +399,188 @@ async def get_stats(
         "out_of_sync": by_sync.get("OutOfSync", 0),
         "argocd_connected": bool(creds),
     })
+
+
+# ── Epic 9 — Real ArgoCD Status Endpoint ─────────────────────────────────────
+
+@router.get("/applications/{app_id}/status")
+async def get_application_status(
+    app_id: str,
+    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    refresh: bool = False,
+):
+    """
+    Real-time ArgoCD application status (Epic 9 — Module 3).
+
+    Response shape:
+      {
+        "sync_status":   "Synced | OutOfSync | Unknown",
+        "health_status": "Healthy | Progressing | Failed | Unknown",
+        "diff":          {...},
+        "resources":     [...],
+        "revision":      "abc123",
+        "last_synced_at": "ISO-8601",
+        "source":        "argocd | db"
+      }
+
+    Data source priority:
+      1. Live ArgoCD API (when argocd integration is configured)
+      2. Local GitOpsApp record in DB
+    """
+    result = await db.execute(
+        select(GitOpsApp).where(
+            GitOpsApp.id        == app_id,
+            GitOpsApp.tenant_id == tenant_id,
+        )
+    )
+    app = result.scalar_one_or_none()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    argocd_name = app.argocd_app_name or app.name
+
+    # ── Try live ArgoCD ───────────────────────────────────────────────────────
+    creds = await _get_argocd_creds(tenant_id, db)
+    if creds and creds.get("server") and creds.get("token"):
+        from app.integrations.gitops.argocd_client import ArgoCDSyncClient
+        client = ArgoCDSyncClient(
+            server_url=creds["server"],
+            token=creds["token"],
+            insecure=True,
+        )
+
+        try:
+            if refresh:
+                await client.refresh_application(argocd_name)
+
+            status = await client.get_application_status(argocd_name)
+            diff   = await client.get_app_diff(argocd_name)
+
+            # Keep DB record in sync
+            if status["sync_status"] != "Unknown":
+                app.sync_status   = status["sync_status"]
+                app.health_status = status["health_status"]
+                if status.get("revision"):
+                    app.current_revision = status["revision"]
+                await db.commit()
+
+                # Emit event to event bus
+                try:
+                    from app.core.events.event_bus import event_bus
+                    await event_bus.emit(
+                        f"gitops.{'synced' if status['sync_status'] == 'Synced' else 'out_of_sync'}",
+                        {
+                            "app_id":      app_id,
+                            "app_name":    argocd_name,
+                            "sync_status": status["sync_status"],
+                            "health":      status["health_status"],
+                        },
+                        tenant_id=tenant_id,
+                    )
+                except Exception:
+                    pass
+
+            return APIResponse(data={
+                **status,
+                "diff":   diff,
+                "source": "argocd",
+            })
+
+        except Exception as exc:
+            logger.warning(f"[gitops] ArgoCD status fetch failed for {argocd_name}: {exc}")
+
+    # ── Fallback: DB record ───────────────────────────────────────────────────
+    return APIResponse(data={
+        "app_name":      app.name,
+        "sync_status":   app.sync_status   or "Unknown",
+        "health_status": app.health_status or "Unknown",
+        "revision":      app.current_revision or "",
+        "last_synced_at": app.last_synced_at.isoformat() if app.last_synced_at else None,
+        "resources":     (app.resource_summary or {}).get("resources", []),
+        "diff":          {},
+        "message":       "ArgoCD not connected — showing cached state",
+        "source":        "db",
+    })
+
+
+@router.post("/applications/{app_id}/sync")
+async def sync_application_v2(
+    app_id: str,
+    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    revision: str = "HEAD",
+    prune: bool = False,
+):
+    """
+    Trigger a real ArgoCD sync (Epic 9).
+    Falls back to updating local record only if ArgoCD is not configured.
+    """
+    result = await db.execute(
+        select(GitOpsApp).where(
+            GitOpsApp.id == app_id, GitOpsApp.tenant_id == tenant_id
+        )
+    )
+    app = result.scalar_one_or_none()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    creds = await _get_argocd_creds(tenant_id, db)
+    synced_live = False
+
+    if creds and creds.get("server") and creds.get("token"):
+        from app.integrations.gitops.argocd_client import ArgoCDSyncClient
+        client = ArgoCDSyncClient(creds["server"], creds["token"], insecure=True)
+        argocd_name = app.argocd_app_name or app.name
+        try:
+            synced_live = await client.sync_application(argocd_name, revision=revision, prune=prune)
+        except Exception as exc:
+            logger.warning(f"[gitops] ArgoCD sync failed: {exc}")
+
+    from datetime import datetime, timezone
+    app.sync_status    = "Synced" if synced_live else app.sync_status
+    app.last_synced_at = datetime.now(timezone.utc)
+    await db.commit()
+
+    return APIResponse(data={
+        "app_id":     app_id,
+        "synced":     synced_live,
+        "source":     "argocd" if synced_live else "db",
+        "message":    "Sync triggered" if synced_live else "Sync recorded locally (ArgoCD not connected)",
+    })
+
+
+@router.post("/applications/{app_id}/rollback")
+async def rollback_application(
+    app_id: str,
+    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    revision_id: int = 0,
+):
+    """
+    Roll back an ArgoCD application to a prior revision (Epic 9).
+    """
+    result = await db.execute(
+        select(GitOpsApp).where(
+            GitOpsApp.id == app_id, GitOpsApp.tenant_id == tenant_id
+        )
+    )
+    app = result.scalar_one_or_none()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    creds = await _get_argocd_creds(tenant_id, db)
+    rolled_back = False
+
+    if creds and creds.get("server") and creds.get("token"):
+        from app.integrations.gitops.argocd_client import ArgoCDSyncClient
+        client      = ArgoCDSyncClient(creds["server"], creds["token"], insecure=True)
+        argocd_name = app.argocd_app_name or app.name
+        try:
+            rolled_back = await client.rollback_application(argocd_name, revision_id)
+        except Exception as exc:
+            logger.warning(f"[gitops] Rollback failed: {exc}")
+
+    return APIResponse(data={
+        "app_id":      app_id,
+        "rolled_back": rolled_back,
+        "revision_id": revision_id,
+        "source":      "argocd" if rolled_back else "db",
+    })

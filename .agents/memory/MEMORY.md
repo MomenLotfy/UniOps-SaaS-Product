@@ -1,3 +1,4 @@
 - [FinOps pipeline fixes](finops-pipeline.md) — AWS CE data flow: blocking boto3, auto-sync on connect, smart poll vs fixed delay, has_integration flag.
-- [IDP Epic roadmap](idp-epics.md) — UniOps IDP epic status: Epics 1-8 complete.
+- [IDP Epic roadmap](idp-epics.md) — UniOps IDP epic status: Epics 1-9 complete.
 - [DevOps Center RBAC pattern](devops-rbac.md) — canAct = isAdmin() || hasRole('devops'); usePermissions must be imported directly (not via require()).
+- [Epic 9 integration layer](epic9-integration.md) — AsyncSessionLocal (not async_session_factory); duplicate from __future__ causes silent module errors; event bus enable_ws_bridge() called once at startup.
