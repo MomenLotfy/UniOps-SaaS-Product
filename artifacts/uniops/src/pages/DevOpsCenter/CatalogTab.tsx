@@ -14,60 +14,8 @@ import {
 import { clsx } from 'clsx';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useWebSocket } from '@/contexts/WebSocketContext';
-import { apiPost } from '@/hooks/use-api';
+import { apiPost, useApi } from '@/hooks/use-api';
 import type { CatalogService, ServiceType, TechStack, CreateServicePayload } from './types';
-
-// ── Mock seed data ─────────────────────────────────────────────────────────────
-const SEED_SERVICES: CatalogService[] = [
-  {
-    id: 'svc-001', name: 'api-gateway', type: 'Gateway', status: 'Running',
-    tech_stack: 'Node.js', cluster: 'prod-eks', namespace: 'platform',
-    git_repo: 'github.com/acme/api-gateway', last_deployment: '2025-06-19T14:22:00Z',
-    replicas: 3, created_at: '2025-01-10T08:00:00Z', owner: 'platform-team',
-    description: 'Main API gateway routing traffic to downstream services.',
-    tags: ['gateway', 'ingress', 'platform'],
-  },
-  {
-    id: 'svc-002', name: 'user-service', type: 'Microservice', status: 'Running',
-    tech_stack: 'Go', cluster: 'prod-eks', namespace: 'backend',
-    git_repo: 'github.com/acme/user-service', last_deployment: '2025-06-18T09:10:00Z',
-    replicas: 2, created_at: '2025-02-05T10:00:00Z', owner: 'backend-team',
-    description: 'Handles user authentication, profiles, and preferences.',
-    tags: ['auth', 'users'],
-  },
-  {
-    id: 'svc-003', name: 'postgres-primary', type: 'Database', status: 'Running',
-    tech_stack: 'Other', cluster: 'prod-eks', namespace: 'data',
-    git_repo: '', last_deployment: '2025-05-01T06:00:00Z',
-    replicas: 1, created_at: '2025-01-01T00:00:00Z', owner: 'data-team',
-    description: 'Primary PostgreSQL database cluster.',
-    tags: ['postgres', 'database', 'stateful'],
-  },
-  {
-    id: 'svc-004', name: 'notification-worker', type: 'Worker', status: 'Running',
-    tech_stack: 'Python', cluster: 'staging-eks', namespace: 'workers',
-    git_repo: 'github.com/acme/notification-worker', last_deployment: '2025-06-17T11:00:00Z',
-    replicas: 1, created_at: '2025-03-12T12:00:00Z', owner: 'platform-team',
-    description: 'Background worker for sending email and SMS notifications.',
-    tags: ['worker', 'notifications'],
-  },
-  {
-    id: 'svc-005', name: 'event-queue', type: 'Queue', status: 'Running',
-    tech_stack: 'Other', cluster: 'prod-eks', namespace: 'messaging',
-    git_repo: '', last_deployment: '2025-04-20T08:00:00Z',
-    replicas: 3, created_at: '2025-01-15T08:00:00Z', owner: 'platform-team',
-    description: 'RabbitMQ event queue for async service communication.',
-    tags: ['queue', 'messaging', 'rabbitmq'],
-  },
-  {
-    id: 'svc-006', name: 'analytics-service', type: 'Microservice', status: 'Deploying',
-    tech_stack: 'FastAPI', cluster: 'staging-eks', namespace: 'analytics',
-    git_repo: 'github.com/acme/analytics', last_deployment: '2025-06-20T07:30:00Z',
-    replicas: 2, created_at: '2025-05-20T14:00:00Z', owner: 'data-team',
-    description: 'ClickHouse-backed analytics ingestion and query service.',
-    tags: ['analytics', 'clickhouse', 'data'],
-  },
-];
 
 // ── Style maps ─────────────────────────────────────────────────────────────────
 const TYPE_ICONS: Record<ServiceType, React.ElementType> = {
@@ -302,6 +250,7 @@ function CreateWizard({ onClose, onCreate, initialValues }: {
   );
   const [tagInput, setTagInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const uid = useId();
 
   const set = useCallback(<K extends keyof CreateServicePayload>(key: K, val: CreateServicePayload[K]) => {
@@ -360,9 +309,12 @@ function CreateWizard({ onClose, onCreate, initialValues }: {
         last_deployment: created?.last_deployment ?? now,
       };
       onCreate(svc);
-    } catch {
-      const now = new Date().toISOString();
-      onCreate({ id: `svc-${Date.now()}`, ...form, status: 'Deploying', created_at: now, last_deployment: now });
+    } catch (err: any) {
+      setSubmitError(
+        err?.response?.data?.detail
+          ?? err?.message
+          ?? 'Failed to create service. Check backend connectivity and try again.',
+      );
     } finally {
       setSubmitting(false);
     }
@@ -700,7 +652,7 @@ function CreateWizard({ onClose, onCreate, initialValues }: {
 
           {step < WIZARD_STEPS.length - 1 ? (
             <button
-              onClick={() => setStep(s => s + 1)}
+              onClick={() => { setSubmitError(null); setStep(s => s + 1); }}
               disabled={!canNext}
               className={clsx(
                 'flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition-all',
@@ -713,17 +665,22 @@ function CreateWizard({ onClose, onCreate, initialValues }: {
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="flex items-center gap-1.5 px-5 py-2 text-xs font-semibold rounded-lg bg-green-600 hover:bg-green-500 text-white transition-colors disabled:opacity-60"
-            >
-              {submitting ? (
-                <><RefreshCw className="w-3.5 h-3.5 animate-spin" />Deploying…</>
-              ) : (
-                <><Zap className="w-3.5 h-3.5" />Deploy Service</>
+            <div className="flex flex-col items-end gap-2">
+              {submitError && (
+                <p className="text-xs text-red-400 text-right max-w-xs">{submitError}</p>
               )}
-            </button>
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="flex items-center gap-1.5 px-5 py-2 text-xs font-semibold rounded-lg bg-green-600 hover:bg-green-500 text-white transition-colors disabled:opacity-60"
+              >
+                {submitting ? (
+                  <><RefreshCw className="w-3.5 h-3.5 animate-spin" />Deploying…</>
+                ) : (
+                  <><Zap className="w-3.5 h-3.5" />Deploy Service</>
+                )}
+              </button>
+            </div>
           )}
         </div>
       </motion.div>
