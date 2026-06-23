@@ -5,6 +5,10 @@ import { CommandPalette } from '@/components/Layout/CommandPalette';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { RoleBasedRoute } from '@/components/auth/RoleBasedRoute';
 import { ScanNotificationListener } from '@/components/ScanNotificationListener';
+// Landing pages — eagerly imported so they load instantly as the first page users see
+import Home    from '@/pages/landing/Home';
+import Pricing from '@/pages/landing/Pricing';
+import Contact from '@/pages/landing/Contact';
 
 // Dashboard pages
 const CommandCenter  = lazy(() => import('@/pages/CommandCenter'));
@@ -52,11 +56,6 @@ const AWSIntegration        = lazy(() => import('@/pages/integrations/AWSIntegra
 const GitHubIntegration     = lazy(() => import('@/pages/integrations/GitHubIntegration'));
 const KubernetesIntegration = lazy(() => import('@/pages/integrations/KubernetesIntegration'));
 const SlackIntegration      = lazy(() => import('@/pages/integrations/SlackIntegration'));
-
-// Landing pages
-const Home    = lazy(() => import('@/pages/landing/Home'));
-const Pricing = lazy(() => import('@/pages/landing/Pricing'));
-const Contact = lazy(() => import('@/pages/landing/Contact'));
 
 // Onboarding
 const Onboarding  = lazy(() => import('@/pages/onboarding'));

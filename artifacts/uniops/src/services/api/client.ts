@@ -22,7 +22,9 @@ apiClient.interceptors.response.use(
     const original = error.config;
 
     const isAuthEndpoint = original?.url?.includes('/auth/');
-    const isOnAuthPage   = window.location.pathname.startsWith('/auth/');
+    const publicPaths    = ['/', '/landing', '/features', '/pricing', '/contact', '/about', '/faq', '/docs', '/blog'];
+    const isOnAuthPage   = window.location.pathname.startsWith('/auth/')
+      || publicPaths.includes(window.location.pathname);
 
     if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
       original._retry = true;
