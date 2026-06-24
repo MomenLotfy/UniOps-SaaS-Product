@@ -4,12 +4,13 @@ import {
   GitBranch, Cloud, Database, Box, Layers, HardDrive,
   AlertTriangle, CheckCircle, Clock, ExternalLink, X,
   ChevronDown, ChevronUp, Link2, Shield, User, Globe,
-  MoreHorizontal, Play, Activity,
+  MoreHorizontal, Play, Activity, Network, List,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useApi, apiPost } from '@/hooks/use-api';
 import { usePermissions } from '@/hooks/use-permissions';
 import { canWriteSecurity } from '@/lib/permissions';
+import AssetGraph from './AssetGraph';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 

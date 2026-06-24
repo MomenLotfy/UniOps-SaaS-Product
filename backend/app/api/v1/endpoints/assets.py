@@ -127,6 +127,91 @@ async def list_assets(
     ))
 
 
+@router.get("/graph")
+async def get_asset_graph(
+    current_user: CurrentUser,
+    tenant_id: TenantID,
+    db: DBSession,
+    limit: int = Query(200, ge=1, le=500, description="Max nodes to return"),
+    source: Optional[str] = Query(None),
+    risk_level: Optional[str] = Query(None),
+    asset_type: Optional[str] = Query(None, alias="type"),
+    environment: Optional[str] = Query(None),
+):
+    """
+    Return nodes + edges for the asset relationship graph.
+    Nodes are limited to `limit` assets; edges are all relationships
+    that connect returned nodes (both endpoints must be in the set).
+    """
+    node_q = select(Asset).where(
+        Asset.tenant_id == tenant_id,
+        Asset.status != "decommissioned",
+    )
+    if source:
+        node_q = node_q.where(Asset.source == source)
+    if risk_level:
+        node_q = node_q.where(Asset.risk_level == risk_level)
+    if asset_type:
+        node_q = node_q.where(Asset.type == asset_type)
+    if environment:
+        node_q = node_q.where(Asset.environment == environment)
+
+    # Prioritise: critical/high first, then recently synced
+    node_q = node_q.order_by(
+        Asset.open_findings.desc(),
+        Asset.last_synced_at.desc(),
+    ).limit(limit)
+
+    asset_rows = (await db.execute(node_q)).scalars().all()
+    node_ids = {a.id for a in asset_rows}
+
+    nodes = [
+        {
+            "id": a.id,
+            "name": a.name,
+            "type": a.type,
+            "source": a.source,
+            "risk_level": a.risk_level or "none",
+            "environment": a.environment or "unknown",
+            "owner": a.owner,
+            "open_findings": a.open_findings,
+            "is_critical": a.is_critical,
+            "last_synced_at": a.last_synced_at.isoformat() if a.last_synced_at else None,
+            "url": a.url,
+        }
+        for a in asset_rows
+    ]
+
+    # Fetch all relationships where BOTH endpoints are in our node set
+    if node_ids:
+        edge_q = select(AssetRelationship).where(
+            AssetRelationship.source_asset_id.in_(node_ids),
+            AssetRelationship.target_asset_id.in_(node_ids),
+        )
+        edge_rows = (await db.execute(edge_q)).scalars().all()
+        edges = [
+            {
+                "id": e.id,
+                "source": e.source_asset_id,
+                "target": e.target_asset_id,
+                "type": e.relationship_type,
+            }
+            for e in edge_rows
+        ]
+    else:
+        edges = []
+
+    return APIResponse(data={
+        "nodes": nodes,
+        "edges": edges,
+        "meta": {
+            "node_count": len(nodes),
+            "edge_count": len(edges),
+            "limit": limit,
+        },
+    })
+
+
 @router.get("/stats")
 async def get_asset_stats(
     current_user: CurrentUser,
