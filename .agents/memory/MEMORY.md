@@ -1,1 +1,2 @@
 - [Security Platform Refactor](security-platform.md) — 10-section Security Center with full RBAC, real DB, 4 new models, new endpoints; sections use query params `?section=...`
+- [Asset Inventory Engine](asset-inventory.md) — full asset discovery for GitHub/GitLab/AWS/K8s/Docker; scheduler runs every 6h; GitHub client returns simplified owner (str not dict) — fixed in _sync_github

@@ -170,22 +170,33 @@ class AssetDiscoveryService(BaseService):
 
         count = 0
         for repo in repos:
-            external_id = str(repo.get("id", repo.get("full_name", "")))
+            # GitHub client returns a simplified format:
+            # {full_name, owner (str), name, default_branch, private, updated_at, html_url}
+            # Handle both simplified (owner as str) and raw API (owner as dict) formats.
+            owner_raw = repo.get("owner")
+            if isinstance(owner_raw, dict):
+                owner_login = owner_raw.get("login")
+            else:
+                owner_login = owner_raw  # simplified client returns str directly
+
+            full_name = repo.get("full_name") or repo.get("name", "")
+            external_id = str(repo.get("id", full_name))
             env = _infer_github_env(repo)
+
             await self._upsert_asset(
                 tenant_id=tenant_id,
                 integration_id=intg.id,
                 asset_type="github_repo",
                 source="github",
                 external_id=external_id,
-                name=repo.get("full_name") or repo.get("name", ""),
+                name=full_name,
                 environment=env,
-                owner=repo.get("owner", {}).get("login"),
+                owner=owner_login,
                 description=repo.get("description"),
                 url=repo.get("html_url"),
                 tags={
                     "language": repo.get("language"),
-                    "private": repo.get("private"),
+                    "private": repo.get("private", False),
                     "default_branch": repo.get("default_branch", "main"),
                     "archived": repo.get("archived", False),
                     "fork": repo.get("fork", False),

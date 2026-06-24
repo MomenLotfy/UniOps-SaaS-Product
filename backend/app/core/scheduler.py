@@ -27,12 +27,13 @@ class BackgroundScheduler:
 
         # Schedule periodic tasks
         self._tasks = [
-            asyncio.create_task(self._repeat(120,  self._sync_pods),      name="sync-pods"),
-            asyncio.create_task(self._repeat(300,  self._sync_pipelines),  name="sync-pipelines"),
-            asyncio.create_task(self._repeat(3600, self._sync_costs),      name="sync-costs"),
-            asyncio.create_task(self._repeat(3600, self._sync_security),   name="sync-security"),
-            asyncio.create_task(self._repeat(86400,  self._cleanup),        name="cleanup"),
-            asyncio.create_task(self._repeat(21600,  self._sync_ml),          name="sync-ml"),
+            asyncio.create_task(self._repeat(120,   self._sync_pods),      name="sync-pods"),
+            asyncio.create_task(self._repeat(300,   self._sync_pipelines), name="sync-pipelines"),
+            asyncio.create_task(self._repeat(3600,  self._sync_costs),     name="sync-costs"),
+            asyncio.create_task(self._repeat(3600,  self._sync_security),  name="sync-security"),
+            asyncio.create_task(self._repeat(21600, self._sync_assets),    name="sync-assets"),
+            asyncio.create_task(self._repeat(86400, self._cleanup),        name="cleanup"),
+            asyncio.create_task(self._repeat(21600, self._sync_ml),        name="sync-ml"),
         ]
         logger.info(f"Scheduler started {len(self._tasks)} periodic tasks")
 
@@ -130,6 +131,56 @@ class BackgroundScheduler:
             await cleanup_async()
         except Exception as e:
             logger.warning(f"Cleanup skipped: {e}")
+
+    @staticmethod
+    async def _sync_assets():
+        """
+        Periodic full-asset sync — runs every 6 hours.
+        Discovers and upserts assets from all connected integrations
+        (GitHub, GitLab, AWS, Kubernetes, Docker) for every active tenant.
+        """
+        try:
+            from app.core.database import AsyncSessionLocal
+            from app.models.tenant import Tenant
+            from app.services.asset_discovery_service import AssetDiscoveryService
+            from sqlalchemy import select
+
+            async with AsyncSessionLocal() as session:
+                result = await session.execute(
+                    select(Tenant).where(Tenant.is_active == True)
+                )
+                tenants = result.scalars().all()
+
+            total: dict[str, int] = {}
+            errors: list[str] = []
+            for tenant in tenants:
+                try:
+                    async with AsyncSessionLocal() as session:
+                        svc = AssetDiscoveryService(session)
+                        sync_result = await svc.sync_all(tenant.id)
+                        await session.commit()
+                    for k, v in (sync_result.get("synced") or {}).items():
+                        total[k] = total.get(k, 0) + v
+                    errors.extend(sync_result.get("errors") or [])
+                except Exception as exc:
+                    errors.append(f"tenant={tenant.id[:8]}: {str(exc)[:100]}")
+                    logger.warning(f"[scheduler:sync_assets] tenant={tenant.id[:8]} error={exc}")
+
+            logger.info(f"[scheduler:sync_assets] done totals={total} errors={len(errors)}")
+
+            # Broadcast update to connected websocket clients
+            try:
+                from app.api.v1.websocket.manager import ws_manager
+                if ws_manager.total_connections > 0:
+                    await ws_manager.broadcast({
+                        "event": "assets.synced",
+                        "data": {"totals": total, "error_count": len(errors)},
+                    })
+            except Exception:
+                pass
+
+        except Exception as e:
+            logger.warning(f"[scheduler:sync_assets] skipped: {e}")
 
     @staticmethod
     async def _sync_ml():
