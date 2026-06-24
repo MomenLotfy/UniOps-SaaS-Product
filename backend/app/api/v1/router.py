@@ -4,7 +4,7 @@ from app.api.v1.endpoints import (
     threats, vulnerabilities, compliance, costs, savings,
     ml, alerts, audit, webhooks, billing, health,
     security_scan, api_keys, clusters, observability, devops_alerts, gitops,
-    catalog, metrics, logs,
+    catalog, metrics, logs, assets,
 )
 
 api_router = APIRouter()
@@ -37,3 +37,6 @@ api_router.include_router(catalog.router,        prefix="/catalog",       tags=[
 # ── Epic 9 — Real Control Plane Endpoints ────────────────────────────────────
 api_router.include_router(metrics.router, prefix="/metrics", tags=["Metrics"])
 api_router.include_router(logs.router,    prefix="/logs",    tags=["Logs"])
+
+# ── Asset Inventory Engine ────────────────────────────────────────────────────
+api_router.include_router(assets.router, prefix="/assets", tags=["Assets"])
