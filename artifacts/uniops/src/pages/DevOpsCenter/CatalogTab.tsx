@@ -734,13 +734,19 @@ interface Props {
 }
 
 export function CatalogTab({ showToast }: Props) {
-  const [services, setServices] = useState<CatalogService[]>(SEED_SERVICES);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<ServiceType | 'All'>('All');
   const [filterStatus, setFilterStatus] = useState<string>('All');
   const [showWizard, setShowWizard] = useState(false);
   const [selectedSvc, setSelectedSvc] = useState<CatalogService | null>(null);
   const [wizardPreset, setWizardPreset] = useState<Partial<CreateServicePayload> | null>(null);
+
+  // Fetch services from backend
+  const { data: catalogRaw, loading: catalogLoading, error: catalogError, refetch: refetchServices } =
+    useApi<any>('/catalog/services');
+  const services: CatalogService[] = Array.isArray(catalogRaw?.data)
+    ? catalogRaw.data
+    : Array.isArray(catalogRaw) ? catalogRaw : [];
 
   // Module 2 — RBAC gate
   const { isAdmin, hasRole } = usePermissions();
@@ -755,18 +761,14 @@ export function CatalogTab({ showToast }: Props) {
         const svcName = d?.service_name ?? d?.name ?? '';
         if (evt === 'service.deployed') showToast(true,  `Deployed: ${svcName}`);
         if (evt === 'service.failed')   showToast(false, `Deploy failed: ${svcName}`);
-        setServices(prev => prev.map(s =>
-          s.name === svcName || s.id === d?.service_id
-            ? { ...s, status: evt === 'service.deployed' ? 'Running' : evt === 'service.failed' ? 'Failed' : s.status }
-            : s,
-        ));
+        refetchServices();
       }),
     );
     return () => unsubs.forEach(u => u());
-  }, [subscribe, showToast]);
+  }, [subscribe, showToast, refetchServices]);
 
   const filtered = services.filter(s => {
-    if (search && !s.name.includes(search.toLowerCase()) && !s.description?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !s.name.toLowerCase().includes(search.toLowerCase()) && !s.description?.toLowerCase().includes(search.toLowerCase())) return false;
     if (filterType !== 'All' && s.type !== filterType) return false;
     if (filterStatus !== 'All' && s.status !== filterStatus) return false;
     return true;
@@ -780,11 +782,11 @@ export function CatalogTab({ showToast }: Props) {
   };
 
   const handleCreate = useCallback((svc: CatalogService) => {
-    setServices(prev => [svc, ...prev]);
     setShowWizard(false);
     setWizardPreset(null);
     showToast(true, `Service "${svc.name}" is deploying to ${svc.cluster}/${svc.namespace}`);
-  }, [showToast]);
+    refetchServices();
+  }, [showToast, refetchServices]);
 
   const openWizardWithTemplate = useCallback((tpl: typeof SERVICE_TEMPLATES[0]) => {
     setWizardPreset({ type: tpl.type, tech_stack: tpl.stack });
@@ -922,7 +924,29 @@ export function CatalogTab({ showToast }: Props) {
       </div>
 
       {/* ── Service grid ───────────────────────────────────────────────────── */}
-      {filtered.length === 0 ? (
+      {catalogLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="rounded-xl border h-36 animate-pulse"
+              style={{ background: 'hsl(230 18% 9%)', borderColor: 'hsl(230 15% 15%)' }} />
+          ))}
+        </div>
+      ) : catalogError ? (
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
+            <Package className="w-6 h-6 text-red-500" />
+          </div>
+          <p className="text-sm font-medium text-red-400">Failed to load services</p>
+          <p className="text-xs text-gray-500 max-w-xs">{catalogError}</p>
+          <button
+            onClick={() => refetchServices()}
+            className="mt-2 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-gray-300 transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Retry
+          </button>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
             <Package className="w-6 h-6 text-gray-500" />
@@ -933,7 +957,7 @@ export function CatalogTab({ showToast }: Props) {
               ? 'Try adjusting your filters.'
               : 'Create your first service to get started.'}
           </p>
-          {!search && filterType === 'All' && filterStatus === 'All' && (
+          {!search && filterType === 'All' && filterStatus === 'All' && canAct && (
             <button
               onClick={() => setShowWizard(true)}
               className="mt-2 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-colors"
