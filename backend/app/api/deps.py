@@ -13,6 +13,10 @@ from app.core.exceptions import UnauthorizedError, ForbiddenError
 from app.core.redis_client import get_redis
 from app.core.pagination import PageParams
 from app.config import settings
+from app.constants.roles import (
+    SECURITY_ROLES, WRITE_SECURITY_ROLES, COMPLIANCE_ROLES,
+    AUDIT_READ_ROLES, EXECUTIVE_ROLES,
+)
 
 security = HTTPBearer(auto_error=False)
 
@@ -62,6 +66,42 @@ async def require_super_admin(
     return current_user
 
 
+async def require_security_read(
+    current_user: Annotated[dict, Depends(get_current_active_user)],
+) -> dict:
+    roles = set(current_user.get("roles", []))
+    if not roles.intersection(SECURITY_ROLES | {"executive", "devops_engineer", "developer", "viewer"}):
+        raise ForbiddenError("Security read access required")
+    return current_user
+
+
+async def require_security_write(
+    current_user: Annotated[dict, Depends(get_current_active_user)],
+) -> dict:
+    roles = set(current_user.get("roles", []))
+    if not roles.intersection(WRITE_SECURITY_ROLES):
+        raise ForbiddenError("Security write access required — Security Engineer or Admin role needed")
+    return current_user
+
+
+async def require_compliance(
+    current_user: Annotated[dict, Depends(get_current_active_user)],
+) -> dict:
+    roles = set(current_user.get("roles", []))
+    if not roles.intersection(COMPLIANCE_ROLES):
+        raise ForbiddenError("Compliance Manager or Admin role required")
+    return current_user
+
+
+async def require_audit_read(
+    current_user: Annotated[dict, Depends(get_current_active_user)],
+) -> dict:
+    roles = set(current_user.get("roles", []))
+    if not roles.intersection(AUDIT_READ_ROLES):
+        raise ForbiddenError("Auditor or higher role required")
+    return current_user
+
+
 async def get_tenant_id(
     current_user: Annotated[dict, Depends(get_current_active_user)],
 ) -> str:
@@ -81,6 +121,10 @@ def get_pagination(
 CurrentUser = Annotated[dict, Depends(get_current_active_user)]
 AdminUser = Annotated[dict, Depends(require_admin)]
 SuperAdminUser = Annotated[dict, Depends(require_super_admin)]
+SecurityReadUser = Annotated[dict, Depends(require_security_read)]
+SecurityWriteUser = Annotated[dict, Depends(require_security_write)]
+ComplianceUser = Annotated[dict, Depends(require_compliance)]
+AuditReadUser = Annotated[dict, Depends(require_audit_read)]
 TenantID = Annotated[str, Depends(get_tenant_id)]
 DBSession = Annotated[AsyncSession, Depends(get_db)]
 Pagination = Annotated[PageParams, Depends(get_pagination)]

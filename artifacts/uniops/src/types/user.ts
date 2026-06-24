@@ -1,4 +1,15 @@
-export type UserRole = 'super_admin' | 'admin' | 'devops' | 'security' | 'finops' | 'viewer';
+export type UserRole =
+  | 'super_admin'
+  | 'admin'
+  | 'security_engineer'
+  | 'security_analyst'
+  | 'devops_engineer'
+  | 'compliance_manager'
+  | 'auditor'
+  | 'executive'
+  | 'cost_analyst'
+  | 'developer'
+  | 'viewer';
 
 export type UserStatus = 'active' | 'inactive' | 'pending' | 'suspended';
 

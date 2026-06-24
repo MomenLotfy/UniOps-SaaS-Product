@@ -1,0 +1,1 @@
+- [Security Platform Refactor](security-platform.md) — 10-section Security Center with full RBAC, real DB, 4 new models, new endpoints; sections use query params `?section=...`

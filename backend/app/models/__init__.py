@@ -20,15 +20,19 @@ from app.models.ml_correlation import MLCorrelation
 from app.models.alert import Alert
 from app.models.audit_log import AuditLog
 from app.models.webhook import Webhook
-from app.models.scan import Scan, Repository   # DevSecOps scan engine
+from app.models.scan import Scan, Repository
 from app.models.api_key import ApiKey
-from app.models.cluster import Cluster          # Multi-cluster management
-from app.models.devops_alert import DevOpsAlert  # Alert center (Epic 4)
-from app.models.gitops_app import GitOpsApp        # GitOps apps (Epic 5)
-from app.models.gitops_history import GitOpsHistory # GitOps history (Epic 5)
-from app.models.service import CatalogService        # Self-Service Catalog (Epic 6/7)
-from app.models.deployment_log import DeploymentLog  # Deployment Engine logs (Epic 7)
-from app.models.asset import Asset, AssetRelationship  # Asset Inventory Engine
+from app.models.cluster import Cluster
+from app.models.devops_alert import DevOpsAlert
+from app.models.gitops_app import GitOpsApp
+from app.models.gitops_history import GitOpsHistory
+from app.models.service import CatalogService
+from app.models.deployment_log import DeploymentLog
+from app.models.asset import Asset, AssetRelationship
+from app.models.security_policy import SecurityPolicy
+from app.models.security_exception import SecurityException
+from app.models.security_report import SecurityReport
+from app.models.security_posture import SecurityPostureScore
 
 __all__ = [
     "BaseModel", "Tenant", "User", "Role", "Permission", "Subscription",
@@ -39,4 +43,5 @@ __all__ = [
     "GitOpsApp", "GitOpsHistory",
     "CatalogService", "DeploymentLog",
     "Asset", "AssetRelationship",
+    "SecurityPolicy", "SecurityException", "SecurityReport", "SecurityPostureScore",
 ]
