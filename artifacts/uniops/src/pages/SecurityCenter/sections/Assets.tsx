@@ -297,6 +297,7 @@ export default function Assets() {
   const [syncMsg,   setSyncMsg]   = useState<{ ok: boolean; text: string } | null>(null);
   const [selected,  setSelected]  = useState<any | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'graph'>('table');
 
   const PAGE_SIZE = 20;
 
@@ -372,6 +373,32 @@ export default function Assets() {
               <Activity className="w-3.5 h-3.5 animate-pulse" /> Syncing…
             </span>
           )}
+
+          {/* View mode toggle */}
+          <div className="flex items-center rounded-lg border border-border overflow-hidden">
+            <button
+              onClick={() => setViewMode('table')}
+              className={clsx(
+                'flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors',
+                viewMode === 'table'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <List className="w-3.5 h-3.5" /> Table
+            </button>
+            <button
+              onClick={() => setViewMode('graph')}
+              className={clsx(
+                'flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors border-l border-border',
+                viewMode === 'graph'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <Network className="w-3.5 h-3.5" /> Graph
+            </button>
+          </div>
 
           <button
             onClick={() => setShowFilters(f => !f)}
@@ -514,7 +541,11 @@ export default function Assets() {
         </div>
       )}
 
+      {/* ── Graph view ── */}
+      {viewMode === 'graph' && <AssetGraph />}
+
       {/* ── Table ── */}
+      {viewMode === 'table' && (
       <div className="card-base overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px]">
@@ -694,6 +725,7 @@ export default function Assets() {
           </div>
         )}
       </div>
+      )}
 
       {/* Asset detail drawer */}
       {selected && <AssetDrawer asset={selected} onClose={() => setSelected(null)} />}
