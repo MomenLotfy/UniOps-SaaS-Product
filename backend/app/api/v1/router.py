@@ -6,7 +6,7 @@ from app.api.v1.endpoints import (
     security_scan, api_keys, clusters, observability, devops_alerts, gitops,
     catalog, metrics, logs, assets,
     security_policies, security_exceptions, security_reports, security_posture,
-    k8s_security, sbom,
+    k8s_security, sbom, repository_risk,
 )
 
 api_router = APIRouter()
@@ -54,3 +54,4 @@ api_router.include_router(logs.router,               prefix="/logs",            
 api_router.include_router(assets.router,             prefix="/assets",            tags=["Assets"])
 api_router.include_router(k8s_security.router,       prefix="/k8s",               tags=["Kubernetes Security"])
 api_router.include_router(sbom.router,               prefix="/sbom",              tags=["Security - SBOM"])
+api_router.include_router(repository_risk.router,    prefix="/repos/risk",        tags=["Security - Risk Ratings"])

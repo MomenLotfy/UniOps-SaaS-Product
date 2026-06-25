@@ -249,6 +249,48 @@ async def _run_scan_async(scan_id: str) -> None:
             except Exception as sbom_exc:
                 logger.warning(f"[scan:{scan_id}] SBOM generation failed (non-fatal): {sbom_exc}")
 
+            # ── Repository Risk Rating (non-fatal — upserts risk record) ─────
+            try:
+                from app.services.risk_service import RiskService
+                from app.models.compliance import Compliance
+                from sqlalchemy import func as _func
+
+                # Count compliance violations (failed checks across all frameworks)
+                comp_res = await db.execute(
+                    select(_func.sum(Compliance.failed)).where(
+                        Compliance.tenant_id == tenant_id
+                    )
+                )
+                compliance_violations = int(comp_res.scalar() or 0)
+
+                # Re-fetch scan + repo (post-commit, so reload from DB)
+                _scan_res = await db.execute(
+                    select(Scan).where(Scan.id == scan_id)
+                )
+                _scan_obj = _scan_res.scalar_one_or_none()
+                _repo_res = await db.execute(
+                    select(Repository).where(Repository.id == repo_id)
+                )
+                _repo_obj = _repo_res.scalar_one_or_none()
+
+                if _scan_obj and _repo_obj:
+                    risk_svc = RiskService(db)
+                    risk_record = await risk_svc.compute_and_store(
+                        tenant_id=tenant_id,
+                        repo_id=repo_id,
+                        scan_id=scan_id,
+                        scan=_scan_obj,
+                        repo=_repo_obj,
+                        compliance_violations=compliance_violations,
+                    )
+                    logger.info(
+                        f"[scan:{scan_id}] Risk rated: "
+                        f"level={risk_record.risk_level} score={risk_record.risk_score} "
+                        f"trend={risk_record.trend}"
+                    )
+            except Exception as risk_exc:
+                logger.warning(f"[scan:{scan_id}] Risk rating failed (non-fatal): {risk_exc}")
+
             # ── Update compliance frameworks from scan results ─────────────────
             await _update_compliance(db, tenant_id, result.findings, security_score, now_end)
 

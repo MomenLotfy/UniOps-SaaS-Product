@@ -35,6 +35,7 @@ from app.models.security_report import SecurityReport
 from app.models.security_posture import SecurityPostureScore
 from app.models.k8s_security import K8sScan, K8sFinding
 from app.models.sbom import SBOM
+from app.models.repository_risk import RepositoryRiskScore
 
 __all__ = [
     "BaseModel", "Tenant", "User", "Role", "Permission", "Subscription",
@@ -48,4 +49,5 @@ __all__ = [
     "SecurityPolicy", "SecurityException", "SecurityReport", "SecurityPostureScore",
     "K8sScan", "K8sFinding",
     "SBOM",
+    "RepositoryRiskScore",
 ]
