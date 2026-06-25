@@ -175,13 +175,24 @@ async def _run_scan_async(scan_id: str) -> None:
             )
             logger.info(
                 f"[scan:{scan_id}] Persisting "
-                f"{len(threat_dicts)} threats, {len(vuln_dicts)} vulnerabilities"
+                f"{len(threat_dicts)} threats, {len(vuln_dicts)} vulnerabilities (pre-dedup)"
             )
 
             for td in threat_dicts:
                 db.add(Threat(**td))
+
+            # ── Vulnerability deduplication — upsert by (tenant_id, cve_id, package_name)
+            dedup_count = 0
             for vd in vuln_dicts:
-                db.add(Vulnerability(**vd))
+                stored = await _upsert_vulnerability(db, vd)
+                if stored == "merged":
+                    dedup_count += 1
+
+            logger.info(
+                f"[scan:{scan_id}] Vulnerability dedup: "
+                f"{len(vuln_dicts)} raw → {dedup_count} merged, "
+                f"{len(vuln_dicts) - dedup_count} new"
+            )
 
             # ── Score + AI ────────────────────────────────────────────────────
             security_score = ScoreCalculator.compute(result.findings)
@@ -222,6 +233,21 @@ async def _run_scan_async(scan_id: str) -> None:
                 )
             )
             await db.commit()
+
+            # ── SBOM generation (non-fatal — runs after scan is committed) ────
+            try:
+                from app.services.sbom_service import SBOMService
+                sbom_svc = SBOMService(db)
+                sboms = await sbom_svc.generate(
+                    repo_path=work_dir,
+                    tenant_id=tenant_id,
+                    repo_id=repo_id,
+                    scan_id=scan_id,
+                    repo_name=full_name,
+                )
+                logger.info(f"[scan:{scan_id}] Generated {len(sboms)} SBOM(s)")
+            except Exception as sbom_exc:
+                logger.warning(f"[scan:{scan_id}] SBOM generation failed (non-fatal): {sbom_exc}")
 
             # ── Update compliance frameworks from scan results ─────────────────
             await _update_compliance(db, tenant_id, result.findings, security_score, now_end)
@@ -270,6 +296,67 @@ async def _run_scan_async(scan_id: str) -> None:
                 _shutil.rmtree(work_dir, ignore_errors=True)
                 logger.info(f"[scan:{scan_id}] Temp clone dir removed")
             await _release_scan_lock(repo_id)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Vulnerability Deduplication — upsert by (tenant_id, cve_id, package_name)
+# ─────────────────────────────────────────────────────────────────────────────
+
+async def _upsert_vulnerability(db, vd: dict) -> str:
+    """
+    Insert a new vulnerability or merge it into an existing one.
+
+    Deduplication key: (tenant_id, cve_id, package_name)
+    A match requires a real cve_id — findings without a CVE are never merged.
+
+    Returns "merged" if deduped into an existing record, "new" otherwise.
+    """
+    from app.models.vulnerability import Vulnerability
+
+    cve_id       = vd.get("cve_id")
+    package_name = vd.get("package_name")
+    tenant_id    = vd["tenant_id"]
+
+    # Only deduplicate when we have a real CVE + package name
+    if cve_id and package_name:
+        existing_res = await db.execute(
+            select(Vulnerability).where(
+                Vulnerability.tenant_id    == tenant_id,
+                Vulnerability.cve_id       == cve_id,
+                Vulnerability.package_name == package_name,
+            ).limit(1)
+        )
+        existing = existing_res.scalar_one_or_none()
+
+        if existing:
+            # Merge: update last_seen_at, detected_by (add scanner if new)
+            scanner = vd.get("scanner_name")  # set by to_vulnerabilities
+            existing_detected = list(existing.detected_by or [])
+            if scanner and scanner not in existing_detected:
+                existing_detected.append(scanner)
+
+            now = datetime.now(timezone.utc)
+            await db.execute(
+                update(Vulnerability).where(Vulnerability.id == existing.id).values(
+                    last_seen_at=now,
+                    detected_by=existing_detected,
+                    scan_id=vd.get("scan_id"),   # update to latest scan
+                )
+            )
+            await db.flush()
+            return "merged"
+
+    # New finding — insert
+    now = datetime.now(timezone.utc)
+    vuln = Vulnerability(
+        **{k: v for k, v in vd.items() if k != "scanner_name"},
+        first_seen_at=now,
+        last_seen_at=now,
+        detected_by=[vd.get("scanner_name")] if vd.get("scanner_name") else [],
+    )
+    db.add(vuln)
+    await db.flush()
+    return "new"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -425,7 +512,6 @@ async def _update_compliance(db, tenant_id: str, findings: list, security_score:
 
     for fw in frameworks:
         score, status = _score_and_counts(fw["passed"], fw["total"])
-        # Upsert: find existing row for this tenant+framework
         existing = await db.execute(
             select(Compliance).where(
                 Compliance.tenant_id == tenant_id,

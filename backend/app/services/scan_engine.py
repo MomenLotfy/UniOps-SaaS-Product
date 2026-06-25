@@ -757,6 +757,7 @@ class ResultAdapter:
         """
         Convert raw scan findings to Vulnerability dicts.
         repo_id is stored on every record so queries can be repo-isolated.
+        scanner_name is included for the deduplication engine in run_scan.py.
         """
         vulns = []
         for f in findings:
@@ -778,6 +779,8 @@ class ResultAdapter:
                 "target":          repo_full_name,
                 "image":           None,
                 "references":      [],
+                # ── Deduplication key — consumed by _upsert_vulnerability ───
+                "scanner_name":    f.scanner,
             })
         return vulns
 

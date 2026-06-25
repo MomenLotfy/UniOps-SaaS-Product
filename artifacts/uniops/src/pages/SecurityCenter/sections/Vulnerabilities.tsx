@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bug, Shield, Filter, RefreshCw, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { Bug, Shield, Filter, RefreshCw, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useApi } from '@/hooks/use-api';
 
@@ -13,6 +13,45 @@ const SEV_CLASS: Record<string, string> = {
   medium:   'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20',
   low:      'bg-blue-500/15 text-blue-400 border border-blue-500/20',
 };
+
+const SCANNER_COLORS: Record<string, string> = {
+  deps:      'bg-purple-500/15 text-purple-400 border-purple-500/20',
+  sast:      'bg-cyan-500/15 text-cyan-400 border-cyan-500/20',
+  secrets:   'bg-red-500/15 text-red-400 border-red-500/20',
+  container: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
+  cicd:      'bg-green-500/15 text-green-400 border-green-500/20',
+};
+
+function DetectedByBadges({ detectedBy }: { detectedBy: string[] }) {
+  if (!detectedBy || detectedBy.length === 0) return null;
+  return (
+    <div className="flex items-center gap-1 flex-wrap mt-1">
+      <Users className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+      {detectedBy.map((scanner) => (
+        <span
+          key={scanner}
+          className={clsx(
+            'text-[9px] px-1.5 py-0.5 rounded border font-mono font-medium',
+            SCANNER_COLORS[scanner] ?? 'bg-white/5 text-muted-foreground border-white/10',
+          )}
+        >
+          {scanner}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function DateRange({ firstSeen, lastSeen }: { firstSeen?: string; lastSeen?: string }) {
+  if (!firstSeen && !lastSeen) return null;
+  const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return (
+    <p className="text-[10px] text-muted-foreground mt-0.5">
+      {firstSeen && <>First seen {fmt(firstSeen)}</>}
+      {firstSeen && lastSeen && firstSeen !== lastSeen && <> · Last seen {fmt(lastSeen)}</>}
+    </p>
+  );
+}
 
 export default function Vulnerabilities() {
   const [severity, setSeverity] = useState('');
@@ -37,11 +76,13 @@ export default function Vulnerabilities() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-lg font-bold text-foreground">Vulnerabilities</h1>
-          <p className="text-xs text-muted-foreground">{total} CVEs and package findings</p>
+          <p className="text-xs text-muted-foreground">{total} CVEs and package findings · deduplicated by CVE + package</p>
         </div>
-        <button onClick={() => refetch()}
+        <button
+          onClick={() => refetch()}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border text-muted-foreground hover:text-foreground transition-colors"
-          style={{ borderColor: 'hsl(230 15% 20%)' }}>
+          style={{ borderColor: 'hsl(230 15% 20%)' }}
+        >
           <RefreshCw className="w-3.5 h-3.5" /> Refresh
         </button>
       </div>
@@ -50,10 +91,10 @@ export default function Vulnerabilities() {
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
           {[
-            { label: 'Critical', key: 'critical_count', cls: 'text-red-400' },
-            { label: 'High',     key: 'high_count',     cls: 'text-orange-400' },
-            { label: 'Medium',   key: 'medium_count',   cls: 'text-yellow-400' },
-            { label: 'Low',      key: 'low_count',      cls: 'text-blue-400' },
+            { label: 'Critical', key: 'critical', cls: 'text-red-400' },
+            { label: 'High',     key: 'high',     cls: 'text-orange-400' },
+            { label: 'Medium',   key: 'medium',   cls: 'text-yellow-400' },
+            { label: 'Low',      key: 'low',      cls: 'text-blue-400' },
           ].map(({ label, key, cls }) => (
             <div key={key} className="card-base px-3 py-2.5 text-center">
               <p className={clsx('text-xl font-bold', cls)}>{stats?.[key] ?? 0}</p>
@@ -86,7 +127,7 @@ export default function Vulnerabilities() {
       {/* List */}
       <div className="space-y-2">
         {loading ? (
-          [...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-xl" />)
+          [...Array(5)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)
         ) : vulns.length === 0 ? (
           <div className="card-base py-12 text-center">
             <Shield className="w-8 h-8 text-green-400 mx-auto mb-2" />
@@ -117,11 +158,13 @@ export default function Vulnerabilities() {
                 <p className="text-sm font-medium text-foreground">{v.title}</p>
                 {v.package_name && (
                   <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                    {v.package_name}@{v.package_version}
+                    {v.package_name}{v.package_version ? `@${v.package_version}` : ''}
                     {v.fixed_version && <span className="text-green-400 ml-1">→ {v.fixed_version}</span>}
                   </p>
                 )}
                 {v.target && <p className="text-xs text-muted-foreground font-mono truncate">{v.target}</p>}
+                <DetectedByBadges detectedBy={v.detected_by ?? []} />
+                <DateRange firstSeen={v.first_seen_at} lastSeen={v.last_seen_at} />
               </div>
               <span className="text-[10px] text-muted-foreground flex-shrink-0">
                 {v.created_at ? new Date(v.created_at).toLocaleDateString() : ''}

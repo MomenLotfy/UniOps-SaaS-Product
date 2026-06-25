@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, AlertTriangle, Bug, CheckSquare, GitBranch,
   Server, TrendingUp, FileText, ClipboardList, BookOpen,
-  ChevronRight, Menu, X, Layers,
+  ChevronRight, Menu, X, Layers, Package,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -21,11 +21,12 @@ import Policies             from './sections/Policies';
 import Exceptions           from './sections/Exceptions';
 import Reports              from './sections/Reports';
 import KubernetesSecurity   from './sections/KubernetesSecurity';
+import SBOMSection          from './sections/SBOM';
 
 export type SecuritySection =
   | 'overview' | 'threats' | 'vulnerabilities' | 'compliance'
   | 'repositories' | 'assets' | 'kubernetes' | 'posture'
-  | 'policies' | 'exceptions' | 'reports';
+  | 'policies' | 'exceptions' | 'reports' | 'sbom';
 
 interface NavItem {
   id: SecuritySection;
@@ -48,6 +49,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'policies',        label: 'Policies',            icon: BookOpen,      description: 'Security policies' },
   { id: 'exceptions',      label: 'Exceptions',          icon: ClipboardList, description: 'Exception requests' },
   { id: 'reports',         label: 'Reports',             icon: FileText,      description: 'Audit & reports' },
+  { id: 'sbom',            label: 'SBOM',                icon: Package,       description: 'Software Bill of Materials' },
 ];
 
 const SECTION_COMPONENTS: Record<SecuritySection, React.ComponentType> = {
@@ -62,6 +64,7 @@ const SECTION_COMPONENTS: Record<SecuritySection, React.ComponentType> = {
   policies:        Policies,
   exceptions:      Exceptions,
   reports:         Reports,
+  sbom:            SBOMSection,
 };
 
 export default function SecurityCenter() {

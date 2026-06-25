@@ -1,0 +1,153 @@
+IMPORTANT:
+
+This is an existing UniOps Control Tower codebase.
+
+Do NOT rebuild Security Center.
+Do NOT modify existing working features.
+Do NOT generate demo data.
+Do NOT create mock services.
+Do NOT replace existing database models.
+Do NOT create duplicate functionality.
+
+Before coding:
+- Inspect the current Security Center implementation.
+- Reuse existing architecture patterns.
+- Extend the current codebase only.
+- Follow existing FastAPI, SQLAlchemy, PostgreSQL, React and TypeScript conventions.
+- Maintain tenant isolation on all queries and actions.
+
+TASK:
+
+Implement Phase 1 Step 4:
+
+SBOM Generation + Vulnerability Deduplication Engine.
+
+GOAL:
+
+Extend the existing Security Center scanning pipeline so every completed repository scan automatically generates a Software Bill of Materials (SBOM) and prevents duplicate vulnerabilities from being stored.
+
+PART 1 — SBOM GENERATION
+
+Integrate Syft.
+
+Generate SBOM automatically after successful scans.
+
+Supported formats:
+
+- CycloneDX JSON
+- SPDX JSON
+
+Requirements:
+
+- Store generated SBOM metadata in PostgreSQL
+- Associate SBOM with:
+  - tenant_id
+  - repository_id
+  - scan_id
+- Track generation timestamp
+- Track format type
+
+Create backend services and APIs to:
+
+- List repository SBOMs
+- Retrieve a specific SBOM
+- Download SBOM
+
+Frontend:
+
+Add an SBOM section inside Repository Security Details.
+
+Display:
+
+- Generated Date
+- Format
+- Repository
+- Scan
+- Download Button
+
+Only show real generated SBOMs.
+
+No sample files.
+
+PART 2 — VULNERABILITY DEDUPLICATION ENGINE
+
+Problem:
+
+The same CVE can be reported by multiple scanners.
+
+Implement a deduplication layer before vulnerabilities are stored.
+
+Deduplication key:
+
+tenant_id
+cve_id
+package_name
+
+Requirements:
+
+- Merge duplicate findings
+- Preserve scanner source information
+- Maintain severity
+- Maintain remediation information
+- Maintain timestamps
+
+If multiple scanners detect the same CVE:
+
+Store a single vulnerability record.
+
+Add metadata:
+
+detected_by = [scanner names]
+
+Examples:
+
+Semgrep
+Dependency Check
+pip-audit
+npm-audit
+Trivy
+
+Database Requirements:
+
+Create required migrations only if tables do not already exist.
+
+Do not break existing data.
+
+Frontend:
+
+Update Vulnerabilities tab.
+
+Display:
+
+- CVE
+- Package
+- Severity
+- Status
+- Detected By
+- First Seen
+- Last Seen
+
+PART 3 — SECURITY SCORE COMPATIBILITY
+
+Ensure existing Security Score calculations continue working after deduplication.
+
+Do not double-count duplicated findings.
+
+PART 4 — PRODUCTION REQUIREMENTS
+
+- No demo data
+- No mock responses
+- No fake vulnerabilities
+- No hardcoded repositories
+- No hardcoded SBOM files
+
+Deliver:
+
+- Database changes
+- Backend implementation
+- API endpoints
+- Frontend implementation
+- Migration scripts
+- Integration into existing scan workflow
+
+Extend existing functionality only.
