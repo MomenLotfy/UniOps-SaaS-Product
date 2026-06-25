@@ -129,6 +129,220 @@ class SecurityPostureService(BaseService):
         logger.info(f"[posture:snapshot] tenant={tenant_id[:8]} overall={scores['overall']:.1f}")
         return SecurityPostureResponse.model_validate(snapshot)
 
+    async def get_dashboard(self, tenant_id: str, days: int = 30) -> dict:
+        """
+        Full Security Posture Dashboard payload.
+        All scores and trends from real DB aggregations — no synthetic data.
+        """
+        from app.models.scan import Scan as ScanModel, Repository
+        from app.models.k8s_security import K8sScan
+        from app.models.asset import Asset
+        from app.models.repository_risk import RepositoryRiskScore
+        from app.models.repository_risk_history import RepositoryRiskHistory
+
+        now      = datetime.now(timezone.utc)
+        cutoff   = now - timedelta(days=days)
+
+        # ── Base scores ────────────────────────────────────────────────────
+        scores = await self._compute_scores(tenant_id)
+
+        # Git Security: avg security_score across all completed git scans
+        git_score_raw = (await self.db.execute(
+            select(func.avg(ScanModel.security_score))
+            .join(Repository, ScanModel.repo_id == Repository.id)
+            .where(
+                ScanModel.tenant_id == tenant_id,
+                ScanModel.status == "completed",
+                ScanModel.security_score.isnot(None),
+                Repository.provider.in_(["github", "gitlab"]),
+            )
+        )).scalar()
+        git_security = round(float(git_score_raw), 1) if git_score_raw is not None else None
+
+        # K8s Security: 100 - avg_risk across completed k8s scans
+        k8s_risk_raw = (await self.db.execute(
+            select(func.avg(K8sScan.risk_score))
+            .where(K8sScan.tenant_id == tenant_id, K8sScan.status == "completed")
+        )).scalar()
+        k8s_security = round(_clamp(100.0 - float(k8s_risk_raw)), 1) if k8s_risk_raw is not None else None
+
+        # AWS Security: from assets where source='aws'
+        aws_total = (await self.db.execute(
+            select(func.count(Asset.id))
+            .where(Asset.tenant_id == tenant_id, Asset.source == "aws")
+        )).scalar() or 0
+        if aws_total > 0:
+            aws_critical = (await self.db.execute(
+                select(func.count(Asset.id))
+                .where(
+                    Asset.tenant_id == tenant_id,
+                    Asset.source == "aws",
+                    Asset.risk_level.in_(["critical", "high"]),
+                )
+            )).scalar() or 0
+            aws_security = round(_clamp(100.0 - (aws_critical / aws_total) * 80), 1)
+        else:
+            aws_security = None
+
+        # Overall Risk: avg risk_score from repository_risk_scores (higher = worse)
+        avg_risk_raw = (await self.db.execute(
+            select(func.avg(RepositoryRiskScore.risk_score))
+            .where(RepositoryRiskScore.tenant_id == tenant_id)
+        )).scalar()
+        overall_risk = round(float(avg_risk_raw), 1) if avg_risk_raw is not None else 0.0
+
+        # Vuln counts
+        open_vulns = (await self.db.execute(
+            select(func.count(Vulnerability.id))
+            .where(Vulnerability.tenant_id == tenant_id, Vulnerability.status == "open")
+        )).scalar() or 0
+        crit_vulns = (await self.db.execute(
+            select(func.count(Vulnerability.id))
+            .where(
+                Vulnerability.tenant_id == tenant_id,
+                Vulnerability.severity == "critical",
+                Vulnerability.status == "open",
+            )
+        )).scalar() or 0
+        resolved_vulns = (await self.db.execute(
+            select(func.count(Vulnerability.id))
+            .where(Vulnerability.tenant_id == tenant_id, Vulnerability.status == "resolved")
+        )).scalar() or 0
+
+        # ── Trend deltas (7d / 30d / 90d) ────────────────────────────────
+        trend_deltas: dict[str, dict] = {}
+        for d in [7, 30, 90]:
+            window_start = now - timedelta(days=d) - timedelta(hours=12)
+            window_end   = now - timedelta(days=d) + timedelta(hours=12)
+
+            past_snap = (await self.db.execute(
+                select(SecurityPostureScore)
+                .where(
+                    SecurityPostureScore.tenant_id   == tenant_id,
+                    SecurityPostureScore.recorded_at >= window_start,
+                    SecurityPostureScore.recorded_at <= window_end,
+                )
+                .order_by(SecurityPostureScore.recorded_at.desc())
+                .limit(1)
+            )).scalar_one_or_none()
+
+            past_risk_raw = (await self.db.execute(
+                select(func.avg(RepositoryRiskHistory.risk_score))
+                .where(
+                    RepositoryRiskHistory.tenant_id   == tenant_id,
+                    RepositoryRiskHistory.recorded_at >= window_start,
+                    RepositoryRiskHistory.recorded_at <= window_end,
+                )
+            )).scalar()
+
+            trend_deltas[f"{d}d"] = {
+                "overall_security": round(
+                    scores["overall"] - (past_snap.overall_score if past_snap else scores["overall"]), 1
+                ),
+                "compliance": round(
+                    scores["compliance"] - (past_snap.compliance_score if past_snap else scores["compliance"]), 1
+                ),
+                "risk_score": round(
+                    overall_risk - (float(past_risk_raw) if past_risk_raw is not None else overall_risk), 1
+                ),
+                "has_baseline": past_snap is not None or past_risk_raw is not None,
+            }
+
+        # ── Risk Trend Chart ──────────────────────────────────────────────
+        risk_trend_rows = (await self.db.execute(
+            select(
+                func.date_trunc("day", RepositoryRiskHistory.recorded_at).label("day"),
+                func.avg(RepositoryRiskHistory.risk_score).label("avg_risk"),
+                func.max(RepositoryRiskHistory.risk_score).label("max_risk"),
+                func.min(RepositoryRiskHistory.risk_score).label("min_risk"),
+                func.count(RepositoryRiskHistory.id).label("sample_count"),
+            )
+            .where(
+                RepositoryRiskHistory.tenant_id   == tenant_id,
+                RepositoryRiskHistory.recorded_at >= cutoff,
+            )
+            .group_by(func.date_trunc("day", RepositoryRiskHistory.recorded_at))
+            .order_by(func.date_trunc("day", RepositoryRiskHistory.recorded_at).asc())
+        )).all()
+        risk_trend = [
+            {
+                "date":     row.day.strftime("%Y-%m-%d"),
+                "avg_risk": round(float(row.avg_risk), 1),
+                "max_risk": round(float(row.max_risk), 1),
+                "min_risk": round(float(row.min_risk), 1),
+            }
+            for row in risk_trend_rows
+        ]
+
+        # ── Security Trend Chart ──────────────────────────────────────────
+        sec_trend_rows = (await self.db.execute(
+            select(SecurityPostureScore)
+            .where(
+                SecurityPostureScore.tenant_id   == tenant_id,
+                SecurityPostureScore.recorded_at >= cutoff,
+            )
+            .order_by(SecurityPostureScore.recorded_at.asc())
+        )).scalars().all()
+        security_trend = [
+            {
+                "date":       s.recorded_at.strftime("%Y-%m-%d"),
+                "overall":    s.overall_score,
+                "threat":     s.threat_score,
+                "vuln":       s.vulnerability_score,
+                "compliance": s.compliance_score,
+                "asset":      s.asset_score,
+            }
+            for s in sec_trend_rows
+        ]
+
+        # ── Remediation Trend Chart ───────────────────────────────────────
+        # Daily snapshot of open critical+high vs medium+low from completed scans
+        scan_trend_rows = (await self.db.execute(
+            select(
+                func.date_trunc("day", ScanModel.completed_at).label("day"),
+                func.sum(ScanModel.critical_count + ScanModel.high_count).label("open_crit_high"),
+                func.sum(ScanModel.medium_count + ScanModel.low_count).label("open_med_low"),
+                func.count(ScanModel.id).label("scans"),
+            )
+            .where(
+                ScanModel.tenant_id   == tenant_id,
+                ScanModel.status      == "completed",
+                ScanModel.completed_at >= cutoff,
+                ScanModel.completed_at.isnot(None),
+            )
+            .group_by(func.date_trunc("day", ScanModel.completed_at))
+            .order_by(func.date_trunc("day", ScanModel.completed_at).asc())
+        )).all()
+        remediation_trend = [
+            {
+                "date":            row.day.strftime("%Y-%m-%d"),
+                "open_crit_high":  int(row.open_crit_high or 0),
+                "open_med_low":    int(row.open_med_low or 0),
+                "scans":           int(row.scans),
+            }
+            for row in scan_trend_rows
+        ]
+
+        return {
+            "scores": {
+                "overall_risk":      overall_risk,
+                "overall_security":  round(float(scores["overall"]), 1),
+                "git_security":      git_security,
+                "aws_security":      aws_security,
+                "k8s_security":      k8s_security,
+                "compliance":        round(float(scores["compliance"]), 1),
+                "threat":            round(float(scores["threat"]), 1),
+                "vuln_score":        round(float(scores["vulnerability"]), 1),
+                "open_vulns":        open_vulns,
+                "critical_vulns":    crit_vulns,
+                "resolved_vulns":    resolved_vulns,
+            },
+            "trends":           trend_deltas,
+            "risk_trend":       risk_trend,
+            "security_trend":   security_trend,
+            "remediation_trend": remediation_trend,
+        }
+
     async def _compute_scores(self, tenant_id: str) -> dict:
         # ── Threat Score ─────────────────────────────────────────────────────
         t_total = (await self.db.execute(

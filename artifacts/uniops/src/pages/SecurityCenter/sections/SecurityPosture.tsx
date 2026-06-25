@@ -1,362 +1,521 @@
 import { useState } from 'react';
-import { TrendingUp, RefreshCw, Loader2, AlertTriangle } from 'lucide-react';
+import {
+  TrendingUp, TrendingDown, Minus, Loader2, RefreshCw,
+  ShieldCheck, GitBranch, Cloud, Server, AlertTriangle,
+  CheckCircle2, XCircle, BarChart3,
+} from 'lucide-react';
 import { clsx } from 'clsx';
 import { useApi } from '@/hooks/use-api';
 import apiClient from '@/services/api/client';
 import {
   AreaChart, Area, LineChart, Line,
+  BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar, Legend,
+  ResponsiveContainer, Legend,
 } from 'recharts';
 
+// ─── helpers ────────────────────────────────────────────────────────────────
 function Skeleton({ className }: { className?: string }) {
   return <div className={clsx('animate-pulse rounded bg-white/5', className)} />;
 }
 
-function ScoreGauge({ score, label }: { score: number; label: string }) {
-  const color = score >= 80 ? '#22c55e' : score >= 60 ? '#eab308' : '#ef4444';
+function fmt(v: number | null | undefined, digits = 1) {
+  if (v == null) return '—';
+  return v.toFixed(digits);
+}
+
+function scoreColor(score: number | null | undefined, invert = false): string {
+  if (score == null) return 'text-muted-foreground';
+  const s = invert ? 100 - score : score;
+  if (s >= 75) return 'text-green-400';
+  if (s >= 50) return 'text-yellow-400';
+  return 'text-red-400';
+}
+
+function scoreBg(score: number | null | undefined, invert = false): string {
+  if (score == null) return 'border-white/10';
+  const s = invert ? 100 - score : score;
+  if (s >= 75) return 'border-green-500/30';
+  if (s >= 50) return 'border-yellow-500/30';
+  return 'border-red-500/30';
+}
+
+function scoreFill(score: number | null | undefined, invert = false): string {
+  if (score == null) return '#6b7280';
+  const s = invert ? 100 - score : score;
+  if (s >= 75) return '#22c55e';
+  if (s >= 50) return '#eab308';
+  return '#ef4444';
+}
+
+function DeltaBadge({ delta, invert = false }: { delta: number | null | undefined; invert?: boolean }) {
+  if (delta == null) return null;
+  const effective = invert ? -delta : delta;
+  if (Math.abs(delta) < 0.5) {
+    return (
+      <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+        <Minus className="w-2.5 h-2.5" /> stable
+      </span>
+    );
+  }
+  if (effective > 0) {
+    return (
+      <span className="flex items-center gap-0.5 text-[10px] text-green-400">
+        <TrendingUp className="w-2.5 h-2.5" /> +{Math.abs(delta).toFixed(1)}
+      </span>
+    );
+  }
   return (
-    <div className="card-base p-4 flex flex-col items-center">
-      <div className="relative w-16 h-16 mb-2">
-        <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-          <circle cx="18" cy="18" r="15.9" fill="none" stroke="hsl(230 15% 16%)" strokeWidth="3" />
-          <circle cx="18" cy="18" r="15.9" fill="none" stroke={color} strokeWidth="3"
-            strokeDasharray={`${score} 100`} strokeLinecap="round" />
-        </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-sm font-bold" style={{ color }}>
-          {score.toFixed(0)}
+    <span className="flex items-center gap-0.5 text-[10px] text-red-400">
+      <TrendingDown className="w-2.5 h-2.5" /> {delta.toFixed(1)}
+    </span>
+  );
+}
+
+// Circular gauge
+function CircleGauge({ score, size = 80, invert = false }: { score: number | null; size?: number; invert?: boolean }) {
+  const fill  = scoreFill(score, invert);
+  const pct   = score != null ? (invert ? 100 - score : score) : 0;
+  const r     = 15.9;
+  const circ  = 2 * Math.PI * r;
+  const dash  = (pct / 100) * circ;
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+        <circle cx="18" cy="18" r={r} fill="none" stroke="hsl(230 15% 16%)" strokeWidth="3" />
+        {score != null && (
+          <circle cx="18" cy="18" r={r} fill="none" stroke={fill} strokeWidth="3"
+            strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round" />
+        )}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-bold leading-none" style={{ fontSize: size * 0.2, color: fill }}>
+          {score != null ? score.toFixed(0) : '—'}
         </span>
       </div>
-      <p className="text-[10px] text-muted-foreground text-center">{label}</p>
     </div>
   );
 }
 
-// Stable palette for up to 10 repos
-const REPO_COLORS = [
-  '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#a855f7',
-  '#06b6d4', '#f97316', '#ec4899', '#84cc16', '#14b8a6',
-];
+// ─── Score Card ──────────────────────────────────────────────────────────────
+interface ScoreCardProps {
+  label:    string;
+  sublabel: string;
+  icon:     React.ReactNode;
+  score:    number | null;
+  delta?:   number | null;
+  invert?:  boolean; // true = lower score is WORSE (risk score)
+  extra?:   React.ReactNode;
+  noData?:  boolean;
+}
+function ScoreCard({ label, sublabel, icon, score, delta, invert = false, extra, noData }: ScoreCardProps) {
+  return (
+    <div className={clsx('card-base p-4 flex flex-col gap-3 border', scoreBg(score, invert))}>
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span className="text-muted-foreground">{icon}</span>
+            <p className="text-[11px] font-semibold text-foreground">{label}</p>
+          </div>
+          <p className="text-[10px] text-muted-foreground">{sublabel}</p>
+        </div>
+        {noData && (
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-muted-foreground">no data</span>
+        )}
+      </div>
+      <div className="flex items-end justify-between gap-2">
+        <CircleGauge score={score} invert={invert} />
+        <div className="flex-1 flex flex-col items-end gap-1">
+          <span className={clsx('text-2xl font-bold', scoreColor(score, invert))}>
+            {score != null ? score.toFixed(0) : '—'}
+          </span>
+          <DeltaBadge delta={delta} invert={invert} />
+          {extra}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-const RISK_LEVEL_SCORE: Record<string, number> = {
-  critical: 4, high: 3, medium: 2, low: 1,
-};
-const RISK_COLOR: Record<string, string> = {
-  critical: '#ef4444', high: '#f97316', medium: '#eab308', low: '#22c55e',
-};
-
-function RiskLevelTooltip({ active, payload, label }: any) {
+// ─── Chart tooltip ────────────────────────────────────────────────────────────
+function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border p-2 text-xs shadow-xl"
+    <div className="rounded-lg border p-2 text-xs shadow-xl space-y-1"
       style={{ background: 'hsl(230 15% 10%)', borderColor: 'hsl(230 15% 18%)' }}>
-      <p className="text-muted-foreground mb-1">
-        {new Date(label).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+      <p className="text-muted-foreground font-medium">
+        {label ? new Date(label).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}
       </p>
       {payload.map((p: any) => (
         <div key={p.dataKey} className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: p.color }} />
-          <span className="text-muted-foreground truncate max-w-[100px]">{p.name}:</span>
-          <span className="font-medium text-foreground">{Number(p.value).toFixed(1)}</span>
+          <span className="text-muted-foreground">{p.name}:</span>
+          <span className="font-semibold text-foreground">{typeof p.value === 'number' ? p.value.toFixed(1) : p.value}</span>
         </div>
       ))}
     </div>
   );
 }
 
+const XAXIS_PROPS = {
+  tick: { fill: 'hsl(215 16% 47%)', fontSize: 9 },
+  tickFormatter: (v: string) => new Date(v).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+};
+const YAXIS_PROPS = { tick: { fill: 'hsl(215 16% 47%)', fontSize: 9 } };
+const GRID_PROPS  = { strokeDasharray: '3 3', stroke: 'hsl(230 15% 16%)' };
+
+function EmptyChart({ message }: { message: string }) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center gap-2 text-center py-8">
+      <BarChart3 className="w-7 h-7 text-muted-foreground opacity-30" />
+      <p className="text-xs text-muted-foreground max-w-48">{message}</p>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 export default function SecurityPosture() {
-  const [days, setDays]             = useState(30);
-  const [riskDays, setRiskDays]     = useState(30);
-  const [snapshotting, setSnapshotting] = useState(false);
+  const [days, setDays]         = useState<7 | 30 | 90>(30);
+  const [snapshotting, setSnap] = useState(false);
 
-  const { data: summaryRaw,   loading: summaryLoading,  refetch: refetchSummary  } = useApi<any>('/security-posture/summary');
-  const { data: historyRaw,   loading: historyLoading,  refetch: refetchHistory  } = useApi<any>(`/security-posture/history?days=${days}`);
-  const { data: riskHistRaw,  loading: riskHistLoading, refetch: refetchRiskHist } = useApi<any>(`/repos/risk/history?days=${riskDays}`);
+  const { data: raw, loading, error, refetch } = useApi<any>(`/security-posture/dashboard?days=${days}`);
+  const dash = raw?.data ?? raw;
 
-  const summary    = summaryRaw?.data ?? summaryRaw;
-  const history    = historyRaw?.data ?? (Array.isArray(historyRaw) ? historyRaw : []);
-  const riskHistRaw2 = riskHistRaw?.data ?? riskHistRaw;
+  const scores    = dash?.scores    ?? {};
+  const trends    = dash?.trends    ?? {};
+  const trendKey  = `${days}d` as '7d' | '30d' | '90d';
+  const trendData = trends[trendKey] ?? {};
 
-  // riskHistRaw2 shape: { repos: [{repo_id, repo_name}], timeline: [{date, scores: {repo_id: risk_score}}] }
-  const riskRepos:    Array<{ repo_id: string; repo_name: string }> = riskHistRaw2?.repos ?? [];
-  const riskTimeline: Array<{ date: string; [key: string]: any }>   = riskHistRaw2?.timeline ?? [];
-
-  const radarData = summary ? [
-    { subject: 'Threats',    A: summary.threat_score ?? 0 },
-    { subject: 'Vulns',      A: summary.vulnerability_score ?? 0 },
-    { subject: 'Compliance', A: summary.compliance_score ?? 0 },
-    { subject: 'Assets',     A: summary.asset_score ?? 0 },
-    { subject: 'Policies',   A: summary.policy_score ?? 0 },
-  ] : [];
+  const riskTrend        = dash?.risk_trend        ?? [];
+  const securityTrend    = dash?.security_trend    ?? [];
+  const remediationTrend = dash?.remediation_trend ?? [];
 
   const handleSnapshot = async () => {
-    setSnapshotting(true);
+    setSnap(true);
     try {
       await apiClient.post('/security-posture/snapshot');
-      await Promise.all([refetchSummary(), refetchHistory(), refetchRiskHist()]);
-    } finally { setSnapshotting(false); }
+      await refetch();
+    } finally { setSnap(false); }
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
+    <div className="space-y-5">
+
+      {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-lg font-bold text-foreground">Security Posture</h1>
-          <p className="text-xs text-muted-foreground">Computed score across all security dimensions</p>
+          <h1 className="text-lg font-bold text-foreground">Security Posture Dashboard</h1>
+          <p className="text-xs text-muted-foreground">
+            Real-time aggregated security scores across your entire infrastructure
+          </p>
         </div>
-        <button onClick={handleSnapshot} disabled={snapshotting}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-60">
-          {snapshotting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <TrendingUp className="w-3.5 h-3.5" />}
-          {snapshotting ? 'Computing…' : 'Snapshot Now'}
-        </button>
-      </div>
-
-      {/* Overall score */}
-      {summaryLoading ? (
-        <Skeleton className="h-28 rounded-xl" />
-      ) : summary ? (
-        <div className="card-base p-5 flex items-center gap-6 flex-wrap">
-          <div className="flex flex-col items-center">
-            <div className={clsx('w-20 h-20 rounded-full border-4 flex items-center justify-center',
-              (summary.current_score ?? 0) >= 80 ? 'border-green-500/50'
-              : (summary.current_score ?? 0) >= 60 ? 'border-yellow-500/50'
-              : 'border-red-500/50')}>
-              <span className={clsx('text-2xl font-bold',
-                (summary.current_score ?? 0) >= 80 ? 'text-green-400'
-                : (summary.current_score ?? 0) >= 60 ? 'text-yellow-400' : 'text-red-400')}>
-                {(summary.current_score ?? 0).toFixed(0)}
-              </span>
-            </div>
-            <p className={clsx('text-xs mt-1 capitalize font-medium',
-              summary.trend === 'improving' ? 'text-green-400'
-              : summary.trend === 'degrading' ? 'text-red-400' : 'text-muted-foreground')}>
-              {summary.trend ?? 'stable'}
-            </p>
-          </div>
-          <div className="flex-1 grid grid-cols-2 lg:grid-cols-5 gap-3">
-            {[
-              { label: 'Open Threats',       value: summary.open_threats ?? 0,       color: 'text-red-400' },
-              { label: 'Open Vulns',          value: summary.open_vulns ?? 0,         color: 'text-orange-400' },
-              { label: 'Critical Assets',     value: summary.critical_assets ?? 0,    color: 'text-yellow-400' },
-              { label: 'Active Policies',     value: summary.active_policies ?? 0,    color: 'text-blue-400' },
-              { label: 'Pending Exceptions',  value: summary.pending_exceptions ?? 0, color: 'text-purple-400' },
-            ].map(({ label, value, color }) => (
-              <div key={label} className="text-center">
-                <p className={clsx('text-lg font-bold', color)}>{value}</p>
-                <p className="text-[10px] text-muted-foreground">{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="card-base py-8 text-center">
-          <p className="text-sm text-muted-foreground">No posture data. Click "Snapshot Now" to compute.</p>
-        </div>
-      )}
-
-      {/* Score breakdown gauges */}
-      {summary && (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <ScoreGauge score={summary.threat_score ?? 0}         label="Threat Score" />
-          <ScoreGauge score={summary.vulnerability_score ?? 0}  label="Vuln Score" />
-          <ScoreGauge score={summary.compliance_score ?? 0}     label="Compliance" />
-          <ScoreGauge score={summary.asset_score ?? 0}          label="Asset Score" />
-          <ScoreGauge score={summary.policy_score ?? 0}         label="Policy Score" />
-        </div>
-      )}
-
-      {/* Radar + Score Trend */}
-      {radarData.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="card-base p-4">
-            <p className="text-xs font-semibold text-muted-foreground mb-2">Dimension Breakdown</p>
-            <ResponsiveContainer width="100%" height={180}>
-              <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-                <PolarGrid stroke="hsl(230 15% 20%)" />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: 'hsl(215 16% 47%)', fontSize: 10 }} />
-                <Radar dataKey="A" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.15} strokeWidth={1.5} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="card-base p-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold text-muted-foreground">Score Trend</p>
-              <div className="flex gap-1">
-                {[7, 30, 90].map(d => (
-                  <button key={d} onClick={() => setDays(d)}
-                    className={clsx('px-2 py-0.5 text-[10px] rounded transition-colors',
-                      days === d ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-foreground')}>
-                    {d}d
-                  </button>
-                ))}
-              </div>
-            </div>
-            {historyLoading ? <Skeleton className="h-32" /> : history.length < 2 ? (
-              <div className="h-32 flex items-center justify-center text-xs text-muted-foreground">
-                Not enough data. Click "Snapshot Now" to build history.
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={140}>
-                <AreaChart data={history}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(230 15% 16%)" />
-                  <XAxis dataKey="date" tick={{ fill: 'hsl(215 16% 47%)', fontSize: 9 }}
-                    tickFormatter={v => new Date(v).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} />
-                  <YAxis domain={[0, 100]} tick={{ fill: 'hsl(215 16% 47%)', fontSize: 9 }} />
-                  <Tooltip contentStyle={{ background: 'hsl(230 15% 10%)', border: '1px solid hsl(230 15% 18%)', borderRadius: 8, fontSize: 11 }}
-                    formatter={(v: any, name: string) => [`${Number(v).toFixed(1)}`, name]} />
-                  <Area type="monotone" dataKey="overall"    stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} strokeWidth={2} name="Overall" />
-                  <Area type="monotone" dataKey="threat"     stroke="#ef4444" fill="none" strokeWidth={1} strokeDasharray="4 2" name="Threat" />
-                  <Area type="monotone" dataKey="compliance" stroke="#22c55e" fill="none" strokeWidth={1} strokeDasharray="4 2" name="Compliance" />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Repository Risk History ─────────────────────────────────────────── */}
-      <div className="card-base p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-xs font-semibold text-foreground">Repository Risk History</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              Risk score per repo over time — higher score = more risky
-            </p>
-          </div>
-          <div className="flex gap-1">
-            {[7, 30, 90].map(d => (
-              <button key={d} onClick={() => setRiskDays(d)}
-                className={clsx('px-2 py-0.5 text-[10px] rounded transition-colors',
-                  riskDays === d ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-foreground')}>
+        <div className="flex items-center gap-2">
+          {/* Time range */}
+          <div className="flex rounded-lg border border-white/10 overflow-hidden">
+            {([7, 30, 90] as const).map(d => (
+              <button key={d} onClick={() => setDays(d)}
+                className={clsx('px-3 py-1.5 text-[11px] font-medium transition-colors',
+                  days === d ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-foreground hover:bg-white/5')}>
                 {d}d
               </button>
             ))}
           </div>
+          <button onClick={handleSnapshot} disabled={snapshotting}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-60">
+            {snapshotting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            {snapshotting ? 'Snapshotting…' : 'Snapshot Now'}
+          </button>
         </div>
-
-        {riskHistLoading ? (
-          <Skeleton className="h-48" />
-        ) : riskTimeline.length < 2 ? (
-          <div className="h-48 flex flex-col items-center justify-center gap-2 text-center">
-            <AlertTriangle className="w-6 h-6 text-muted-foreground opacity-50" />
-            <p className="text-xs text-muted-foreground">
-              No risk history yet. Risk scores are recorded automatically after each repository scan.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Legend */}
-            <div className="flex flex-wrap gap-3 mb-2">
-              {riskRepos.slice(0, 10).map((r, i) => (
-                <div key={r.repo_id} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <span className="w-2.5 h-0.5 rounded-full flex-shrink-0" style={{ background: REPO_COLORS[i % REPO_COLORS.length] }} />
-                  <span className="truncate max-w-[120px]">{r.repo_name.split('/').pop()}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Risk score trend lines */}
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={riskTimeline} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(230 15% 16%)" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fill: 'hsl(215 16% 47%)', fontSize: 9 }}
-                  tickFormatter={v => new Date(v).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                />
-                <YAxis
-                  domain={[0, 100]}
-                  tick={{ fill: 'hsl(215 16% 47%)', fontSize: 9 }}
-                  label={{ value: 'Risk', angle: -90, position: 'insideLeft', fill: 'hsl(215 16% 47%)', fontSize: 9, dx: -2 }}
-                />
-                {/* Risk zone bands */}
-                <Tooltip content={<RiskLevelTooltip />} />
-                {riskRepos.slice(0, 10).map((r, i) => (
-                  <Line
-                    key={r.repo_id}
-                    type="monotone"
-                    dataKey={r.repo_id}
-                    name={r.repo_name.split('/').pop()}
-                    stroke={REPO_COLORS[i % REPO_COLORS.length]}
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 4, strokeWidth: 0 }}
-                    connectNulls
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-
-            {/* Risk zone legend */}
-            <div className="flex items-center gap-3 mt-2 flex-wrap">
-              {[
-                { label: 'Critical ≥75', color: '#ef4444' },
-                { label: 'High ≥50',     color: '#f97316' },
-                { label: 'Medium ≥25',   color: '#eab308' },
-                { label: 'Low <25',      color: '#22c55e' },
-              ].map(({ label, color }) => (
-                <div key={label} className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
-                  <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: color, opacity: 0.6 }} />
-                  {label}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
       </div>
 
-      {/* Per-repo current risk table */}
-      {riskRepos.length > 0 && !riskHistLoading && (
-        <div className="card-base p-4">
-          <p className="text-xs font-semibold text-muted-foreground mb-3">Current Risk by Repository</p>
-          <div className="space-y-2">
-            {riskRepos.map((r, i) => {
-              // Get latest risk score from timeline
-              const latest = riskTimeline.length > 0
-                ? riskTimeline[riskTimeline.length - 1]?.[r.repo_id]
-                : null;
-              const first  = riskTimeline.length > 0
-                ? riskTimeline[0]?.[r.repo_id]
-                : null;
-              const delta  = latest != null && first != null ? latest - first : null;
-              const level  = latest == null ? 'low'
-                : latest >= 75 ? 'critical'
-                : latest >= 50 ? 'high'
-                : latest >= 25 ? 'medium' : 'low';
-
-              return (
-                <div key={r.repo_id} className="flex items-center gap-3">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: REPO_COLORS[i % REPO_COLORS.length] }} />
-                  <span className="text-xs text-foreground flex-1 truncate">{r.repo_name}</span>
-                  {latest != null && (
-                    <>
-                      {/* Mini bar */}
-                      <div className="w-20 h-1.5 rounded-full bg-white/10 overflow-hidden flex-shrink-0">
-                        <div className="h-full rounded-full" style={{
-                          width: `${Math.min(100, latest)}%`,
-                          background: RISK_COLOR[level],
-                        }} />
-                      </div>
-                      <span className="text-xs font-bold flex-shrink-0" style={{ color: RISK_COLOR[level] }}>
-                        {latest.toFixed(0)}
-                      </span>
-                      {delta != null && Math.abs(delta) >= 1 && (
-                        <span className={clsx('text-[10px] flex-shrink-0', delta > 0 ? 'text-red-400' : 'text-green-400')}>
-                          {delta > 0 ? `+${delta.toFixed(0)}` : delta.toFixed(0)}
-                        </span>
-                      )}
-                    </>
-                  )}
-                  {latest == null && (
-                    <span className="text-[10px] text-muted-foreground">no data</span>
-                  )}
-                </div>
-              );
-            })}
+      {/* ── Loading skeleton ─────────────────────────────────────────────── */}
+      {loading && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-36" />)}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-52" />)}
           </div>
         </div>
+      )}
+
+      {!loading && (
+        <>
+          {/* ── 5 Score cards ────────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+
+            {/* Overall Risk */}
+            <ScoreCard
+              label="Overall Risk"
+              sublabel="Avg repo risk score"
+              icon={<AlertTriangle className="w-3.5 h-3.5" />}
+              score={scores.overall_risk ?? null}
+              delta={trendData.risk_score}
+              invert={true}
+              extra={
+                <span className="text-[9px] text-muted-foreground">
+                  {scores.open_vulns ?? 0} open vulns
+                </span>
+              }
+            />
+
+            {/* Git Security */}
+            <ScoreCard
+              label="Git Security"
+              sublabel="Avg scan score — GitHub / GitLab"
+              icon={<GitBranch className="w-3.5 h-3.5" />}
+              score={scores.git_security ?? null}
+              noData={scores.git_security == null}
+              extra={
+                scores.critical_vulns != null && (
+                  <span className="text-[9px] text-red-400">
+                    {scores.critical_vulns} critical
+                  </span>
+                )
+              }
+            />
+
+            {/* AWS Security */}
+            <ScoreCard
+              label="AWS Security"
+              sublabel="Asset risk — cloud assets"
+              icon={<Cloud className="w-3.5 h-3.5" />}
+              score={scores.aws_security ?? null}
+              noData={scores.aws_security == null}
+            />
+
+            {/* Kubernetes */}
+            <ScoreCard
+              label="Kubernetes"
+              sublabel="K8s cluster security score"
+              icon={<Server className="w-3.5 h-3.5" />}
+              score={scores.k8s_security ?? null}
+              noData={scores.k8s_security == null}
+            />
+
+            {/* Compliance */}
+            <ScoreCard
+              label="Compliance"
+              sublabel="Avg across all frameworks"
+              icon={<ShieldCheck className="w-3.5 h-3.5" />}
+              score={scores.compliance ?? null}
+              delta={trendData.compliance}
+              extra={
+                scores.resolved_vulns != null && (
+                  <span className="text-[9px] text-green-400">
+                    {scores.resolved_vulns} resolved
+                  </span>
+                )
+              }
+            />
+          </div>
+
+          {/* ── Summary bar ──────────────────────────────────────────────── */}
+          <div className="card-base p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              {
+                label: 'Overall Security',
+                value: scores.overall_security,
+                sub: `${days}d delta: ${trendData.overall_security != null ? (trendData.overall_security > 0 ? '+' : '') + trendData.overall_security : '—'}`,
+                color: scoreColor(scores.overall_security),
+              },
+              {
+                label: 'Threat Score',
+                value: scores.threat,
+                sub: 'Higher = safer',
+                color: scoreColor(scores.threat),
+              },
+              {
+                label: 'Vuln Score',
+                value: scores.vuln_score,
+                sub: `${scores.open_vulns ?? 0} open  ·  ${scores.critical_vulns ?? 0} critical`,
+                color: scoreColor(scores.vuln_score),
+              },
+              {
+                label: 'Resolved Vulns',
+                value: scores.resolved_vulns,
+                sub: `of ${(scores.open_vulns ?? 0) + (scores.resolved_vulns ?? 0)} total`,
+                color: 'text-green-400',
+                raw: true,
+              },
+            ].map(({ label, value, sub, color, raw }) => (
+              <div key={label} className="text-center">
+                <p className={clsx('text-2xl font-bold', color)}>
+                  {value != null ? (raw ? value : value.toFixed(0)) : '—'}
+                </p>
+                <p className="text-[11px] font-medium text-foreground mt-0.5">{label}</p>
+                <p className="text-[10px] text-muted-foreground">{sub}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* ── 3 Charts ─────────────────────────────────────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+            {/* 1. Risk Trend */}
+            <div className="card-base p-4">
+              <div className="mb-3">
+                <p className="text-xs font-semibold text-foreground">Risk Trend</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Average repository risk score over time (higher = more risk)
+                </p>
+              </div>
+              {riskTrend.length < 2 ? (
+                <EmptyChart message="Risk data builds up automatically after each repository scan." />
+              ) : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <AreaChart data={riskTrend} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <CartesianGrid {...GRID_PROPS} />
+                    <XAxis dataKey="date" {...XAXIS_PROPS} />
+                    <YAxis domain={[0, 100]} {...YAXIS_PROPS} />
+                    <Tooltip content={<ChartTooltip />} />
+                    <defs>
+                      <linearGradient id="riskGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%"   stopColor="#ef4444" stopOpacity={0.25} />
+                        <stop offset="100%" stopColor="#ef4444" stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <Area
+                      type="monotone" dataKey="max_risk" name="Max risk"
+                      stroke="#ef4444" fill="none" strokeWidth={1}
+                      strokeDasharray="3 2" strokeOpacity={0.5}
+                    />
+                    <Area
+                      type="monotone" dataKey="avg_risk" name="Avg risk"
+                      stroke="#ef4444" fill="url(#riskGrad)" strokeWidth={2}
+                    />
+                    <Area
+                      type="monotone" dataKey="min_risk" name="Min risk"
+                      stroke="#22c55e" fill="none" strokeWidth={1}
+                      strokeDasharray="3 2" strokeOpacity={0.6}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+              {/* Threshold legend */}
+              <div className="flex gap-3 mt-2 flex-wrap">
+                {[
+                  { label: 'Critical ≥75', color: '#ef4444' },
+                  { label: 'High ≥50',     color: '#f97316' },
+                  { label: 'Medium ≥25',   color: '#eab308' },
+                  { label: 'Low <25',      color: '#22c55e' },
+                ].map(({ label, color }) => (
+                  <div key={label} className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                    <span className="w-2 h-0.5 rounded-full" style={{ background: color }} />
+                    {label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. Security Trend */}
+            <div className="card-base p-4">
+              <div className="mb-3">
+                <p className="text-xs font-semibold text-foreground">Security Trend</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Overall + dimension scores from posture snapshots
+                </p>
+              </div>
+              {securityTrend.length < 2 ? (
+                <EmptyChart message='Click "Snapshot Now" to begin recording security posture history.' />
+              ) : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={securityTrend} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <CartesianGrid {...GRID_PROPS} />
+                    <XAxis dataKey="date" {...XAXIS_PROPS} />
+                    <YAxis domain={[0, 100]} {...YAXIS_PROPS} />
+                    <Tooltip content={<ChartTooltip />} />
+                    <Line type="monotone" dataKey="overall"    name="Overall"    stroke="#3b82f6" strokeWidth={2.5} dot={false} />
+                    <Line type="monotone" dataKey="threat"     name="Threat"     stroke="#22c55e" strokeWidth={1.5} dot={false} strokeDasharray="4 2" />
+                    <Line type="monotone" dataKey="vuln"       name="Vuln"       stroke="#f97316" strokeWidth={1.5} dot={false} strokeDasharray="4 2" />
+                    <Line type="monotone" dataKey="compliance" name="Compliance" stroke="#a855f7" strokeWidth={1.5} dot={false} strokeDasharray="4 2" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+              <div className="flex gap-3 mt-2 flex-wrap">
+                {[
+                  { label: 'Overall',    color: '#3b82f6' },
+                  { label: 'Threat',     color: '#22c55e' },
+                  { label: 'Vuln',       color: '#f97316' },
+                  { label: 'Compliance', color: '#a855f7' },
+                ].map(({ label, color }) => (
+                  <div key={label} className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                    <span className="w-2 h-0.5 rounded-full" style={{ background: color }} />
+                    {label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 3. Remediation Trend */}
+            <div className="card-base p-4">
+              <div className="mb-3">
+                <p className="text-xs font-semibold text-foreground">Remediation Trend</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Open critical/high vs medium/low findings per scan day
+                </p>
+              </div>
+              {remediationTrend.length === 0 ? (
+                <EmptyChart message="Remediation data appears after repository scans complete." />
+              ) : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={remediationTrend} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <CartesianGrid {...GRID_PROPS} />
+                    <XAxis dataKey="date" {...XAXIS_PROPS} />
+                    <YAxis {...YAXIS_PROPS} />
+                    <Tooltip content={<ChartTooltip />} />
+                    <Bar dataKey="open_crit_high" name="Critical + High" fill="#ef4444" fillOpacity={0.8} radius={[2, 2, 0, 0]} stackId="a" />
+                    <Bar dataKey="open_med_low"   name="Medium + Low"   fill="#f97316" fillOpacity={0.6} radius={[2, 2, 0, 0]} stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+              <div className="flex gap-3 mt-2 flex-wrap">
+                {[
+                  { label: 'Critical + High', color: '#ef4444' },
+                  { label: 'Medium + Low',    color: '#f97316' },
+                ].map(({ label, color }) => (
+                  <div key={label} className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                    <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: color, opacity: 0.8 }} />
+                    {label}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Trend delta pills ─────────────────────────────────────────── */}
+          {trendData.has_baseline && (
+            <div className="card-base p-3 flex flex-wrap gap-3 items-center">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                {days}d Change
+              </p>
+              {[
+                { label: 'Security',   delta: trendData.overall_security, invert: false },
+                { label: 'Compliance', delta: trendData.compliance,        invert: false },
+                { label: 'Risk Score', delta: trendData.risk_score,        invert: true  },
+              ].map(({ label, delta, invert }) => (
+                delta != null && (
+                  <div key={label} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 text-[11px]">
+                    <span className="text-muted-foreground">{label}</span>
+                    <DeltaBadge delta={delta} invert={invert} />
+                  </div>
+                )
+              ))}
+            </div>
+          )}
+
+          {/* ── No-data nudge ─────────────────────────────────────────────── */}
+          {!trendData.has_baseline && (
+            <div className="card-base p-3 flex items-center gap-3 border border-yellow-500/20">
+              <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                No baseline snapshot found for {days} days ago.
+                Click <strong className="text-foreground">Snapshot Now</strong> regularly to build trend history for delta comparisons.
+              </p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
