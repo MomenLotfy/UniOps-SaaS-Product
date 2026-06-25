@@ -571,6 +571,69 @@ class NativeK8sScanner:
             self.cleanup()
         return findings
 
+    def scan_streaming(self, emit) -> list[dict]:
+        """
+        Like scan() but calls emit(event_dict) after each phase so callers
+        can stream progress over a WebSocket or SSE channel.
+        emit is a *synchronous* callable — wrap with asyncio if needed.
+        """
+        k8s = self._get_k8s()
+        if not k8s:
+            emit({"type": "error", "message": "Could not connect to Kubernetes API server"})
+            return []
+
+        checks = [
+            ("privileged_containers", "Privileged Containers",   self.check_privileged_containers),
+            ("rbac",                  "RBAC Misconfigurations",  self.check_rbac),
+            ("exposed_services",      "Exposed Services",        self.check_exposed_services),
+            ("network_policy",        "Network Policies",        self.check_network_policies),
+            ("secrets",               "Secrets Exposure",        self.check_secrets_exposure),
+            ("cis_benchmark",         "CIS Benchmark",           self.check_cis_benchmark),
+        ]
+
+        all_findings: list[dict] = []
+        try:
+            for phase_id, phase_label, check_fn in checks:
+                emit({"type": "phase_start", "phase": phase_id, "label": phase_label})
+                try:
+                    phase_findings = check_fn(k8s)
+                except Exception as exc:
+                    logger.warning(f"[k8s_security] Phase {phase_id} error: {exc}")
+                    phase_findings = []
+                for f in phase_findings:
+                    f.setdefault("scanner", "native")
+                all_findings += phase_findings
+                emit({
+                    "type": "phase_done",
+                    "phase": phase_id,
+                    "label": phase_label,
+                    "count": len(phase_findings),
+                    "findings": [_serialize_finding(f) for f in phase_findings],
+                })
+        except Exception as exc:
+            logger.warning(f"[k8s_security] Native streaming scan error: {exc}")
+        finally:
+            self.cleanup()
+
+        return all_findings
+
+
+def _serialize_finding(f: dict) -> dict:
+    """Trim a raw finding dict to what's safe to stream over WebSocket."""
+    return {
+        "category":      f.get("category", ""),
+        "severity":      f.get("severity", "info"),
+        "title":         f.get("title", ""),
+        "description":   f.get("description", ""),
+        "remediation":   f.get("remediation", ""),
+        "resource_kind": f.get("resource_kind", ""),
+        "resource_name": f.get("resource_name", ""),
+        "namespace":     f.get("namespace", ""),
+        "cis_control":   f.get("cis_control", ""),
+        "framework":     f.get("framework", ""),
+        "scanner":       f.get("scanner", "native"),
+    }
+
 
 # ─── External scanner helpers ────────────────────────────────────────────────
 
