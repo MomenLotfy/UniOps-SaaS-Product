@@ -25,6 +25,22 @@ async def list_risk_ratings(
     return APIResponse(data=data)
 
 
+@router.get("/history", response_model=APIResponse)
+async def get_risk_history(
+    current_user: CurrentUser,
+    tenant_id:    TenantID,
+    db:           DBSession,
+    days:         int = 30,
+):
+    """
+    Per-repo risk score history for the trend chart.
+    Returns { repos: [{repo_id, repo_name}], timeline: [{date, <repo_id>: score}] }
+    """
+    svc  = RiskService(db)
+    data = await svc.get_risk_history(tenant_id, days=days)
+    return APIResponse(data=data)
+
+
 @router.get("/{repo_id}", response_model=APIResponse)
 async def get_risk_rating(
     repo_id:      str,

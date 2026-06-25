@@ -33,6 +33,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.repository_risk import RepositoryRiskScore
+from app.models.repository_risk_history import RepositoryRiskHistory
 from app.models.scan import Repository, Scan
 from app.models.vulnerability import Vulnerability
 from app.utils.logger import logger
@@ -251,6 +252,19 @@ class RiskService:
 
         await self.db.commit()
 
+        # ── Write history snapshot ────────────────────────────────────────────
+        history_point = RepositoryRiskHistory(
+            tenant_id=     tenant_id,
+            repo_id=       repo_id,
+            scan_id=       scan_id,
+            repo_name=     repo.full_name,
+            risk_level=    level,
+            risk_score=    risk_score,
+            security_score=scan.security_score,
+        )
+        self.db.add(history_point)
+        await self.db.commit()
+
         # Return refreshed record
         result = await self.db.execute(
             select(RepositoryRiskScore).where(
@@ -273,6 +287,57 @@ class RiskService:
         )
         rows = result.all()
         return [_to_risk_dict(rr, repo) for rr, repo in rows]
+
+    async def get_risk_history(self, tenant_id: str, days: int = 30) -> dict:
+        """
+        Return per-repo risk score history for charting.
+
+        Response shape:
+          {
+            repos:    [{repo_id, repo_name}, …],
+            timeline: [{date: ISO, <repo_id>: risk_score, …}, …]
+          }
+        """
+        from datetime import timedelta
+        from sqlalchemy import func as _func
+
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+
+        result = await self.db.execute(
+            select(RepositoryRiskHistory)
+            .where(
+                RepositoryRiskHistory.tenant_id   == tenant_id,
+                RepositoryRiskHistory.recorded_at >= since,
+            )
+            .order_by(RepositoryRiskHistory.recorded_at.asc())
+        )
+        rows: list[RepositoryRiskHistory] = list(result.scalars().all())
+
+        if not rows:
+            return {"repos": [], "timeline": []}
+
+        # Build repo index (unique repos seen in period)
+        repo_map: dict[str, str] = {}  # repo_id → repo_name
+        for r in rows:
+            if r.repo_id not in repo_map:
+                repo_map[r.repo_id] = r.repo_name or r.repo_id
+
+        # Group by date (day granularity), take latest score per repo per day
+        date_repo_score: dict[str, dict[str, float]] = {}
+        for r in rows:
+            day = r.recorded_at.strftime("%Y-%m-%d")
+            if day not in date_repo_score:
+                date_repo_score[day] = {}
+            # Last write wins (rows ordered asc → last in day is most recent)
+            date_repo_score[day][r.repo_id] = r.risk_score
+
+        timeline = [
+            {"date": day, **scores}
+            for day, scores in sorted(date_repo_score.items())
+        ]
+        repos = [{"repo_id": rid, "repo_name": rname} for rid, rname in repo_map.items()]
+
+        return {"repos": repos, "timeline": timeline}
 
     async def get_risk_rating(self, tenant_id: str, repo_id: str) -> Optional[dict]:
         result = await self.db.execute(
