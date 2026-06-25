@@ -33,6 +33,7 @@ from app.models.security_policy import SecurityPolicy
 from app.models.security_exception import SecurityException
 from app.models.security_report import SecurityReport
 from app.models.security_posture import SecurityPostureScore
+from app.models.k8s_security import K8sScan, K8sFinding
 
 __all__ = [
     "BaseModel", "Tenant", "User", "Role", "Permission", "Subscription",
@@ -44,4 +45,5 @@ __all__ = [
     "CatalogService", "DeploymentLog",
     "Asset", "AssetRelationship",
     "SecurityPolicy", "SecurityException", "SecurityReport", "SecurityPostureScore",
+    "K8sScan", "K8sFinding",
 ]
