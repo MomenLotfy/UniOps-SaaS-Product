@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, AlertTriangle, Bug, CheckSquare, GitBranch,
   Server, TrendingUp, FileText, ClipboardList, BookOpen,
-  ChevronRight, Menu, X, Layers, Package, Users, Clock, Ticket, Bot
+  ChevronRight, Menu, X, Layers, Package, Users, Clock, Ticket, Bot, Wrench
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -24,13 +24,14 @@ import KubernetesSecurity   from './sections/KubernetesSecurity';
 import SBOMSection          from './sections/SBOM';
 import Ownership            from './sections/Ownership';
 import SLATracker           from './sections/SLATracker';
+import Remediation          from './sections/Remediation';
 import SecurityCopilot      from './SecurityCopilot';
 
 export type SecuritySection =
   | 'overview' | 'threats' | 'vulnerabilities' | 'compliance'
   | 'repositories' | 'assets' | 'kubernetes' | 'posture'
   | 'policies' | 'exceptions' | 'reports' | 'sbom'
-  | 'ownership' | 'sla' | 'copilot';
+  | 'ownership' | 'sla' | 'remediation' | 'copilot';
 
 interface NavItem {
   id: SecuritySection;
@@ -55,7 +56,8 @@ const NAV_ITEMS: NavItem[] = [
   // ── Governance
   { id: 'posture',         label: 'Security Posture',    icon: TrendingUp,    description: 'Posture score & trends',        group: 'Governance' },
   { id: 'ownership',       label: 'Ownership',           icon: Users,         description: 'Owner / team / department',     group: 'Governance', badge: 'NEW' },
-  { id: 'sla',             label: 'SLA Tracker',         icon: Clock,         description: 'Remediation SLA deadlines',     group: 'Governance', badge: 'NEW' },
+  { id: 'sla',             label: 'SLA Tracker',         icon: Clock,           description: 'Remediation SLA deadlines',     group: 'Governance', badge: 'NEW' },
+  { id: 'remediation',     label: 'Remediation',         icon: Wrench,         description: 'Auto-remediation engine',       group: 'Governance', badge: 'NEW' },
   { id: 'policies',        label: 'Policies',            icon: BookOpen,      description: 'Security policies',             group: 'Governance' },
   { id: 'exceptions',      label: 'Exceptions',          icon: ClipboardList, description: 'Exception requests',            group: 'Governance' },
   // ── Reports
@@ -75,6 +77,7 @@ const SECTION_COMPONENTS: Record<SecuritySection, React.ComponentType> = {
   posture:         SecurityPosture,
   ownership:       Ownership,
   sla:             SLATracker,
+  remediation:     Remediation,
   policies:        Policies,
   exceptions:      Exceptions,
   reports:         Reports,

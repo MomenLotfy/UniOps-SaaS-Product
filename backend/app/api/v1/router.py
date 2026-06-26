@@ -8,7 +8,7 @@ from app.api.v1.endpoints import (
     security_policies, security_exceptions, security_reports, security_posture,
     k8s_security, sbom, repository_risk,
     ownership, sla, tickets,
-    copilot,
+    copilot, remediation,
 )
 
 api_router = APIRouter()
@@ -62,3 +62,4 @@ api_router.include_router(repository_risk.router,    prefix="/repos/risk",      
 api_router.include_router(ownership.router,          prefix="/ownership",          tags=["Security - Ownership"])
 api_router.include_router(sla.router,                prefix="/sla",                tags=["Security - SLA"])
 api_router.include_router(tickets.router,            prefix="/tickets",            tags=["Security - Tickets"])
+api_router.include_router(remediation.router,         prefix="/remediation",       tags=["Security - Remediation"])
