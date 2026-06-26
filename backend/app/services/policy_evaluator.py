@@ -21,6 +21,8 @@ from app.models.policy_violation import PolicyViolation
 from app.models.threat import Threat
 from app.models.vulnerability import Vulnerability
 from app.models.scan import Repository
+from app.models.repository_risk import RepositoryRiskScore
+from app.models.security_posture import SecurityPostureScore
 from app.utils.logger import logger
 
 
@@ -80,6 +82,39 @@ BUILTIN_POLICIES: list[dict] = [
         "description": "All source code repositories must be private. Public repos containing source code are a violation.",
         "rules":       [{"key": "require_private_repos", "description": "Repository must not be public"}],
         "frameworks":  ["SOC2", "ISO27001"],
+        "tags":        {"builtin": True},
+    },
+    {
+        "name":        "Minimum Security Score",
+        "policy_type": "min_security_score",
+        "category":    "posture",
+        "severity":    "high",
+        "enforcement": "audit",
+        "description": "Ensure repositories maintain a minimum security score threshold.",
+        "rules":       [{"key": "min_security_score", "threshold": 70, "description": "Security score must be >= 70"}],
+        "frameworks":  ["NIST", "ISO27001"],
+        "tags":        {"builtin": True},
+    },
+    {
+        "name":        "Block High Risk Repositories",
+        "policy_type": "block_high_risk_repos",
+        "category":    "risk",
+        "severity":    "critical",
+        "enforcement": "enforce",
+        "description": "Prevent deployment of repositories with 'Critical' or 'High' risk levels.",
+        "rules":       [{"key": "block_high_risk_repos", "levels": ["critical", "high"], "description": "Risk level must not be critical or high"}],
+        "frameworks":  ["SOC2", "NIST"],
+        "tags":        {"builtin": True},
+    },
+    {
+        "name":        "Require Passing Compliance Score",
+        "policy_type": "require_passing_compliance",
+        "category":    "compliance",
+        "severity":    "high",
+        "enforcement": "enforce",
+        "description": "Require a minimum compliance score for all active repositories.",
+        "rules":       [{"key": "require_passing_compliance", "threshold": 80, "description": "Compliance score must be >= 80"}],
+        "frameworks":  ["HIPAA", "GDPR", "SOC2"],
         "tags":        {"builtin": True},
     },
 ]
@@ -211,7 +246,11 @@ class PolicyEvaluator:
                 SecurityException.status    == "approved",
             )
         )).scalars().all()
-        excepted_findings = {e.finding_id for e in exceptions if e.finding_id}
+        excepted_findings = {
+            e.finding_id for e in exceptions
+            if e.finding_id and (e.expires_at is None or e.expires_at > now)
+        }
+
 
         # Load threats and vulnerabilities for this scan
         threats = (await self.db.execute(
@@ -279,8 +318,9 @@ class PolicyEvaluator:
 
         await self.db.commit()
 
-        # Check private repos separately (not scan-level, but repo-level)
-        await self._check_private_repo_policies(tenant_id, scan_id, policies)
+        # Check repository and posture policies
+        await self._check_entity_policies(tenant_id, scan_id, policies)
+
 
         logger.info(
             f"[policy:evaluate] scan={scan_id[:8]} violations={violations_created} "
@@ -293,52 +333,106 @@ class PolicyEvaluator:
             "scan_id":    scan_id,
         }
 
-    async def _check_private_repo_policies(
+    async def _check_entity_policies(
         self, tenant_id: str, scan_id: str, policies: list[SecurityPolicy]
     ) -> None:
-        """Check if any repo linked to this scan is public."""
-        priv_policies = [p for p in policies if
-                         any(r.get("key") == "require_private_repos" for r in (p.rules or []))]
-        if not priv_policies:
+        """Check repository, risk, and compliance policies for the scan entity."""
+        # Find policies targeting entities (repos, posture, risk)
+        entity_policies = [p for p in policies if
+                           any(r.get("key") in ["require_private_repos", "min_security_score",
+                                              "block_high_risk_repos", "require_passing_compliance"]
+                               for r in (p.rules or []))]
+        if not entity_policies:
             return
 
-        # Find repo for scan
         from app.models.scan import Scan
         scan = (await self.db.execute(
             select(Scan).where(Scan.id == scan_id)
         )).scalar_one_or_none()
-        if not scan or not scan.repo_id:
+        if not scan:
             return
 
-        repo = (await self.db.execute(
-            select(Repository).where(Repository.id == scan.repo_id)
+        # 1. Repository Privacy Check
+        if scan.repo_id:
+            repo = (await self.db.execute(
+                select(Repository).where(Repository.id == scan.repo_id)
+            )).scalar_one_or_none()
+            if repo and not repo.is_private:
+                for p in entity_policies:
+                    if any(r.get("key") == "require_private_repos" for r in (p.rules or [])):
+                        violation = PolicyViolation(
+                            tenant_id=tenant_id, policy_id=p.id, scan_id=scan_id,
+                            entity_type="repository", entity_id=repo.id, entity_title=repo.full_name,
+                            rule_key="require_private_repos", rule_description=f"Repository '{repo.full_name}' is public",
+                            severity=p.severity, enforcement_mode=p.enforcement,
+                            was_blocked=(p.enforcement == "enforce"), status="open",
+                            context={"repo_full_name": repo.full_name, "is_private": False},
+                        )
+                        self.db.add(violation)
+
+        # 2. Risk & Score Checks
+        if scan.repo_id:
+            risk = (await self.db.execute(
+                select(RepositoryRiskScore).where(RepositoryRiskScore.repo_id == scan.repo_id)
+            )).scalar_one_or_none()
+
+            if risk:
+                for p in entity_policies:
+                    for rule in (p.rules or []):
+                        key = rule.get("key")
+                        if key == "min_security_score":
+                            threshold = rule.get("threshold", 0)
+                            score = risk.security_score or 0.0
+                            if score < threshold:
+                                violation = PolicyViolation(
+                                    tenant_id=tenant_id, policy_id=p.id, scan_id=scan_id,
+                                    entity_type="repository", entity_id=scan.repo_id,
+                                    entity_title=f"Score: {score}", rule_key=key,
+                                    rule_description=f"Security score {score} is below threshold {threshold}",
+                                    severity=p.severity, enforcement_mode=p.enforcement,
+                                    was_blocked=(p.enforcement == "enforce"), status="open",
+                                    context={"score": score, "threshold": threshold},
+                                )
+                                self.db.add(violation)
+
+                        elif key == "block_high_risk_repos":
+                            levels = rule.get("levels", ["critical", "high"])
+                            if risk.risk_level.lower() in [l.lower() for l in levels]:
+                                violation = PolicyViolation(
+                                    tenant_id=tenant_id, policy_id=p.id, scan_id=scan_id,
+                                    entity_type="repository", entity_id=scan.repo_id,
+                                    entity_title=f"Risk: {risk.risk_level}", rule_key=key,
+                                    rule_description=f"Repository risk level '{risk.risk_level}' is blocked",
+                                    severity=p.severity, enforcement_mode=p.enforcement,
+                                    was_blocked=(p.enforcement == "enforce"), status="open",
+                                    context={"risk_level": risk.risk_level, "blocked_levels": levels},
+                                )
+                                self.db.add(violation)
+
+        # 3. Compliance Check (Tenant level)
+        posture = (await self.db.execute(
+            select(SecurityPostureScore).where(SecurityPostureScore.tenant_id == tenant_id)
+            .order_by(SecurityPostureScore.recorded_at.desc())
         )).scalar_one_or_none()
-        if not repo:
-            return
 
-        if not repo.is_private:
-            for policy in priv_policies:
-                violation = PolicyViolation(
-                    tenant_id=       tenant_id,
-                    policy_id=       policy.id,
-                    scan_id=         scan_id,
-                    entity_type=     "repository",
-                    entity_id=       repo.id,
-                    entity_title=    repo.full_name,
-                    rule_key=        "require_private_repos",
-                    rule_description=f"Repository '{repo.full_name}' is public",
-                    severity=        policy.severity,
-                    enforcement_mode=policy.enforcement,
-                    was_blocked=     policy.enforcement == "enforce",
-                    status=          "open",
-                    context={"repo_full_name": repo.full_name, "is_private": False},
-                )
-                self.db.add(violation)
-                await self.db.execute(
-                    update(SecurityPolicy)
-                    .where(SecurityPolicy.id == policy.id)
-                    .values(violations_count=SecurityPolicy.violations_count + 1)
-                )
+        if posture:
+            for p in entity_policies:
+                for rule in (p.rules or []):
+                    if rule.get("key") == "require_passing_compliance":
+                        threshold = rule.get("threshold", 0)
+                        score = posture.compliance_score
+                        if score < threshold:
+                            violation = PolicyViolation(
+                                tenant_id=tenant_id, policy_id=p.id, scan_id=scan_id,
+                                entity_type="tenant", entity_id=tenant_id,
+                                entity_title="Compliance Posture", rule_key="require_passing_compliance",
+                                rule_description=f"Compliance score {score} is below threshold {threshold}",
+                                severity=p.severity, enforcement_mode=p.enforcement,
+                                was_blocked=(p.enforcement == "enforce"), status="open",
+                                context={"score": score, "threshold": threshold},
+                            )
+                            self.db.add(violation)
+
         await self.db.commit()
 
     # ── List violations ───────────────────────────────────────────────────────
