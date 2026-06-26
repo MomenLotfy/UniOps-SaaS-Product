@@ -8,19 +8,20 @@ from app.models.intelligence import (
     IntelligenceCacheEntry, ProviderMetadata, ProviderHealth,
     SyncHistory, IntelligenceVersion
 )
-from app.schemas.intelligence import CanonicalCVE, CanonicalPackage, CanonicalExploit
+from app.schemas.intelligence import CanonicalCVE, CanonicalPackage, CanonicalExploit, EnrichedFinding
 from app.services.intelligence.providers.manager import IntelligenceProviderManager
 from app.services.intelligence.normalization.engine import IntelligenceNormalizationEngine
 from app.services.intelligence.normalization.mappers.base import ProviderMapper
 from app.services.intelligence.normalization.mappers.impls.nvd import NvdMapper
 from app.services.intelligence.normalization.mappers.impls.osv import OsvMapper
+from app.services.intelligence.enrichment import EnrichmentEngine
 from app.core.intelligence_cache import IntelligenceCache
 from app.utils.logger import logger
 
 class IntelligenceService(BaseService):
     """
     The primary facade for the Security Intelligence domain.
-    Coordinates providers, normalization, and cache.
+    Coordinates providers, normalization, and enrichment.
     """
     def __init__(self, db: AsyncSession):
         super().__init__(db)
@@ -33,7 +34,19 @@ class IntelligenceService(BaseService):
             # Other mappers would be added here or loaded dynamically
         }
         self.normalization_engine = IntelligenceNormalizationEngine(mappers)
+        self.enrichment_engine = EnrichmentEngine(self)
         self.cache = IntelligenceCache()
+
+    async def get_enriched_finding(self, finding_id: str) -> Optional[EnrichedFinding]:
+        """
+        Orchestrates the full path from raw metadata to EnrichedFinding.
+        """
+        # In a real system, we'd fetch the raw finding from the database first
+        raw_metadata = {"cve_id": "CVE-2024-1234", "purl": "pkg:npm/express@4.18.2", "asset_criticality": 2.0}
+        return await self.enrichment_engine.enrich(finding_id, "tenant-1", raw_metadata)
+
+    async def get_vulnerability(self, cve_id: str) -> Optional[CanonicalCVE]:
+# ... rest of the file
 
     async def get_vulnerability(self, cve_id: str) -> Optional[CanonicalCVE]:
         """Fetches normalized CVE data, checking cache first."""

@@ -4,62 +4,99 @@ from datetime import datetime
 from app.schemas.intelligence import (
     EnrichedFinding, CanonicalCVE, CanonicalPackage,
     CanonicalExploit, CanonicalWeakness, CanonicalAttackPattern,
-    CanonicalRisk, CanonicalRemediationReference, ConfidenceLevel
+    CanonicalRisk, ConfidenceLevel
 )
-from app.services.intelligence.normalization import NormalizationLayer
-from app.services.intelligence.risk_calculator import RiskCalculator
+from app.services.intelligence.enrichment.context import EnrichmentContext
+from app.services.intelligence.enrichment.pipeline import EnrichmentPipeline
+from app.services.intelligence.enrichment.components.reference_enricher import ReferenceEnricher
+from app.services.intelligence.enrichment.components.patch_analyzer import PatchAnalyzer
+from app.services.intelligence.enrichment.components.exploit_analyzer import ExploitAnalyzer
+from app.services.intelligence.enrichment.components.asset_context_resolver import AssetContextResolver
+from app.services.intelligence.enrichment.components.business_impact_analyzer import BusinessImpactAnalyzer
+from app.services.intelligence.enrichment.components.recommendation_enricher import RecommendationEnricher
+from app.services.intelligence.enrichment.components.timeline_enricher import TimelineEnricher
+from app.services.intelligence.enrichment.components.confidence_calculator import ConfidenceCalculator
+from app.services.intelligence.enrichment.components.trust_score_calculator import TrustScoreCalculator
 from app.utils.logger import logger
 
 class EnrichmentEngine:
     """
-    The pipeline that transforms a raw scanner finding into an EnrichedFinding.
-    Orchestrates the lookup and normalization process.
+    The primary orchestrator for security intelligence enrichment.
+    Transforms Canonical Intelligence into a final EnrichedFinding.
     """
     def __init__(self, intelligence_service: Any):
         self.intel_service = intelligence_service
-        self.normalizer = NormalizationLayer()
-        self.risk_calculator = RiskCalculator()
+        self.pipeline = self._build_pipeline()
+
+    def _build_pipeline(self) -> EnrichmentPipeline:
+        """Defines the order of enrichment stages."""
+        pipeline = EnrichmentPipeline()
+        pipeline.add_stage(ReferenceEnricher())
+        pipeline.add_stage(PatchAnalyzer())
+        pipeline.add_stage(ExploitAnalyzer())
+        pipeline.add_stage(AssetContextResolver())
+        pipeline.add_stage(BusinessImpactAnalyzer())
+        pipeline.add_stage(TimelineEnricher())
+        pipeline.add_stage(ConfidenceCalculator())
+        pipeline.add_stage(TrustScoreCalculator())
+        pipeline.add_stage(RecommendationEnricher())
+        return pipeline
 
     async def enrich(self, finding_id: str, tenant_id: str, raw_metadata: Dict[str, Any]) -> EnrichedFinding:
         """
-        Full enrichment pipeline.
+        Executes the full enrichment pipeline.
         """
-        logger.info(f"[EnrichmentEngine] Enriching finding {finding_id} for tenant {tenant_id}")
+        logger.info(f"[EnrichmentEngine] Starting enrichment pipeline for finding {finding_id}")
 
-        # 1. Extract identifiers
-        cve_id = raw_metadata.get("cve_id")
-        purl = raw_metadata.get("purl")
-
-        # 2. Fetch intelligence from service (which handles caching)
-        vulnerability = None
-        if cve_id:
-            vulnerability = await self.intel_service.get_vulnerability(cve_id)
-
-        package = None
-        if purl:
-            package = await self.intel_service.get_package(purl)
-
-        exploit = None
-        if cve_id:
-            exploit = await self.intel_service.get_exploit(cve_id)
-
-        # 3. Calculate Business Risk
-        risk = self.risk_calculator.calculate_risk(
-            cvss_score=vulnerability.cvss_score if vulnerability else None,
-            exploit_maturity=exploit.maturity if exploit else "unknown",
-            is_known_exploited=False, # Future integration with CISA KEV
-            asset_criticality=raw_metadata.get("asset_criticality", 1.0)
+        # 1. Initialize Context
+        context = EnrichmentContext(
+            finding_id=finding_id,
+            tenant_id=tenant_id,
+            raw_metadata=raw_metadata
         )
 
-        # 4. Assemble Enriched Finding
+        # 2. Fetch Canonical Intelligence (Input to pipeline)
+        cve_id = raw_metadata.get("cve_id")
+        purl = raw_metadataPurl = raw_metadata.get("purl")
+
+        if cve_id:
+            context.vulnerability = await self.intel_service.get_vulnerability(cve_id)
+            context.exploit = await self.intel_service.get_exploit(cve_id)
+
+        if purl:
+            context.package = await self.intel_service.get_package(purl)
+
+        # 3. Run Pipeline
+        await self.pipeline.execute(context)
+
+        # 4. Calculate Final Overall Risk (Combining technical, business, and environmental)
+        # This would normally use the RiskCalculator service
+        overall_risk_score = (context.technical_risk * 0.4) + (context.business_risk * 0.6)
+        # Normalize to 0-100
+        final_score = min(100.0, max(0.0, overall_risk_score * 10))
+
+        # 5. Assemble Final EnrichedFinding
         return EnrichedFinding(
             finding_id=finding_id,
             tenant_id=tenant_id,
-            vulnerability=vulnerability,
-            package=package,
-            exploit=exploit,
-            risk=risk,
-            confidence=ConfidenceLevel.HIGH if vulnerability and exploit else ConfidenceLevel.MEDIUM,
+            vulnerability=context.vulnerability,
+            package=context.package,
+            exploit=context.exploit,
+            risk=CanonicalRisk(
+                score=final_score,
+                level="HIGH" if final_score > 70 else "MEDIUM" if final_score > 40 else "LOW",
+                factors={
+                    "technical": context.technical_risk,
+                    "business": context.business_risk,
+                    "confidence": context.confidence_score,
+                    "trust": context.trust_score
+                },
+                confidence=ConfidenceLevel.HIGH if context.confidence_score > 0.8 else ConfidenceLevel.MEDIUM
+            ),
+            remediation_refs=[ref for ref in context.references],
+            fix_available=len(context.patches) > 0,
+            patched_versions=[p["version"] for p in context.patches],
+            confidence=ConfidenceLevel.HIGH if context.confidence_score > 0.8 else ConfidenceLevel.MEDIUM,
             providers_used=await self.intel_service.get_active_providers(),
             last_enriched_at=datetime.utcnow()
         )

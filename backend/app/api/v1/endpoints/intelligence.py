@@ -5,7 +5,7 @@ from typing import List, Any, Optional
 
 from app.api.deps import get_db
 from app.services.intelligence.service import IntelligenceService
-from app.schemas.intelligence import ProviderHealthSchema, ProviderDetailsSchema, ProviderCapabilitySchema
+from app.schemas.intelligence import ProviderHealthSchema, ProviderDetailsSchema, ProviderCapabilitySchema, CanonicalCVE, CanonicalPackage, EnrichedFinding
 
 router = APIRouter()
 
@@ -166,6 +166,40 @@ async def lookup_intelligence(
         raise HTTPException(status_code=404, detail="Intelligence not found in cache")
 
     return res
+
+@router.get("/enriched/{finding_id}", response_model=EnrichedFinding)
+async def get_enriched_finding(
+    finding_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Returns a fully enriched security finding with risk, context, and recommendations.
+    """
+    service = IntelligenceService(db)
+    res = await service.get_enriched_finding(finding_id)
+    if not res:
+        raise HTTPException(status_code=404, detail="Enriched finding not found")
+    return res
+
+@router.get("/recommendations/{finding_id}")
+async def get_remediation_recommendations(
+    finding_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Returns specific remediation recommendations for a finding.
+    """
+    service = IntelligenceService(db)
+    finding = await service.get_enriched_finding(finding_id)
+    if not finding:
+        raise HTTPException(status_code=404, detail="Finding not found")
+
+    return {
+        "finding_id": finding_id,
+        "recommendations": finding.remediation_refs,
+        "fix_available": finding.fix_available,
+        "patched_versions": finding.patched_versions
+    }
 
 @router.get("/canonical/cve/{cve_id}", response_model=CanonicalCVE)
 async def get_canonical_cve(
