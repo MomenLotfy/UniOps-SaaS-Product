@@ -6,35 +6,42 @@ from datetime import datetime
 class ExecutionContext(BaseModel):
     """
     Immutable context passed through the entire remediation pipeline.
-    Contains all state necessary for the decision engine and execution plugins.
+    Enhanced for full correlation propagation and version tracking.
     """
-    # ── Identity & Traceability ─────────────────────────────────────────────────
-    execution_id: str
+    # ── Traceability & Correlation ────────────────────────────────────────────────
+    request_id: str
     correlation_id: str
+    execution_id: str
     trace_id: str
     tenant_id: str
     user_id: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
-    # ── Target Entity ───────────────────────────────────────────────────────────
+    # ── Versioning Metadata ───────────────────────────────────────────────────────
+    planner_version: str = "1.0.0"
+    capability_version: Optional[str] = None
+    plugin_version: Optional[str] = None
+    engine_version: str = "1.0.0"
+
+    # ── Target Entity ────────────────────────────────────────────────────────S
     repository_id: str
     finding_id: str
     scan_id: Optional[str] = None
 
-    # ── Security State ───────────────────────────────────────────────────────────
+    # ── Security State ──────────────────────────────────────────────────────────
     risk_score: float = 0.0
     severity: str = "medium"
-    policy_state: Dict[str, Any] = {} # Current policy settings for this tenant
+    policy_state: Dict[str, Any] = {}
     compliance_frameworks: list[str] = []
     sbom_snapshot_id: Optional[str] = None
 
     # ── Metadata ─────────────────────────────────────────────────────────────────
-    repo_metadata: Dict[str, Any] = {} # e.g. language, stars, owner
+    repo_metadata: Dict[str, Any] = {}
     tenant_metadata: Dict[str, Any] = {}
 
     # ── Intent ───────────────────────────────────────────────────────────────────
-    requested_action: str # e.g. 'auto_fix', 'propose_only'
-    execution_options: Dict[str, Any] = {} # e.g. {'dry_run': True, 'force': False}
+    requested_action: str
+    execution_options: Dict[str, Any] = {}
     validation_options: Dict[str, Any] = {}
 
     # ── AI Guidance ──────────────────────────────────────────────────────────────
@@ -43,4 +50,4 @@ class ExecutionContext(BaseModel):
     ai_suggested_strategy: Optional[str] = None
 
     class Config:
-        frozen = True # Ensure immutability
+        frozen = True

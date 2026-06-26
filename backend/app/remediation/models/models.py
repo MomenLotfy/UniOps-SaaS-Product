@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import String, ForeignKey, JSON, DateTime, Float, Integer, Enum as SQLEnum
+from sqlalchemy import String, ForeignKey, JSON, DateTime, Float, Integer, SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 from app.remediation.lifecycle.state import RemediationState
@@ -9,12 +9,18 @@ from app.remediation.lifecycle.state import RemediationState
 class RemediationPlan(BaseModel):
     """
     The central entity for a remediation attempt.
-    Tracks the overall state and decision path.
+    Now supports versioning for immutability and audit.
     """
     __tablename__ = "remediation_plans"
 
     tenant_id: Mapped[str] = mapped_column(String(36), ForeignKey("tenants.id"), nullable=False, index=True)
     finding_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+
+    # Versioning
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    parent_version_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("remediation_plans.id"), nullable=True)
+    created_by: Mapped[Optional[str]] = mapped_column(String(100))
+    change_reason: Mapped[Optional[str]] = mapped_column(String(500))
 
     # Decision Metadata
     finding_type: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -57,7 +63,7 @@ class RemediationStep(BaseModel):
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
     input_data: Mapped[dict] = mapped_column(JSON, default=dict)
-    output_data: Mapped[dict] = mapped_column(JSON, default=dict)
+    output_data: M scrape_result: Mapped[dict] = mapped_column(JSON, default=dict)
     error_details: Mapped[Optional[str]] = mapped_column(String(2000))
 
     plan: Mapped["RemediationPlan"] = relationship(back_populates="steps")
@@ -77,6 +83,11 @@ class RemediationStateHistory(BaseModel):
     transition_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     transitioned_by: Mapped[Optional[str]] = mapped_column(String(100)) # e.g. 'PlanningWorker'
     reason: Mapped[Optional[str]] = mapped_column(String(500))
+
+    # Audit enrichment
+    rule_ids: Mapped[list] = mapped_column(JSON, default=list)
+    correlation_id: Mapped[Optional[str]] = mapped_column(String(100))
+    execution_version: Mapped[Optional[int]] = mapped_column(Integer)
 
     plan: Mapped["RemediationPlan"] = relationship(back_populates="state_history")
 
@@ -103,18 +114,30 @@ class RemediationEventLog(BaseModel):
 class PluginMetadata(BaseModel):
     """
     Static registration data for remediation plugins.
+    Includes compatibility and health metadata.
     """
     __tablename__ = "remediation_plugin_metadata"
 
     plugin_id: Mapped[str] = mapped_column(String(100), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    version: Mapped[str] = mapped_column(String(20))
+    version: Mapped[str] = mapped_column(String(20), nullable=False)
     description: Mapped[str] = mapped_column(String(1000))
 
-    supported_capabilities: Mapped[list] = mapped_column(JSON, default=list) # list of capability IDs
+    # Compatibility layer
+    min_engine_version: Mapped[str] = mapped_column(String(20), default="1.0.0")
+    max_engine_version: Mapped[str] = mapped_column(String(20), nullable=True)
+    required_apis: Mapped[list] = mapped_column(JSON, default=list)
+    supported_features: Mapped[list] = mapped_column(JSON, default=list)
+
+    supported_capabilities: Mapped[list] = mapped_column(JSON, default=list)
     config_schema: Mapped[dict] = mapped_column(JSON, default=dict)
 
+    # Health & Status
     is_active: Mapped[bool] = mapped_column(default=True)
+    health_status: Mapped[str] = mapped_column(String(50), default="healthy") # healthy | degraded | failing
+    maintenance_mode: Mapped[bool] = mapped_column(default=False)
+    deprecation_status: Mapped[Optional[str]] = mapped_column(String(100))
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 class RemediationExecutionMetrics(BaseModel):
@@ -147,6 +170,13 @@ class RemediationExecutionHistory(BaseModel):
     latency: Mapped[Optional[float]] = mapped_column(Float)
     status: Mapped[str] = mapped_column(String(50), nullable=False)
     error_message: Mapped[Optional[str]] = mapped_column(String(1000))
+
+    # Version tracking
+    planner_version: Mapped[Optional[str]] = mapped_column(String(50))
+    capability_version: Mapped[Optional[str]] = mapped_column(String(50))
+    strategy_version: Mapped[Optional[str]] = mapped_column(String(50))
+    plugin_version: Mapped[Optional[str]] = mapped_column(String(50))
+    engine_version: Mapped[Optional[str]] = mapped_column(String(50))
 
     model_used: Mapped[Optional[str]] = mapped_column(String(100))
     token_usage: Mapped[Optional[int]] = mapped_column(Integer)

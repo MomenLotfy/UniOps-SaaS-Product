@@ -8,7 +8,7 @@ import {
 import { clsx } from 'clsx';
 
 export default function Remediation() {
-  const [activeTab, setActiveTab] = useState<'capabilities' | 'plans' | 'history' | 'monitoring'>('capabilities');
+  const [activeTab, setActiveTab] = useState<'capabilities' | 'plans' | 'history' | 'monitoring' | 'governance'>('capabilities');
   const [isLoading, setIsLoading] = useState(false);
 
   // Mock data for the architecture preview
@@ -63,7 +63,7 @@ export default function Remediation() {
 
       {/* ── Tabs ────────────────────────────────────────────────────────────────── */}
       <div className="flex p-1 bg-white/5 rounded-lg w-fit border border-white/10">
-        {(['capabilities', 'plans', 'history', 'monitoring'] as const).map(tab => (
+        {(['capabilities', 'plans', 'history', 'monitoring', 'governance'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -194,6 +194,82 @@ export default function Remediation() {
                 <AlertCircle className="w-3 h-3" /> Error Analysis
               </div >
             </div >
+          </div >
+        )}
+
+        {activeTab === 'governance' && (
+          <div className="lg:col-span-3 space-y-6">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 rounded-xl bg-surface-1 border border-white/10 space-y-4">
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-blue-400" />
+                        Execution Policies
+                    </h3>
+                    <div className="space-y-3">
+                        {[
+                            { id: 'POL-001', type: 'Manual Approval', desc: 'Critical Production Repositories' },
+                            { id: 'POL-002', type: 'Production Freeze', desc: 'Peak Hour Constraints' },
+                            { id: 'POL-003', type: 'Security Approval', desc: 'SVP Security Sign-off' },
+                        ].map(p => (
+                            <div key={p.id} className="p-3 rounded-lg bg-white/5 border border-white/10 flex justify-between items-center">
+                                <div>
+                                    <p className="text-xs font-medium text-foreground">{p.type}</p>
+                                    <p className="text-[10px] text-muted-foreground">{p.desc}</p>
+                                </div>
+                                <span className="text-[10px] font-mono text-muted-foreground">{p.id}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="p-6 rounded-xl bg-surface-1 border border-white/10 space-y-4">
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                        <Database className="w-4 h-4 text-blue-400" />
+                        Plugin Compatibility
+                    </h3>
+                    <div className="space-y-3">
+                        {[
+                            { id: 'dep-upgrader', ver: '1.2.0', min: '1.0.0', max: '2.0.0', status: 'Compatible' },
+                            { id: 'docker-hardener', ver: '0.8.4', min: '1.0.0', max: '1.1.0', status: 'Compatible' },
+                            { id: 'tf-fixer', ver: '0.5.0', min: '1.0.0', max: '1.0.0', status: 'Outdated' },
+                        ].map(pl => (
+                            <div key={pl.id} className="p-3 rounded-lg bg-white/5 border border-white/10 flex justify-between items-center">
+                                <div>
+                                    <p className="text-xs font-medium text-foreground">{pl.id}</p>
+                                    <p className="text-[10px] text-muted-foreground">Ver {pl.ver} (Min: {pl.min}, Max: {pl.max})</p>
+                                </div>
+                                <span className={clsx(
+                                    "text-[10px] px-2 py-0.5 rounded-full border",
+                                    pl.status === 'Compatible' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
+                                )}>
+                                    {pl.status}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+             </div >
+
+             <div className="p-6 rounded-xl bg-surface-1 border border-white/10">
+                <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-blue-400" />
+                    Engine Versions & Health
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Planner Version</p>
+                        <p className="text-sm font-mono text-foreground">v1.0.4-stable</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Execution Engine</p>
+                        <p className="text-sm font-mono text-foreground">v1.0.0-core</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Registry Health</p>
+                        <p className="text-sm font-medium text-green-400">Optimal</p>
+                    </div>
+                </div >
+             </div >
           </div >
         )}
 

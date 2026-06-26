@@ -210,6 +210,94 @@ async def get_remediation_metrics(
         "metrics": {m.metric_name: m.value for m in metrics}
     }
 
+@router.get("/plugins/compatibility")
+async def get_plugin_compatibility(
+    tenant_id: str = Depends(get_tenant_id),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Returns compatibility metadata for all registered remediation plugins.
+    """
+    query = select(PluginMetadata).where(
+        PluginMetadata.is_active == True
+    )
+    result = await db.execute(query)
+    plugins = result.scalars().all()
+
+    return [
+        {
+            "plugin_id": p.plugin_id,
+            "version": p.version,
+            "min_engine": p.min_engine_version,
+            "max_engine": p.max_engine_version,
+            "required_apis": p.required_apis,
+            "supported_features": p.supported_features
+        } for p in plugins
+    ]
+
+@router.get("/capabilities/health")
+async def get_capability_health(
+    tenant_id: str = Depends(get_tenant_id),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Returns the health and status of all registered remediation capabilities.
+    """
+    query = select(PluginMetadata)
+    result = await db.execute(query)
+    plugins = result.scalars().all()
+
+    return [
+        {
+            "plugin_id": p.plugin_id,
+            "name": p.name,
+            "health": p.health_status,
+            "maintenance": p.maintenance_mode,
+            "deprecation": p.deprecation_status
+        } for p in plugins
+    ]
+
+@router.get("/plans/{plan_id}/versions")
+async def get_plan_versions(
+    plan_id: str,
+    tenant_id: str = Depends(get_tenant_id),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Returns all versions of a specific remediation plan.
+    """
+    query = select(RemediationPlan).where(
+        (RemediationPlan.id == plan_id) | (RemediationPlan.parent_version_id == plan_id),
+        RemediationPlan.tenant_id == tenant_id
+    ).order_by(RemediationPlan.version.asc())
+
+    result = await db.execute(query)
+    versions = result.scalars().all()
+
+    return [
+        {
+            "version": v.version,
+            "created_at": v.created_at,
+            "created_by": v.created_by,
+            "change_reason": v.change_reason
+        } for v in versions
+    ]
+
+@router.get("/policies")
+async def get_execution_policies(
+    tenant_id: str = Depends(get_tenant_id)
+):
+    """
+    Returns the active execution policies for the tenant.
+    (Currently returns architectural defaults)
+    """
+    return {
+        "policies": [
+            {"id": "POL-001", "type": "manual_approval", "description": "Production repositories require manual approval."},
+            {"id": "POL-002", "type": "production_freeze", "description": "No auto-remediation during peak business hours."}
+        ]
+    }
+
 @router.get("/workers/status")
 async def get_worker_status():
     """
