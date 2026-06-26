@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     security_policies, security_exceptions, security_reports, security_posture,
     k8s_security, sbom, repository_risk,
     ownership, sla, tickets,
+    copilot,
 )
 
 api_router = APIRouter()
@@ -38,6 +39,8 @@ api_router.include_router(savings.router,            prefix="/savings",         
 
 # ── AI & ML ──────────────────────────────────────────────────────────────────
 api_router.include_router(ml.router,                 prefix="/ml",                tags=["ML"])
+api_router.include_router(copilot.router,            prefix="/copilot",           tags=["Security Copilot"])
+
 
 # ── Operations ───────────────────────────────────────────────────────────────
 api_router.include_router(alerts.router,             prefix="/alerts",            tags=["Alerts"])

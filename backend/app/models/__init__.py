@@ -40,6 +40,7 @@ from app.models.repository_risk_history import RepositoryRiskHistory
 from app.models.finding_sla import FindingSLA
 from app.models.security_ticket import SecurityTicket
 from app.models.policy_violation import PolicyViolation
+from app.models.copilot import CopilotConversation, CopilotMessage
 
 __all__ = [
     "BaseModel", "Tenant", "User", "Role", "Permission", "Subscription",
@@ -58,4 +59,5 @@ __all__ = [
     "FindingSLA",
     "SecurityTicket",
     "PolicyViolation",
+    "CopilotConversation", "CopilotMessage",
 ]

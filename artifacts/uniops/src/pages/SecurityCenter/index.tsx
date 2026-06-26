@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, AlertTriangle, Bug, CheckSquare, GitBranch,
   Server, TrendingUp, FileText, ClipboardList, BookOpen,
-  ChevronRight, Menu, X, Layers, Package, Users, Clock, Ticket,
+  ChevronRight, Menu, X, Layers, Package, Users, Clock, Ticket, Bot
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -24,12 +24,13 @@ import KubernetesSecurity   from './sections/KubernetesSecurity';
 import SBOMSection          from './sections/SBOM';
 import Ownership            from './sections/Ownership';
 import SLATracker           from './sections/SLATracker';
+import SecurityCopilot      from './SecurityCopilot';
 
 export type SecuritySection =
   | 'overview' | 'threats' | 'vulnerabilities' | 'compliance'
   | 'repositories' | 'assets' | 'kubernetes' | 'posture'
   | 'policies' | 'exceptions' | 'reports' | 'sbom'
-  | 'ownership' | 'sla';
+  | 'ownership' | 'sla' | 'copilot';
 
 interface NavItem {
   id: SecuritySection;
@@ -46,6 +47,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'threats',         label: 'Threats',             icon: AlertTriangle, description: 'Active security threats',       group: 'Core' },
   { id: 'vulnerabilities', label: 'Vulnerabilities',     icon: Bug,           description: 'CVEs and findings',             group: 'Core' },
   { id: 'compliance',      label: 'Compliance',          icon: CheckSquare,   description: 'Framework compliance',          group: 'Core' },
+  { id: 'copilot',         label: 'Security Copilot',    icon: Bot,           description: 'AI Security Assistant',       group: 'Core', badge: 'AI' },
   // ── Infrastructure
   { id: 'repositories',    label: 'Repositories',        icon: GitBranch,     description: 'Repo scanning & risk',          group: 'Infrastructure' },
   { id: 'assets',          label: 'Assets',              icon: Server,        description: 'Asset inventory',               group: 'Infrastructure' },
@@ -66,6 +68,7 @@ const SECTION_COMPONENTS: Record<SecuritySection, React.ComponentType> = {
   threats:         Threats,
   vulnerabilities: Vulnerabilities,
   compliance:      Compliance,
+  copilot:         SecurityCopilot,
   repositories:    Repositories,
   assets:          Assets,
   kubernetes:      KubernetesSecurity,
