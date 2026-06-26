@@ -1,7 +1,13 @@
-from __future__ import annotations
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 from pydantic import BaseModel
+
+class RollbackStatus(str, Enum):
+    """Rollback capability of a remediation strategy."""
+    AVAILABLE = "available"
+    UNSUPPORTED = "unsupported"
+    MANUAL = "manual"
+    AUTOMATIC = "automatic"
 
 class RemediationContext(BaseModel):
     """Context passed through the remediation pipeline."""
@@ -14,13 +20,24 @@ class RemediationContext(BaseModel):
 class ExecutionPlan(BaseModel):
     """The output of the Decision Engine."""
     plan_id: str
+    finding_id: str
     finding_type: str
     target_technology: str
     capability_id: str
     strategy_id: str
     priority: str
+    risk_level: str = "medium"
+    confidence_score: float = 0.0
+    estimated_impact: str = "low"
     required_inputs: Dict[str, Any] = {}
     expected_outputs: List[str] = []
+    approval_required: bool = False
+    approval_role: Optional[str] = None
+    rollback_available: bool = True
+    rollback_status: RollbackStatus = RollbackStatus.AUTOMATIC
+    validation_requirements: List[str] = []
+    estimated_duration_seconds: int = 0
+    human_summary: Optional[str] = None
     status: str = "draft" # draft | validated | executing | completed | failed
 
 class IRemediationPlugin(ABC):
@@ -39,6 +56,16 @@ class IRemediationPlugin(ABC):
         """List of capability IDs this plugin provides."""
         pass
 
+    @property
+    def supported_technologies(self) -> Set[str]:
+        """Technologies this plugin can handle (e.g. {'docker', 'terraform'})."""
+        pass
+
+    @property
+    def supported_finding_types(self) -> Set[str]:
+        """Finding categories this plugin can remediate (e.g. {'misconfiguration', 'vulnerability'})."""
+        pass
+
     async def initialize(self) -> None:
         """Plugin setup logic."""
         pass
@@ -54,6 +81,11 @@ class IRemediationStrategy(ABC):
     def strategy_id(self) -> str:
         pass
 
+    @property
+    def rollback_status(self) -> RollbackStatus:
+        """Declares if and how this strategy supports rollback."""
+        return RollbackStatus.UNSUPPORTED
+
     async def validate(self, context: RemediationContext) -> bool:
         """Check if the strategy is applicable to the current context."""
         pass
@@ -62,13 +94,17 @@ class IRemediationStrategy(ABC):
         """The actual execution logic (to be implemented by specific strategies)."""
         pass
 
+    async def rollback(self, context: RemedيsationContext, plan: ExecutionPlan) -> Any:
+        """Performs the rollback operation to revert changes made by execute()."""
+        pass
+
     async def get_required_inputs(self, context: RemediationContext) -> Dict[str, Any]:
         """Returns the parameters needed to execute this strategy."""
         pass
 
     @property
     def expected_outputs(self) -> List[str]:
-        """What this strategy promises to deliver (e.g. 'updated_dockerfile', 'pr_link')."""
+        """What this strategy promises to deliver."""
         pass
 
 class ICapability(ABC):

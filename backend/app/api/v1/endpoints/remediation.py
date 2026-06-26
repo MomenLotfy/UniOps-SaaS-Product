@@ -9,11 +9,14 @@ from app.remediation.interfaces.base import RemediationContext, ExecutionPlan
 from app.remediation.models.models import RemediationPlan, RemediationExecutionHistory
 from sqlalchemy import select
 
+from app.services.copilot_service import CopilotService
+
 router = APIRouter()
 
 async def get_remediation_manager(db: AsyncSession = Depends(get_db)):
     registry = get_remediation_registry()
-    return RemediationManager(db, registry)
+    copilot_service = CopilotService(db)
+    return RemediationManager(db, registry, copilot_service=copilot_service)
 
 @router.post("/propose", status_code=status.HTTP_200_OK)
 async def propose_remediation(
