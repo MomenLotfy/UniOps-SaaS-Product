@@ -101,11 +101,14 @@ class IntelligenceCacheEntry(BaseModel):
     # Unified key (e.g., 'CVE-2024-1234' or 'purl:pkg:npm/express@4.18.2')
     intel_id: Mapped[str] = mapped_column(String(255), primary_key=True)
 
-    # The normalized data stored as JSON for flexibility across different intel types
-    normalized_data: Mapped[dict] = mapped_column(JSON, nullable=False)
+    # The canonical normalized data stored as JSON
+    canonical_data: Mapped[dict] = mapped_column(JSON, nullable=False)
 
-    # Source tracking
-    providers: Mapped[list] = mapped_column(JSON, default=list) # List of providers that contributed to this entry
+    # Provenance map: field_name -> provider_metadata
+    provenance: Mapped[dict] = mapped_column(JSON, default=dict)
+
+    # Merge metadata
+    merge_metadata: Mapped[dict] = mapped_column(JSON, default=dict) # quality_score, providers_merged, etc.
 
     # Cache Lifecycle
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -114,6 +117,34 @@ class IntelligenceCacheEntry(BaseModel):
 
     # Versioning
     version: Mapped[int] = mapped_column(Integer, default=1)
+
+class NormalizationAudit(BaseModel):
+    """
+    Audit log of normalization pipeline executions.
+    """
+    __tablename__ = "intelligence_normalization_audit"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    intel_id: Mapped[str] = mapped_column(String(255), index=True)
+    pipeline_version: Mapped[str] = mapped_column(String(50))
+    quality_score: Mapped[float] = mapped_column(Float)
+    duration_ms: Mapped[float] = mapped_column(Float)
+    conflicts_resolved: Mapped[int] = mapped_column(Integer, default=0)
+    executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+class IntelligenceProvenance(BaseModel):
+    """
+    Detailed provenance for every merged field.
+    """
+    __tablename__ = "intelligence_provenance"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    intel_id: Mapped[str] = mapped_column(String(255), ForeignKey("intelligence_cache.intel_id"), index=True)
+    field_name: Mapped[str] = mapped_column(String(100))
+    provider_id: Mapped[str] = mapped_column(String(100))
+    provider_version: Mapped[str] = mapped_column(String(50))
+    trust_score: Mapped[float] = mapped_column(Float)
+    retrieved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 class SyncHistory(BaseModel):
     """

@@ -166,3 +166,31 @@ async def lookup_intelligence(
         raise HTTPException(status_code=404, detail="Intelligence not found in cache")
 
     return res
+
+@router.get("/canonical/cve/{cve_id}", response_model=CanonicalCVE)
+async def get_canonical_cve(
+    cve_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Returns the fully merged canonical representation of a CVE.
+    """
+    service = IntelligenceService(db)
+    res = await service.get_vulnerability(cve_id)
+    if not res:
+        raise HTTPException(status_code=404, detail="Canonical CVE not found")
+    return res
+
+@router.get("/canonical/package/{purl}", response_model=CanonicalPackage)
+async def get_canonical_package(
+    purl: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Returns the fully merged canonical representation of a package.
+    """
+    service = IntelligenceService(db)
+    res = await service.get_package(purl)
+    if not res:
+        raise HTTPException(status_code=404, detail="Canonical package not found")
+    return res
