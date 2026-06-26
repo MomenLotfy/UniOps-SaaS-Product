@@ -16,6 +16,25 @@ export interface ProviderHealth {
   last_check_at: string;
 }
 
+export interface ProviderCapability {
+  provider_id: string;
+  capability_type: string;
+  is_supported: boolean;
+  confidence_level: number;
+}
+
+export interface ProviderDetails {
+  provider_id: string;
+  name: string;
+  description: string | null;
+  version: string;
+  provider_type: string;
+  is_active: boolean;
+  capabilities: ProviderCapability[];
+  config: any;
+  health: ProviderHealth | null;
+}
+
 export const intelligenceApi = {
   async getHealth(): Promise<ProviderHealth[]> {
     const res = await api.get('/intelligence/health');
@@ -24,6 +43,11 @@ export const intelligenceApi = {
 
   async getStatus(): Promise<IntelligenceStatus[]> {
     const res = await api.get('/intelligence/status');
+    return res.data;
+  },
+
+  async getProviders(): Promise<ProviderDetails[]> {
+    const res = await api.get('/intelligence/providers');
     return res.data;
   },
 

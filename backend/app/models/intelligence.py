@@ -28,6 +28,54 @@ class ProviderMetadata(BaseModel):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
+    # Relationships
+    config: Mapped["ProviderConfiguration"] = relationship(back_populates="provider", uselist=False)
+    capabilities: Mapped[List["ProviderCapability"]] = relationship(back_populates="provider")
+    versions: Mapped[List["ProviderVersion"]] = relationship(back_populates="provider")
+
+class ProviderConfiguration(BaseModel):
+    """
+    Detailed operational settings for an intelligence provider.
+    """
+    __tablename__ = "intelligence_provider_config"
+
+    provider_id: Mapped[str] = mapped_column(String(100), ForeignKey("intelligence_provider_metadata.provider_id"), primary_key=True)
+    priority: Mapped[int] = mapped_column(Integer, default=100) # Lower = Higher Priority
+    timeout_seconds: Mapped[int] = mapped_column(Integer, default=30)
+    retry_count: Mapped[int] = mapped_column(Integer, default=3)
+    config_json: Mapped[dict] = mapped_column(JSON, default=dict) # Provider-specific tweaks
+
+    provider: Mapped["ProviderMetadata"] = relationship(back_populates="config")
+
+class ProviderCapability(BaseModel):
+    """
+    Maps providers to the specific types of lookups they support.
+    """
+    __tablename__ = "intelligence_provider_capabilities"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    provider_id: Mapped[str] = mapped_column(String(100), ForeignKey("intelligence_provider_metadata.provider_id"), index=True)
+    capability_type: Mapped[str] = mapped_column(String(50), nullable=False) # e.g., 'CVE', 'PURL', 'EPSS'
+    is_supported: Mapped[bool] = mapped_column(Boolean, default=True)
+    confidence_level: Mapped[float] = mapped_column(Float, default=1.0) # Expected accuracy (0.0 - 1.0)
+
+    provider: Mapped["ProviderMetadata"] = relationship(back_populates="capabilities")
+
+class ProviderVersion(BaseModel):
+    """
+    Tracks the implementation version history of the provider logic.
+    """
+    __tablename__ = "intelligence_provider_versions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    provider_id: Mapped[str] = mapped_column(String(100), ForeignKey("intelligence_provider_metadata.provider_id"), index=True)
+    version_string: Mapped[str] = mapped_column(String(50), nullable=False)
+    release_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    changelog: Mapped[Optional[str]] = mapped_column(String(2000))
+
+    provider: Mapped["ProviderMetadata"] = relationship(back_populates="versions")
+
+
 class ProviderHealth(BaseModel):
     """
     Real-time health status of intelligence providers.

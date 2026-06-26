@@ -109,3 +109,22 @@ class ProviderHealthSchema(BaseModel):
     status: str
     latency_ms: Optional[float] = None
     last_check_at: datetime
+
+class ProviderCapabilitySchema(BaseModel):
+    """API Response for provider capabilities."""
+    provider_id: str
+    capability_type: str
+    is_supported: bool
+    confidence_level: float
+
+class ProviderDetailsSchema(BaseModel):
+    """API Response for provider detailed metadata."""
+    provider_id: str
+    name: str
+    description: Optional[str]
+    version: str
+    provider_type: str
+    is_active: bool
+    capabilities: List[ProviderCapabilitySchema]
+    config: Dict[str, Any]
+    health: Optional[ProviderHealthSchema] = None
