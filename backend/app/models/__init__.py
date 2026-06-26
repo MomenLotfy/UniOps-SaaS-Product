@@ -39,6 +39,7 @@ from app.models.repository_risk import RepositoryRiskScore
 from app.models.repository_risk_history import RepositoryRiskHistory
 from app.models.finding_sla import FindingSLA
 from app.models.security_ticket import SecurityTicket
+from app.models.policy_violation import PolicyViolation
 
 __all__ = [
     "BaseModel", "Tenant", "User", "Role", "Permission", "Subscription",
@@ -56,4 +57,5 @@ __all__ = [
     "RepositoryRiskHistory",
     "FindingSLA",
     "SecurityTicket",
+    "PolicyViolation",
 ]

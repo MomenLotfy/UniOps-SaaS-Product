@@ -52,6 +52,8 @@ class SecurityPolicyResponse(BaseModel):
     review_date: Optional[datetime]
     frameworks: list
     tags: dict
+    is_builtin: bool = False
+    policy_type: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

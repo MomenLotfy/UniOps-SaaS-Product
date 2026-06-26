@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from sqlalchemy import String, ForeignKey, JSON, Text, Boolean, DateTime
+from sqlalchemy import String, ForeignKey, JSON, Text, Boolean, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import BaseModel
 
@@ -25,3 +25,5 @@ class SecurityPolicy(BaseModel):
     review_date:      Mapped[datetime|None] = mapped_column(DateTime(timezone=True))
     frameworks:       Mapped[list]          = mapped_column(JSON, default=list)
     tags:             Mapped[dict]          = mapped_column(JSON, default=dict)
+    is_builtin:       Mapped[bool]          = mapped_column(Boolean, default=False, nullable=False)
+    policy_type:      Mapped[str | None]    = mapped_column(String(100), nullable=True)
