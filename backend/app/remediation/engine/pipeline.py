@@ -1,88 +1,140 @@
 from __future__ import annotations
-from typing import Any, Optional
-import uuid
-from datetime import datetime, timezone
-
-from app.remediation.interfaces.base import RemediationContext, ExecutionPlan, IRemediationValidator
-from app.remediation.registry.registry import CapabilityRegistry
-from app.remediation.models.models import RemediationExecutionHistory
+from enum import Enum
+from typing import Any, Dict, List, Optional, Callable, Awaitable
+from pydantic import BaseModel
+from app.remediation.interfaces.base import RemediationContext, ExecutionPlan
 from app.utils.logger import logger
+
+class PipelineStage(str, Enum):
+    """The deterministic stages of a remediation execution pipeline."""
+    PRE_VALIDATION = "pre_validation"
+    POLICY_VALIDATION = "policy_validation"
+    CAPABILITY_PREP = "capability_prep"
+    EXECUTION_PREP = "execution_prep"
+    EXECUTION = "execution"
+    POST_EXECUTION = "post_execution"
+    VERIFICATION = "verification"
+    COMPLETION = "completion"
+    ROLLBACK = "rollback"
+
+class StageResult(BaseModel):
+    """The outcome of a specific pipeline stage."""
+    stage: PipelineStage
+    status: str # success | failed | skipped
+    output: Any = None
+    error: Optional[str] = None
+    duration_ms: float = 0.0
 
 class ExecutionPipeline:
     """
-    Orchestrates the end-to-end execution of a remediation plan.
-    Handles Validation -> Execution -> Telemetry -> Recording.
+    Orchestrates the sequential execution of remediation stages.
+    This class does not contain business logic; it coordinates the call
+    to the appropriate plugins and validators for each stage.
     """
-    def __init__(self, registry: CapabilityRegistry, db_session, validator: Optional[IRemediationValidator] = None):
-        self.registry = registry
-        self.db = db_session
-        self.validator = validator
+    def __init__(self, orchestrator: Any):
+        self.orchestrator = orchestrator
+        self.stages = [
+            PipelineStage.PRE_VALIDATION,
+            PipelineStage.POLICY_VALIDATION,
+            PipelineStage.CAPABILITY_PREP,
+            PipelineStage.EXECUTION_PREP,
+            PipelineStage.EXECUTION,
+            PipelineStage.POST_EXECUTION,
+            PipelineStage.VERIFICATION,
+            PipelineStage.COMPLETION
+        ]
 
-    async def execute_plan(self, context: RemediationContext, plan: ExecutionPlan) -> Any:
+    async def run(self, context: RemediationContext, plan: ExecutionPlan) -> List[StageResult]:
         """
-        Executes the remediation plan and records the outcome.
+        Executes the pipeline stages in order.
         """
-        logger.info(f"[Pipeline] Starting execution for plan {plan.plan_id}")
-
-        # 1. Validation Phase
-        # Ensure the plan is still applicable and safe to execute.
-        if self.validator:
-            is_valid = await self.validator.validate(plan, context)
-            if not is_valid:
-                logger.error(f"[Pipeline] Plan {plan.plan_id} failed pre-execution validation")
-                return {"status": "failed", "error": "Pre-execution validation failed"}
-
-        # 2. Strategy Retrieval
-        # Find the plugin responsible for the capability and get the specific strategy.
-        capability_handler = self.registry.get_capability(plan.capability_id)
-        if not capability_handler:
-            logger.error(f"[Pipeline] No handler found for capability {plan.capability_id}")
-            return {"status": "failed", "error": f"Capability {plan.capability_id} not available"}
+        results = []
 
         try:
-            strategy = await capability_handler.get_strategy(plan.strategy_id)
+            for stage in self.stages:
+                result = await self._execute_stage(stage, context, plan)
+                results.append(result)
+
+                if result.status == "failed":
+                    logger.error(f"[Pipeline] Stage {stage} failed. Initiating rollback.")
+                    await self._handle_rollback(context, plan)
+                    break
+
+            return results
+
         except Exception as e:
-            logger.error(f"[Pipeline] Error retrieving strategy {plan.strategy_id}: {e}")
-            return {"status": "failed", "error": str(e)}
+            logger.exception(f"[Pipeline] Critical failure during pipeline execution: {e}")
+            await self._handle_rollback(context, plan)
+            return results
 
-        if not strategy:
-            logger.error(f"[Pipeline] Strategy {plan.strategy_id} not found in plugin")
-            return {"status": "failed", "error": "Remediation strategy not found"}
-
-        # 3. Execution and recording
-        execution_id = str(uuid.uuid4())
-        history_entry = RemediationExecutionHistory(
-            execution_id=execution_id,
-            plan_id=plan.plan_id,
-            tenant_id=context.tenant_id,
-            start_time=datetime.now(timezone.utc),
-            status="started"
-        )
-        self.db.add(history_entry)
-        await self.db.commit()
+    async def _execute_stage(self, stage: PipelineStage, context: RemediationContext, plan: ExecutionPlan) -> StageResult:
+        """
+        Routes the execution to the specific handler for the stage.
+        """
+        import time
+        start = time.time()
 
         try:
-            # The core execution logic resides in the strategy plugin.
-            result = await strategy.execute(context, plan)
+            # Routing logic to orchestrator methods
+            if stage == PipelineStage.PRE_VALIDATION:
+                success = await self.orchestrator.validate_pre_execution(context, plan)
+                status = "success" if success else "failed"
+                output = "Pre-validation passed" if success else "Pre-validation failed"
 
-            # Update history on success
-            history_entry.status = "success"
-            history_entry.end_time = datetime.now(timezone.utc)
-            history_entry.result_metadata = {"output": result}
+            elif stage == PipelineStage.POLICY_VALIDATION:
+                success = await self.orchestrator.validate_policies(context, plan)
+                status = "success" if success else "failed"
+                output = "Policies compliant" if success else "Policy violation"
 
-            # Update the plan status to completed.
-            plan.status = "completed"
+            elif stage == PipelineStage.CAPABILITY_PREP:
+                # Resolve and prepare the plugin/strategy
+                output = await self.orchestrator.prepare_capability(context, plan)
+                status = "success" if output else "failed"
+
+            elif stage == PipelineStage.EXECUTION_PREP:
+                # Final check and resource locking
+                output = await self.orchestrator.prepare_execution(context, plan)
+                status = "success" if output else "failed"
+
+            elif stage == PipelineStage.EXECUTION:
+                # Call the actual strategy execute()
+                output = await self.orchestrator.execute_strategy(context, plan)
+                status = "success" if output else "failed"
+
+            elif stage == PipelineStage.POST_EXECUTION:
+                output = await self.orchestrator.post_execute(context, plan)
+                status = "success" if output else "failed"
+
+            elif stage == PipelineStage.VERIFICATION:
+                output = await self.orchestrator.verify_remediation(context, plan)
+                status = "success" if output else "failed"
+
+            elif stage == PipelineStage.COMPLETION:
+                output = await self.orchestrator.finalize_execution(context, plan)
+                status = "success" if output else "failed"
+
+            else:
+                status = "skipped"
+                output = None
+
+            return StageResult(
+                stage=stage,
+                status=status,
+                output=output,
+                duration_ms=(time.time() - start) * 1000
+            )
 
         except Exception as e:
-            logger.exception(f"[Pipeline] Critical error during execution of plan {plan.plan_id}")
-            history_entry.status = "failed"
-            history_entry.error_message = str(e)
-            history_entry.end_time = datetime.now(timezone.utc)
-            plan.status = "failed"
-            return {"status": "failed", "error": str(e)}
-        finally:
-            # Final commit for the execution record.
-            await self.db.commit()
+            logger.error(f"[Pipeline] Exception in stage {stage}: {e}")
+            return StageResult(stage=stage, status="failed", error=str(e), duration_ms=(time.time() - start) * 1000)
 
-        logger.info(f"[Pipeline] Successfully executed plan {plan.plan_id} (ID: {execution_id})")
-        return {"status": "success", "execution_id": execution_id, "result": result}
+    async def _handle_rollback(self, context: RemediationContext, plan: ExecutionPlan):
+        """
+        Coordinates the rollback process across the strategy and state machine.
+        """
+        logger.info(f"[Pipeline] Triggering rollback for plan {plan.plan_id}")
+        try:
+            # Call orchestrator to perform the strategy rollback
+            await self.orchestrator.rollback_execution(context, plan)
+        except Exception as e:
+            logger.exception(f"[Pipeline] Rollback failed: {e}")

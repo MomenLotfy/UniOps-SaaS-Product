@@ -1,15 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Any, Optional
+import uuid
 
 from app.api.deps import get_db, get_current_user, get_tenant_id
 from app.remediation.manager import RemediationManager
 from app.remediation.registry.provider import get_remediation_registry
 from app.remediation.interfaces.base import RemediationContext, ExecutionPlan
-from app.remediation.models.models import RemediationPlan, RemediationExecutionHistory
+from app.remediation.models.models import RemediationPlan, RemediationExecutionHistory, RemediationStateHistory, RemediationExecutionMetrics, PluginMetadata
 from sqlalchemy import select
 
 from app.services.copilot_service import CopilotService
+from app.remediation.engine.orchestrator import ExecutionOrchestrator
+from app.remediation.engine.controller import ExecutionController
+from app.remediation.engine.locks import LockManager, InMemoryLockProvider
 
 router = APIRouter()
 
@@ -17,6 +21,16 @@ async def get_remediation_manager(db: AsyncSession = Depends(get_db)):
     registry = get_remediation_registry()
     copilot_service = CopilotService(db)
     return RemediationManager(db, registry, copilot_service=copilot_service)
+
+async def get_orchestrator(db: AsyncSession = Depends(get_db)):
+    registry = get_remediation_registry()
+    return ExecutionOrchestrator(registry, db, lock_manager=LockManager(InMemoryLockProvider()))
+
+async def get_controller(
+    db: AsyncSession = Depends(get_db),
+    orchestrator: ExecutionOrchestrator = Depends(get_orchestrator)
+):
+    return ExecutionController(orchestrator, db)
 
 @router.post("/propose", status_code=status.HTTP_200_OK)
 async def propose_remediation(
@@ -26,7 +40,6 @@ async def propose_remediation(
 ):
     """
     Proposes a remediation plan based on the provided finding context.
-    Payload should contain finding_id, repo_id, and optional metadata.
     """
     try:
         context = RemediationContext(
@@ -48,6 +61,65 @@ async def propose_remediation(
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
+@router.post("/execute/{plan_id}/start", status_code=status.HTTP_200_OK)
+async def start_execution(
+    plan_id: str,
+    tenant_id: str = Depends(get_tenant_id),
+    controller: ExecutionController = Depends(get_controller),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Triggers the execution of a specific plan.
+    """
+    query = select(RemediationPlan).where(
+        RemediationPlan.id == plan_id,
+        RemediationPlan.tenant_id == tenant_id
+    )
+    result = await db.execute(query)
+    plan_db = result.scalar_one_or_none()
+    if not plan_db:
+        raise HTTPException(status_code=404, detail="Plan not found")
+
+    plan = ExecutionPlan(**plan_db.__dict__)
+    context = RemediationContext(
+        tenant_id=tenant_id,
+        finding_id=plan.finding_id,
+        repo_id="unknown",
+        correlation_id=str(uuid.uuid4())
+    )
+
+    return await controller.start_execution(context, plan)
+
+@router.post("/execute/{plan_id}/cancel", status_code=status.HTTP_200_OK)
+async def cancel_execution(
+    plan_id: str,
+    tenant_id: str = Depends(get_tenant_id),
+    controller: ExecutionController = Depends(get_controller)
+):
+    """
+    Cancels a running execution.
+    """
+    success = await controller.cancel_execution(plan_id, tenant_id)
+    return {"status": "cancelled" if success else "failed"}
+
+@router.post("/execute/{plan_id}/rollback", status_code=status.HTTP_200_OK)
+async def rollback_execution(
+    plan_id: str,
+    tenant_id: str = Depends(get_tenant_id),
+    controller: ExecutionController = Depends(get_controller),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Manually triggers a la rollback for a completed/failed plan.
+    """
+    context = RemediationContext(
+        tenant_id=tenant_id,
+        finding_id="unknown",
+        repo_id="unknown",
+        correlation_id=str(uuid.uuid4())
+    )
+    return await controller.trigger_rollback(plan_id, tenant_id, context)
+
 @router.post("/execute/{plan_id}", status_code=status.HTTP_200_OK)
 async def execute_remediation(
     plan_id: str,
@@ -58,7 +130,6 @@ async def execute_remediation(
     """
     Triggers the execution of a previously proposed remediation plan.
     """
-    # 1. Fetch the plan from DB to validate it belongs to the tenant
     query = select(RemediationPlan).where(
         RemediationPlan.id == plan_id,
         RemediationPlan.tenant_id == tenant_id
@@ -67,34 +138,19 @@ async def execute_remediation(
     plan_db = result.scalar_one_or_none()
 
     if not plan_db:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
+        raise HTTPException(status_code=404, detail="Plan not found")
 
-    # 2. Reconstruct the context (In a real system, context would be persisted)
-    # For this architecture, we assume the caller provides context or we retrieve it.
-    # Simplified: we'll use the plan's metadata to build a basic context.
     context = RemediationContext(
         tenant_id=tenant_id,
         finding_id=plan_db.finding_id,
-        repo_id="unknown", # Would be retrieved from plan metadata in real impl
+        repo_id="unknown",
         metadata={
             "finding_type": plan_db.finding_type,
             "technology": plan_db.target_technology
         }
     )
 
-    # Convert DB model to ExecutionPlan Pydantic model
-    execution_plan = ExecutionPlan(
-        plan_id=plan_db.id,
-        finding_type=plan_db.finding_type,
-        target_technology=plan_db.target_technology,
-        capability_id=plan_db.capability_id,
-        strategy_id=plan_db.strategy_id,
-        priority=plan_db.priority,
-        required_inputs=plan_db.required_inputs,
-        expected_outputs=plan_db.expected_outputs,
-        status=plan_db.status
-    )
-
+    execution_plan = ExecutionPlan(**plan_db.__dict__)
     res = await manager.run_remediation(context, execution_plan)
 
     if res["status"] == "failed":
@@ -115,7 +171,7 @@ async def get_plan(
     result = await db.execute(query)
     plan = result.scalar_one_or_none()
     if not plan:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
+        raise HTTPException(status_code=404, detail="Plan not found")
     return plan
 
 @router.get("/history/{plan_id}")
@@ -136,9 +192,6 @@ async def get_plan_history(
 async def list_capabilities(
     manager: RemediationManager = Depends(get_remediation_manager)
 ):
-    """
-    Lists all available remediation capabilities registered in the system.
-    """
     return manager.registry.list_plugins()
 
 @router.get("/status/{plan_id}")
@@ -147,9 +200,6 @@ async def get_execution_status(
     tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Returns the current state of a remediation plan.
-    """
     query = select(RemediationPlan).where(
         RemediationPlan.id == plan_id,
         RemediationPlan.tenant_id == tenant_id
@@ -171,9 +221,6 @@ async def get_execution_timeline(
     tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Returns the state transition history for a la plan.
-    """
     query = select(RemediationStateHistory).where(
         RemediationStateHistory.plan_id == plan_id,
         RemediationStateHistory.tenant_id == tenant_id
@@ -197,9 +244,6 @@ async def get_remediation_metrics(
     tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Returns aggregated remediation performance metrics.
-    """
     query = select(RemediationExecutionMetrics).where(
         RemediationExecutionMetrics.tenant_id == tenant_id
     )
@@ -215,9 +259,6 @@ async def get_plugin_compatibility(
     tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Returns compatibility metadata for all registered remediation plugins.
-    """
     query = select(PluginMetadata).where(
         PluginMetadata.is_active == True
     )
@@ -240,9 +281,6 @@ async def get_capability_health(
     tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Returns the health and status of all registered remediation capabilities.
-    """
     query = select(PluginMetadata)
     result = await db.execute(query)
     plugins = result.scalars().all()
@@ -263,9 +301,6 @@ async def get_plan_versions(
     tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Returns all versions of a specific remediation plan.
-    """
     query = select(RemediationPlan).where(
         (RemediationPlan.id == plan_id) | (RemediationPlan.parent_version_id == plan_id),
         RemediationPlan.tenant_id == tenant_id
@@ -287,23 +322,16 @@ async def get_plan_versions(
 async def get_execution_policies(
     tenant_id: str = Depends(get_tenant_id)
 ):
-    """
-    Returns the active execution policies for the tenant.
-    (Currently returns architectural defaults)
-    """
     return {
         "policies": [
             {"id": "POL-001", "type": "manual_approval", "description": "Production repositories require manual approval."},
-            {"id": "POL-002", "type": "production_freeze", "description": "No auto-remediation during peak business hours."}
+            {"id": "POL-002", "type": "production_freeze", "description": "Peak Hour ConstraintsC"},
+            {"id": "POL-003", "type": "security_approval", "description": "SVP Security Sign-off"},
         ]
     }
 
 @router.get("/workers/status")
 async def get_worker_status():
-    """
-    Returns the status of the remediation worker fleet.
-    (In a real impl, this would query a health check or monitoring system)
-    """
     return {
         "workers": [
             {"name": "PlanningWorker", "status": "active", "load": "low"},
