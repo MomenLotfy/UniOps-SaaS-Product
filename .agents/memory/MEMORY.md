@@ -2,3 +2,4 @@
 - [Asset Inventory Engine](asset-inventory.md) — full asset discovery for GitHub/GitLab/AWS/K8s/Docker; scheduler runs every 6h; GitHub client returns simplified owner (str not dict) — fixed in _sync_github
 - [SBOM + Vuln Dedup Engine](sbom-dedup.md) — Phase 1 Step 4: sboms table, 3 API endpoints, CycloneDX+SPDX generation; vuln dedup key=(tenant_id,cve_id,package_name); SQLAlchemy create_all does NOT ALTER existing tables — must run ALTER TABLE manually for new columns
 - [Repository Risk Rating Engine](repo-risk.md) — repository_risk_scores table, RiskService, 2 API endpoints; risk computed post-scan (non-fatal); factors: critical/high/secrets/container/compliance/exposure; sorted by risk_score desc in API
+- [Ownership + SLA + Ticket Integrations](ownership-sla-tickets.md) — owner/team/department on threats/vulns/repos/assets via ALTER TABLE; finding_slas table for SLA tracking; security_tickets table for Jira/Linear/ADO; ticket clients use httpx + env vars

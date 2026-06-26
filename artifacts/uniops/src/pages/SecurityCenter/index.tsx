@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, AlertTriangle, Bug, CheckSquare, GitBranch,
   Server, TrendingUp, FileText, ClipboardList, BookOpen,
-  ChevronRight, Menu, X, Layers, Package,
+  ChevronRight, Menu, X, Layers, Package, Users, Clock, Ticket,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -22,11 +22,14 @@ import Exceptions           from './sections/Exceptions';
 import Reports              from './sections/Reports';
 import KubernetesSecurity   from './sections/KubernetesSecurity';
 import SBOMSection          from './sections/SBOM';
+import Ownership            from './sections/Ownership';
+import SLATracker           from './sections/SLATracker';
 
 export type SecuritySection =
   | 'overview' | 'threats' | 'vulnerabilities' | 'compliance'
   | 'repositories' | 'assets' | 'kubernetes' | 'posture'
-  | 'policies' | 'exceptions' | 'reports' | 'sbom';
+  | 'policies' | 'exceptions' | 'reports' | 'sbom'
+  | 'ownership' | 'sla';
 
 interface NavItem {
   id: SecuritySection;
@@ -34,22 +37,28 @@ interface NavItem {
   icon: React.ElementType;
   description: string;
   badge?: string;
-  minRole?: string[];
+  group?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'overview',        label: 'Overview',            icon: Shield,        description: 'Security dashboard' },
-  { id: 'threats',         label: 'Threats',             icon: AlertTriangle, description: 'Active security threats' },
-  { id: 'vulnerabilities', label: 'Vulnerabilities',     icon: Bug,           description: 'CVEs and findings' },
-  { id: 'compliance',      label: 'Compliance',          icon: CheckSquare,   description: 'Framework compliance' },
-  { id: 'repositories',    label: 'Repositories',        icon: GitBranch,     description: 'Repo scanning' },
-  { id: 'assets',          label: 'Assets',              icon: Server,        description: 'Asset inventory' },
-  { id: 'kubernetes',      label: 'Kubernetes Security', icon: Layers,        description: 'K8s cluster scanning', badge: 'NEW' },
-  { id: 'posture',         label: 'Security Posture',    icon: TrendingUp,    description: 'Posture score & trends' },
-  { id: 'policies',        label: 'Policies',            icon: BookOpen,      description: 'Security policies' },
-  { id: 'exceptions',      label: 'Exceptions',          icon: ClipboardList, description: 'Exception requests' },
-  { id: 'reports',         label: 'Reports',             icon: FileText,      description: 'Audit & reports' },
-  { id: 'sbom',            label: 'SBOM',                icon: Package,       description: 'Software Bill of Materials' },
+  // ── Core
+  { id: 'overview',        label: 'Overview',            icon: Shield,        description: 'Security dashboard',           group: 'Core' },
+  { id: 'threats',         label: 'Threats',             icon: AlertTriangle, description: 'Active security threats',       group: 'Core' },
+  { id: 'vulnerabilities', label: 'Vulnerabilities',     icon: Bug,           description: 'CVEs and findings',             group: 'Core' },
+  { id: 'compliance',      label: 'Compliance',          icon: CheckSquare,   description: 'Framework compliance',          group: 'Core' },
+  // ── Infrastructure
+  { id: 'repositories',    label: 'Repositories',        icon: GitBranch,     description: 'Repo scanning & risk',          group: 'Infrastructure' },
+  { id: 'assets',          label: 'Assets',              icon: Server,        description: 'Asset inventory',               group: 'Infrastructure' },
+  { id: 'kubernetes',      label: 'Kubernetes',          icon: Layers,        description: 'K8s cluster scanning',          group: 'Infrastructure', badge: 'NEW' },
+  // ── Governance
+  { id: 'posture',         label: 'Security Posture',    icon: TrendingUp,    description: 'Posture score & trends',        group: 'Governance' },
+  { id: 'ownership',       label: 'Ownership',           icon: Users,         description: 'Owner / team / department',     group: 'Governance', badge: 'NEW' },
+  { id: 'sla',             label: 'SLA Tracker',         icon: Clock,         description: 'Remediation SLA deadlines',     group: 'Governance', badge: 'NEW' },
+  { id: 'policies',        label: 'Policies',            icon: BookOpen,      description: 'Security policies',             group: 'Governance' },
+  { id: 'exceptions',      label: 'Exceptions',          icon: ClipboardList, description: 'Exception requests',            group: 'Governance' },
+  // ── Reports
+  { id: 'reports',         label: 'Reports',             icon: FileText,      description: 'Audit & reports',               group: 'Reports' },
+  { id: 'sbom',            label: 'SBOM',                icon: Package,       description: 'Software Bill of Materials',    group: 'Reports' },
 ];
 
 const SECTION_COMPONENTS: Record<SecuritySection, React.ComponentType> = {
@@ -61,15 +70,19 @@ const SECTION_COMPONENTS: Record<SecuritySection, React.ComponentType> = {
   assets:          Assets,
   kubernetes:      KubernetesSecurity,
   posture:         SecurityPosture,
+  ownership:       Ownership,
+  sla:             SLATracker,
   policies:        Policies,
   exceptions:      Exceptions,
   reports:         Reports,
   sbom:            SBOMSection,
 };
 
+const GROUPS = ['Core', 'Infrastructure', 'Governance', 'Reports'];
+
 export default function SecurityCenter() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen]   = useState(false);
   const { role } = usePermissions();
 
   const sectionParam = searchParams.get('section') as SecuritySection | null;
@@ -100,7 +113,7 @@ export default function SecurityCenter() {
 
   return (
     <div className="flex h-full min-h-screen" style={{ background: 'hsl(230 15% 6%)' }}>
-      {/* ── Mobile overlay ────────────────────────────────────────────────── */}
+      {/* ── Mobile overlay ───────────────────────────────────────────── */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -111,7 +124,7 @@ export default function SecurityCenter() {
         )}
       </AnimatePresence>
 
-      {/* ── Sidebar ───────────────────────────────────────────────────────── */}
+      {/* ── Sidebar ──────────────────────────────────────────────────── */}
       <aside className={clsx(
         'fixed lg:static inset-y-0 left-0 z-40 lg:z-auto',
         'w-56 flex-shrink-0 flex flex-col border-r transition-transform duration-200',
@@ -135,31 +148,41 @@ export default function SecurityCenter() {
           </button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-2 px-2">
-          {NAV_ITEMS.map(item => {
-            const Icon = item.icon;
-            const active = activeSection === item.id;
+        {/* Nav — grouped */}
+        <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-3">
+          {GROUPS.map(group => {
+            const items = NAV_ITEMS.filter(n => n.group === group);
             return (
-              <button
-                key={item.id}
-                onClick={() => navigate(item.id)}
-                className={clsx(
-                  'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all mb-0.5',
-                  active
-                    ? 'bg-blue-600/20 text-blue-400 border border-blue-500/20'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent',
-                )}
-              >
-                <Icon className={clsx('w-4 h-4 flex-shrink-0', active ? 'text-blue-400' : 'text-muted-foreground')} />
-                <span className="text-xs font-medium">{item.label}</span>
-                {item.badge && !active && (
-                  <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-                    {item.badge}
-                  </span>
-                )}
-                {active && <ChevronRight className="w-3 h-3 ml-auto text-blue-400" />}
-              </button>
+              <div key={group}>
+                <p className="px-3 py-1 text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">
+                  {group}
+                </p>
+                {items.map(item => {
+                  const Icon   = item.icon;
+                  const active = activeSection === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => navigate(item.id)}
+                      className={clsx(
+                        'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all mb-0.5',
+                        active
+                          ? 'bg-blue-600/20 text-blue-400 border border-blue-500/20'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent',
+                      )}
+                    >
+                      <Icon className={clsx('w-4 h-4 flex-shrink-0', active ? 'text-blue-400' : 'text-muted-foreground')} />
+                      <span className="text-xs font-medium flex-1">{item.label}</span>
+                      {item.badge && !active && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                          {item.badge}
+                        </span>
+                      )}
+                      {active && <ChevronRight className="w-3 h-3 ml-auto text-blue-400" />}
+                    </button>
+                  );
+                })}
+              </div>
             );
           })}
         </nav>
@@ -173,7 +196,7 @@ export default function SecurityCenter() {
         </div>
       </aside>
 
-      {/* ── Main content ──────────────────────────────────────────────────── */}
+      {/* ── Main content ─────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile top bar */}
         <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: 'hsl(230 15% 14%)' }}>
