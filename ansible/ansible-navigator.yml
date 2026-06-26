@@ -1,8 +1,0 @@
-ansible-navigator:
-  execution-environment:
-    enabled: true
-    image: registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest
-    volume-mounts:
-      - src: /home/bisho
-        dest: /home/bisho
-          #        options: Z
