@@ -137,3 +137,93 @@ async def list_capabilities(
     Lists all available remediation capabilities registered in the system.
     """
     return manager.registry.list_plugins()
+
+@router.get("/status/{plan_id}")
+async def get_execution_status(
+    plan_id: str,
+    tenant_id: str = Depends(get_tenant_id),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Returns the current state of a remediation plan.
+    """
+    query = select(RemediationPlan).where(
+        RemediationPlan.id == plan_id,
+        RemediationPlan.tenant_id == tenant_id
+    )
+    result = await db.execute(query)
+    plan = result.scalar_one_or_none()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+
+    return {
+        "plan_id": plan.id,
+        "current_state": plan.status,
+        "updated_at": plan.updated_at
+    }
+
+@router.get("/timeline/{plan_id}")
+async def get_execution_timeline(
+    plan_id: str,
+    tenant_id: str = Depends(get_tenant_id),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Returns the state transition history for a la plan.
+    """
+    query = select(RemediationStateHistory).where(
+        RemediationStateHistory.plan_id == plan_id,
+        RemediationStateHistory.tenant_id == tenant_id
+    ).order_by(RemediationStateHistory.transition_timestamp.asc())
+
+    result = await db.execute(query)
+    history = result.scalars().all()
+
+    return [
+        {
+            "from": h.from_state,
+            "to": h.to_state,
+            "timestamp": h.transition_timestamp,
+            "reason": h.reason,
+            "by": h.transitioned_by
+        } for h in history
+    ]
+
+@router.get("/metrics")
+async def get_remediation_metrics(
+    tenant_id: str = Depends(get_tenant_id),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Returns aggregated remediation performance metrics.
+    """
+    query = select(RemediationExecutionMetrics).where(
+        RemediationExecutionMetrics.tenant_id == tenant_id
+    )
+    result = await db.execute(query)
+    metrics = result.scalars().all()
+
+    return {
+        "metrics": {m.metric_name: m.value for m in metrics}
+    }
+
+@router.get("/workers/status")
+async def get_worker_status():
+    """
+    Returns the status of the remediation worker fleet.
+    (In a real impl, this would query a health check or monitoring system)
+    """
+    return {
+        "workers": [
+            {"name": "PlanningWorker", "status": "active", "load": "low"},
+            {"name": "ExecutionWorker", "status": "active", "load": "medium"},
+            {"name": "ValidationWorker", "status": "active", "load": "low"},
+            {"name": "NotificationWorker", "status": "active", "load": "low"},
+            {"name": "MetricsWorker", "status": "active", "load": "low"},
+        ],
+        "queue_status": {
+            "remediation.planning": 0,
+            "remediation.execution": 2,
+            "remediation.validation": 0,
+        }
+    }
