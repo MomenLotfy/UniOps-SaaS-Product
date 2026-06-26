@@ -110,7 +110,7 @@ async def rollback_execution(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Manually triggers a la rollback for a completed/failed plan.
+    Manually triggers a rollback for a completed/failed plan.
     """
     context = RemediationContext(
         tenant_id=tenant_id,

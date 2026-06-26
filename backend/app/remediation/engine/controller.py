@@ -19,7 +19,7 @@ class ExecutionController:
         self.db = db
 
     async def start_execution(self, context: RemediationContext, plan: ExecutionPlan) -> Any:
-        """Triggers the execution of a la plan."""
+        """Triggers the execution of a plan."""
         return await self.orchestrator.run_execution(context, plan)
 
     async def cancel_execution(self, plan_id: str, tenant_id: str) -> bool:

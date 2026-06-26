@@ -27,7 +27,7 @@ class ValidationWorker(BaseRemediationWorker):
         return "remediation.validation"
 
     async def handle_message(self, message: Any) -> Any:
-        logger.info(f la "[ValidationWorker] Validating plan: {message.payload.get('plan_id')}")
+        logger.info(f"[ValidationWorker] Validating plan: {message.payload.get('plan_id')}")
         # Logic for calling IRemediationValidator goes here.
         return {"status": "validated"}
 

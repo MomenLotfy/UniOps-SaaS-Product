@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 from pydantic import BaseModel
+from abc import ABC
 
 class RollbackStatus(str, Enum):
     """Rollback capability of a remediation strategy."""
@@ -70,7 +71,7 @@ class IRemediationPlugin(ABC):
         """Plugin setup logic."""
         pass
 
-    async def get_strategy(self, strategy_id: str) -> Optional[IRemediationStrategy]:
+    async def get_strategy(self, strategy_id: str) -> Optional['IRemediationStrategy']:
         """Retrieve a specific strategy implementation by ID."""
         pass
 
@@ -94,7 +95,7 @@ class IRemediationStrategy(ABC):
         """The actual execution logic (to be implemented by specific strategies)."""
         pass
 
-    async def rollback(self, context: RemedيsationContext, plan: ExecutionPlan) -> Any:
+    async def rollback(self, context: RemediationContext, plan: ExecutionPlan) -> Any:
         """Performs the rollback operation to revert changes made by execute()."""
         pass
 

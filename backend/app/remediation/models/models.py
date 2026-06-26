@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import String, ForeignKey, JSON, DateTime, Float, Integer, SQLEnum
+from sqlalchemy import String, ForeignKey, JSON, DateTime, Float, Integer, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 from app.remediation.lifecycle.state import RemediationState
@@ -29,7 +29,7 @@ class RemediationPlan(BaseModel):
     strategy_id: Mapped[str] = mapped_column(String(100), nullable=False)
 
     priority: Mapped[str] = mapped_column(String(20), default="medium")
-    status: Mapped[RemediationState] = mapped_column(SQLEnum(RemediationState), default=RemediationState.CREATED)
+    status: Mapped[RemediationState] = mapped_column(Enum(RemediationState), default=RemediationState.CREATED)
 
     # Inputs/Outputs
     required_inputs: Mapped[dict] = mapped_column(JSON, default=dict)
@@ -63,7 +63,8 @@ class RemediationStep(BaseModel):
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
     input_data: Mapped[dict] = mapped_column(JSON, default=dict)
-    output_data: M scrape_result: Mapped[dict] = mapped_column(JSON, default=dict)
+    output_data: Mapped[dict] = mapped_column(JSON, default=dict)
+    scrape_result: Mapped[dict] = mapped_column(JSON, default=dict)
     error_details: Mapped[Optional[str]] = mapped_column(String(2000))
 
     plan: Mapped["RemediationPlan"] = relationship(back_populates="steps")
@@ -77,8 +78,8 @@ class RemediationStateHistory(BaseModel):
     plan_id: Mapped[str] = mapped_column(String(36), ForeignKey("remediation_plans.id", ondelete="CASCADE"), nullable=False)
     tenant_id: Mapped[str] = mapped_column(String(36), ForeignKey("tenants.id"), nullable=False, index=True)
 
-    from_state: Mapped[RemediationState] = mapped_column(SQLEnum(RemediationState))
-    to_state: Mapped[RemediationState] = mapped_column(SQLEnum(RemediationState))
+    from_state: Mapped[RemediationState] = mapped_column(Enum(RemediationState))
+    to_state: Mapped[RemediationState] = mapped_column(Enum(RemediationState))
 
     transition_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     transitioned_by: Mapped[Optional[str]] = mapped_column(String(100)) # e.g. 'PlanningWorker'

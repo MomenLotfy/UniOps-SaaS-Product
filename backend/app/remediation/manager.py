@@ -7,13 +7,15 @@ from app.remediation.registry.registry import CapabilityRegistry
 from app.remediation.engine.decision_engine import RemediationDecisionEngine
 from app.remediation.engine.ai_support import DecisionSupportAI
 from app.remediation.engine.pipeline import ExecutionPipeline
+from app.remediation.engine.quotas import ExecutionQuotas
+from app.remediation.engine.recovery import RecoveryManager
 from app.services.copilot_service import CopilotService
 from app.utils.logger import logger
 
 class RemediationManager:
     """
     The primary facade for the Remediation Engine.
-    Coordinates the Decision Engine and Execution Pipeline.
+    Coordinates the Decision Engine, Execution Pipeline, and Runtime Hardening (Quotas, Recovery).
     """
     def __init__(self, db: AsyncSession, registry: CapabilityRegistry, copilot_service: Optional[CopilotService] = None):
         self.db = db
@@ -26,6 +28,8 @@ class RemediationManager:
 
         self.decision_engine = RemediationDecisionEngine(registry, ai_support=ai_support)
         self.pipeline = ExecutionPipeline(registry, db)
+        self.quotas = ExecutionQuotas(db)
+        self.recovery = RecoveryManager(db)
 
     async def propose_remediation(self, context: RemediationContext) -> Optional[ExecutionPlan]:
         """
@@ -35,9 +39,20 @@ class RemediationManager:
 
     async def run_remediation(self, context: RemediationContext, plan: ExecutionPlan) -> Any:
         """
-        Executes a previously proposed remediation plan.
+        Executes a previously proposed remediation plan after validating quotas.
         """
+        # 1. Quota Check
+        if not await self.quotas.check_quota(context.tenant_id):
+            logger.warning(f"[RemediationManager] Execution quota exceeded for tenant {context.tenant_id}")
+            return {"status": "failed", "error": "Concurrent execution quota exceeded. Please try again later."}
+
         return await self.pipeline.execute_plan(context, plan)
+
+    async def perform_recovery_scan(self, tenant_id: Optional[str] = None) -> Any:
+        """
+        Triggers a scan for stuck executions and attempts recovery.
+        """
+        return await self.recovery.scan_and_recover_stuck_executions(tenant_id)
 
     async def full_remediation_cycle(self, context: RemediationContext) -> Any:
         """

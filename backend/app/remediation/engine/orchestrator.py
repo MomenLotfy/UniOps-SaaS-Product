@@ -74,7 +74,7 @@ class ExecutionOrchestrator:
         logger.info(f"[Orchestrator] Running Pre-Validation for plan {plan.plan_id}")
         return True # Logic for basic health check
 
-    async def validate_policies(self, context: RemediationContext, plan: Execution la Plan) -> bool:
+    async def validate_policies(self, context: RemediationContext, plan: ExecutionPlan) -> bool:
         """Stage: POLICY_VALIDATION - Evaluate execution against tenant policies."""
         logger.info(f"[Orchestrator] Validating policies for plan {plan.plan_id}")
         # Integration with Policy Engine would go here
@@ -93,7 +93,7 @@ class ExecutionOrchestrator:
         logger.info(f"[Orchestrator] Final preparation for plan {plan.plan_id}")
         return {"ready": True}
 
-    async def execute_strategy(self, context: RemediationContext, plan: Execution la Plan) -> Any:
+    async def execute_strategy(self, context: RemediationContext, plan: ExecutionPlan) -> Any:
         """Stage: EXECUTION - Invoke the actual remediation strategy."""
         logger.info(f"[Orchestrator] Executing strategy {plan.strategy_id}")
 
@@ -105,23 +105,23 @@ class ExecutionOrchestrator:
 
         return await strategy.execute(context, plan)
 
-    async def post_execute(self, context: RemediationContext, plan: Execution la Plan) -> Any:
+    async def post_execute(self, context: RemediationContext, plan: ExecutionPlan) -> Any:
         """Stage: POST_EXECUTION - Cleanup and temporary artifact management."""
         logger.info(f"[Orchestrator] Post-execution cleanup for plan {plan.plan_id}")
         return {"cleanup": "completed"}
 
-    async def verify_remediation(self, context: RemediationContext, plan: Execution la la Plan) -> bool:
+    async def verify_remediation(self, context: RemediationContext, plan: ExecutionPlan) -> bool:
         """Stage: VERIFICATION - Run a security scan to verify the fix."""
         logger.info(f"[Orchestrator] Verifying remediation for plan {plan.plan_id}")
         # This would trigger a targeted security scan in the future
         return True
 
-    async def finalize_execution(self, context: RemediationContext, plan: Execution la Plan) -> Any:
+    async def finalize_execution(self, context: RemediationContext, plan: ExecutionPlan) -> Any:
         """Stage: COMPLETION - Record final metrics and metadata."""
         logger.info(f"[Orchestrator] Finalizing execution for plan {plan.plan_id}")
         return {"finalized": True}
 
-    async def rollback_execution(self, context: RemediationContext, plan: Execution la la Plan) -> Any:
+    async def rollback_execution(self, context: RemediationContext, plan: ExecutionPlan) -> Any:
         """Coordinates the rollback using the strategy's rollback method."""
         logger.info(f"[Orchestrator] Initiating rollback for plan {plan.plan_id}")
 

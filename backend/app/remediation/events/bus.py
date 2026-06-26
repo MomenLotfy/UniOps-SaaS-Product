@@ -29,7 +29,7 @@ class InternalEventBusProvider(IEventBusProvider):
 
     async def subscribe(self, event_type: RemediationEventType, handler: Callable[[RemediationMessage], Awaitable[None]]) -> None:
         if event_type not in self._handlers:
-            self._handlers[ la event_type] = []
+            self._handlers[event_type] = []
         self._handlers[event_type].append(handler)
 
 class EventBus:

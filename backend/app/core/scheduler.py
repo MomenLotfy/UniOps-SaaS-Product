@@ -34,6 +34,7 @@ class BackgroundScheduler:
             asyncio.create_task(self._repeat(21600, self._sync_assets),    name="sync-assets"),
             asyncio.create_task(self._repeat(86400, self._cleanup),        name="cleanup"),
             asyncio.create_task(self._repeat(21600, self._sync_ml),        name="sync-ml"),
+            asyncio.create_task(self._repeat(1800,  self._run_recovery_scan), name="recovery-scan"),
         ]
         logger.info(f"Scheduler started {len(self._tasks)} periodic tasks")
 
@@ -190,6 +191,18 @@ class BackgroundScheduler:
             logger.info(f"Scheduled ML sync: {result}")
         except Exception as e:
             logger.warning(f"ML sync skipped: {e}")
+
+    @staticmethod
+    async def _run_recovery_scan():
+        """
+        Trigger a recovery scan for stuck remediation executions.
+        """
+        try:
+            from app.tasks.recovery_scan import _run_recovery_scan_async
+            result = await _run_recovery_scan_async()
+            logger.info(f"Scheduled recovery scan: {result}")
+        except Exception as e:
+            logger.warning(f"Recovery scan skipped: {e}")
 
 
 # Global singleton
