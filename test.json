@@ -1,9 +1,0 @@
-{
-  "model": "mistral-large",
-  "messages": [
-    {
-      "role": "user",
-      "content": "Hello"
-    }
-  ]
-}
