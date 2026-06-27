@@ -1,53 +1,41 @@
 from __future__ import annotations
 from typing import Tuple, List, Optional
-from .context_builder import DecisionContext
-from ..models.decision import Decision, DecisionPlan, DecisionStep, DecisionReason, DecisionEvidence
-from ..models.policy import DecisionPolicyReference
+from sqlalchemy.ext.asyncio import AsyncSession
+from .rule_engine import RuleEngine
+from .rule_repository import RuleRepository
+from ..models.decision import Decision, DecisionPlan, DecisionStep, DecisionReason
+from ..models.context import DecisionContext
 
 class DecisionEngine:
     """
     Core deterministic logic for converting a validated context into a decision.
+    Now powered by the Rule Engine.
     """
-    def __init__(self):
-        # In a full implementation, this would load a set of active policies
-        pass
+    def __init__(self, db: AsyncSession):
+        self.db = db
 
     async def determine_decision(self, context: DecisionContext) -> Tuple[Decision, List[DecisionPlan], List[DecisionReason]]:
         """
-        Applies policies to the context to produce a deterministic decision.
+        Evaluates the context using the Rule Engine to produce a deterministic decision.
         """
-        raw_data = context.raw_data
-        risk_score = raw_data.get("risk", {}).get("overall_score", 0.0)
+        # Initialize Rule Engine with its repository
+        repo = RuleRepository(self.db)
+        rule_engine = RuleEngine(self.db, repo)
 
-        # DETERMINISTIC LOGIC (Foundation Level):
-        # If risk > 8.0 -> Critical Patch Required
-        # If risk > 5.0 -> Mitigate
-        # Else -> Monitor
-
-        result = "MONITOR"
-        reason_code = "LOW_RISK"
-        description = "Risk score is below the threshold for active remediation."
-
-        if risk_score > 8.0:
-            result = "PATCH"
-            reason_code = "HIGH_RISK_VULNERABILITY"
-            description = "Critical risk score detected; immediate patching required."
-        elif risk_score > 5.0:
-            result = "MITIGATE"
-            reason_code = "MEDIUM_RISK_VULNERABILITY"
-            description = "Medium risk score detected; mitigation recommended."
+        # Evaluate context against rules
+        final_result, _, matched_reasons_data = await rule_engine.evaluate(context)
 
         # 1. Create the Decision entity
         decision = Decision(
             tenant_id=context.tenant_id,
             correlation_id=context.correlation_id,
             context_id=context.id,
-            final_result=result,
-            status="READY", # Set by the pipeline, but we define the outcome here
+            final_result=final_result,
+            status="READY",
             version=1
         )
 
-        # 2. Create a simple Plan (Foundation Level)
+        # 2. Build a basic Plan based on the result
         plan = DecisionPlan(
             decision_id=decision.id,
             execution_order=1,
@@ -65,20 +53,32 @@ class DecisionEngine:
             ),
             DecisionStep(
                 plan_id=plan.id,
-                step_type=f"EXECUTE_{result}",
+                step_type=f"EXECUTE_{final_result}",
                 result="Pending",
                 tenant_id=context.tenant_id,
                 correlation_id=context.correlation_id
             )
         ]
 
-        # 3. Create the Reason
-        reason = DecisionReason(
-            decision_id=decision.id,
-            reason_code=reason_code,
-            description=description,
-            tenant_id=context.tenant_id,
-            correlation_id=context.correlation_id
-        )
+        # 3. Create Reasons from Rule Engine matches
+        reasons = [
+            DecisionReason(
+                decision_id=decision.id,
+                reason_code=r["code"],
+                description=r["description"],
+                tenant_id=context.tenant_id,
+                correlation_id=context.correlation_id
+            ) for r in matched_reasons_data
+        ]
 
-        return decision, [plan], [reason]
+        # If no rules matched, provide a default reason
+        if not reasons:
+            reasons.append(DecisionReason(
+                decision_id=decision.id,
+                reason_code="DEFAULT_MONITOR",
+                description="No specific rules matched; default to monitoring.",
+                tenant_id=context.tenant_id,
+                correlation_id=context.correlation_id
+            ))
+
+        return decision, [plan], reasons

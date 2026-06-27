@@ -27,13 +27,14 @@ import SLATracker           from './sections/SLATracker';
 import Intelligence from './sections/Intelligence';
 import Remediation          from './sections/Remediation';
 import Decisions            from './sections/Decisions';
+import Rules               from './sections/Rules';
 import SecurityCopilot      from './SecurityCopilot';
 
 export type SecuritySection =
   | 'overview' | 'threats' | 'vulnerabilities' | 'compliance'
   | 'repositories' | 'assets' | 'kubernetes' | 'posture'
   | 'policies' | 'exceptions' | 'reports' | 'sbom'
-  | 'ownership' | 'sla' | 'remediation' | 'copilot' | 'intelligence' | 'decisions';
+  | 'ownership' | 'sla' | 'remediation' | 'copilot' | 'intelligence' | 'decisions' | 'rules';
 
 interface NavItem {
   id: SecuritySection;
@@ -62,6 +63,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'remediation',     label: 'Remediation',         icon: Wrench,         description: 'Auto-remediation engine',       group: 'Governance', badge: 'NEW' },
   { id: 'intelligence',      label: 'Intelligence',       icon: Server,        description: 'Security Intel Foundation',     group: 'Governance', badge: 'NEW' },
   { id: 'decisions',            label: 'Decisions',            icon: Gavel,         description: 'Remediation Decisions',       group: 'Governance', badge: 'NEW' },
+  { id: 'rules',               label: 'Rules',               icon: BookOpen,      description: 'Deterministic Rule Engine',   group: 'Governance', badge: 'NEW' },
   { id: 'policies',        label: 'Policies',            icon: BookOpen,      description: 'Security policies',             group: 'Governance' },
   { id: 'exceptions',      label: 'Exceptions',          icon: ClipboardList, description: 'Exception requests',            group: 'Governance' },
   // ── Reports
@@ -84,6 +86,7 @@ const SECTION_COMPONENTS: Record<SecuritySection, React.ComponentType> = {
   remediation:     Remediation,
   intelligence:      Intelligence,
   decisions:         Decisions,
+  rules:             Rules,
   policies:        Policies,
   exceptions:      Exceptions,
   reports:         Reports,

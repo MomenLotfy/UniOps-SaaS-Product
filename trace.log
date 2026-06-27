@@ -1,0 +1,268 @@
+* Host router.bynara.id:443 was resolved.
+* IPv6: 2606:4700:3032::ac43:a09a, 2606:4700:3032::6815:991
+* IPv4: 172.67.160.154, 104.21.9.145
+*   Trying [2606:4700:3032::ac43:a09a]:443...
+* Immediate connect fail for 2606:4700:3032::ac43:a09a: Network is unreachable
+*   Trying 172.67.160.154:443...
+* ALPN: curl offers h2,http/1.1
+=> Send SSL data, 5 bytes (0x5)
+0000: ....#
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+=> Send SSL data, 1571 bytes (0x623)
+0000: .............6...-.@Kp.{..D.K,(i..WPT. .2<..#.dx..L....3...1.*@.
+0040: .p..=.3.<.......,.0.........+./...$.(.k.#.'.g.....9.....3.....=.
+0080: <.5./..................router.bynara.id.........................
+00c0: ............h2.http/1.1.........1.....6.4.......................
+0100: ..............................+........-.....3........-......qo.
+0140: .}...\.....s7!.0p.......+&3..VG.b<...Ba@XO.,..K.<.gC......,`..V.
+0180: O...n:;....8...]A.....|6...=w....&...#T#\5o..?..UL.3.X.Gh...#eT.
+01c0: .b..a....p.x..-?@......7)%.$.Q..I.Z..0W>.vF...wl..L.S......&.w..
+0200: V.a9f..[..6B..7......<H4!...`.\i..o..j57X.&...1D.V.<...)...Z.2..
+0240: .!9d.\v.....fA.z.c8..p......wh=...v<bV..?+Y.$./#..Up' .?$.q.....
+0280: xJ.!,P."~.........69V#...T..T.e..#._...}90_...6.6..}..D.UpU.....
+02c0: .X..26G..e..xH......o.........7...(x)F.iO..\:....Jl.JmFC....,..*
+0300: ...r8rG.Ij....B.....,.,D...+.y...t...h......:.+....w`.......&...
+0340: ....d..gq.7q....{....W">..`...1A.ccnp.1p!.b.y...7....o.....:]...
+0380: .......s. 7.G}...[((.%...S.L.-.*.|U..w........z*..s.i..44...[4..
+03c0: p.p...i.xJ....apy(e....j..E.$....I....6...Z&..D..K..d.......`...
+0400: ...p:\.D ....*...k.....>.1;.l,........vf0..f.T...R`,...P}>9*_I.0
+0440: (...$U..qAk..Z....X...'.G...._..............aL_. ...THw...-.&C>.
+0480: .H2F...aI0..............9.X.^..abG.IRb.L.....rM.6.U.../......@#p
+04c0: (...$i.YB..5....\.....:.....d..&.XqR.*.....r.J..I..{p_S..K4..e.$
+0500: ..e.o...r.7X.W.......1G..7.{..a.KJ...;..b.&.ws...m.x.A...R(.....
+0540: *..YS..c.KZ...&..)...Y...R.....5:*6.QlL......T.....c......0.vA..
+0580: $.....=.K},..;gZ.....9.j..%...)..W4QK.......'...,.V..=p...bV..B.
+05c0: k..........5*a...egy^9....~Qf[.....2...g..&..`>x .Oy&s... ..%...
+0600: |....gs|...//..K....iM...5.........
+* SSL Trust Anchors:
+*   CAfile: /etc/ssl/certs/ca-certificates.crt
+*   CApath: /etc/ssl/certs
+<= Recv SSL data, 5 bytes (0x5)
+0000: .....
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+<= Recv SSL data, 1210 bytes (0x4ba)
+0000: .........PP.1.\.....Pn........O..X.30z .2<..#.dx..L....3...1.*@.
+0040: .p..=.3....n.3.d...`k}M.M..T.c].{@...........5.."Y...8Ft.L.@....
+0080: .U.r0.>)&....e,.p.>..L....a.Y...3z.Q.'..W.........V=.;.r.......F
+00c0: .$.^.%. ...`.^...B.R...K.X..%R...W...)A.P~..4.).......^....r....
+0100: ..h...Q..>r|(.a..;.X.&`.@I......=.....9 7.....0.c..X....>..:....
+0140: 3.F..da...#..{..s..o.?.N.[`u..0.rA{.u......,..k..h<. .B..G^f....
+0180: .<.....T...".{o......Ee......b..#.Uh/....[.o...l..h....kK.H....S
+01c0: *Wl..d .*.O..:-.d!/.8...$.3.........u.....4....8...m.|.E:.!.W..r
+0200: ...!...6.....l....%.w$A....p.C.`.Pp.&\f.m..Y....ee."..rM:Ss.....
+0240: '.4.S3..{.K.v..B`..G.........2R.4p.}.....B..l.......{[.........n
+0280: |-K..W....h..nE.~..P..P7..hl4.j.....1...CAx@...=aU....h.|...@.%a
+02c0: A<8`K.cl|......|+.![.k...>....2O.)Y.&.h.......#:*.,tm:..>.[....=
+0300: ..u.sS"..TTS.H.d...1jX1Y.% .2q..r..D..A.o....?2...Ys.HfOn.^...G.
+0340: D>.w..C,V1-Hp..j..<....<...X?....q.1/..jS...ZK....\.9..*>..8...A
+0380: /..y...Cs.,{.8.S.....f..F(....l%.=..#._/...4E*.m..xpx.....X8\..A
+03c0: .....3.....)Hh..q..(~....V.._.....i.%.pQ... E....'.*8}.......U..
+0400: +..+..............^..;jE.."......9.y./......s.P....f.Q.XI._.....
+0440: L.....e...N....(..\X...^?W....b.a...R>.z...h........9f.%....A..#
+0480: .P...pK#...R......wS...*................u...B...M{...+....
+<= Recv SSL data, 5 bytes (0x5)
+0000: .....
+* TLSv1.3 (IN), TLS change cipher, Change cipher spec (1):
+<= Recv SSL data, 1 bytes (0x1)
+0000: .
+<= Recv SSL data, 5 bytes (0x5)
+0000: ....V
+<= Recv SSL data, 1 bytes (0x1)
+0000: .
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+<= Recv SSL data, 19 bytes (0x13)
+0000: .................h2
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+<= Recv SSL data, 2479 bytes (0x9af)
+0000: ..........w0..s0...........[.Y.....u..I..K0...*.H.=...0;1.0...U.
+0040: ...US1.0...U....Google Trust Services1.0...U....WE10...260621094
+0080: 134Z..260919103910Z0.1.0...U....bynara.id0Y0...*.H.=....*.H.=...
+00c0: .B..'fu<.R...i..y]>..."..r......5.K.....vq.....It%b..........{..
+0100: .T.....#0...0...U...........0...U.%..0...+.......0...U.......0.0
+0140: ...U..........J..'....oe......0...U.#..0....w.5g......{..y{...80
+0180: 5..+........)0'0%..+.....0...http://i.pki.goog/we1.crt0!..U....0
+01c0: ...bynara.id..*.bynara.id0...U. ..0.0...g.....06..U.../0-0+.).'.
+0200: %http://c.pki.goog/we1/0b07lKySgU0.crl0.....+.....y............u
+0240: ..m}....w..._......3Ze....s....iw......~Q.....F0D. 3.......{..S.
+0280: 4.|25......0[5D..... .2..fH...*..v..7.=....s....*$.X..t..NC.....
+02c0: ...$&..e..._8..?rg}U7.........~......E0C. Q...ceg....rXbJ..^..S.
+0300: .|.......c..c,7.!.1P.W5..o...|....D...{y#..0...*.H.=....I.0F.!..
+0340: `(.......M.....&.....}.....k....!..x.....[.9.i.*r.+...t\..<wM90_
+0380: +J.....0...0..%..........w.,"Jv.].....0...*.H.=...0G1.0...U....U
+03c0: S1"0 ..U....Google Trust Services LLC1.0...U....GTS Root R40...2
+0400: 31213090000Z..290220140000Z0;1.0...U....US1.0...U....Google Trus
+0440: t Services1.0...U....WE10Y0...*.H.=....*.H.=....B..o.:.gWGL!..@.
+0480: G].XG.@.\....7..|..K.................Y.,&...&%....V...0..0...U..
+04c0: .........0...U.%..0...+.........+.......0...U.......0.......0...
+0500: U.......w.5g......{..y{...80...U.#..0....L..t.I6.....>.j....04..
+0540: +........(0&0$..+.....0...http://i.pki.goog/r4.crt0+..U...$0"0 .
+0580: .....http://c.pki.goog/r/r4.crl0...U. ..0.0...g.....0...*.H.=...
+05c0: .h.0e.1....Q..C..u......@Az&....2-=....#H.R.>dy....,.nU..0&..h.b
+0600: ...~....D~.LI..l.b4...~:..P.....}s..RAM..V....~0..z0..b.........
+0640: 0.3.C.....I=..0...*.H........0W1.0...U....BE1.0...U....GlobalSig
+0680: n nv-sa1.0...U....Root CA1.0...U....GlobalSign Root CA0...231115
+06c0: 034321Z..280128000042Z0G1.0...U....US1"0 ..U....Google Trust Ser
+0700: vices LLC1.0...U....GTS Root R40v0...*.H.=....+...".b...ts.h.`.C
+0740: .5..0{KI...a...F.k.a.5.@.s...0Z.<..|.@v;...G.*...js..r9.)...._^X
+0780: .e...e......s..j/.........0..0...U...........0...U.%..0...+.....
+07c0: ....+.......0...U.......0....0...U.......L..t.I6.....>.j....0...
+0800: U.#..0...`{f.E....P/}..4....K06..+........*0(0&..+.....0...http:
+0840: //i.pki.goog/gsr1.crt0-..U...&0$0". ....http://c.pki.goog/r/gsr1
+0880: .crl0...U. ..0.0...g.....0...*.H..............B........?c.....hH
+08c0: .9"s...N-.1......6...y.....j.{.}.t..e.h*,,.B..q...-.k..n.}V.#XX.
+0900: %...G... ........U.yu5,1[?e....B.....^.....-G...c~....k.......gX
+0940: ......I.P[?:.%....\.yW.6...&.........>..n..<..8.A..^S.>. W...?H.
+0980: .....j#....?/....n..F...g.3&...K..6.&;[........
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+<= Recv SSL data, 79 bytes (0x4f)
+0000: ...K...G0E.!..r..<#.?...f.........].f......;.. 75h..&p.|4..\o...
+0040: 2..i$K$<.......
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+<= Recv SSL data, 52 bytes (0x34)
+0000: ...0..{Q0p.......H...,.......S.....m}......6..K..0..
+=> Send SSL data, 5 bytes (0x5)
+0000: .....
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+=> Send SSL data, 1 bytes (0x1)
+0000: .
+=> Send SSL data, 5 bytes (0x5)
+0000: ....E
+=> Send SSL data, 1 bytes (0x1)
+0000: .
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+=> Send SSL data, 52 bytes (0x34)
+0000: ...0..n.}.v.)":...p/...PM.;\.A..0.r/..q....v9.Z..P%.
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519MLKEM768 / id-ecPublicKey
+* ALPN: server accepted h2
+* Server certificate:
+*   subject: CN=bynara.id
+*   start date: Jun 21 09:41:34 2026 GMT
+*   expire date: Sep 19 10:39:10 2026 GMT
+*   issuer: C=US; O=Google Trust Services; CN=WE1
+*   Certificate level 0: Public key type EC/prime256v1 (256/128 Bits/secBits), signed using ecdsa-with-SHA256
+*   Certificate level 1: Public key type EC/prime256v1 (256/128 Bits/secBits), signed using ecdsa-with-SHA384
+*   Certificate level 2: Public key type EC/secp384r1 (384/192 Bits/secBits), signed using ecdsa-with-SHA384
+*   subjectAltName: "router.bynara.id" matches cert's "*.bynara.id"
+* SSL certificate verified via OpenSSL.
+* Established connection to router.bynara.id (172.67.160.154 port 443) from 192.168.1.3 port 49700 
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://router.bynara.id/v1/chat/completions
+* [HTTP/2] [1] [:method: POST]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: router.bynara.id]
+* [HTTP/2] [1] [:path: /v1/chat/completions]
+* [HTTP/2] [1] [user-agent: curl/8.18.0]
+* [HTTP/2] [1] [accept: */*]
+* [HTTP/2] [1] [authorization: Bearer sk-nry-esHUbjMbFrG9MqkwBUQN-tivm38-KlDmNnRIqu3FtoI]
+=> Send SSL data, 5 bytes (0x5)
+0000: ....j
+=> Send SSL data, 1 bytes (0x1)
+0000: .
+=> Send header, 227 bytes (0xe3)
+0000: POST /v1/chat/completions HTTP/2
+0022: Host: router.bynara.id
+003a: User-Agent: curl/8.18.0
+0053: Accept: */*
+0060: Authorization: Bearer sk-nry-esHUbjMbFrG9MqkwBUQN-tivm38-KlDmNnR
+00a0: Iqu3FtoI..
+00ac: Content-Type: application/json
+00cc: Content-Length: 111
+00e1: 
+=> Send data, 111 bytes (0x6f)
+0000: {.  "model": "mistral-large",.  "messages": [.    {.      "role"
+0040: : "user",.      "content": "Hello".    }.  ].}.
+* upload completely sent off: 111 bytes
+=> Send SSL data, 5 bytes (0x5)
+0000: ....+
+=> Send SSL data, 1 bytes (0x1)
+0000: .
+<= Recv SSL data, 5 bytes (0x5)
+0000: .....
+<= Recv SSL data, 1 bytes (0x1)
+0000: .
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+<= Recv SSL data, 230 bytes (0xe6)
+0000: ..........X.......+7.ZD1w@...]..-..'.`.X.n............>z...)]_Z.
+0040: ....n.h.2.....g".?j.C^....*.Q%...^}..V.Mz.c.k1O..de|n...jt..g..&
+0080: >6...`.{]._.....b...]L.Q..<N...`.a&..*...|..lN......W.n..IU.R.L.
+00c0: ..."F....E|q..^.....^...4.....<.......
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+<= Recv SSL data, 230 bytes (0xe6)
+0000: ...........C......+7.ZD1w@...]....p..[..........qE......a.......
+0040: ...Po2...Z/G5.....#."K.4'='"..Y..5.oU<)....m...Y...#...a.Z_.....
+0080: ........+.x{.......S....T...y./2...u2..W0..[...7*n.5.....[....l.
+00c0: v9~,..............;.....1.....z.......
+<= Recv SSL data, 5 bytes (0x5)
+0000: ....9
+<= Recv SSL data, 1 bytes (0x1)
+0000: .
+=> Send SSL data, 5 bytes (0x5)
+0000: .....
+=> Send SSL data, 1 bytes (0x1)
+0000: .
+<= Recv SSL data, 5 bytes (0x5)
+0000: .....
+<= Recv SSL data, 1 bytes (0x1)
+0000: .
+<= Recv SSL data, 5 bytes (0x5)
+0000: ....n
+<= Recv SSL data, 1 bytes (0x1)
+0000: .
+<= Recv header, 13 bytes (0xd)
+0000: HTTP/2 400 
+<= Recv header, 37 bytes (0x25)
+0000: date: Sat, 27 Jun 2026 09:40:39 GMT
+<= Recv header, 47 bytes (0x2f)
+0000: content-type: application/json; charset=utf-8
+<= Recv header, 21 bytes (0x15)
+0000: content-length: 138
+<= Recv header, 30 bytes (0x1e)
+0000: alt-svc: h3=":443"; ma=86400
+<= Recv header, 69 bytes (0x45)
+0000: content-security-policy: default-src 'none'; frame-ancestors 'no
+0040: ne'
+<= Recv header, 30 bytes (0x1e)
+0000: referrer-policy: no-referrer
+<= Recv header, 64 bytes (0x40)
+0000: strict-transport-security: max-age=31536000; includeSubDomains
+<= Recv header, 16 bytes (0x10)
+0000: via: 1.1 Caddy
+<= Recv header, 16 bytes (0x10)
+0000: via: 1.1 Caddy
+<= Recv header, 33 bytes (0x21)
+0000: x-content-type-options: nosniff
+<= Recv header, 23 bytes (0x17)
+0000: x-frame-options: DENY
+<= Recv header, 52 bytes (0x34)
+0000: x-request-id: 2e7cbee0-17d0-4188-a21a-a875b95eed23
+<= Recv header, 26 bytes (0x1a)
+0000: cf-cache-status: DYNAMIC
+<= Recv header, 270 bytes (0x10e)
+0000: report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url
+0040: ":"https://a.nel.cloudflare.com/report/v4?s=Kq1ld%2FB8Ln4slRGcXE
+0080: 1%2BeCBQCuryZ%2F9gMI6Adznii9YJlR0PV0Zyv%2Bz1Q6kWy80AQj%2BECn29%2
+00c0: F6%2BGdhRAtzzqK%2FKsIKrQMUTVe9%2BK3TqI2skvYWcgJJp8Jvdv%2F%2Bwgu0
+0100: G7B%2Bns"}]}
+<= Recv header, 69 bytes (0x45)
+0000: nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":6048
+0040: 00}
+<= Recv header, 20 bytes (0x14)
+0000: server: cloudflare
+<= Recv header, 30 bytes (0x1e)
+0000: cf-ray: a1237dd11d82cac8-MRS
+<= Recv header, 2 bytes (0x2)
+0000: 
+<= Recv SSL data, 5 bytes (0x5)
+0000: .....
+<= Recv SSL data, 1 bytes (0x1)
+0000: .
+<= Recv data, 138 bytes (0x8a)
+0000: {"error":{"type":"validation_error","message":"The request body 
+0040: is not valid JSON.","request_id":"2e7cbee0-17d0-4188-a21a-a875b9
+0080: 5eed23"}}.
+<= Recv SSL data, 5 bytes (0x5)
+0000: .....
+<= Recv SSL data, 1 bytes (0x1)
+0000: .
+<= Recv data, 0 bytes (0x0)
+* Connection #0 to host router.bynara.id:443 left intact

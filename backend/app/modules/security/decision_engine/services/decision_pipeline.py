@@ -48,7 +48,7 @@ class DecisionPipeline:
                 await self.manager.transition_to(decision.id, DecisionState.REJECTED, reason=error)
                 return decision
 
-            # Stage 4: Decision Creation (Includes Policy Loading & Enrichment in Engine)
+            # Stage 4: Decision Creation (Powered by Rule Engine)
             decision_obj, plans, reasons = await self.engine.determine_decision(context)
 
             # Merge results into the original decision object
