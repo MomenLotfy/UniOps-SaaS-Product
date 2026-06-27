@@ -1,0 +1,182 @@
+"""
+Decision Approval Engine (Module 0 / Part 5).
+
+Deterministic evaluation of approval requirements.  Produces a
+fully populated ApprovalRequest with a resolved approver chain,
+reasons, evidence, constraints, and metadata.
+
+Public entry points:
+  - `ApprovalEngine.evaluate(...)`         → in-memory evaluation
+  - `ApprovalEvaluationPipeline.run(...)`  → evaluation + persistence
+  - `ApprovalService`                      → read-only API facade
+"""
+from __future__ import annotations
+
+from .constants import (
+    APPROVAL_CACHE_TTL_SECONDS,
+    APPROVAL_SCORING_WEIGHTS,
+    AUTOMATIC_APPROVAL_THRESHOLD,
+    AUTOMATIC_REJECTION_THRESHOLD,
+    ApprovalActorRole,
+    ApprovalOutcome,
+    ApprovalPipelineStage,
+    ApprovalRejectionReason,
+    ApprovalRequirementMode,
+    ApprovalState,
+    ApprovalType,
+    DEFAULT_APPROVAL_TTL_SECONDS,
+    PolicyFactor,
+    TERMINAL_APPROVAL_STATES,
+    VALID_APPROVAL_TRANSITIONS,
+)
+from .models import (
+    ApprovalActor,
+    ApprovalAudit,
+    ApprovalConstraint,
+    ApprovalDecision,
+    ApprovalEvidence,
+    ApprovalGroup,
+    ApprovalHistory,
+    ApprovalMetadata,
+    ApprovalPolicy,
+    ApprovalReason,
+    ApprovalRequest,
+    ApprovalRequirement,
+    ApprovalRule,
+    ApprovalStatistics,
+    ApprovalVersion,
+)
+from .services import (
+    ApprovalAuditService,
+    ApprovalCache,
+    ApprovalContext,
+    ApprovalContextBuilder,
+    ApprovalEngine,
+    ApprovalEvaluationPipeline,
+    ApprovalFactory,
+    ApprovalLifecycleManager,
+    ApprovalManager,
+    ApprovalNotificationService,
+    ApprovalPolicyEngine,
+    ApprovalRegistry,
+    ApprovalRepository,
+    ApprovalResolver,
+    ApprovalScoringEngine,
+    ApprovalSerializer,
+    ApprovalService,
+    ApprovalStatisticsService,
+    ApprovalValidator,
+    ApprovalVersionManager,
+    AutomationEvaluator,
+    ComplianceEvaluator,
+    CriticalityEvaluator,
+    DEFAULT_APPROVAL_EVALUATORS,
+    DEFAULT_APPROVAL_POLICIES,
+    HistoryEvaluator,
+    OwnerEvaluator,
+    RiskEvaluator,
+    UrgencyEvaluator,
+    ApprovalCandidateData,
+    ApprovalEvaluationResult,
+    ApprovalPolicyResult,
+    ApprovalRequirementSpec,
+    IApprovalEvaluator,
+    IApprovalLifecycleManager,
+    IApprovalPolicy,
+    IApprovalRegistry,
+    IApprovalRepository,
+    IApprovalResolver,
+    IApprovalValidator,
+    bootstrap_default_approval_policies,
+    deserialize_candidate,
+    serialize_candidate,
+)
+from .api import router as approval_router
+
+
+__all__ = [
+    # Constants
+    "APPROVAL_CACHE_TTL_SECONDS",
+    "APPROVAL_SCORING_WEIGHTS",
+    "AUTOMATIC_APPROVAL_THRESHOLD",
+    "AUTOMATIC_REJECTION_THRESHOLD",
+    "ApprovalActorRole",
+    "ApprovalOutcome",
+    "ApprovalPipelineStage",
+    "ApprovalRejectionReason",
+    "ApprovalRequirementMode",
+    "ApprovalState",
+    "ApprovalType",
+    "DEFAULT_APPROVAL_TTL_SECONDS",
+    "PolicyFactor",
+    "TERMINAL_APPROVAL_STATES",
+    "VALID_APPROVAL_TRANSITIONS",
+
+    # Models (15)
+    "ApprovalActor",
+    "ApprovalAudit",
+    "ApprovalConstraint",
+    "ApprovalDecision",
+    "ApprovalEvidence",
+    "ApprovalGroup",
+    "ApprovalHistory",
+    "ApprovalMetadata",
+    "ApprovalPolicy",
+    "ApprovalReason",
+    "ApprovalRequest",
+    "ApprovalRequirement",
+    "ApprovalRule",
+    "ApprovalStatistics",
+    "ApprovalVersion",
+
+    # Services (17)
+    "ApprovalAuditService",
+    "ApprovalCache",
+    "ApprovalEngine",
+    "ApprovalEvaluationPipeline",
+    "ApprovalFactory",
+    "ApprovalLifecycleManager",
+    "ApprovalManager",
+    "ApprovalNotificationService",
+    "ApprovalPolicyEngine",
+    "ApprovalRegistry",
+    "ApprovalRepository",
+    "ApprovalResolver",
+    "ApprovalScoringEngine",
+    "ApprovalService",
+    "ApprovalStatisticsService",
+    "ApprovalValidator",
+    "ApprovalVersionManager",
+
+    # Default evaluators (7)
+    "AutomationEvaluator",
+    "ComplianceEvaluator",
+    "CriticalityEvaluator",
+    "DEFAULT_APPROVAL_EVALUATORS",
+    "HistoryEvaluator",
+    "OwnerEvaluator",
+    "RiskEvaluator",
+    "UrgencyEvaluator",
+
+    # Data containers + interfaces
+    "ApprovalCandidateData",
+    "ApprovalContext",
+    "ApprovalContextBuilder",
+    "ApprovalEvaluationResult",
+    "ApprovalPolicyResult",
+    "ApprovalRequirementSpec",
+    "IApprovalEvaluator",
+    "IApprovalLifecycleManager",
+    "IApprovalPolicy",
+    "IApprovalRegistry",
+    "IApprovalRepository",
+    "IApprovalResolver",
+    "IApprovalValidator",
+
+    # Misc
+    "DEFAULT_APPROVAL_POLICIES",
+    "approval_router",
+    "bootstrap_default_approval_policies",
+    "deserialize_candidate",
+    "serialize_candidate",
+]   # 15 models + 17 services

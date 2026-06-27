@@ -8,6 +8,11 @@ from app.main import app
 from app.core.database import Base, get_db
 import app.models  # noqa
 
+# Register all security submodule models so SQLAlchemy can resolve FKs
+from app.modules.security.decision_engine.models import base as _de_base  # noqa: F401
+from app.modules.security.decision_strategy.models import strategy as _ds_models  # noqa: F401
+from app.modules.security.decision_approval.models import approval as _da_models  # noqa: F401
+
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 
 test_engine = create_async_engine(
