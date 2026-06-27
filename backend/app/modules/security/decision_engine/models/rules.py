@@ -1,11 +1,12 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import String, ForeignKey, JSON, DateTime, Integer, Boolean, Enum
+from enum import Enum as PyEnum
+from sqlalchemy import String, ForeignKey, JSON, DateTime, Integer, Boolean, Enum, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import DecisionBase
 
-class RuleOperator(str, Enum):
+class RuleOperator(str, PyEnum):
     """
     Deterministic operators for rule evaluation.
     """
@@ -20,7 +21,7 @@ class RuleOperator(str, Enum):
     EXISTS = "EXISTS"
     NOT_EXISTS = "NOT_EXISTS"
 
-class RuleLogic(str, Enum):
+class RuleLogic(str, PyEnum):
     """
     Boolean logic for combining conditions.
     """
@@ -50,7 +51,7 @@ class DecisionRule(DecisionBase):
     actions: Mapped[List["RuleAction"]] = relationship(back_populates="rule", cascade="all, delete-orphan")
     versions: Mapped[List["RuleVersion"]] = relationship(back_populates="rule")
     executions: Mapped[List["RuleExecution"]] = relationship(back_populates="rule")
-    dependencies: Mapped[List["RuleDependency"]] = relationship(back_populates="rule")
+    dependencies: Mapped[List["RuleDependency"]] = relationship(back_populates="rule", foreign_keys="RuleDependency.rule_id")
 
 class RuleCondition(DecisionBase):
     """
@@ -119,7 +120,7 @@ class RuleDependency(DecisionBase):
     rule_id: Mapped[str] = mapped_column(String(36), ForeignKey("security_rules.id"), index=True)
     depends_on_rule_id: Mapped[str] = mapped_column(String(36), ForeignKey("security_rules.id"), index=True)
 
-    rule: Mapped["DecisionRule"] = relationship(back_populates="dependencies")
+    rule: Mapped["DecisionRule"] = relationship(back_populates="dependencies", foreign_keys=[rule_id])
 
 class RuleStatistics(DecisionBase):
     """

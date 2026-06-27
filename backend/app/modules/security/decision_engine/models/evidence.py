@@ -1,6 +1,6 @@
 from __future__ import annotations
-from typing import Optional
-from sqlalchemy import String, ForeignKey
+from typing import Optional, List
+from sqlalchemy import String, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import DecisionBase
 
@@ -37,6 +37,6 @@ class DecisionConstraint(DecisionBase):
 
     decision_id: Mapped[str] = mapped_column(String(36), ForeignKey("security_decisions.id"), index=True)
     constraint_type: Mapped[str] = mapped_column(String(100), nullable=False) # e.g. 'OWNER_APPROVAL_REQUIRED'
-    is_met: Mapped[bool] = mapped_column(String(10), default="false") # Stored as string for simplicity or use Boolean
+    is_met: Mapped[bool] = mapped_column(Boolean, default=False)
 
     decision: Mapped["Decision"] = relationship(back_populates="constraints")

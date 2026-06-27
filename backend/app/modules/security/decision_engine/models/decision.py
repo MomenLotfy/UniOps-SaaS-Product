@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import String, ForeignKey, JSON, DateTime, Enum
+from sqlalchemy import String, ForeignKey, JSON, DateTime, Integer, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import DecisionBase
 from ..constants import DecisionState

@@ -1,10 +1,12 @@
 from __future__ import annotations
 from typing import Any, Dict, List
+import time
 from sqlalchemy.ext.asyncio import AsyncSession
 from .context_builder import DecisionContextBuilder
 from .decision_validator import DecisionValidator
 from .decision_engine import DecisionEngine
 from .decision_manager import DecisionManager
+from .statistics_service import StatisticsService
 from ..constants import DecisionPipelineStage, DecisionState
 
 class DecisionPipeline:
@@ -17,18 +19,21 @@ class DecisionPipeline:
         context_builder: DecisionContextBuilder,
         validator: DecisionValidator,
         engine: DecisionEngine,
-        manager: DecisionManager
+        manager: DecisionManager,
+        stats_service: StatisticsService
     ):
         self.db = db
         self.context_builder = context_builder
         self.validator = validator
         self.engine = engine
         self.manager = manager
+        self.stats_service = stats_service
 
     async def execute(self, tenant_id: str, finding_id: str, correlation_id: str):
         """
         Runs the full pipeline from Context Build to Statistics Update.
         """
+        start_time = time.time()
         # Stage 1: Create Decision Entity
         decision = await self.manager.create_decision(tenant_id, correlation_id, "")
         # Note: context_id will be updated after build
@@ -46,10 +51,12 @@ class DecisionPipeline:
             is_valid, error = await self.validator.validate_request(tenant_id, finding_id)
             if not is_valid:
                 await self.manager.transition_to(decision.id, DecisionState.REJECTED, reason=error)
+                duration = (time.time() - start_time) * 1000
+                await self.stats_service.record_decision_stats(tenant_id, DecisionState.REJECTED, duration)
                 return decision
 
             # Stage 4: Decision Creation (Powered by Rule Engine)
-            decision_obj, plans, reasons = await self.engine.determine_decision(context)
+            decision_obj, plans, reasons, resolution = await self.engine.determine_decision(context)
 
             # Merge results into the original decision object
             decision.final_result = decision_obj.final_result
@@ -60,8 +67,21 @@ class DecisionPipeline:
             # Note: In real impl, would also add steps, evidence, etc.
             await self.db.commit()
 
+            # Stage 6: Statistics Update
+            duration = (time.time() - start_time) * 1000
+            await self.stats_service.record_decision_stats(tenant_id, DecisionState.READY, duration)
+
+            if resolution and resolution.policy_id != "N/A":
+                await self.stats_service.record_policy_stats(
+                    policy_id=resolution.policy_id,
+                    duration_ms=duration, # Approximation of eval time
+                    was_overridden=resolution.overridden
+                )
+
         except Exception as e:
             await self.manager.transition_to(decision.id, DecisionState.REJECTED, reason=str(e))
+            duration = (time.time() - start_time) * 1000
+            await self.stats_service.record_decision_stats(tenant_id, DecisionState.REJECTED, duration)
             await self.db.rollback()
             raise e
 
