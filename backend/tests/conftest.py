@@ -12,6 +12,7 @@ import app.models  # noqa
 from app.modules.security.decision_engine.models import base as _de_base  # noqa: F401
 from app.modules.security.decision_strategy.models import strategy as _ds_models  # noqa: F401
 from app.modules.security.decision_approval.models import approval as _da_models  # noqa: F401
+from app.modules.security.execution_orchestration.models import execution as _eo_models  # noqa: F401
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 

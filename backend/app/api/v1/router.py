@@ -13,6 +13,7 @@ from app.api.v1.endpoints import (
 from app.modules.security.decision_engine.api.routes import router as decisions_router
 from app.modules.security.decision_strategy.api.routes import router as decision_strategies_router
 from app.modules.security.decision_approval.api.routes import router as decision_approvals_router
+from app.modules.security.execution_orchestration.api.routes import router as execution_orchestration_router
 
 api_router = APIRouter()
 
@@ -70,3 +71,4 @@ api_router.include_router(intelligence.router,          prefix="/intelligence", 
 api_router.include_router(decisions_router,              prefix="/security/decisions", tags=["Security - Decisions"])
 api_router.include_router(decision_strategies_router,    prefix="/security",           tags=["Security - Decision Strategies"])
 api_router.include_router(decision_approvals_router,     prefix="/security",           tags=["Security - Decision Approvals"])
+api_router.include_router(execution_orchestration_router, prefix="/security",           tags=["Security - Execution Orchestration"])
