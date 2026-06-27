@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     ownership, sla, tickets,
     copilot, remediation, intelligence,
 )
+from app.modules.security.decision_engine.api.routes import router as decisions_router
 
 api_router = APIRouter()
 
@@ -64,3 +65,4 @@ api_router.include_router(sla.router,                prefix="/sla",             
 api_router.include_router(tickets.router,            prefix="/tickets",            tags=["Security - Tickets"])
 api_router.include_router(remediation.router,         prefix="/remediation",       tags=["Security - Remediation"])
 api_router.include_router(intelligence.router,          prefix="/intelligence",       tags=["Security - Intelligence"])
+api_router.include_router(decisions_router,              prefix="/security/decisions", tags=["Security - Decisions"])
