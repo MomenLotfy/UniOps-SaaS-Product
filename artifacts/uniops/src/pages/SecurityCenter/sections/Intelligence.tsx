@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Title, Text, Badge, Table, Button, Spinner } from '../../components/ui';
-import { intelligenceApi, ProviderHealth, IntelligenceStatus, ProviderDetails } from '../../services/api/intelligence';
+import { Card } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
+import { Table } from '../../../components/ui/table';
+import { Button } from '../../../components/ui/button';
+import { Spinner } from '../../../components/ui/spinner';
+import { intelligenceApi, ProviderHealth, IntelligenceStatus, ProviderDetails } from '../../../services/api/intelligence';
 import { Activity, Server, Clock, ShieldCheck, Settings, Info } from 'lucide-react';
 
 const IntelligenceSection = () => {
@@ -60,30 +64,30 @@ const IntelligenceSection = () => {
             <Card className="p-4 flex items-center gap-4">
               <div className="p-3 bg-blue-100 rounded-full text-blue-600">
                 <ShieldCheck size={24} />
-              </div
-              <div>
-                <Text className="text-sm text-muted-foreground">Active Providers</Text>
-                <Title className="text-2xl font-bold">{status.filter(s => s.is_active).length}</Title>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground">Active Providers</span>
+                <span className="text-2xl font-bold">{status.filter(s => s.is_active).length}</span>
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-4">
               <div className="p-3 bg-green-100 rounded-full text-green-600">
                 <Activity size={24} />
-              </div
-              <div>
-                <Text className="text-sm text-muted-foreground">System Health</Text>
-                <Title className="text-2xl font-bold">
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground">System Health</span>
+                <span className="text-2xl font-bold">
                   {health.every(h => h.status === 'healthy') ? 'Healthy' : 'Degraded'}
-                </Title>
+                </span>
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-4">
               <div className="p-3 bg-purple-100 rounded-full text-purple-600">
                 <Clock size={24} />
-              </div
-              <div>
-                <Text className="text-sm text-muted-foreground">Cache Status</Text>
-                <Title className="text-2xl font-bold">L1/L2 Active</Title>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground">Cache Status</span>
+                <span className="text-2xl font-bold">L1/L2 Active</span>
               </div>
             </Card>
           </div>
@@ -91,7 +95,7 @@ const IntelligenceSection = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <Title>Provider Health</Title>
+                <h3 className="text-lg font-semibold text-foreground">Provider Health</h3>
                 <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>Refresh</Button>
               </div>
               <Table>
@@ -121,7 +125,7 @@ const IntelligenceSection = () => {
             </Card>
 
             <Card className="p-6">
-              <Title className="mb-4">Provider Registry</Title>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Provider Registry</h3>
               <Table>
                 <thead className="text-xs text-muted-foreground uppercase">
                   <tr>
@@ -153,9 +157,9 @@ const IntelligenceSection = () => {
         <div className="space-y-6">
           <Card className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <div>
-                <Title>Provider Management</Title>
-                <Text className="text-sm text-muted-foreground">Configure and monitor detailed provider capabilities</Text>
+              <div className="flex flex-col">
+                <h3 className="text-lg font-semibold text-foreground">Provider Management</h3>
+                <span className="text-sm text-muted-foreground">Configure and monitor detailed provider capabilities</span>
               </div>
               <Button size="sm" variant="outline" onClick={() => window.location.reload()}>Sync Registry</Button>
             </div>

@@ -1,4 +1,4 @@
-import { api } from './client';
+import apiClient from './client';
 import { ProviderHealthSchema } from '../../types/intelligence'; // Need to define this type first
 
 export interface IntelligenceStatus {
@@ -37,22 +37,22 @@ export interface ProviderDetails {
 
 export const intelligenceApi = {
   async getHealth(): Promise<ProviderHealth[]> {
-    const res = await api.get('/intelligence/health');
+    const res = await apiClient.get('/intelligence/health');
     return res.data;
   },
 
   async getStatus(): Promise<IntelligenceStatus[]> {
-    const res = await api.get('/intelligence/status');
+    const res = await apiClient.get('/intelligence/status');
     return res.data;
   },
 
   async getProviders(): Promise<ProviderDetails[]> {
-    const res = await api.get('/intelligence/providers');
+    const res = await apiClient.get('/intelligence/providers');
     return res.data;
   },
 
   async lookup(id: string): Promise<any> {
-    const res = await api.get(`/intelligence/lookup/${id}`);
+    const res = await apiClient.get(`/intelligence/lookup/${id}`);
     return res.data;
   }
 };

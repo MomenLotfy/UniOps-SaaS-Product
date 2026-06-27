@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Title, Text, Badge, Table, Button, Input, Select } from '../../components/ui';
+import { Card } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
+import { Table } from '../../../components/ui/table';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
 import { Search, Filter, Clock, Share2, Bookmark, History, Target, Activity, Layers } from 'lucide-react';
 
 const InvestigationsSection = () => {
@@ -71,7 +75,7 @@ const InvestigationsSection = () => {
         <div className="lg:col-span-2 space-y-6">
           {activeTab === 'search' && (
             <Card className="p-6">
-              <Title className="mb-4 text-sm uppercase text-muted-foreground">Investigation Results</Title>
+              <h3 className="text-sm uppercase text-muted-foreground mb-4">Investigation Results</h3>
               <Table>
                 <thead className="text-xs text-muted-foreground uppercase">
                   <tr>
@@ -114,11 +118,11 @@ const InvestigationsSection = () => {
 
           {activeTab === 'timeline' && (
             <Card className="p-6">
-              <Title className="mb-4 text-sm uppercase text-muted-foreground">Entity Timeline</Title>
+              <h3 className="text-sm uppercase text-muted-foreground mb-4">Entity Timeline</h3>
               {!selectedEntity ? (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                   <Clock size={40} className="mb-4 opacity-20" />
-                  <Text className="text-sm">Select an entity from search results to view its historical timeline.</Text>
+                  <span className="text-sm">Select an entity from search results to view its historical timeline.</span>
                 </div>
               ) : (
                 <div className="space-y-6 relative before:absolute before:left-4 before:top-0 before:bottom-0 before:w-px before:bg-white/10">
@@ -130,9 +134,9 @@ const InvestigationsSection = () => {
                           <span className="text-xs font-bold text-foreground">Security Event {i}</span>
                           <span className="text-[10px] text-muted-foreground">2026-06-{(26-i).toString().padStart(2, '0')} 14:20</span>
                         </div>
-                        <Text className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           Deterministic event detected for {selectedEntity.id}. State changed from 'Low' to 'Critical' risk.
-                        </Text>
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -143,11 +147,11 @@ const InvestigationsSection = () => {
 
           {activeTab === 'correlation' && (
             <Card className="p-6">
-              <Title className="mb-4 text-sm uppercase text-muted-foreground">Correlation Analysis</Title>
+              <h3 className="text-sm uppercase text-muted-foreground mb-4">Correlation Analysis</h3>
               {!selectedEntity ? (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                   <Share2 size={40} className="mb-4 opacity-20" />
-                  <Text className="text-sm">Select an entity to uncover deterministic correlations across the graph.</Text>
+                  <span className="text-sm">Select an entity to uncover deterministic correlations across the graph.</span>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -166,9 +170,9 @@ const InvestigationsSection = () => {
                           <span className="text-xs font-medium">{corr.id}</span>
                           <Badge variant="outline" className="text-[9px]">{corr.type}</Badge>
                         </div>
-                        <Text className="text-[10px] text-muted-foreground">
+                        <span className="text-[10px] text-muted-foreground">
                           Linked via <span className="text-foreground font-semibold">{corr.rel}</span> (Depth: {corr.depth})
-                        </Text>
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -179,19 +183,19 @@ const InvestigationsSection = () => {
 
           {activeTab === 'risk' && (
             <Card className="p-6">
-              <Title className="mb-4 text-sm uppercase text-muted-foreground">Risk Intelligence Summary</Title>
+              <h3 className="text-sm uppercase text-muted-foreground mb-4">Risk Intelligence Summary</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <Text className="text-[10px] text-red-400 uppercase font-bold">Critical Impact</Text>
-                  <Title className="text-2xl font-bold">84%</Title>
+                  <span className="text-[10px] text-red-400 uppercase font-bold">Critical Impact</span>
+                  <span className="text-2xl font-bold block">84%</span>
                 </div>
                 <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                  <Text className="text-[10px] text-orange-400 uppercase font-bold">Blast Radius</Text>
-                  <Title className="text-2xl font-bold">High</Title>
+                  <span className="text-[10px] text-orange-400 uppercase font-bold">Blast Radius</span>
+                  <span className="text-2xl font-bold block">High</span>
                 </div>
-                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <Text className="text-[10px] text-blue-400 uppercase font-bold">Confidence</Text>
-                  <Title className="text-2xl font-bold">Deterministic</Title>
+                <div className="p-4 bg-blue-500/10 border border-blue-500/ own-20 rounded-lg">
+                  <span className="text-[10px] text-blue-400 uppercase font-bold">Confidence</span>
+                  <span className="text-2xl font-bold block">Deterministic</span>
                 </div>
               </div>
             </Card>
@@ -201,23 +205,23 @@ const InvestigationsSection = () => {
         {/* Right Sidebar: Investigation Context */}
         <div className="space-y-6">
           <Card className="p-6">
-            <Title className="mb-4 text-sm uppercase text-muted-foreground flex items-center gap-2">
+            <h3 className="text-sm uppercase text-muted-foreground mb-4 flex items-center gap-2">
               <Target size={16} /> Target Context
-            </Title>
+            </h3>
             {!selectedEntity ? (
-              <Text className="text-xs text-muted-foreground italic">No entity selected for deep investigation.</Text>
+              <span className="text-xs text-muted-foreground italic">No entity selected for deep investigation.</span>
             ) : (
               <div className="space-y-4">
-                <div>
-                  <Text className="text-[10px] text-muted-foreground uppercase">Entity ID</Text>
-                  <Text className="text-sm font-medium">{selectedEntity.id}</Text>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-muted-foreground uppercase">Entity ID</span>
+                  <span className="text-sm font-medium">{selectedEntity.id}</span>
                 </div>
-                <div>
-                  <Text className="text-[10px] text-muted-foreground uppercase">Type</Text>
-                  <Badge variant="outline" className="text-[10px]">{selectedEntity.type}</Badge>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-muted-foreground uppercase">Type</span>
+                  <Badge variant="outline" className="text-[10px] w-fit">{selectedEntity.type}</Badge>
                 </div>
-                <div>
-                  <Text className="text-[10px] text-muted-foreground uppercase">Risk Score</Text>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-muted-foreground uppercase">Risk Score</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold">{selectedEntity.risk}</span>
                     <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
@@ -238,9 +242,9 @@ const InvestigationsSection = () => {
           </Card>
 
           <Card className="p-6">
-            <Title className="mb-4 text-sm uppercase text-muted-foreground flex items-center gap-2">
+            <h3 className="text-sm uppercase text-muted-s-foreground mb-4 flex items-center gap-2">
               <Activity size={16} /> Investigation State
-            </Title>
+            </h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-muted-foreground">Session</span>
@@ -264,11 +268,11 @@ const InvestigationsSection = () => {
       </div>
 
       <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
-        <Text className="text-[10px] text-indigo-300 leading-relaxed">
+        <span className="text-[10px] text-indigo-300 leading-relaxed">
           The Security Investigation Engine provides deterministic reasoning over the Intelligence Platform.
           It allows security researchers to pivot from a finding to an asset, correlate its blast radius,
           and reconstruct its historical timeline without any probabilistic AI interference.
-        </Text>
+        </span>
       </div>
     </div>
   );

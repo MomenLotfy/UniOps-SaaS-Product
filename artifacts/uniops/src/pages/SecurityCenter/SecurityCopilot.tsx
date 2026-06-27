@@ -309,7 +309,7 @@ export default function SecurityCopilot() {
             </div>
           </div>
         </div>
-      </div
+      </div>
     </div>
   );
 }

@@ -34,26 +34,10 @@ class SyncJob(BaseModel):
 
     provider: Mapped["ProviderMetadata"] = relationship()
 
-class SyncHistory(BaseModel):
-    """
-    Audit log of completed synchronization attempts.
-    (Note: Overlapping with existing SyncHistory, this replaces/extends it)
-    """
-    __tablename__ = "intelligence_sync_history"
+# ... (keep other classes) ...
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    provider_id: Mapped[str] = mapped_column(String(100), ForeignKey("intelligence_provider_metadata.provider_id"), index=True)
-
-    start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    end_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-
-    status: Mapped[str] = mapped_column(String(50)) # success, failed, partial
-    items_processed: Mapped[int] = mapped_column(Integer, default=0)
-    items_updated: Mapped[int] = mapped_column(Integer, default=0)
-    errors: Mapped[Optional[str]] = mapped_column(JSON)
-
-    provider: Mapped["ProviderMetadata"] = relationship()
-
+class CacheMetadata(BaseModel):
+# ...
 class CacheMetadata(BaseModel):
     """
     Tracks metadata and statistics for cached intelligence entities.

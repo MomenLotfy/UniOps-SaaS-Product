@@ -6,17 +6,17 @@ from app.schemas.intelligence import (
     CanonicalExploit, CanonicalWeakness, CanonicalAttackPattern,
     CanonicalRisk, ConfidenceLevel
 )
-from app.services.intelligence.enrichment.context import EnrichmentContext
-from app.services.intelligence.enrichment.pipeline import EnrichmentPipeline
-from app.services.intelligence.enrichment.components.reference_enricher import ReferenceEnricher
-from app.services.intelligence.enrichment.components.patch_analyzer import PatchAnalyzer
-from app.services.intelligence.enrichment.components.exploit_analyzer import ExploitAnalyzer
-from app.services.intelligence.enrichment.components.asset_context_resolver import AssetContextResolver
-from app.services.intelligence.enrichment.components.business_impact_analyzer import BusinessImpactAnalyzer
-from app.services.intelligence.enrichment.components.recommendation_enricher import RecommendationEnricher
-from app.services.intelligence.enrichment.components.timeline_enricher import TimelineEnricher
-from app.services.intelligence.enrichment.components.confidence_calculator import ConfidenceCalculator
-from app.services.intelligence.enrichment.components.trust_score_calculator import TrustScoreCalculator
+from .context import EnrichmentContext
+from .pipeline import EnrichmentPipeline
+from .components.reference_enricher import ReferenceEnricher
+from .components.patch_analyzer import PatchAnalyzer
+from .components.exploit_analyzer import ExploitAnalyzer
+from .components.asset_context_resolver import AssetContextResolver
+from .components.business_impact_analyzer import BusinessImpactAnalyzer
+from .components.recommendation_enricher import RecommendationEnricher
+from .components.timeline_enricher import TimelineEnricher
+from .components.confidence_calculator import ConfidenceCalculator
+from .components.trust_score_calculator import TrustScoreCalculator
 from app.utils.logger import logger
 
 class EnrichmentEngine:
@@ -57,7 +57,7 @@ class EnrichmentEngine:
 
         # 2. Fetch Canonical Intelligence (Input to pipeline)
         cve_id = raw_metadata.get("cve_id")
-        purl = raw_metadataPurl = raw_metadata.get("purl")
+        purl = raw_metadata.get("purl")
 
         if cve_id:
             context.vulnerability = await self.intel_service.get_vulnerability(cve_id)

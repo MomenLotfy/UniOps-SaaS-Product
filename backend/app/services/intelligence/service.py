@@ -46,9 +46,6 @@ class IntelligenceService(BaseService):
         return await self.enrichment_engine.enrich(finding_id, "tenant-1", raw_metadata)
 
     async def get_vulnerability(self, cve_id: str) -> Optional[CanonicalCVE]:
-# ... rest of the file
-
-    async def get_vulnerability(self, cve_id: str) -> Optional[CanonicalCVE]:
         """Fetches normalized CVE data, checking cache first."""
         # 1. Check Cache
         cached = await self.cache.get(cve_id)

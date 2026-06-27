@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Title, Text, Badge, Table, Button } from '../../components/ui';
+import { Card } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
+import { Table } from '../../../components/ui/table';
+import { Button } from '../../../components/ui/button';
 import { AlertTriangle, TrendingUp, ShieldAlert, BarChart3 } from 'lucide-react';
 
 const RiskDashboard = () => {
@@ -34,38 +37,38 @@ const RiskDashboard = () => {
           <div className="p-3 bg-red-500/15 rounded-full text-red-500">
             <ShieldAlert size={24} />
           </div>
-          <div>
-            <Text className="text-sm text-muted-foreground">Critical Repos</Text>
-            <Title className="text-2xl font-bold">{repoRisks.filter(r => r.priority_level === 'critical').length}</Title>
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">Critical Repos</span>
+            <span className="text-2xl font-bold">{repoRisks.filter(r => r.priority_level === 'critical').length}</span>
           </div>
         </Card>
         <Card className="p-4 flex items-center gap-4">
           <div className="p-3 bg-orange-500/15 rounded-full text-orange-500">
             <AlertTriangle size={24} />
           </div>
-          <div>
-            <Text className="text-sm text-muted-foreground">High Risk Avg</Text>
-            <Title className="text-2xl font-bold">
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">High Risk Avg</span>
+            <span className="text-2xl font-bold">
               {Math.round(repoRisks.reduce((acc, curr) => acc + curr.overall_risk_score, 0) / repoRisks.length)}
-            </Title>
+            </span>
           </div>
         </Card>
         <Card className="p-4 flex items-center gap-4">
           <div className="p-3 bg-blue-500/15 rounded-full text-blue-500">
             <TrendingUp size={24} />
           </div>
-          <div>
-            <Text className="text-sm text-muted-foreground">Risk Trend</Text>
-            <Title className="text-2xl font-bold">Stable</Title>
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">Risk Trend</span>
+            <span className="text-2xl font-bold">Stable</span>
           </div>
         </Card>
         <Card className="p-4 flex items-center gap-4">
           <div className="p-3 bg-purple-500/15 rounded-full text-purple-500">
             <BarChart3 size={24} />
           </div>
-          <div>
-            <Text className="text-sm text-muted-foreground">Priority Dist.</Text>
-            <Title className="text-2xl font-bold">Bimodal</Title>
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">Priority Dist.</span>
+            <span className="text-2xl font-bold">Bimodal</span>
           </div>
         </Card>
       </div>
@@ -73,7 +76,7 @@ const RiskDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 p-6">
           <div className="flex justify-between items-center mb-6">
-            <Title>Repository Risk Landscape</Title>
+            <h3 className="text-lg font-semibold text-foreground">Repository Risk Landscape</h3>
             <Button variant="outline" size="sm">Export Report</Button>
           </div>
           <Table>
@@ -115,7 +118,7 @@ const RiskDashboard = () => {
         </Card>
 
         <Card className="p-6">
-          <Title className="mb-4">Risk Distribution</Title>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Risk Distribution</h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center p-3 bg-surface-2 rounded-lg">
               <span className="text-xs text-muted-foreground">Critical</span>
@@ -135,9 +138,9 @@ const RiskDashboard = () => {
             </div>
           </div>
           <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-            <Text className="text-[10px] text-blue-300 leading-relaxed">
+            <span className="text-[10px] text-blue-300 leading-relaxed">
               Risk scores are calculated using the <b>Risk Intelligence Engine v1.0</b>, synthesizing technical CVSS, asset criticality, and real-time exploit intelligence.
-            </Text>
+            </span>
           </div>
         </Card>
       </div>

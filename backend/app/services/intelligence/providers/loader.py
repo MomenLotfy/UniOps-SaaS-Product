@@ -26,7 +26,7 @@ class ProviderLoader:
     }
 
     @classmethod
-    def load_provider(cls, provider_id: str, config: Optional[Dict[str, Any]] = None) -> IIntelligenceProvider:
+    async def load_provider(cls, provider_id: str, config: Optional[Dict[str, Any]] = None) -> IIntelligenceProvider:
         """
         Dynamically loads and instantiates an intelligence provider.
         """

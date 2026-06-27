@@ -11,7 +11,7 @@ class ProviderMetadata(BaseModel):
     """
     __tablename__ = "intelligence_provider_metadata"
 
-    provider_id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    provider_id: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(1000))
     version: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -99,7 +99,7 @@ class IntelligenceCacheEntry(BaseModel):
     __tablename__ = "intelligence_cache"
 
     # Unified key (e.g., 'CVE-2024-1234' or 'purl:pkg:npm/express@4.18.2')
-    intel_id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    intel_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
     # The canonical normalized data stored as JSON
     canonical_data: Mapped[dict] = mapped_column(JSON, nullable=False)

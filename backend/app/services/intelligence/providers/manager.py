@@ -33,7 +33,7 @@ class IntelligenceProviderManager:
 
             try:
                 # Load instance
-                provider = self.loader.load_provider(pid, config)
+                provider = await self.loader.load_provider(pid, config)
                 # Register it (active status determined by config)
                 self.registry.register_provider(
                     provider,

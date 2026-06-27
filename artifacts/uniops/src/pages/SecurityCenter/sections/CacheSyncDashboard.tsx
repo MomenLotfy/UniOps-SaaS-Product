@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Title, Text, Badge, Table, Button } from '../../components/ui';
+import { Card } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
+import { Table } from '../../../components/ui/table';
+import { Button } from '../../../components/ui/button';
 import { Activity, Clock, Database, RefreshCcw, CheckCircle2, XCircle } from 'lucide-react';
 
 const CacheSyncDashboard = () => {
@@ -44,36 +47,36 @@ const CacheSyncDashboard = () => {
           <div className="p-3 bg-blue-500/15 rounded-full text-blue-500">
             <Database size={24} />
           </div>
-          <div>
-            <Text className="text-sm text-muted-foreground">Total Entries</Text>
-            <Title className="text-2xl font-bold">{stats?.total_entries.toLocaleString()}</Title>
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">Total Entries</span>
+            <span className="text-2xl font-bold">{stats?.total_entries.toLocaleString()}</span>
           </div>
         </Card>
         <Card className="p-4 flex items-center gap-4">
           <div className="p-3 bg-green-500/15 rounded-full text-green-500">
             <Activity size={24} />
           </div>
-          <div>
-            <Text className="text-sm text-muted-foreground">Hit Ratio</Text>
-            <Title className="text-2xl font-bold">{(stats?.hit_ratio * 100).toFixed(1)}%</Title>
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">Hit Ratio</span>
+            <span className="text-2xl font-bold">{(stats?.hit_ratio * 100).toFixed(1)}%</span>
           </div>
         </Card>
         <Card className="p-4 flex items-center gap-4">
           <div className="p-3 bg-purple-500/15 rounded-full text-purple-500">
             <Clock size={24} />
           </div>
-          <div>
-            <Text className="text-sm text-muted-foreground">Avg Latency</Text>
-            <Title className="text-2xl font-bold">{stats?.avg_lookup_time_ms}ms</Title>
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">Avg Latency</span>
+            <span className="text-2xl font-bold">{stats?.avg_lookup_time_ms}ms</span>
           </div>
         </Card>
         <Card className="p-4 flex items-center gap-4">
           <div className="p-3 bg-orange-500/15 rounded-full text-orange-500">
             <RefreshCcw size={24} />
           </div>
-          <div>
-            <Text className="text-sm text-muted-foreground">L2 Size</Text>
-            <Title className="text-2xl font-bold">{stats?.l2_size}</Title>
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">L2 Size</span>
+            <span className="text-2xl font-bold">{stats?.l2_size}</span>
           </div>
         </Card>
       </div>
@@ -81,7 +84,7 @@ const CacheSyncDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 p-6">
           <div className="flex justify-between items-center mb-6">
-            <Title>Active Synchronization Jobs</Title>
+            <h3 className="text-lg font-semibold text-foreground">Active Synchronization Jobs</h3>
             <Button variant="outline" size="sm">View Full History</Button>
           </div>
           <Table>
@@ -121,7 +124,7 @@ const CacheSyncDashboard = () => {
         </Card>
 
         <Card className="p-6">
-          <Title className="mb-4">Sync Health</Title>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Sync Health</h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center p-3 bg-surface-2 rounded-lg">
               <div className="flex items-center gap-2">
@@ -146,9 +149,9 @@ const CacheSyncDashboard = () => {
             </div>
           </div>
           <div className="mt-6 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
-            <Text className="text-[10px] text-indigo-300 leading-relaxed">
+            <span className="text-[10px] text-indigo-300 leading-relaxed">
               The Synchronization Engine uses a checkpoint-based incremental strategy to minimize provider load and ensure deterministic state recovery.
-            </Text>
+            </span>
           </div>
         </Card>
       </div>
