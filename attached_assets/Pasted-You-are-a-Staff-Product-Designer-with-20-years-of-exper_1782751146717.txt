@@ -1,0 +1,224 @@
+You are a Staff Product Designer with 20+ years of experience designing enterprise cybersecurity platforms including Microsoft Defender, Wiz, Palo Alto Prisma Cloud, CrowdStrike Falcon, Datadog Cloud Security, and GitHub Advanced Security.
+
+Your task is to redesign ONLY the Security Center page.
+
+DO NOT touch authentication.
+DO NOT touch routing.
+DO NOT touch backend logic.
+DO NOT modify unrelated pages.
+
+Only improve the Security Center UI/UX.
+
+--------------------------------------------------
+
+DESIGN GOALS
+
+This page must feel like an enterprise SOC platform.
+
+Think:
+- Microsoft Defender
+- Wiz
+- Prisma Cloud
+- Datadog
+- GitHub Security
+
+NOT a startup dashboard.
+
+--------------------------------------------------
+
+Layout
+
+The first visible tab MUST be:
+
+Repositories
+
+Repositories are the entry point of the entire platform.
+
+The new order is:
+
+Repositories
+Overview
+Infrastructure
+Assets
+Kubernetes
+Threats
+Vulnerabilities
+Security Posture
+Remediation
+Intelligence
+Compliance
+Policies
+Exceptions
+Governance
+Ownership
+SLA Tracker
+Reports
+SBOM
+Security Copilot
+
+--------------------------------------------------
+
+Page Layout
+
+Top Header
+
+Security Center
+
+Workspace selector
+
+Repository selector
+
+Cloud selector
+
+Environment selector
+
+Global Search
+
+Refresh button
+
+Export
+
+Filters
+
+Time range
+
+--------------------------------------------------
+
+Global KPIs
+
+Across the top create professional metric cards.
+
+Repositories
+
+Cloud Accounts
+
+Clusters
+
+Assets
+
+Critical Vulnerabilities
+
+High Vulnerabilities
+
+Open Remediations
+
+Failed Policies
+
+Compliance Score
+
+Risk Score
+
+MTTR
+
+MTTD
+
+--------------------------------------------------
+
+Each metric card
+
+small icon
+
+value
+
+trend
+
+sparkline
+
+status color
+
+clickable
+
+--------------------------------------------------
+
+Every section
+
+Use cards
+
+Rounded corners
+
+Soft shadows
+
+Modern spacing
+
+Responsive
+
+Consistent typography
+
+Loading skeletons
+
+Error states
+
+Empty states
+
+No fake data
+
+--------------------------------------------------
+
+Every table
+
+Sticky header
+
+Sorting
+
+Filtering
+
+Column picker
+
+Pagination
+
+Bulk actions
+
+CSV Export
+
+Search
+
+Resizable columns
+
+Status badges
+
+--------------------------------------------------
+
+Charts
+
+Use Recharts already used in project.
+
+Dark mode compatible.
+
+--------------------------------------------------
+
+Performance
+
+Virtualize long tables.
+
+Memoize heavy components.
+
+Lazy load tabs.
+
+--------------------------------------------------
+
+Code Quality
+
+Split into reusable components.
+
+No duplicated code.
+
+No inline styles.
+
+TypeScript strict.
+
+Existing design system only.
+
+--------------------------------------------------
+
+Most important rule
+
+Do NOT introduce Demo Data.
+
+Everything must come from backend APIs.
+
+If API does not exist,
+leave loading state until endpoint exists.
+
+Never fake values.
+
+Return production-ready code.
