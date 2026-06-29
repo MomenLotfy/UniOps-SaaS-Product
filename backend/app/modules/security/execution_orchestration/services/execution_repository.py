@@ -43,9 +43,20 @@ class ExecutionRepository(IExecutionRepository):
         self.db = db
 
     # ── ExecutionPackage CRUD ─────────────────────────────────────
-    async def get_package(self, package_id: str) -> Optional[ExecutionPackage]:
+    async def get_package(
+        self, tenant_id: str, package_id: str
+    ) -> Optional[ExecutionPackage]:
+        """
+        R8: tenant-scoped lookup.  Returns None (not a row from
+        another tenant) when the package belongs to a different
+        tenant.  This is the defense-in-depth layer below the
+        route-level auth dependency.
+        """
         result = await self.db.execute(
-            select(ExecutionPackage).where(ExecutionPackage.id == package_id)
+            select(ExecutionPackage).where(
+                ExecutionPackage.id == package_id,
+                ExecutionPackage.tenant_id == tenant_id,
+            )
         )
         return result.scalar_one_or_none()
 
@@ -77,19 +88,29 @@ class ExecutionRepository(IExecutionRepository):
         return package
 
     # ── History + Audit ───────────────────────────────────────────
-    async def list_history(self, package_id: str) -> List[ExecutionHistory]:
+    async def list_history(
+        self, tenant_id: str, package_id: str
+    ) -> List[ExecutionHistory]:
         stmt = (
             select(ExecutionHistory)
-            .where(ExecutionHistory.package_id == package_id)
+            .where(
+                ExecutionHistory.package_id == package_id,
+                ExecutionHistory.tenant_id == tenant_id,
+            )
             .order_by(ExecutionHistory.changed_at.asc(), ExecutionHistory.created_at.asc())
         )
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def list_audit(self, package_id: str) -> List[ExecutionAudit]:
+    async def list_audit(
+        self, tenant_id: str, package_id: str
+    ) -> List[ExecutionAudit]:
         stmt = (
             select(ExecutionAudit)
-            .where(ExecutionAudit.package_id == package_id)
+            .where(
+                ExecutionAudit.package_id == package_id,
+                ExecutionAudit.tenant_id == tenant_id,
+            )
             .order_by(ExecutionAudit.occurred_at.asc(), ExecutionAudit.created_at.asc())
         )
         result = await self.db.execute(stmt)

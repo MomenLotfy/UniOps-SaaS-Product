@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: uniops
+
+resources:
+  - ../../kustomization.yaml
+
+namePrefix: staging-
+
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: uniops-api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+  - target:
+      kind: ConfigMap
+      name: uniops-config
+    patch: |-
+      - op: replace
+        path: /data/APP_ENV
+        value: "staging"

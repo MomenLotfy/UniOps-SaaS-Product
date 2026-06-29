@@ -34,9 +34,10 @@ class DecisionPolicy(DecisionBase):
     is_mandatory: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Relationships
-    versions: Mapped[List["PolicyVersion"]] = relationship(back_populates="policy")
-    evaluations: Mapped[List["PolicyEvaluation"]] = relationship(back_populates="policy")
-    history: Mapped[List["PolicyHistory"]] = relationship(back_populates="policy")
+    # Sprint 2 R17: selectin-load to avoid lazy loads on detached async sessions.
+    versions: Mapped[List["PolicyVersion"]] = relationship(back_populates="policy", lazy="selectin")
+    evaluations: Mapped[List["PolicyEvaluation"]] = relationship(back_populates="policy", lazy="selectin")
+    history: Mapped[List["PolicyHistory"]] = relationship(back_populates="policy", lazy="selectin")
 
 class PolicyVersion(DecisionBase):
     """

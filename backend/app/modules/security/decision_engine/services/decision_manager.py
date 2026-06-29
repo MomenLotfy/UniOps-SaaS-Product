@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+from app.core.exceptions import DecisionNotFoundError, InvalidStateTransitionError
 from app.models.base import BaseModel
 from ..constants import DecisionState, VALID_TRANSITIONS
 from ..models.decision import Decision
@@ -22,14 +23,18 @@ class DecisionManager:
         decision = result.scalar_one_or_none()
 
         if not decision:
-            raise ValueError(f"Decision {decision_id} not found")
+            raise DecisionNotFoundError(decision_id)
 
         current_state = decision.status
 
         # 2. Validate transition
         allowed_next_states = VALID_TRANSITIONS.get(current_state, [])
         if to_state not in allowed_next_states:
-            raise ValueError(f"Invalid state transition: {current_state} -> {to_state}")
+            raise InvalidStateTransitionError(
+                from_state=str(current_state.value if hasattr(current_state, "value") else current_state),
+                to_state=str(to_state.value if hasattr(to_state, "value") else to_state),
+                entity="Decision",
+            )
 
         # 3. Update state
         decision.status = to_state

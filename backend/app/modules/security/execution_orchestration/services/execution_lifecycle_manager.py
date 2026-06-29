@@ -12,6 +12,10 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import (
+    ExecutionNotFoundError,
+    IllegalExecutionTransitionError,
+)
 from ..constants import (
     ExecutionPackageState,
     VALID_EXECUTION_TRANSITIONS,
@@ -38,24 +42,35 @@ class ExecutionLifecycleManager(IExecutionLifecycleManager):
 
     async def transition(
         self,
+        tenant_id: str,
         package_id: str,
         to_state: ExecutionPackageState,
         *,
         changed_by: str,
         reason: Optional[str] = None,
     ) -> ExecutionPackage:
-        """Apply the transition + append a history row.  Raises on illegal moves."""
+        """
+        Apply the transition + append a history row.  Raises on illegal moves.
+
+        Sprint 1 R8: ``tenant_id`` is now a required positional argument so
+        the lookup is tenant-scoped — refuses to operate on a package that
+        belongs to a different tenant.
+        """
         result = await self.db.execute(
-            select(ExecutionPackage).where(ExecutionPackage.id == package_id)
+            select(ExecutionPackage).where(
+                ExecutionPackage.id == package_id,
+                ExecutionPackage.tenant_id == tenant_id,
+            )
         )
         pkg: Optional[ExecutionPackage] = result.scalar_one_or_none()
         if pkg is None:
-            raise ValueError(f"ExecutionPackage {package_id} not found")
+            raise ExecutionNotFoundError(f"{package_id} (tenant={tenant_id})")
 
         from_state = pkg.package_state
         if not self.can_transition(from_state, to_state):
-            raise ValueError(
-                f"Illegal transition {from_state} -> {to_state} for ExecutionPackage {package_id}"
+            raise IllegalExecutionTransitionError(
+                from_state=str(from_state.value if hasattr(from_state, "value") else from_state),
+                to_state=str(to_state.value if hasattr(to_state, "value") else to_state),
             )
 
         pkg.package_state = to_state

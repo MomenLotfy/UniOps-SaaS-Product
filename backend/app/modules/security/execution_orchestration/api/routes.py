@@ -3,6 +3,13 @@ Read-only FastAPI routes for the Execution Orchestration Engine.
 
 Mounted at `/security/execution-packages/` by the parent module.
 All endpoints are GET-only.
+
+Sprint 1 R8 — every endpoint now authenticates via
+``get_current_active_user`` and reads the tenant from the JWT via
+``get_tenant_id`` instead of accepting a raw ``tenant_id`` query
+parameter.  The previous design let any unauthenticated caller
+read another tenant's execution packages by passing
+``?tenant_id=...`` in the URL.
 """
 from __future__ import annotations
 
@@ -12,7 +19,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import get_db, get_current_active_user, get_tenant_id
 
 from ..constants import ExecutionPackageState
 from ..services import ExecutionService
@@ -90,7 +97,7 @@ def _to_detail_schema(row, summary=None) -> ExecutionPackageDetailSchema:
 
 
 # ─────────────────────────────────────────────────────────────────────
-#  Endpoints
+#  Endpoints  (R8: tenant comes from JWT, user is authenticated)
 # ─────────────────────────────────────────────────────────────────────
 @router.get(
     "/",
@@ -98,12 +105,13 @@ def _to_detail_schema(row, summary=None) -> ExecutionPackageDetailSchema:
     summary="List execution packages",
 )
 async def list_packages(
-    tenant_id: str = Query(..., description="Tenant identifier"),
+    tenant_id: str = Depends(get_tenant_id),
     package_state: Optional[ExecutionPackageState] = Query(None, alias="state"),
     decision_id: Optional[str] = Query(None, description="Filter by originating decision"),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
     rows = await svc.list_packages(
@@ -122,8 +130,9 @@ async def list_packages(
     summary="Tenant-wide execution package metrics",
 )
 async def package_statistics(
-    tenant_id: str = Query(..., description="Tenant identifier"),
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
     data = await svc.get_statistics(tenant_id)
@@ -137,16 +146,18 @@ async def package_statistics(
 )
 async def get_package(
     package_id: str,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
-    row = await svc.get_package(package_id)
+    row = await svc.get_package(tenant_id, package_id)
     if row is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"ExecutionPackage {package_id} not found",
         )
-    summary = await svc.get_summary(package_id)
+    summary = await svc.get_summary(tenant_id, package_id)
     return _to_detail_schema(row, summary=summary)
 
 
@@ -157,10 +168,12 @@ async def get_package(
 )
 async def get_preparation(
     package_id: str,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
-    row = await svc.get_preparation(package_id)
+    row = await svc.get_preparation(tenant_id, package_id)
     if row is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -187,10 +200,12 @@ async def get_preparation(
 )
 async def get_readiness(
     package_id: str,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
-    row = await svc.get_readiness(package_id)
+    row = await svc.get_readiness(tenant_id, package_id)
     if row is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -217,10 +232,12 @@ async def get_readiness(
 )
 async def list_dependencies(
     package_id: str,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
-    rows = await svc.list_dependencies(package_id)
+    rows = await svc.list_dependencies(tenant_id, package_id)
     return [
         ExecutionDependencySchema(
             id=r.id,
@@ -244,10 +261,12 @@ async def list_dependencies(
 )
 async def list_constraints(
     package_id: str,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
-    rows = await svc.list_constraints(package_id)
+    rows = await svc.list_constraints(tenant_id, package_id)
     return [
         ExecutionConstraintSchema(
             id=r.id,
@@ -269,10 +288,12 @@ async def list_constraints(
 )
 async def list_requirements(
     package_id: str,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
-    rows = await svc.list_requirements(package_id)
+    rows = await svc.list_requirements(tenant_id, package_id)
     return [
         ExecutionRequirementSchema(
             id=r.id,
@@ -294,10 +315,12 @@ async def list_requirements(
 )
 async def list_metadata(
     package_id: str,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
-    rows = await svc.list_metadata(package_id)
+    rows = await svc.list_metadata(tenant_id, package_id)
     return [
         ExecutionMetadataSchema(
             id=r.id,
@@ -317,10 +340,12 @@ async def list_metadata(
 )
 async def package_history(
     package_id: str,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
-    rows = await svc.list_history(package_id)
+    rows = await svc.list_history(tenant_id, package_id)
     return [
         ExecutionHistoryEntrySchema(
             id=r.id,
@@ -343,10 +368,12 @@ async def package_history(
 )
 async def package_audit(
     package_id: str,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
-    rows = await svc.list_audit(package_id)
+    rows = await svc.list_audit(tenant_id, package_id)
     return [
         ExecutionAuditEntrySchema(
             id=r.id,
@@ -369,10 +396,12 @@ async def package_audit(
 )
 async def package_versions(
     package_id: str,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
-    rows = await svc.list_versions(package_id)
+    rows = await svc.list_versions(tenant_id, package_id)
     return [
         ExecutionVersionSchema(
             id=r.id,
@@ -393,10 +422,12 @@ async def package_versions(
 )
 async def package_statistics_rows(
     package_id: str,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
-    rows = await svc.list_statistics(package_id)
+    rows = await svc.list_statistics(tenant_id, package_id)
     return [
         ExecutionStatisticsEntrySchema(
             id=r.id,
@@ -420,10 +451,12 @@ async def package_statistics_rows(
 )
 async def package_summary(
     package_id: str,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
+    _current_user: dict = Depends(get_current_active_user),
 ):
     svc = ExecutionService(db)
-    row = await svc.get_summary(package_id)
+    row = await svc.get_summary(tenant_id, package_id)
     if row is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

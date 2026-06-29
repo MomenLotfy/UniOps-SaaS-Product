@@ -12,6 +12,10 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import (
+    ApprovalNotFoundError,
+    InvalidApprovalTransitionError,
+)
 from ..constants import (
     ApprovalState,
     TERMINAL_APPROVAL_STATES,
@@ -51,12 +55,13 @@ class ApprovalLifecycleManager(IApprovalLifecycleManager):
         )
         req: Optional[ApprovalRequest] = result.scalar_one_or_none()
         if req is None:
-            raise ValueError(f"ApprovalRequest {request_id} not found")
+            raise ApprovalNotFoundError(request_id)
 
         from_state = req.approval_state
         if not self.can_transition(from_state, to_state):
-            raise ValueError(
-                f"Illegal transition {from_state} -> {to_state} for ApprovalRequest {request_id}"
+            raise InvalidApprovalTransitionError(
+                from_state=str(from_state.value if hasattr(from_state, "value") else from_state),
+                to_state=str(to_state.value if hasattr(to_state, "value") else to_state),
             )
 
         req.approval_state = to_state

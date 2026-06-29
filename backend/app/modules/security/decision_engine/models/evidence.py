@@ -14,8 +14,8 @@ class DecisionReason(DecisionBase):
     reason_code: Mapped[str] = mapped_column(String(100), nullable=False) # e.g. 'SENSITIVE_DATA_FOUND'
     description: Mapped[str] = mapped_column(String(1000), nullable=False)
 
-    decision: Mapped["Decision"] = relationship(back_populates="reasons")
-    evidence: Mapped[List["DecisionEvidence"]] = relationship(back_populates="reason")
+    decision: Mapped["Decision"] = relationship(back_populates="reasons", lazy="selectin")
+    evidence: Mapped[List["DecisionEvidence"]] = relationship(back_populates="reason", lazy="selectin")
 
 class DecisionEvidence(DecisionBase):
     """

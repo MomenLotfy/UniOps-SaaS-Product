@@ -1,0 +1,46 @@
+---
+# Non-secret application configuration.
+# Secrets (DATABASE_URL, SECRET_KEY, JWT_SECRET_KEY, SENTRY_DSN, …) are
+# mounted as k8s Secret from ExternalSecrets / SealedSecrets / Vault.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: uniops-config
+  namespace: uniops
+  labels:
+    app.kubernetes.io/name: uniops
+    app.kubernetes.io/component: config
+data:
+  # ── Application ────────────────────────────────────────────────────────
+  APP_NAME: "UniOps"
+  APP_ENV: "production"
+  APP_VERSION: "1.0.0"
+  API_V1_PREFIX: "/api/v1"
+  FRONTEND_URL: "https://app.uniops.io"
+
+  # ── Logging ────────────────────────────────────────────────────────────
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
+
+  # ── OpenTelemetry ──────────────────────────────────────────────────────
+  OTEL_SERVICE_NAME: "uniops"
+  OTEL_SDK_DISABLED: "false"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability.svc.cluster.local:4317"
+  OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+
+  # ── Sentry ─────────────────────────────────────────────────────────────
+  SENTRY_ENVIRONMENT: "production"
+  SENTRY_TRACES_SAMPLE_RATE: "0.1"
+  SENTRY_PROFILES_SAMPLE_RATE: "0.0"
+
+  # ── CORS ───────────────────────────────────────────────────────────────
+  CORS_ORIGINS: "https://app.uniops.io,https://admin.uniops.io"
+
+  # ── Limits ─────────────────────────────────────────────────────────────
+  RATE_LIMIT_PER_MINUTE: "120"
+
+  # ── Database / Redis (cluster DNS) ─────────────────────────────────────
+  # Override per environment via overlay patches.
+  REDIS_URL: "redis://uniops-redis.uniops-redis.svc.cluster.local:6379/0"
+  CELERY_BROKER_URL: "redis://uniops-redis.uniops-redis.svc.cluster.local:6379/1"
+  CELERY_RESULT_BACKEND: "redis://uniops-redis.uniops-redis.svc.cluster.local:6379/2"

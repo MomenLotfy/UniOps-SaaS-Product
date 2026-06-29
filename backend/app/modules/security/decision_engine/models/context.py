@@ -14,7 +14,7 @@ class DecisionContext(DecisionBase):
     raw_data: Mapped[dict] = mapped_column(JSON, nullable=False) # Full snapshot of context build
 
     # Relationships
-    context_metadata: Mapped[List["DecisionMetadata"]] = relationship(back_populates="context")
+    context_metadata: Mapped[List["DecisionMetadata"]] = relationship(back_populates="context", lazy="selectin")
 
 class DecisionMetadata(DecisionBase):
     """

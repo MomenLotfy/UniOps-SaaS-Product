@@ -69,4 +69,30 @@ apiClient.interceptors.response.use(
   },
 );
 
+// Expose the request/trace/correlation ids on every response so the UI can
+// display them (e.g. when surfacing an error to support).  We attach the
+// fields in-place on the response object — axios passes the same reference
+// back to callers' `.then(r => ...)` handlers.
+declare module 'axios' {
+  export interface AxiosResponse {
+    traceId?: string;
+    correlationId?: string;
+    requestId?: string;
+  }
+}
+
+apiClient.interceptors.response.use(
+  (response) => {
+    const h = response.headers ?? {};
+    const get = (k: string): string | undefined => {
+      const v = (h as any)[k] ?? (h as any)[k.toLowerCase()];
+      return typeof v === 'string' ? v : undefined;
+    };
+    response.traceId       = get('x-trace-id');
+    response.correlationId = get('x-correlation-id');
+    response.requestId     = get('x-request-id');
+    return response;
+  },
+);
+
 export default apiClient;

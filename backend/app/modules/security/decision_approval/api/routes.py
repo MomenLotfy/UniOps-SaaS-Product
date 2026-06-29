@@ -2,21 +2,29 @@
 Read-only FastAPI routes for the Approval Engine.
 
 Mounted at `/security/decision-approvals/` by the parent module.
-All endpoints are GET-only.
+
+Sprint 2 R24: now exposes mutating endpoints behind ``POST``.  Every
+mutation honours the ``Idempotency-Key`` request header (RFC draft)
+so retries are safe.
 """
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
 
 from ..constants import ApprovalState, ApprovalType
 from ..services import ApprovalService
+from ..services.approval_manager import ApprovalManager
+from ..services.idempotency_service import IdempotencyService
 from .schemas import (
+    ApprovalActionRequest,
+    ApprovalActionResponse,
     ApprovalHistoryEntrySchema,
     ApprovalPolicySchema,
     ApprovalRequestDetailSchema,
@@ -180,6 +188,127 @@ async def approval_policies(
         )
         for r in rows
     ]
+
+
+@router.post(
+    "/{approval_id}/actions",
+    response_model=ApprovalActionResponse,
+    summary="Apply an approval action (approve / reject / cancel / archive)",
+    status_code=status.HTTP_200_OK,
+)
+async def apply_approval_action(
+    approval_id: str,
+    payload: ApprovalActionRequest,
+    tenant_id: str = Query(..., description="Tenant identifier"),
+    idempotency_key: Optional[str] = Header(default=None, alias="Idempotency-Key", max_length=255),
+    db: AsyncSession = Depends(get_db),
+) -> ApprovalActionResponse:
+    """
+    Mutate the lifecycle of an approval request.
+
+    Honours the ``Idempotency-Key`` header: replays of the same key
+    (with the same body) return the original response without re-applying
+    the transition.  The same key with a different body raises 409.
+    """
+    chosen = [
+        name for name, flag in (
+            ("approve", payload.approve),
+            ("reject",  payload.reject),
+            ("cancel",  payload.cancel),
+            ("archive", payload.archive),
+        ) if flag
+    ]
+    if len(chosen) != 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Exactly one of approve / reject / cancel / archive must be set",
+        )
+
+    body_for_hash = payload.model_dump()
+    body_for_hash["approval_id"] = approval_id
+
+    idem = IdempotencyService(db)
+    replay = await idem.lookup(tenant_id, idempotency_key or "", body_for_hash)
+    if replay:
+        replay["replayed"] = True
+        return ApprovalActionResponse(**replay)
+
+    # Verify the request belongs to the tenant before mutating.
+    svc = ApprovalService(db)
+    row = await svc.get_request(approval_id)
+    if row is None or row.tenant_id != tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ApprovalRequest {approval_id} not found",
+        )
+    previous_state = row.approval_state
+
+    actor_id = payload.actor_id or "anonymous"
+    manager = ApprovalManager(db)
+    if chosen[0] == "approve":
+        updated = await manager.approve(approval_id, changed_by=actor_id, reason=payload.reason)
+    elif chosen[0] == "reject":
+        updated = await manager.reject(approval_id, changed_by=actor_id, reason=payload.reason)
+    elif chosen[0] == "cancel":
+        updated = await manager.cancel(approval_id, changed_by=actor_id, reason=payload.reason)
+    else:  # archive
+        updated = await manager.archive(approval_id, changed_by=actor_id, reason=payload.reason)
+
+    response = ApprovalActionResponse(
+        approval_id=approval_id,
+        tenant_id=tenant_id,
+        previous_state=previous_state,
+        new_state=updated.approval_state,
+        version=updated.version,
+        changed_by=actor_id,
+        change_reason=payload.reason,
+        idempotency_key=idempotency_key,
+        replayed=False,
+        occurred_at=datetime.now(timezone.utc),
+    )
+    await idem.store(
+        tenant_id,
+        idempotency_key,
+        request_id=updated.id,
+        payload=body_for_hash,
+        response_snapshot=response.model_dump(mode="json"),
+    )
+    return response
+
+
+@router.post(
+    "/{approval_id}/expire",
+    response_model=ApprovalActionResponse,
+    summary="Force an approval request into EXPIRED (system action)",
+)
+async def expire_approval(
+    approval_id: str,
+    tenant_id: str = Query(..., description="Tenant identifier"),
+    db: AsyncSession = Depends(get_db),
+) -> ApprovalActionResponse:
+    """System-only path used by the scheduler to expire stale approvals."""
+    svc = ApprovalService(db)
+    row = await svc.get_request(approval_id)
+    if row is None or row.tenant_id != tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ApprovalRequest {approval_id} not found",
+        )
+    previous_state = row.approval_state
+    manager = ApprovalManager(db)
+    updated = await manager.expire(approval_id)
+    return ApprovalActionResponse(
+        approval_id=approval_id,
+        tenant_id=tenant_id,
+        previous_state=previous_state,
+        new_state=updated.approval_state,
+        version=updated.version,
+        changed_by="system",
+        change_reason="TTL elapsed",
+        idempotency_key=None,
+        replayed=False,
+        occurred_at=datetime.now(timezone.utc),
+    )
 
 
 __all__ = ["router"]

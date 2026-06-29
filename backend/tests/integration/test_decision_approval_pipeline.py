@@ -23,7 +23,7 @@ from app.modules.security.decision_approval.services import (
 @pytest.mark.asyncio
 async def test_approval_pipeline_persists_request_and_supports():
     # Arrange: in-memory DB stand-in
-    db = MagicMock()
+    db = AsyncMock()
 
     decision = SimpleNamespace(
         id="dec-1",
@@ -45,9 +45,11 @@ async def test_approval_pipeline_persists_request_and_supports():
         },
     )
 
-    # Capture every ORM row that gets `add()`-ed; also fake id population on flush
+    # Capture every ORM row that gets `add()`-ed; also fake id population on flush.
+    # `db.add` must be a sync MagicMock so we can capture the object;
+    # AsyncMock would auto-create an async one returning a coroutine.
     added = []
-    db.add.side_effect = lambda obj: added.append(obj)
+    db.add = MagicMock(side_effect=lambda obj: added.append(obj))
     counter = {"i": 0}
 
     async def fake_flush():
@@ -102,7 +104,7 @@ async def test_approval_pipeline_persists_request_and_supports():
 
 @pytest.mark.asyncio
 async def test_approval_pipeline_auto_rejects_critical():
-    db = MagicMock()
+    db = AsyncMock()
     db.add = MagicMock()
     db.flush = AsyncMock()
 
@@ -143,7 +145,7 @@ async def test_approval_pipeline_auto_rejects_critical():
 async def test_lifecycle_manager_records_history_on_transition():
     from app.modules.security.decision_approval.constants import ApprovalState
 
-    db = MagicMock()
+    db = AsyncMock()
     db.flush = AsyncMock()
 
     strategy = SimpleNamespace(
@@ -182,7 +184,7 @@ async def test_lifecycle_manager_records_history_on_transition():
 @pytest.mark.asyncio
 async def test_lifecycle_rejects_invalid_transition():
     from app.modules.security.decision_approval.constants import ApprovalState
-    db = MagicMock()
+    db = AsyncMock()
     db.flush = AsyncMock()
     strategy = SimpleNamespace(
         id="str-2",
@@ -196,7 +198,9 @@ async def test_lifecycle_rejects_invalid_transition():
     db.execute = AsyncMock(return_value=result_mock)
 
     mgr = ApprovalLifecycleManager(db)
-    with pytest.raises(ValueError):
+    # R19: typed InvalidApprovalTransitionError (subclasses ValueError).
+    from app.core.exceptions import InvalidApprovalTransitionError
+    with pytest.raises((ValueError, InvalidApprovalTransitionError)):
         await mgr.transition(
             request_id="str-2",
             to_state=ApprovalState.APPROVED,
@@ -206,7 +210,7 @@ async def test_lifecycle_rejects_invalid_transition():
 
 @pytest.mark.asyncio
 async def test_pipeline_handles_emergency_override():
-    db = MagicMock()
+    db = AsyncMock()
     db.add = MagicMock()
     db.flush = AsyncMock()
 

@@ -1,0 +1,52 @@
+---
+# Sprint 4 — Prometheus Adapter configuration.
+#
+# Exposes the UniOps application metric `uniops_http_requests_in_progress`
+# (a Prometheus gauge exposed by the FastAPI app at /metrics) as the
+# Kubernetes custom metric of the same name, so HPAs referencing it can
+# query through the `custom.metrics.k8s.io` API.
+#
+# Naming: query series exactly as reported by the FastAPI exporter.
+# Series format:  uniops_http_requests_in_progress{pod="…",namespace="…"}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-adapter-config
+  namespace: monitoring
+data:
+  config.yaml: |
+    rules:
+      - seriesQuery: 'uniops_http_requests_in_progress'
+        resources:
+          overrides:
+            namespace:
+              resource: namespace
+            pod:
+              resource: pod
+        name:
+          matches: "^(.*)$"
+          as: "${1}"
+        metricsQuery: 'sum_over_time(uniops_http_requests_in_progress[2m])'
+      - seriesQuery: 'uniops_pipeline_duration_seconds_sum'
+        resources:
+          overrides:
+            namespace:
+              resource: namespace
+            pod:
+              resource: pod
+        name:
+          matches: "^(.*)_seconds_sum$"
+          as: "${1}_seconds_sum"
+        metricsQuery: 'sum_over_time(uniops_pipeline_duration_seconds_sum[2m])'
+      - seriesQuery: 'uniops_pipeline_failures_total'
+        resources:
+          overrides:
+            namespace:
+              resource: namespace
+            pod:
+              resource: pod
+        name:
+          matches: "^(.*)_total$"
+          as: "${1}_total"
+        metricsQuery: 'sum_over_time(uniops_pipeline_failures_total[2m])'

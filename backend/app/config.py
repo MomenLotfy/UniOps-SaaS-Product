@@ -1,7 +1,34 @@
+"""
+Application settings.
+
+Sprint 1 R7: SECRET_KEY is validated at startup and rejected when it
+matches a known placeholder / default / empty value.  The check is
+deliberately permissive in development (APP_ENV != "production") so
+local dev workflows continue to work with the documented default.
+"""
 from functools import lru_cache
 from typing import List
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+# Values that explicitly must NOT appear as a production SECRET_KEY.
+# Match is case-insensitive on the substring.
+_FORBIDDEN_SECRET_SUBSTRINGS = (
+    "change-me",
+    "change_me",
+    "changeme",
+    "default",
+    "placeholder",
+    "example",
+    "todo",
+    "fixme",
+    "your-secret",
+    "your_secret",
+    "insecure",
+    "test-secret",
+    "test_secret",
+)
 
 
 class Settings(BaseSettings):
@@ -22,7 +49,7 @@ class Settings(BaseSettings):
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
-    def fix_database_url(cls, v):
+    def fix_database_url(cls, v: object) -> object:
         if isinstance(v, str):
             if v.startswith("postgresql://"):
                 v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
@@ -72,7 +99,7 @@ class Settings(BaseSettings):
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def parse_cors(cls, v):
+    def parse_cors(cls, v: object) -> object:
         if isinstance(v, str):
             # Handle JSON list string: '["a","b"]'
             if v.startswith("["):
@@ -84,7 +111,76 @@ class Settings(BaseSettings):
             # Handle comma-separated: "a,b,c"
             return [i.strip() for i in v.split(",") if i.strip()]
         return v
+
+    @field_validator("RATE_LIMIT_TRUSTED_PROXIES", mode="before")
+    @classmethod
+    def _parse_trusted_proxies(cls, v: object) -> object:
+        if isinstance(v, str):
+            return [i.strip() for i in v.split(",") if i.strip()]
+        return v
     RATE_LIMIT_PER_MINUTE: int = 60
+    # Sprint 4: production-grade rate limiting.  All values are
+    # configurable through the environment; the Redis-backed
+    # RateLimiter enforces them per tenant + per endpoint.
+    RATE_LIMIT_BURST_PER_MINUTE: int = 100
+    RATE_LIMIT_SUSTAINED_PER_HOUR: int = 5000
+    RATE_LIMIT_TENANT_BURST_PER_MINUTE: int = 300
+    RATE_LIMIT_TENANT_SUSTAINED_PER_HOUR: int = 20000
+    RATE_LIMIT_TRUSTED_PROXIES: List[str] = []
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_KEY_PREFIX: str = "rl"
+
+    # ── Sprint 3 R30 observability ────────────────────────────────────────────────
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "json"  # "json" | "text"
+    OTEL_SERVICE_NAME: str = "uniops"
+    OTEL_SDK_DISABLED: str = "false"
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.0
+    SENTRY_PROFILES_SAMPLE_RATE: float = 0.0
+
+    # ── Sprint 1 R7: SECRET_KEY hardening ─────────────────────────────
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def _validate_secret_key(cls, v: str) -> str:
+        if v is None:
+            raise ValueError(
+                "SECRET_KEY is empty. Set a strong random value via env or .env."
+            )
+        stripped = (v or "").strip()
+        if not stripped:
+            raise ValueError(
+                "SECRET_KEY is empty. Set a strong random value via env or .env."
+            )
+        lowered = stripped.lower()
+        for bad in _FORBIDDEN_SECRET_SUBSTRINGS:
+            if bad in lowered:
+                raise ValueError(
+                    f"SECRET_KEY contains forbidden placeholder substring "
+                    f"'{bad}'. Set a strong random value via env or .env."
+                )
+        if len(stripped) < 32:
+            raise ValueError(
+                "SECRET_KEY must be at least 32 characters long. "
+                "Generate one with `python -c \"import secrets; print(secrets.token_urlsafe(48))\"`."
+            )
+        return v
+
+    @model_validator(mode="after")
+    def _enforce_secret_key_in_production(self) -> "Settings":
+        """In production, refuse to boot when CORS_ORIGINS is wildcard or
+        when DEBUG is enabled.  These are operational invariants that
+        should fail loud."""
+        if (self.APP_ENV or "").lower() in {"production", "prod", "staging"}:
+            if self.DEBUG:
+                raise ValueError(
+                    "DEBUG must be False when APP_ENV is production/staging."
+                )
+            if "*" in (self.CORS_ORIGINS or []):
+                raise ValueError(
+                    "CORS_ORIGINS must not include '*' when APP_ENV is "
+                    "production/staging. Set explicit allowed origins."
+                )
+        return self
 
 
 @lru_cache()

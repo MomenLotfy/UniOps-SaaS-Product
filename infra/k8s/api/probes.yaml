@@ -1,0 +1,40 @@
+---
+# Probe split-out — referenced by api/deployment.yaml for readability.
+# Three distinct probes map to the three FastAPI endpoints:
+#
+#   /api/v1/health/startup  → startupProbe   (allows up to 150s boot)
+#   /api/v1/health/live     → livenessProbe  (always 200 unless wedged)
+#   /api/v1/health/ready    → readinessProbe (503 when DB/Redis down)
+#
+# Why three?
+#
+#   startup  — the lifespan must finish (DB init, scheduler start,
+#              plugin bootstrap) before traffic is routed.  This probe
+#              is generous (150s total) so a slow first migration
+#              doesn't kill the pod before it's ready.
+#
+#   liveness — process is wedged → kill it.  This MUST NOT depend on
+#              external services, so it never returns 503 just because
+#              Postgres hiccupped.
+#
+#   readiness — DB / Redis / scheduler must be reachable.  When any
+#               critical dep is down, the pod is removed from the
+#               service endpoint set so it stops receiving traffic
+#               but is NOT killed.
+#
+# All three endpoints are exposed by:
+#   backend/app/api/v1/endpoints/health.py  (Sprint 3 R38)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: uniops-probes-doc
+  namespace: uniops
+  labels:
+    app.kubernetes.io/name: uniops
+    app.kubernetes.io/component: api
+data:
+  README: |
+    See api/deployment.yaml for the actual probe configuration; this
+    ConfigMap exists purely to document the contract.  The endpoint
+    implementations live in backend/app/api/v1/endpoints/health.py.

@@ -9,36 +9,36 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
+from app.platform.thread_safe_registry import ThreadSafeRegistry
+
 from ..constants import StrategyType
 from .strategy_interfaces import IStrategyDescriptor, IStrategyRegistry
 
 
-class DecisionStrategyRegistry(IStrategyRegistry):
+class DecisionStrategyRegistry(ThreadSafeRegistry[StrategyType, IStrategyDescriptor], IStrategyRegistry):
     """
     In-memory registry of strategy descriptors.
 
-    Thread-safe enough for read-heavy production: registrations happen
-    at process start (in `bootstrap_default_strategies`); reads are
-    concurrent.
+    Thread-safe (Sprint 3 R36): inherited ``threading.RLock``-guarded
+    store.  Registrations are still expected to happen at process
+    start (in ``bootstrap_default_strategies``); reads are concurrent
+    across both asyncio tasks and Celery worker threads.
     """
-
-    def __init__(self) -> None:
-        self._store: Dict[StrategyType, IStrategyDescriptor] = {}
 
     # ── IStrategyRegistry ────────────────────────────────────────────────
     def register(self, strategy_type: StrategyType, descriptor: IStrategyDescriptor) -> None:
         descriptor.strategy_type = strategy_type
-        self._store[strategy_type] = descriptor
+        super().register(strategy_type, descriptor)
 
     def get(self, strategy_type: StrategyType):
-        return self._store.get(strategy_type)
+        return super().get(strategy_type)
 
     def all(self) -> Dict[StrategyType, IStrategyDescriptor]:
-        return dict(self._store)
+        return super().all()
 
     def discover(self, decision: Any, context: Any) -> List[IStrategyDescriptor]:
         out: List[IStrategyDescriptor] = []
-        for d in self._store.values():
+        for d in self.values():
             try:
                 if d.applicable(decision, context):
                     out.append(d)

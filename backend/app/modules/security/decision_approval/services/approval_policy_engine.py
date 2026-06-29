@@ -66,6 +66,7 @@ class ApprovalPolicyEngine:
         context: Any,
         *,
         approval_type,
+        strategy: Any = None,
     ) -> ApprovalCandidateData:
         verdict = self.evaluate_policies(context)
         scoring = self._scoring.score(context)
@@ -75,6 +76,7 @@ class ApprovalPolicyEngine:
             verdict=verdict,
             approval_type=approval_type,
             scoring=scoring,
+            strategy=strategy,
         )
 
 

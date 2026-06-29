@@ -157,6 +157,7 @@ class ApprovalCandidateData:
     reasons: List[Tuple[str, str]] = field(default_factory=list)
     constraints: List[Tuple[str, bool, str]] = field(default_factory=list)  # (type, is_met, details)
     evidence: List[Tuple[str, str]] = field(default_factory=list)           # (type, value)
+    metadata: List[Tuple[str, Any]] = field(default_factory=list)           # (key, scalar value)
     risk_score: float = 0.0
     criticality_score: float = 0.0
     composite_score: float = 0.0

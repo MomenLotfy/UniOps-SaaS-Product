@@ -59,9 +59,21 @@ done
 echo "  ✓ Redis check complete"
 
 # ── Step 3: Run database migrations ─────────────────────────────────────────
+# Sprint 4: in production we rely on Alembic exclusively.  The
+# create_all fallback would silently shadow the migration chain and
+# is permitted only in non-production environments (APP_ENV ∈
+# {development, test, dev}).  In production a failed migration is
+# fatal — the operator must fix the migration or restore a backup
+# before the API can boot.
 echo "[3/4] Running alembic migrations..."
+APP_ENV_LC=$(echo "${APP_ENV:-development}" | tr '[:upper:]' '[:lower:]')
 if ! alembic upgrade head 2>&1; then
-    echo "  ⚠ alembic migration failed — falling back to SQLAlchemy create_all"
+    if [ "$APP_ENV_LC" = "production" ] || [ "$APP_ENV_LC" = "prod" ] || [ "$APP_ENV_LC" = "staging" ]; then
+        echo "  ✗ alembic migration failed in $APP_ENV_LC — refusing to start"
+        echo "    (create_all fallback is disabled in production; restore DB or fix migration)"
+        exit 1
+    fi
+    echo "  ⚠ alembic migration failed in $APP_ENV_LC — falling back to SQLAlchemy create_all"
     python -c "
 import asyncio, sys
 sys.path.insert(0, '/app')

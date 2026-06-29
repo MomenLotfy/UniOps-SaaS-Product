@@ -31,22 +31,30 @@ logger = logging.getLogger(__name__)
 #  Per-factor checks
 # ─────────────────────────────────────────────────────────────────────
 class DecisionReadyCheck(IExecutionReadinessCheck):
-    """Verifies that the originating Decision is in a buildable state."""
+    """
+    Verifies that the originating Decision is in a buildable state.
+
+    Sprint 2 R15: the previous implementation was gated by
+    ``candidate.dependencies and ...`` which short-circuited on an
+    empty dependency list — meaning this check ALWAYS evaluated
+    ``decision_state == ""`` and emitted FAILED.  The check now
+    reads ``context.decision_state`` directly without any dependency
+    on the candidate's dependency list, so it correctly evaluates
+    the real decision state every time the pipeline runs.
+    """
     factor = ReadinessFactor.DECISION_READY
 
     _BUILDABLE_STATES = {"READY", "APPROVED", "BUILDABLE", "READY_FOR_EXECUTION"}
 
     def applicable(self, candidate: ExecutionCandidateData, context: Any) -> bool:
+        # Always applicable — the decision state is independent of
+        # whether dependencies have been resolved yet.
         return True
 
     def evaluate(self, candidate: ExecutionCandidateData, context: Any) -> ReadinessFactorResult:
         started = time.monotonic()
-        decision_state = (
-            candidate.dependencies and  # type: ignore[truthy-function]
-            getattr(context, "decision_state", None)
-        ) or ""
-        decision_state = str(decision_state).upper() if decision_state else ""
-
+        raw_state = getattr(context, "decision_state", None)
+        decision_state = str(raw_state).upper() if raw_state else ""
         outcome = (
             ReadinessOutcome.PASSED
             if decision_state in self._BUILDABLE_STATES
@@ -70,11 +78,19 @@ class DecisionReadyCheck(IExecutionReadinessCheck):
 
 
 class ApprovalCompleteCheck(IExecutionReadinessCheck):
-    """Verifies the upstream Approval is APPROVED."""
+    """
+    Verifies the upstream Approval is APPROVED.
+
+    Sprint 2 R15: previously this check silently skipped when
+    ``approval_id`` was None, which meant a missing approval was
+    never surfaced as a failed readiness check.  The check now runs
+    unconditionally and the underlying ``evaluate`` will FAILED
+    when the approval state is missing or not APPROVED.
+    """
     factor = ReadinessFactor.APPROVAL_COMPLETE
 
     def applicable(self, candidate: ExecutionCandidateData, context: Any) -> bool:
-        return candidate.approval_id is not None
+        return True
 
     def evaluate(self, candidate: ExecutionCandidateData, context: Any) -> ReadinessFactorResult:
         started = time.monotonic()
@@ -87,18 +103,28 @@ class ApprovalCompleteCheck(IExecutionReadinessCheck):
         return ReadinessFactorResult(
             factor=self.factor,
             outcome=outcome,
-            rationale=f"Approval state={approval_state or 'MISSING'}",
-            details={"approval_state": approval_state},
+            rationale=(
+                f"Approval state={approval_state or 'MISSING'}"
+                + (" (approved)" if outcome == ReadinessOutcome.PASSED else "")
+            ),
+            details={"approval_state": approval_state, "approval_id": candidate.approval_id},
             latency_ms=(time.monotonic() - started) * 1000.0,
         )
 
 
 class StrategySelectedCheck(IExecutionReadinessCheck):
-    """Verifies that a non-rejected Strategy was selected."""
+    """
+    Verifies that a non-rejected Strategy was selected.
+
+    Sprint 2 R15: previously this check silently skipped when
+    ``strategy_id`` was None.  Now runs unconditionally and emits
+    FAILED when the strategy state is missing or not in a
+    buildable set.
+    """
     factor = ReadinessFactor.STRATEGY_SELECTED
 
     def applicable(self, candidate: ExecutionCandidateData, context: Any) -> bool:
-        return candidate.strategy_id is not None
+        return True
 
     def evaluate(self, candidate: ExecutionCandidateData, context: Any) -> ReadinessFactorResult:
         started = time.monotonic()
@@ -112,7 +138,7 @@ class StrategySelectedCheck(IExecutionReadinessCheck):
             factor=self.factor,
             outcome=outcome,
             rationale=f"Strategy state={strategy_state or 'MISSING'}",
-            details={"strategy_state": strategy_state},
+            details={"strategy_state": strategy_state, "strategy_id": candidate.strategy_id},
             latency_ms=(time.monotonic() - started) * 1000.0,
         )
 

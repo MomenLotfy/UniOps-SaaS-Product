@@ -77,7 +77,6 @@ services:
       - ./backend/scripts:/app/scripts
       - models_data:/app/models
       - backend_logs:/app/logs
-      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8000:8000"
     depends_on:

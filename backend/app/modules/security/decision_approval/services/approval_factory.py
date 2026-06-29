@@ -7,7 +7,7 @@ deterministically; no I/O happens here.
 """
 from __future__ import annotations
 
-from typing import Any, List
+from typing import Any, List, Tuple
 
 from ..constants import ApprovalActorRole
 from .approval_interfaces import (
@@ -24,6 +24,22 @@ def _stringify(value: Any, max_len: int = 2000) -> str:
     return s[:max_len]
 
 
+def _extract_metadata(raw_data: Any) -> List[Tuple[str, Any]]:
+    """
+    Project a context's `raw_data` dict into a list of scalar (key, value)
+    pairs suitable for ApprovalMetadata persistence.  Only scalar values
+    (str, int, float, bool) are kept — nested dicts/lists are skipped to
+    avoid exceeding column widths.
+    """
+    if not isinstance(raw_data, dict):
+        return []
+    out: List[Tuple[str, Any]] = []
+    for k, v in raw_data.items():
+        if isinstance(v, (str, int, float, bool)):
+            out.append((str(k), v))
+    return out
+
+
 class ApprovalFactory:
     """Builds ApprovalCandidateData objects from policy verdicts + context."""
 
@@ -35,6 +51,7 @@ class ApprovalFactory:
         *,
         approval_type: Any,
         scoring: dict,
+        strategy: Any = None,
     ) -> ApprovalCandidateData:
         requirements: List[ApprovalRequirementSpec] = [
             ApprovalRequirementSpec(
@@ -62,9 +79,17 @@ class ApprovalFactory:
         for code, desc in verdict.reasons:
             evidence.append(("POLICY_REASON", f"{code}: {desc}"))
 
+        # R12: strategy_id must reference the actual Strategy aggregate when
+        # supplied; never fall back to decision.plan_id.
+        strategy_id: Any = None
+        if strategy is not None and getattr(strategy, "id", None) is not None:
+            strategy_id = getattr(strategy, "id")
+        elif getattr(decision, "strategy_id", None) is not None:
+            strategy_id = getattr(decision, "strategy_id")
+
         return ApprovalCandidateData(
             decision_id=getattr(decision, "id", "unknown"),
-            strategy_id=getattr(decision, "plan_id", None),
+            strategy_id=strategy_id,
             tenant_id=getattr(context, "tenant_id", None) or getattr(decision, "tenant_id", "default"),
             approval_type=approval_type,
             requirement_mode=verdict.requirement_mode,
@@ -72,6 +97,7 @@ class ApprovalFactory:
             reasons=[(r[0], r[1]) for r in verdict.reasons],
             constraints=constraints,
             evidence=evidence,
+            metadata=_extract_metadata(getattr(context, "raw_data", {})),
             risk_score=verdict.risk_score,
             criticality_score=verdict.criticality_score,
             composite_score=float(scoring.get("composite", 0.0)),

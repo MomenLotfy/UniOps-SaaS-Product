@@ -12,8 +12,10 @@ from __future__ import annotations
 
 import logging
 import time
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+from app.core.exceptions import ApprovalInvariantError
 from ..constants import ApprovalState
 from ..models.approval import (
     ApprovalAudit,
@@ -103,6 +105,7 @@ class ApprovalEngine:
             decision=decision,
             context=context,
             approval_type=approval_type,
+            strategy=strategy,
         )
 
         duration_ms = int((time.monotonic() - started) * 1000)
@@ -138,7 +141,7 @@ class ApprovalEngine:
     ) -> ApprovalRequest:
         """Convert the winning candidate into ORM rows.  Called by the pipeline."""
         if result.candidate is None:
-            raise ValueError("Cannot persist an ApprovalEvaluationResult with no candidate")
+            raise ApprovalInvariantError("Cannot persist an ApprovalEvaluationResult with no candidate")
         cand = result.candidate
 
         # Persist the ApprovalRequest row first (so FK targets exist)
@@ -214,18 +217,19 @@ class ApprovalEngine:
                 trace_id=cand.trace_id,
             ))
 
-        # Metadata (key/value, scalar values only)
-        if isinstance(cand.evidence, list):
-            for k, v in (cand.evidence or []):
-                if isinstance(v, (str, int, float, bool)):
-                    db_session.add(ApprovalMetadata(
-                        tenant_id=cand.tenant_id,
-                        request_id=row.id,
-                        key=str(k)[:128],
-                        value=str(v)[:4000],
-                        correlation_id=cand.correlation_id,
-                        trace_id=cand.trace_id,
-                    ))
+        # Metadata (key/value, scalar values only).
+        # R11: Iterate the proper metadata list (key, scalar value) from the
+        # candidate — never from cand.evidence (which is policy-reason tuples).
+        for k, v in (cand.metadata or []):
+            if isinstance(v, (str, int, float, bool)):
+                db_session.add(ApprovalMetadata(
+                    tenant_id=cand.tenant_id,
+                    request_id=row.id,
+                    key=str(k)[:128],
+                    value=str(v)[:4000],
+                    correlation_id=cand.correlation_id,
+                    trace_id=cand.trace_id,
+                ))
 
         # Seed a CREATED history entry so the audit chain starts here
         db_session.add(ApprovalHistory(
@@ -254,7 +258,7 @@ class ApprovalEngine:
                 "auto_reject":     cand.auto_reject,
                 "composite_score": cand.composite_score,
             },
-            occurred_at=time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime()),
+            occurred_at=datetime.now(timezone.utc),
             correlation_id=cand.correlation_id,
             trace_id=cand.trace_id,
         ))

@@ -35,9 +35,12 @@ from app.modules.security.execution_orchestration.services import (
 
 
 def _make_db_mock():
-    db = MagicMock()
+    """AsyncMock-based DB stand-in with sync `add()` capture + async flush/commit/rollback."""
+    db = AsyncMock()
     added = []
-    db.add.side_effect = lambda obj: added.append(obj)
+    # `db.add` must be a sync MagicMock so we can capture the object;
+    # AsyncMock would auto-create an async one returning a coroutine.
+    db.add = MagicMock(side_effect=lambda obj: added.append(obj))
     counter = {"i": 0}
 
     async def fake_flush():
@@ -47,6 +50,25 @@ def _make_db_mock():
                 obj.id = f"mock-id-{counter['i']}"
     db.flush = fake_flush
     db.added = added
+
+    # Make `db.execute(...).scalar_one_or_none()` resolve to the most-recently
+    # added row matching the WHERE filter — this is how the lifecycle manager
+    # loads the current package state during a transition.  We can't fully
+    # parse SQLAlchemy's WHERE clauses in tests, so we just return the latest
+    # ExecutionPackage row; that is the row the lifecycle manager will be
+    # transitioning in the happy path.
+    async def fake_execute(*_args, **_kwargs):
+        result = MagicMock()
+        candidates = [
+            o for o in added
+            if type(o).__name__ in ("ExecutionPackage",)
+            and getattr(o, "id", None)
+        ]
+        result.scalar_one_or_none.return_value = (
+            candidates[-1] if candidates else None
+        )
+        return result
+    db.execute = fake_execute
     return db
 
 
@@ -258,6 +280,13 @@ def test_serializer_round_trip_preserves_candidate():
             rationale="ok",
         )
     ]
+    # Serializer reads candidate.readiness_total/passed/etc which are
+    # normally populated by the readiness engine; for the round-trip
+    # test we set them explicitly.
+    cand.readiness_total = 1
+    cand.readiness_passed = 1
+    cand.readiness_warned = 0
+    cand.readiness_failed = 0
     payload = ExecutionPackageSerializer().to_dict(cand)
     assert payload["decision_id"] == "d1"
     assert payload["readiness"]["total"] == 1

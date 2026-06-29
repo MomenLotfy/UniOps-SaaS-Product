@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Any, Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
+from app.core.exceptions import NotFoundError
 from ..models.policy import DecisionPolicy, PolicyVersion
 
 class PolicyVersionManager:
@@ -22,7 +23,7 @@ class PolicyVersionManager:
         policy = result.scalar_one_or_none()
 
         if not policy:
-            raise ValueError(f"Policy {policy_id} not found")
+            raise NotFoundError("DecisionPolicy", policy_id)
 
         # 2. Determine next version number
         version_stmt = select(PolicyVersion.version_number).where(PolicyVersion.policy_id == policy_id).order_by(desc(PolicyVersion.version_number))
@@ -63,7 +64,7 @@ class PolicyVersionManager:
         version = result.scalar_one_or_none()
 
         if not version:
-            raise ValueError(f"Version {version_number} for policy {policy_id} not found")
+            raise NotFoundError(f"PolicyVersion(policy_id={policy_id}, version_number={version_number})")
 
         snapshot = version.config_snapshot
 
@@ -73,7 +74,7 @@ class PolicyVersionManager:
         policy = policy_res.scalar_one_or_none()
 
         if not policy:
-            raise ValueError(f"Policy {policy_id} not found")
+            raise NotFoundError("DecisionPolicy", policy_id)
 
         # Restore attributes
         policy.name = snapshot["name"]

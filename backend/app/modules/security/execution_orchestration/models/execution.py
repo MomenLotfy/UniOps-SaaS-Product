@@ -14,6 +14,7 @@ NO execution semantics live in these models.  They are durable
 artifacts only.
 """
 from __future__ import annotations
+from datetime import datetime
 from typing import Optional, List
 
 from sqlalchemy import (
@@ -98,38 +99,42 @@ class ExecutionPackage(DecisionBase):
     package_size_kb:  Mapped[float] = mapped_column(Float, default=0.0)
 
     # Relationships
+    # Sprint 2 R17: every to-many relationship uses ``lazy="selectin"`` so the
+    # collections are auto-fetched when the parent is loaded, eliminating
+    # ``MissingGreenlet`` / ``DetachedInstanceError`` when callers access
+    # children on a detached async session.
     preparation: Mapped[Optional["ExecutionPreparation"]] = relationship(
-        back_populates="package", uselist=False, cascade="all, delete-orphan",
+        back_populates="package", uselist=False, cascade="all, delete-orphan", lazy="selectin",
     )
     readiness:   Mapped[Optional["ExecutionReadiness"]]   = relationship(
-        back_populates="package", uselist=False, cascade="all, delete-orphan",
+        back_populates="package", uselist=False, cascade="all, delete-orphan", lazy="selectin",
     )
     dependencies: Mapped[List["ExecutionDependency"]] = relationship(
-        back_populates="package", cascade="all, delete-orphan",
+        back_populates="package", cascade="all, delete-orphan", lazy="selectin",
     )
     constraints:  Mapped[List["ExecutionConstraint"]] = relationship(
-        back_populates="package", cascade="all, delete-orphan",
+        back_populates="package", cascade="all, delete-orphan", lazy="selectin",
     )
     requirements: Mapped[List["ExecutionRequirement"]] = relationship(
-        back_populates="package", cascade="all, delete-orphan",
+        back_populates="package", cascade="all, delete-orphan", lazy="selectin",
     )
     metadata_rows: Mapped[List["ExecutionMetadata"]] = relationship(
-        back_populates="package", cascade="all, delete-orphan",
+        back_populates="package", cascade="all, delete-orphan", lazy="selectin",
     )
     history:       Mapped[List["ExecutionHistory"]] = relationship(
-        back_populates="package", cascade="all, delete-orphan",
+        back_populates="package", cascade="all, delete-orphan", lazy="selectin",
     )
     versions:      Mapped[List["ExecutionVersion"]] = relationship(
-        back_populates="package", cascade="all, delete-orphan",
+        back_populates="package", cascade="all, delete-orphan", lazy="selectin",
     )
     statistics_rows: Mapped[List["ExecutionStatistics"]] = relationship(
-        back_populates="package", cascade="all, delete-orphan",
+        back_populates="package", cascade="all, delete-orphan", lazy="selectin",
     )
     audit:         Mapped[List["ExecutionAudit"]] = relationship(
-        back_populates="package", cascade="all, delete-orphan",
+        back_populates="package", cascade="all, delete-orphan", lazy="selectin",
     )
     summary_row:   Mapped[Optional["ExecutionSummary"]] = relationship(
-        back_populates="package", uselist=False, cascade="all, delete-orphan",
+        back_populates="package", uselist=False, cascade="all, delete-orphan", lazy="selectin",
     )
 
 
@@ -141,7 +146,6 @@ class ExecutionPreparation(DecisionBase):
     __tablename__ = "security_execution_preparations"
     __table_args__ = (
         Index("ix_eprep_tenant",   "tenant_id"),
-        Index("ix_eprep_decision", "decision_id"),
         Index("ix_eprep_package",  "package_id"),
     )
 
@@ -326,7 +330,10 @@ class ExecutionHistory(DecisionBase):
     )
     changed_by:    Mapped[str] = mapped_column(String(100), nullable=False)
     change_reason: Mapped[Optional[str]] = mapped_column(String(2000))
-    changed_at:    Mapped[Optional[str]] = mapped_column(String(50))
+    # Sprint 2 R22: store as a timezone-aware datetime so range queries
+    # and inter-module joins (Decision.timestamp vs Execution.changed_at)
+    # work correctly across time zones.
+    changed_at:    Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
     package: Mapped["ExecutionPackage"] = relationship(back_populates="history")
 
@@ -405,7 +412,7 @@ class ExecutionAudit(DecisionBase):
     actor_id:    Mapped[Optional[str]] = mapped_column(String(100))
     actor_role:  Mapped[Optional[str]] = mapped_column(String(100))
     details:     Mapped[Optional[dict]] = mapped_column(JSON)
-    occurred_at: Mapped[Optional[str]] = mapped_column(String(50))
+    occurred_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
     package: Mapped["ExecutionPackage"] = relationship(back_populates="audit")
 
@@ -422,7 +429,6 @@ class ExecutionSummary(DecisionBase):
     __table_args__ = (
         Index("ix_esu_tenant",   "tenant_id"),
         Index("ix_esu_package",  "package_id"),
-        Index("ix_esu_state",    "package_state"),
     )
 
     package_id: Mapped[str] = mapped_column(

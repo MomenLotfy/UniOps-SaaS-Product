@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from app.api.deps import get_db, TenantID
 from ..services.decision_service import DecisionService
+from ..services.statistics_service import StatisticsService
 from ..models.decision import Decision
 from .schemas import DecisionRead, DecisionDetailRead, DecisionStatsRead, DecisionHistoryRead
 
@@ -69,11 +70,22 @@ async def get_decision_stats(
 ):
     """
     Get aggregated metrics for decision outcomes.
+
+    Sprint 2 R23: wired to the real ``StatisticsService.get_tenant_metrics``
+    which reads from ``security_decision_statistics`` (one bucket per state).
+    Returns one ``DecisionStatsRead`` row per state with non-zero count.
     """
-    # Mocking stats for the foundation level
+    stats_service = StatisticsService(db)
+    metrics = await stats_service.get_tenant_metrics(tenant_id)
+    by_state = metrics.get("by_state", {}) or {}
+    avg_durations = metrics.get("avg_durations", {}) or {}
     return [
-        {"state": "READY", "count": 10, "avg_duration_ms": 120.5},
-        {"state": "REJECTED", "count": 2, "avg_duration_ms": 45.2},
+        DecisionStatsRead(
+            state=str(state),
+            count=int(by_state[state]),
+            avg_duration_ms=float(avg_durations.get(state, 0.0)),
+        )
+        for state in by_state
     ]
 
 @router.get("/history/{decision_id}", response_model=List[DecisionHistoryRead])

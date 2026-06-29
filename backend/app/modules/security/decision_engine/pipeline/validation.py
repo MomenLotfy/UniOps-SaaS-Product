@@ -1,5 +1,6 @@
 from ..pipeline.base import BasePipelineStage
 from ..services.decision_validator import DecisionValidator
+from app.core.exceptions import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 class ValidationStage(BasePipelineStage):
@@ -13,5 +14,5 @@ class ValidationStage(BasePipelineStage):
             context.source_finding_id
         )
         if not is_valid:
-            raise ValueError(f"Validation failed: {error}")
+            raise ValidationError(f"Validation failed: {error}", field="source_finding_id")
         return context

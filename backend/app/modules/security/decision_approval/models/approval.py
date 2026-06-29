@@ -11,6 +11,7 @@ Indexes are defined per the spec:
     created_at — plus the obvious composite indexes.
 """
 from __future__ import annotations
+from datetime import datetime
 from typing import Optional, List
 from sqlalchemy import (
     String, ForeignKey, JSON, Integer, Boolean,
@@ -81,25 +82,30 @@ class ApprovalRequest(DecisionBase):
     composite_score:   Mapped[float] = mapped_column(Float, default=0.0)
     confidence:        Mapped[float] = mapped_column(Float, default=0.0)
 
-    expires_at:     Mapped[Optional[str]]   = mapped_column(String(50), nullable=True)
+    expires_at:     Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     is_emergency:   Mapped[bool]           = mapped_column(Boolean, default=False)
     auto_decided:   Mapped[bool]           = mapped_column(Boolean, default=False)
     blocked:        Mapped[bool]           = mapped_column(Boolean, default=False)
     blocked_reason: Mapped[Optional[str]]  = mapped_column(String(1000))
 
     # Relationships
-    decisions:     Mapped[List["ApprovalDecision"]]      = relationship(back_populates="request", cascade="all, delete-orphan")
-    requirements:  Mapped[List["ApprovalRequirement"]]   = relationship(back_populates="request", cascade="all, delete-orphan")
-    actors:        Mapped[List["ApprovalActor"]]         = relationship(back_populates="request", cascade="all, delete-orphan")
-    groups:        Mapped[List["ApprovalGroup"]]         = relationship(back_populates="request", cascade="all, delete-orphan")
-    reasons:       Mapped[List["ApprovalReason"]]        = relationship(back_populates="request", cascade="all, delete-orphan")
-    constraints:   Mapped[List["ApprovalConstraint"]]    = relationship(back_populates="request", cascade="all, delete-orphan")
-    evidence:      Mapped[List["ApprovalEvidence"]]      = relationship(back_populates="request", cascade="all, delete-orphan")
-    metadata_rows: Mapped[List["ApprovalMetadata"]]      = relationship(back_populates="request", cascade="all, delete-orphan")
-    history:       Mapped[List["ApprovalHistory"]]       = relationship(back_populates="request", cascade="all, delete-orphan")
-    versions:      Mapped[List["ApprovalVersion"]]       = relationship(back_populates="request", cascade="all, delete-orphan")
-    audit:         Mapped[List["ApprovalAudit"]]         = relationship(back_populates="request", cascade="all, delete-orphan")
-    statistics_rows: Mapped[List["ApprovalStatistics"]]   = relationship(back_populates="request", cascade="all, delete-orphan")
+    # Sprint 2 R17: every to-many relationship uses ``lazy="selectin"`` so the
+    # collection is fetched automatically via a second SELECT after the parent
+    # is loaded.  This prevents ``MissingGreenlet`` / ``DetachedInstanceError``
+    # when the parent is returned from a request-scoped async session and the
+    # response model accesses child collections.
+    decisions:     Mapped[List["ApprovalDecision"]]      = relationship(back_populates="request", cascade="all, delete-orphan", lazy="selectin")
+    requirements:  Mapped[List["ApprovalRequirement"]]   = relationship(back_populates="request", cascade="all, delete-orphan", lazy="selectin")
+    actors:        Mapped[List["ApprovalActor"]]         = relationship(back_populates="request", cascade="all, delete-orphan", lazy="selectin")
+    groups:        Mapped[List["ApprovalGroup"]]         = relationship(back_populates="request", cascade="all, delete-orphan", lazy="selectin")
+    reasons:       Mapped[List["ApprovalReason"]]        = relationship(back_populates="request", cascade="all, delete-orphan", lazy="selectin")
+    constraints:   Mapped[List["ApprovalConstraint"]]    = relationship(back_populates="request", cascade="all, delete-orphan", lazy="selectin")
+    evidence:      Mapped[List["ApprovalEvidence"]]      = relationship(back_populates="request", cascade="all, delete-orphan", lazy="selectin")
+    metadata_rows: Mapped[List["ApprovalMetadata"]]      = relationship(back_populates="request", cascade="all, delete-orphan", lazy="selectin")
+    history:       Mapped[List["ApprovalHistory"]]       = relationship(back_populates="request", cascade="all, delete-orphan", lazy="selectin")
+    versions:      Mapped[List["ApprovalVersion"]]       = relationship(back_populates="request", cascade="all, delete-orphan", lazy="selectin")
+    audit:         Mapped[List["ApprovalAudit"]]         = relationship(back_populates="request", cascade="all, delete-orphan", lazy="selectin")
+    statistics_rows: Mapped[List["ApprovalStatistics"]]   = relationship(back_populates="request", cascade="all, delete-orphan", lazy="selectin")
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -125,7 +131,7 @@ class ApprovalDecision(DecisionBase):
         default=ApprovalOutcome.PENDING, nullable=False,
     )
     rationale:    Mapped[Optional[str]]  = mapped_column(String(2000))
-    decided_at:   Mapped[Optional[str]]  = mapped_column(String(50))
+    decided_at:   Mapped[Optional[datetime]]  = mapped_column(DateTime(timezone=True))
 
     request: Mapped["ApprovalRequest"] = relationship(back_populates="decisions")
 
@@ -157,7 +163,7 @@ class ApprovalPolicy(DecisionBase):
     # Snapshot of the policy's evaluation factors and thresholds.
     config: Mapped[dict] = mapped_column(JSON, default=dict)
 
-    rules: Mapped[List["ApprovalRule"]] = relationship(back_populates="policy", cascade="all, delete-orphan")
+    rules: Mapped[List["ApprovalRule"]] = relationship(back_populates="policy", cascade="all, delete-orphan", lazy="selectin")
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -312,7 +318,7 @@ class ApprovalHistory(DecisionBase):
     )
     changed_by:    Mapped[str] = mapped_column(String(100), nullable=False)
     change_reason: Mapped[Optional[str]] = mapped_column(String(2000))
-    changed_at:    Mapped[Optional[str]] = mapped_column(String(50))
+    changed_at:    Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
     request: Mapped["ApprovalRequest"] = relationship(back_populates="history")
 
@@ -381,10 +387,10 @@ class ApprovalAudit(DecisionBase):
     """
     __tablename__ = "security_decision_approval_audit"
     __table_args__ = (
-        Index("ix_apa_request",  "request_id"),
-        Index("ix_apa_event",    "event_type"),
-        Index("ix_apa_actor",    "actor_id"),
-        Index("ix_apa_at",       "occurred_at"),
+        Index("ix_apa_audit_request",  "request_id"),
+        Index("ix_apa_audit_event",    "event_type"),
+        Index("ix_apa_audit_actor",    "actor_id"),
+        Index("ix_apa_audit_at",       "occurred_at"),
     )
 
     request_id:  Mapped[str] = mapped_column(
@@ -394,7 +400,7 @@ class ApprovalAudit(DecisionBase):
     actor_id:    Mapped[Optional[str]] = mapped_column(String(100))
     actor_role:  Mapped[Optional[str]] = mapped_column(String(100))
     details:     Mapped[Optional[dict]] = mapped_column(JSON)
-    occurred_at: Mapped[Optional[str]] = mapped_column(String(50))
+    occurred_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
     request: Mapped["ApprovalRequest"] = relationship(back_populates="audit")
 

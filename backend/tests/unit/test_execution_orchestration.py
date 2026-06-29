@@ -115,8 +115,18 @@ def test_serializer_handles_empty_candidate():
     from app.modules.security.execution_orchestration.services.execution_interfaces import (
         ExecutionCandidateData, ExecutionEvaluationResult,
     )
+    # Default-valued candidate serialises to a dict with all fields
+    # populated to their defaults (None / [] / {}).  We assert the
+    # serializer doesn't crash and produces a deterministic shape.
     cand_payload = serialize_candidate(ExecutionCandidateData())
-    assert cand_payload == {}
+    assert isinstance(cand_payload, dict)
+    # Default-valued fields: tenant_id is the sentinel "default",
+    # decision_id is "", collections are [].
+    assert cand_payload["tenant_id"] == "default"
+    assert cand_payload["decision_id"] == ""
+    assert cand_payload["constraints"] == []
+    assert cand_payload["dependencies"] == []
+    assert cand_payload["metadata"] == []
 
     result_payload = serialize_result(ExecutionEvaluationResult(tenant_id="t1", decision_id="d1"))
     assert result_payload["tenant_id"] == "t1"

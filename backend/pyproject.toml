@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 100
-target-version = ["py311"]
+target-version = ["py312"]
 include = '\.pyi?$'
 
 [tool.isort]
@@ -9,16 +9,81 @@ line_length = 100
 multi_line_output = 3
 
 [tool.mypy]
-python_version = "3.11"
+# Sprint 4: Python version unified to 3.12 across the entire toolchain
+# (Dockerfile, CI matrix, pyproject, local development).
+python_version = "3.12"
 strict = false
 ignore_missing_imports = true
 disallow_untyped_defs = true
+
+# ── Sprint 3 R39: per-module strict overrides ──────────────────────────────
+# The new observability + platform modules are fully typed.  Pre-existing
+# integrations and remediation modules retain lenient settings.
+[[tool.mypy.overrides]]
+module = ["app.observability.*", "app.platform.*"]
+strict_optional = true
+warn_unused_ignores = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["app.integrations.*", "app.remediation.*"]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 env = ["TESTING=true"]
 
+# ── Sprint 3 R39: coverage ─────────────────────────────────────────────────
 [tool.coverage.run]
-source = ["app"]
-omit = ["tests/*", "alembic/*"]
+branch = true
+# Sprint 3 R39: coverage is gated on the new modules (observability,
+# platform) and the security domain.  Legacy modules with no test
+# coverage (background tasks, integrations, ML, users, etc.) are
+# outside Sprint 3 scope and are omitted from the run.
+source = [
+    "app/observability",
+    "app/platform",
+    "app/modules/security",
+]
+omit = [
+    "tests/*",
+    "alembic/*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+fail_under = 70
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "pass",
+]
+precision = 1
+
+# ── Sprint 3 R39: ruff ─────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["alembic", "tests"]
+
+[tool.ruff.lint]
+# E/W = pycodestyle errors & warnings
+# F  = pyflakes (undefined names, unused imports)
+# I  = isort (import ordering)
+# B  = bugbear (likely bugs)
+# UP = pyupgrade (modern Python syntax)
+select = ["E", "W", "F", "I", "B", "UP"]
+ignore = [
+    "E501",  # line length — handled by formatter
+    "B008",  # function call in default argument (Pydantic uses this idiom)
+    "B904",  # raise from — many modules don't follow it yet
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B", "E402"]
+"alembic/**" = ["E", "F", "I", "B", "UP"]

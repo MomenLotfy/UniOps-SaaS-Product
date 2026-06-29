@@ -1,0 +1,112 @@
+---
+# Sprint 4 — UniOps Prometheus alerting rules.
+# Reference these from your Prometheus operator / PrometheusRule CR.
+# Severe pages on-call; warning rules Slack/email only.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: uniops-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: uniops
+    app.kubernetes.io/part-of: uniops-observability
+spec:
+  groups:
+    - name: uniops.api
+      rules:
+        - alert: UniOpsAPIHighErrorRate
+          expr: |
+            sum(rate(uniops_http_requests_total{status=~"5.."}[5m]))
+            / sum(rate(uniops_http_requests_total[5m])) > 0.05
+          for: 5m
+          labels:
+            severity: critical
+            service: uniops
+          annotations:
+            summary: "UniOps API 5xx rate > 5% for 5m"
+            description: |
+              5xx error rate is {{ $value | humanizePercentage }} on the
+              UniOps API.  See runbook for incident response.
+            runbook_url: "https://runbooks.uniops.io/uniops/api-5xx"
+
+        - alert: UniOpsAPILatencyHigh
+          expr: |
+            histogram_quantile(0.95,
+              sum by (le) (rate(uniops_http_request_duration_seconds_bucket[5m]))
+            ) > 1.0
+          for: 10m
+          labels:
+            severity: warning
+            service: uniops
+          annotations:
+            summary: "UniOps API p95 latency > 1s for 10m"
+
+        - alert: UniOpsPipelineFailuresSpike
+          expr: |
+            sum by (pipeline) (rate(uniops_pipeline_failures_total[5m])) > 0.5
+          for: 5m
+          labels:
+            severity: critical
+            service: uniops
+          annotations:
+            summary: "UniOps pipeline {{ $labels.pipeline }} failures > 0.5/s"
+
+        - alert: UniOpsRateLimited
+          expr: |
+            sum by (tenant_id) (rate(uniops_rate_limit_blocks_total[5m])) > 50
+          for: 10m
+          labels:
+            severity: warning
+            service: uniops
+          annotations:
+            summary: "Tenant {{ $labels.tenant_id }} is hitting rate limits"
+
+        - alert: UniOpsDatabaseDown
+          expr: |
+            up{job="postgres"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            service: uniops
+          annotations:
+            summary: "PostgreSQL is unreachable"
+
+        - alert: UniOpsRedisDown
+          expr: |
+            up{job="redis"} == 0
+          for: 1m
+          labels:
+            severity: warning
+            service: uniops
+          annotations:
+            summary: "Redis is unreachable — rate limiter + cache degraded"
+
+        - alert: UniOpsBackupFailing
+          expr: |
+            increase(kube_job_status_failed{job_name=~"postgres-backup-.*"}[24h]) > 0
+          for: 1h
+          labels:
+            severity: critical
+            service: uniops
+          annotations:
+            summary: "Daily Postgres backup has failed in the last 24h"
+
+        - alert: UniOpsBackupMissing
+          expr: |
+            time() - kube_job_status_completion_time{job_name=~"postgres-backup-.*"} > 86400
+          for: 1h
+          labels:
+            severity: critical
+            service: uniops
+          annotations:
+            summary: "No successful Postgres backup in > 24h"
+
+        - alert: UniOpsCertificateExpiring
+          expr: |
+            (probe_ssl_earliest_cert_expiry - time()) / 86400 < 14
+          for: 1h
+          labels:
+            severity: warning
+            service: uniops
+          annotations:
+            summary: "TLS certificate expires in < 14 days"

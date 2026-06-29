@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from app.core.exceptions import MissingUpstreamError, ValidationError
 from .execution_interfaces import (
     ExecutionPreparationSnapshot,
     IExecutionPreparationService,
@@ -69,7 +70,7 @@ class ExecutionPreparationService(IExecutionPreparationService):
         raw_data: Optional[Dict[str, Any]] = None,
     ) -> ExecutionPreparationSnapshot:
         if decision is None:
-            raise ValueError("Decision is required for execution preparation")
+            raise MissingUpstreamError("Decision", "")
 
         if tenant_id is None:
             tenant_id = _safe_getattr(decision, "tenant_id", "default")

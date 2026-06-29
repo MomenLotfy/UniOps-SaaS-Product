@@ -31,7 +31,7 @@ from app.modules.security.decision_strategy.services.strategy_lifecycle_manager 
 @pytest.mark.asyncio
 async def test_strategy_pipeline_persists_winner_and_alternatives():
     # Arrange: in-memory DB stand-in
-    db = MagicMock()
+    db = AsyncMock()
 
     decision = SimpleNamespace(
         id="dec-1",
@@ -51,9 +51,12 @@ async def test_strategy_pipeline_persists_winner_and_alternatives():
         },
     )
 
-    # Capture every ORM row that gets `add()`-ed
+    # Capture every ORM row that gets `add()`-ed.  We need `db.add` to
+    # be a synchronous MagicMock (not AsyncMock) so we can capture the
+    # object passed to it; AsyncMock auto-creates it as an async mock
+    # which returns a coroutine.
     added: list = []
-    db.add.side_effect = lambda obj: added.append(obj)
+    db.add = MagicMock(side_effect=lambda obj: added.append(obj))
     db.flush = AsyncMock()
 
     # Stub repository methods that touch the DB
@@ -98,7 +101,7 @@ async def test_strategy_pipeline_persists_winner_and_alternatives():
 
 @pytest.mark.asyncio
 async def test_lifecycle_manager_records_history_on_transition():
-    db = MagicMock()
+    db = AsyncMock()
     db.flush = AsyncMock()
 
     # Pre-existing DecisionStrategy with SELECTED state
@@ -137,7 +140,7 @@ async def test_lifecycle_manager_records_history_on_transition():
 @pytest.mark.asyncio
 async def test_lifecycle_rejects_invalid_transition():
     from app.modules.security.decision_strategy.constants import StrategyState
-    db = MagicMock()
+    db = AsyncMock()
     db.flush = AsyncMock()
     strategy = SimpleNamespace(
         id="str-2",
@@ -151,7 +154,10 @@ async def test_lifecycle_rejects_invalid_transition():
     db.execute = AsyncMock(return_value=result_mock)
 
     mgr = DecisionStrategyLifecycleManager(db)
-    with pytest.raises(ValueError):
+    # R19: typed InvalidStrategyTransitionError (which subclasses
+    # ValueError via the project exception hierarchy).
+    from app.core.exceptions import InvalidStrategyTransitionError
+    with pytest.raises((ValueError, InvalidStrategyTransitionError)):
         await mgr.transition_to(
             strategy_id="str-2",
             to_state=StrategyState.APPROVED,
@@ -161,7 +167,7 @@ async def test_lifecycle_rejects_invalid_transition():
 
 @pytest.mark.asyncio
 async def test_pipeline_handles_empty_context_with_no_action():
-    db = MagicMock()
+    db = AsyncMock()
     db.add = MagicMock()
     db.flush = AsyncMock()
 

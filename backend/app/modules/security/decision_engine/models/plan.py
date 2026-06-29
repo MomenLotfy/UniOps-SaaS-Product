@@ -13,8 +13,8 @@ class DecisionPlan(DecisionBase):
     decision_id: Mapped[str] = mapped_column(String(36), ForeignKey("security_decisions.id"), index=True)
     execution_order: Mapped[int] = mapped_column(Integer, default=1)
 
-    decision: Mapped["Decision"] = relationship(back_populates="plan")
-    steps: Mapped[List["DecisionStep"]] = relationship(back_populates="plan")
+    decision: Mapped["Decision"] = relationship(back_populates="plan", lazy="selectin")
+    steps: Mapped[List["DecisionStep"]] = relationship(back_populates="plan", lazy="selectin")
 
 class DecisionStep(DecisionBase):
     """

@@ -9,15 +9,16 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from ..constants import StrategyState, StrategyType
 from ..models.strategy import (
     DecisionStrategy,
+    StrategyCandidate,
     StrategyEvaluation,
     StrategyHistory,
-    StrategyRanking,
     StrategyStatistics,
     StrategyVersion,
 )
@@ -34,66 +35,60 @@ class DecisionStrategyRepository(IStrategyRepository):
         Persist the winning DecisionStrategy + all supporting rows in
         a single transaction (delegated to caller).  Returns the
         StrategyEvaluation row.
+
+        R27 contract: ``winning_strategy_id`` is the ``DecisionStrategy.id``
+        populated by ``engine.persist_winner`` (which is called BEFORE this
+        method in the pipeline).  The in-memory ``StrategyCandidateData``
+        carries no ORM id, so we cannot rely on ``win.id`` here.
         """
         win = result.winner
+        winning_strategy_id = result.winning_strategy_id
+        if winning_strategy_id is None:
+            raise ValueError(
+                "save_evaluation called before winning_strategy_id was set; "
+                "ensure engine.persist_winner(...) ran first and assigned "
+                "result.winning_strategy_id."
+            )
         # Already added by the engine — flush to populate id
         await self.db.flush()
+
+        # Resolve correlation_id once so we never persist NULL into a
+        # NOT NULL column.  Fall back to the decision-derived placeholder
+        # when the in-memory candidate has no correlation_id.
+        effective_corr = (
+            win.correlation_id
+            or getattr(win, "decision_id", None)
+            and f"strategy-evaluation:{win.decision_id}"
+            or f"strategy-evaluation:{result.decision_id}"
+        )
 
         evaluation = StrategyEvaluation(
             tenant_id=win.tenant_id,
             decision_id=result.decision_id,
-            winning_strategy_id=win.id,
+            selected_strategy_id=winning_strategy_id,
             candidate_count=len(result.candidates),
-            valid_count=sum(1 for c in result.candidates if c.is_valid),
             rejected_count=sum(1 for c in result.candidates if not c.is_valid),
-            selected_type=win.candidate_type,
-            composite_score=win.composite_score,
-            feasibility_score=win.feasibility_score,
-            risk_score=win.risk_score,
-            ranking_stable=result.ranking_stable,
-            evaluation_duration_ms=result.evaluation_duration_ms,
-            correlation_id=win.correlation_id,
+            duration_ms=result.evaluation_duration_ms,
+            correlation_id=effective_corr,
             trace_id=win.trace_id,
         )
         self.db.add(evaluation)
 
-        # Persist StrategyRanking rows (one per candidate)
-        for c in result.candidates:
-            ranking = StrategyRanking(
-                tenant_id=win.tenant_id,
-                strategy_id=win.id,
-                evaluation_id=None,  # set after flush
-                candidate_type=c.candidate_type,
-                rank=c.rank,
-                composite_score=c.composite_score,
-                feasibility_score=c.feasibility_score,
-                is_valid=c.is_valid,
-                rejection_reason=c.rejection_reason,
-                correlation_id=win.correlation_id,
-                trace_id=win.trace_id,
-            )
-            self.db.add(ranking)
-
-        await self.db.flush()
-        # Bind evaluation_id onto rankings now that we have it
-        unbound = await self.db.execute(
-            select(StrategyRanking).where(
-                StrategyRanking.strategy_id == win.id,
-                StrategyRanking.evaluation_id.is_(None),
-            )
-        )
-        for ranking_row in unbound.scalars().all():
-            ranking_row.evaluation_id = evaluation.id
-
         # Persist initial history entry for the strategy
+        # R27: in-memory StrategyCandidateData does not carry a ``state``
+        # field — the only stateful thing is the DecisionStrategy row
+        # we just persisted.  Default to ``SELECTED`` here; lifecycle
+        # transitions are tracked separately.
+        from ..constants import StrategyState
+        initial_state = StrategyState.SELECTED
         hist = StrategyHistory(
             tenant_id=win.tenant_id,
-            strategy_id=win.id,
+            strategy_id=winning_strategy_id,
             from_state=None,
-            to_state=win.state,
+            to_state=initial_state,
             changed_by="system",
             change_reason="Initial strategy evaluation persisted",
-            correlation_id=win.correlation_id,
+            correlation_id=effective_corr,
             trace_id=win.trace_id,
         )
         self.db.add(hist)
@@ -103,9 +98,32 @@ class DecisionStrategyRepository(IStrategyRepository):
 
     # ── Reads ──────────────────────────────────────────────────────────
     async def get_by_id(self, strategy_id: str) -> Optional[DecisionStrategy]:
-        result = await self.db.execute(
-            select(DecisionStrategy).where(DecisionStrategy.id == strategy_id)
+        # Sprint 2 R17: eagerly load child collections so route handlers can
+        # access ``strategy.candidates`` / ``strategy.scores`` / ``strategy.reasons``
+        # / ``strategy.constraints`` / ``strategy.requirements`` / ``strategy.metadata``
+        # without triggering lazy loads on a detached session.
+        stmt = (
+            select(DecisionStrategy)
+            .where(DecisionStrategy.id == strategy_id)
+            .options(
+                selectinload(DecisionStrategy.candidates).selectinload(StrategyCandidate.scores),
+                selectinload(DecisionStrategy.candidates).selectinload(StrategyCandidate.reasons),
+                selectinload(DecisionStrategy.candidates).selectinload(StrategyCandidate.constraints),
+                selectinload(DecisionStrategy.candidates).selectinload(StrategyCandidate.requirements),
+                selectinload(DecisionStrategy.candidates).selectinload(StrategyCandidate.metadata),
+                selectinload(DecisionStrategy.candidates).selectinload(StrategyCandidate.evaluations),
+                selectinload(DecisionStrategy.rankings),
+                selectinload(DecisionStrategy.scores),
+                selectinload(DecisionStrategy.reasons),
+                selectinload(DecisionStrategy.constraints),
+                selectinload(DecisionStrategy.requirements),
+                selectinload(DecisionStrategy.metadata_rows),
+                selectinload(DecisionStrategy.evaluations),
+                selectinload(DecisionStrategy.history),
+                selectinload(DecisionStrategy.versions),
+            )
         )
+        result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
     async def list_for_tenant(

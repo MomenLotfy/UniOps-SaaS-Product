@@ -1,0 +1,97 @@
+---
+# Celery worker pool.
+# 2 replicas; single concurrency per worker (each pod runs -c 4).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uniops-celery-worker
+  namespace: uniops
+  labels:
+    app.kubernetes.io/name: uniops
+    app.kubernetes.io/component: celery-worker
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: uniops
+      app.kubernetes.io/component: celery-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: uniops
+        app.kubernetes.io/component: celery-worker
+        app.kubernetes.io/version: "1.0.0"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: uniops-celery-worker
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: celery-worker
+          image: ghcr.io/uniops/api:1.0.0
+          imagePullPolicy: IfNotPresent
+          command: ["celery", "-A", "app.core.celery_app", "worker", "-l", "info", "-c", "4", "-Q", "default"]
+          envFrom:
+            - configMapRef:
+                name: uniops-config
+            - secretRef:
+                name: uniops-secrets
+          env:
+            - name: ROLE
+              value: "celery-worker"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          # Workers don't expose HTTP; use a TCP exec readiness probe.
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "celery -A app.core.celery_app inspect ping -t 5 || exit 1"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "celery -A app.core.celery_app inspect ping -t 5 || exit 1"
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: tmp
+          emptyDir: {}

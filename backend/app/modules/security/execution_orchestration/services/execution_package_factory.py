@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
+from app.core.exceptions import ValidationError
 from ..constants import ExecutionRejectionReason
 from .execution_interfaces import (
     ExecutionCandidateData,
@@ -37,7 +38,7 @@ class ExecutionPackageFactory:
         summary: Optional[str] = None,
     ) -> ExecutionCandidateData:
         if snapshot is None:
-            raise ValueError("ExecutionPreparationSnapshot is required")
+            raise ValidationError("ExecutionPreparationSnapshot is required", field="snapshot")
 
         # If the snapshot was missing mandatory fields, surface that as
         # an immediate rejection reason.
@@ -52,6 +53,24 @@ class ExecutionPackageFactory:
             rejection_details = (
                 f"Missing mandatory fields: {', '.join(snapshot.missing_fields)}"
             )
+
+        # Synthesize baseline requirements from metadata so the package
+        # always carries at least the contract implied by its own
+        # metadata (e.g. rollback_strategy_present whenever rollback is
+        # declared).  Caller-supplied requirements are appended after.
+        synthesized: List[ExecutionRequirementSpec] = []
+        meta_keys = {str(k) for (k, _) in (metadata or [])}
+        if "rollback_strategy" in meta_keys:
+            synthesized.append(ExecutionRequirementSpec(
+                requirement_type="rollback_strategy_present",
+                value="true",
+                is_mandatory=True,
+                description="A rollback_strategy was declared in package metadata",
+            ))
+
+        final_requirements: List[ExecutionRequirementSpec] = list(
+            synthesized
+        ) + list(requirements or [])
 
         return ExecutionCandidateData(
             tenant_id=snapshot.tenant_id,
@@ -73,7 +92,7 @@ class ExecutionPackageFactory:
             rejection_details=rejection_details,
             dependencies=[],
             constraints=[],
-            requirements=list(requirements or []),
+            requirements=final_requirements,
             metadata=list(metadata or []),
             summary=_stringify(summary, max_len=2000) or None,
         )

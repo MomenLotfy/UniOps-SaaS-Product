@@ -223,7 +223,9 @@ class IExecutionRepository(ABC):
     async def save_package(self, package: Any) -> Any: ...
 
     @abstractmethod
-    async def get_package(self, package_id: str) -> Optional[Any]: ...
+    async def get_package(
+        self, tenant_id: str, package_id: str
+    ) -> Optional[Any]: ...
 
     @abstractmethod
     async def list_packages(
@@ -235,10 +237,14 @@ class IExecutionRepository(ABC):
     ) -> List[Any]: ...
 
     @abstractmethod
-    async def list_history(self, package_id: str) -> List[Any]: ...
+    async def list_history(
+        self, tenant_id: str, package_id: str
+    ) -> List[Any]: ...
 
     @abstractmethod
-    async def list_audit(self, package_id: str) -> List[Any]: ...
+    async def list_audit(
+        self, tenant_id: str, package_id: str
+    ) -> List[Any]: ...
 
     @abstractmethod
     async def get_statistics(self, tenant_id: str) -> Dict[str, Any]: ...
@@ -251,7 +257,7 @@ class IExecutionLifecycleManager(ABC):
 
     @abstractmethod
     async def transition(
-        self, package_id: str, to_state: ExecutionPackageState, *,
+        self, tenant_id: str, package_id: str, to_state: ExecutionPackageState, *,
         changed_by: str, reason: Optional[str] = None,
     ) -> Any: ...
 

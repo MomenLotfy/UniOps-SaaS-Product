@@ -1,4 +1,10 @@
 import apiClient from './client';
+import type {
+  Decision,
+  DecisionDetailResponse,
+  DecisionListParams,
+  DecisionStats,
+} from '@/types/decision';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -189,4 +195,37 @@ export const postureApi = {
 
   snapshot: () =>
     apiClient.post('/security-posture/snapshot').then(r => r.data),
+};
+
+// ── Decisions (Sprint 3 R33) ───────────────────────────────────────────────
+
+export const decisionsApi = {
+  /**
+   * List decisions for the current tenant.
+   * Backed by `GET /api/v1/security/decisions`.
+   * Backend returns `List[DecisionRead]` (raw array; possibly wrapped in the
+   * FastAPI `{success, data, ...}` envelope — `client.ts` does not unwrap
+   * arrays, so callers receive either an array or `{data: [...]}`).
+   */
+  list: (params: DecisionListParams = {}) =>
+    apiClient.get<Decision[] | { data: Decision[] }>('/security/decisions', { params })
+      .then(r => r.data),
+
+  /**
+   * Full decision detail.
+   * Backed by `GET /api/v1/security/decisions/{id}`.
+   */
+  getDetail: (id: string) =>
+    apiClient
+      .get<DecisionDetailResponse>(`/security/decisions/${id}`)
+      .then(r => r.data),
+
+  /**
+   * Tenant-wide aggregate metrics (one row per state).
+   * Backed by `GET /api/v1/security/decisions/statistics`.
+   */
+  statistics: () =>
+    apiClient
+      .get<DecisionStats[] | { data: DecisionStats[] }>('/security/decisions/statistics')
+      .then(r => r.data),
 };

@@ -109,8 +109,14 @@ class ApprovalRepository:
         approval_type = (
             result.candidate.approval_type if result.candidate else ApprovalType.AUTOMATIC
         )
+        # R27: ApprovalStatistics inherits DecisionBase → correlation_id NOT NULL.
+        effective_corr = (
+            getattr(result.candidate, "correlation_id", None)
+            or f"approval-evaluation:{result.tenant_id}:{result.decision_id}"
+        )
         row = ApprovalStatistics(
             tenant_id=result.tenant_id,
+            correlation_id=effective_corr,
             approval_type=approval_type,
             approval_state=ApprovalState.CREATED,  # always reflects pre-decision state
             count=1,

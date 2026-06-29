@@ -61,12 +61,15 @@ class DecisionStrategy(DecisionBase):
     is_reversible:           Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Relationships
-    candidates:  Mapped[List["StrategyCandidate"]]   = relationship(back_populates="strategy")
-    constraints: Mapped[List["StrategyConstraint"]]  = relationship(back_populates="strategy")
-    requirements: Mapped[List["StrategyRequirement"]] = relationship(back_populates="strategy")
-    reasons:     Mapped[List["StrategyReason"]]      = relationship(back_populates="strategy")
-    history:     Mapped[List["StrategyHistory"]]     = relationship(back_populates="strategy")
-    versions:    Mapped[List["StrategyVersion"]]     = relationship(back_populates="strategy")
+    # Sprint 2 R17: ``lazy="selectin"`` ensures child collections are
+    # auto-loaded after the parent, eliminating MissingGreenlet errors
+    # when the parent is returned across session boundaries.
+    candidates:  Mapped[List["StrategyCandidate"]]   = relationship(back_populates="strategy", lazy="selectin")
+    constraints: Mapped[List["StrategyConstraint"]]  = relationship(back_populates="strategy", lazy="selectin")
+    requirements: Mapped[List["StrategyRequirement"]] = relationship(back_populates="strategy", lazy="selectin")
+    reasons:     Mapped[List["StrategyReason"]]      = relationship(back_populates="strategy", lazy="selectin")
+    history:     Mapped[List["StrategyHistory"]]     = relationship(back_populates="strategy", lazy="selectin")
+    versions:    Mapped[List["StrategyVersion"]]     = relationship(back_populates="strategy", lazy="selectin")
 
 
 class StrategyCandidate(DecisionBase):
@@ -91,13 +94,15 @@ class StrategyCandidate(DecisionBase):
 
     feasibility_score: Mapped[float] = mapped_column(Float, default=0.0)
     composite_score:   Mapped[float] = mapped_column(Float, default=0.0)
+    risk_score:        Mapped[float] = mapped_column(Float, default=0.0)
+    confidence:        Mapped[float] = mapped_column(Float, default=0.0)
     rank:              Mapped[Optional[int]] = mapped_column(Integer)
 
     is_valid:        Mapped[bool] = mapped_column(Boolean, default=True)
     rejected_reason: Mapped[Optional[str]] = mapped_column(String(255))
 
     strategy: Mapped["DecisionStrategy"] = relationship(back_populates="candidates")
-    scores:   Mapped[List["StrategyScore"]]  = relationship(back_populates="candidate")
+    scores:   Mapped[List["StrategyScore"]]  = relationship(back_populates="candidate", lazy="selectin")
     ranking:  Mapped[Optional["StrategyRanking"]] = relationship(back_populates="candidate")
 
 
@@ -120,6 +125,7 @@ class StrategyScore(DecisionBase):
     value:        Mapped[float] = mapped_column(Float, default=0.0)
     weight:       Mapped[float] = mapped_column(Float, default=0.0)
     contribution: Mapped[float] = mapped_column(Float, default=0.0)  # value * weight
+    rationale:    Mapped[Optional[str]] = mapped_column(String(1000))
 
     candidate: Mapped["StrategyCandidate"] = relationship(back_populates="scores")
 
@@ -138,7 +144,10 @@ class StrategyRanking(DecisionBase):
         String(36), ForeignKey("security_decision_strategy_candidates.id"), index=True
     )
     rank:         Mapped[int] = mapped_column(Integer, nullable=False)
-    composite_score: Mapped[float] = mapped_column(Float, default=0.0)
+    composite_score:    Mapped[float] = mapped_column(Float, default=0.0)
+    feasibility_score:  Mapped[float] = mapped_column(Float, default=0.0)
+    is_valid:           Mapped[bool]  = mapped_column(Boolean, default=True)
+    rejection_reason:   Mapped[Optional[str]] = mapped_column(String(1000))
 
     candidate: Mapped["StrategyCandidate"] = relationship(back_populates="ranking")
 
@@ -230,7 +239,7 @@ class StrategyReason(DecisionBase):
     category:     Mapped[str] = mapped_column(String(50), default="TECHNICAL")  # BUSINESS|TECHNICAL|COMPLIANCE
 
     strategy: Mapped["DecisionStrategy"] = relationship(back_populates="reasons")
-    evidence: Mapped[List["StrategyEvidence"]] = relationship(back_populates="reason")
+    evidence: Mapped[List["StrategyEvidence"]] = relationship(back_populates="reason", lazy="selectin")
 
 
 class StrategyEvidence(DecisionBase):
@@ -277,10 +286,10 @@ class StrategyHistory(DecisionBase):
         String(36), ForeignKey("security_decision_strategies.id"), index=True
     )
     from_state:  Mapped[Optional[StrategyState]] = mapped_column(
-        SAEnum(StrategyState, name="strategy_history_from_enum"), nullable=True
+        SAEnum(StrategyState, name="strategy_state_enum"), nullable=True
     )
     to_state:    Mapped[StrategyState] = mapped_column(
-        SAEnum(StrategyState, name="strategy_history_to_enum"), nullable=False
+        SAEnum(StrategyState, name="strategy_state_enum"), nullable=False
     )
     changed_by:    Mapped[str] = mapped_column(String(100), nullable=False)
     change_reason: Mapped[Optional[str]] = mapped_column(String(1000))
@@ -305,6 +314,7 @@ class StrategyStatistics(DecisionBase):
         SAEnum(StrategyState, name="strategy_statistics_state_enum"), index=True
     )
     count:          Mapped[int]   = mapped_column(Integer, default=0)
+    rejection_count: Mapped[int]  = mapped_column(Integer, default=0, nullable=False)
     avg_duration_ms: Mapped[float] = mapped_column(Float, default=0.0)
     avg_confidence: Mapped[float] = mapped_column(Float, default=0.0)
     avg_risk:       Mapped[float] = mapped_column(Float, default=0.0)

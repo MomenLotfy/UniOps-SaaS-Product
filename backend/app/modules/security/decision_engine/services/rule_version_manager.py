@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Any, Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
+from app.core.exceptions import NotFoundError
 from ..models.rules import DecisionRule, RuleVersion, RuleCondition, RuleAction
 
 class RuleVersionManager:
@@ -23,7 +24,7 @@ class RuleVersionManager:
         rule = result.scalar_one_or_none()
 
         if not rule:
-            raise ValueError(f"Rule {rule_id} not found")
+            raise NotFoundError("DecisionRule", rule_id)
 
         # 2. Determine next version number
         version_stmt = select(RuleVersion.version_number).where(RuleVersion.rule_id == rule_id).order_by(desc(RuleVersion.version_number))
@@ -80,7 +81,7 @@ class RuleVersionManager:
         version = result.scalar_one_or_none()
 
         if not version:
-            raise ValueError(f"Version {version_number} for rule {rule_id} not found")
+            raise NotFoundError(f"RuleVersion(rule_id={rule_id}, version_number={version_number})")
 
         snapshot = version.snapshot
 
@@ -90,7 +91,7 @@ class RuleVersionManager:
         rule = rule_res.scalar_one_or_none()
 
         if not rule:
-            raise ValueError(f"Rule {rule_id} not found")
+            raise NotFoundError("DecisionRule", rule_id)
 
         # Restore basic attributes
         rule.name = snapshot["name"]

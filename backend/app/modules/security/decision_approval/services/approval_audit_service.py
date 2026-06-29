@@ -39,7 +39,7 @@ class ApprovalAuditService:
             actor_id=actor_id,
             actor_role=actor_role,
             details=details or {},
-            occurred_at=datetime.now(timezone.utc).isoformat(),
+            occurred_at=datetime.now(timezone.utc),
             correlation_id=request.correlation_id,
             trace_id=request.trace_id,
         )

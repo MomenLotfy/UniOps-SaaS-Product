@@ -9,8 +9,10 @@ Twelve canonical policies are registered by default.
 """
 from __future__ import annotations
 
+import threading
 from typing import Any, Dict, List, Optional
 
+from app.core.exceptions import ValidationError
 from ..constants import ApprovalActorRole, ApprovalRequirementMode, PolicyFactor
 from .approval_interfaces import IApprovalPolicy, IApprovalRegistry, ApprovalPolicyResult
 
@@ -421,30 +423,42 @@ DEFAULT_APPROVAL_POLICIES: List[IApprovalPolicy] = [
 #  Registry
 # ─────────────────────────────────────────────────────────────────────
 class ApprovalRegistry(IApprovalRegistry):
-    """Mutable map of policy name → IApprovalPolicy descriptor."""
+    """Mutable map of policy name → IApprovalPolicy descriptor.
+
+    Sprint 3 R36: thread-safe via ``ThreadSafeRegistry[str, IApprovalPolicy]``
+    so concurrent registrations from Celery workers and reads from
+    FastAPI handlers don't race.
+    """
 
     def __init__(self) -> None:
         self._policies: Dict[str, IApprovalPolicy] = {}
+        self._lock = threading.RLock()
 
     def register(self, policy: IApprovalPolicy) -> None:
         if not policy.name:
-            raise ValueError("Policy must have a non-empty name")
-        self._policies[policy.name] = policy
+            raise ValidationError("Policy must have a non-empty name", field="name")
+        with self._lock:
+            self._policies[policy.name] = policy
 
     def unregister(self, name: str) -> None:
-        self._policies.pop(name, None)
+        with self._lock:
+            self._policies.pop(name, None)
 
     def get(self, name: str) -> Optional[IApprovalPolicy]:
-        return self._policies.get(name)
+        with self._lock:
+            return self._policies.get(name)
 
     def all(self) -> Dict[str, IApprovalPolicy]:
-        return dict(self._policies)
+        with self._lock:
+            return dict(self._policies)
 
     def applicable(self, context: Any) -> List[IApprovalPolicy]:
-        return [p for p in self._policies.values() if p.is_applicable(context)]
+        with self._lock:
+            return [p for p in self._policies.values() if p.is_applicable(context)]
 
     def names(self) -> List[str]:
-        return sorted(self._policies.keys())
+        with self._lock:
+            return sorted(self._policies.keys())
 
 
 def bootstrap_default_approval_policies(registry: ApprovalRegistry) -> None:

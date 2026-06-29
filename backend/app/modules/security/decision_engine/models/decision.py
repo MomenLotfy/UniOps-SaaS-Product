@@ -18,13 +18,15 @@ class Decision(DecisionBase):
     context_id: Mapped[str] = mapped_column(String(36), ForeignKey("security_decision_contexts.id"), index=True)
 
     # Relationships
-    context: Mapped["DecisionContext"] = relationship()
-    plan: Mapped["DecisionPlan"] = relationship(back_populates="decision")
-    history: Mapped[List["DecisionHistory"]] = relationship(back_populates="decision")
-    versions: Mapped[List["DecisionVersion"]] = relationship(back_populates="decision")
-    reasons: Mapped[List["DecisionReason"]] = relationship(back_populates="decision")
-    constraints: Mapped[List["DecisionConstraint"]] = relationship(back_populates="decision")
-    policy_ref: Mapped[Optional["DecisionPolicyReference"]] = relationship(back_populates="decision")
+    # Sprint 2 R17: ``lazy="selectin"`` so child collections are auto-loaded
+    # after the parent — eliminates MissingGreenlet on detached sessions.
+    context: Mapped["DecisionContext"] = relationship(lazy="selectin")
+    plan: Mapped["DecisionPlan"] = relationship(back_populates="decision", lazy="selectin")
+    history: Mapped[List["DecisionHistory"]] = relationship(back_populates="decision", lazy="selectin")
+    versions: Mapped[List["DecisionVersion"]] = relationship(back_populates="decision", lazy="selectin")
+    reasons: Mapped[List["DecisionReason"]] = relationship(back_populates="decision", lazy="selectin")
+    constraints: Mapped[List["DecisionConstraint"]] = relationship(back_populates="decision", lazy="selectin")
+    policy_ref: Mapped[Optional["DecisionPolicyReference"]] = relationship(back_populates="decision", lazy="selectin")
 
 class DecisionHistory(DecisionBase):
     """

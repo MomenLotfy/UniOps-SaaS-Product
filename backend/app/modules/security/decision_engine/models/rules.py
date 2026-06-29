@@ -47,11 +47,12 @@ class DecisionRule(DecisionBase):
     short_circuit: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Relationships
-    conditions: Mapped[List["RuleCondition"]] = relationship(back_populates="rule", cascade="all, delete-orphan")
-    actions: Mapped[List["RuleAction"]] = relationship(back_populates="rule", cascade="all, delete-orphan")
-    versions: Mapped[List["RuleVersion"]] = relationship(back_populates="rule")
-    executions: Mapped[List["RuleExecution"]] = relationship(back_populates="rule")
-    dependencies: Mapped[List["RuleDependency"]] = relationship(back_populates="rule", foreign_keys="RuleDependency.rule_id")
+    # Sprint 2 R17: selectin-load all child collections for async safety.
+    conditions: Mapped[List["RuleCondition"]] = relationship(back_populates="rule", cascade="all, delete-orphan", lazy="selectin")
+    actions: Mapped[List["RuleAction"]] = relationship(back_populates="rule", cascade="all, delete-orphan", lazy="selectin")
+    versions: Mapped[List["RuleVersion"]] = relationship(back_populates="rule", lazy="selectin")
+    executions: Mapped[List["RuleExecution"]] = relationship(back_populates="rule", lazy="selectin")
+    dependencies: Mapped[List["RuleDependency"]] = relationship(back_populates="rule", foreign_keys="RuleDependency.rule_id", lazy="selectin")
 
 class RuleCondition(DecisionBase):
     """
@@ -70,7 +71,7 @@ class RuleCondition(DecisionBase):
     expected_value: Mapped[Optional[str]] = mapped_column(String(1000)) # Serialized value
 
     rule: Mapped["DecisionRule"] = relationship(back_populates="conditions")
-    children: Mapped[List["RuleCondition"]] = relationship()
+    children: Mapped[List["RuleCondition"]] = relationship(lazy="selectin")
 
 class RuleAction(DecisionBase):
     """

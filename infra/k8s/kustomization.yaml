@@ -1,0 +1,29 @@
+---
+# Base kustomization — every overlay composes this.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: uniops
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.example.yaml
+  - ingress.yaml
+  - api/serviceaccount.yaml
+  - api/deployment.yaml
+  - api/service.yaml
+  - api/hpa.yaml
+  - api/pdb.yaml
+  - api/networkpolicy.yaml
+  - api/probes.yaml
+  - celery-worker/serviceaccount.yaml
+  - celery-worker/deployment.yaml
+  - celery-worker/pdb.yaml
+  - celery-beat/serviceaccount.yaml
+  - celery-beat/deployment.yaml
+  - celery-beat/pdb.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: uniops-control-tower
+  app.kubernetes.io/managed-by: kustomize

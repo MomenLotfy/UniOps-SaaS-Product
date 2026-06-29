@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 import time
 from typing import Any, Dict, Optional, Tuple
 
@@ -33,35 +34,47 @@ class ExecutionCache(IExecutionCache):
     def __init__(self, ttl_seconds: int = EXECUTION_CACHE_TTL_SECONDS) -> None:
         self._ttl = ttl_seconds
         self._store: Dict[Tuple[str, str, str], Tuple[float, ExecutionEvaluationResult]] = {}
+        self._lock = threading.RLock()
 
     def _key(self, tenant_id: str, decision_id: str, context: Any) -> Tuple[str, str, str]:
         return (tenant_id, decision_id, _hash_context(context))
 
     def get(self, tenant_id: str, decision_id: str, context: Any) -> Optional[ExecutionEvaluationResult]:
+        from app.observability.metrics import observe_cache_hit, observe_cache_miss
+
         key = self._key(tenant_id, decision_id, context)
-        entry = self._store.get(key)
-        if entry is None:
-            return None
-        expires_at, value = entry
-        if expires_at < time.monotonic():
-            self._store.pop(key, None)
-            return None
-        return value
+        with self._lock:
+            entry = self._store.get(key)
+            if entry is None:
+                observe_cache_miss(cache="execution")
+                return None
+            expires_at, value = entry
+            if expires_at < time.monotonic():
+                self._store.pop(key, None)
+                observe_cache_miss(cache="execution")
+                return None
+            observe_cache_hit(cache="execution")
+            return value
 
     def put(self, tenant_id: str, decision_id: str, context: Any,
             value: ExecutionEvaluationResult) -> None:
-        self._store[self._key(tenant_id, decision_id, context)] = (
-            time.monotonic() + self._ttl,
-            value,
-        )
+        with self._lock:
+            self._store[self._key(tenant_id, decision_id, context)] = (
+                time.monotonic() + self._ttl,
+                value,
+            )
 
-    def invalidate(self, tenant_id: Optional[str] = None) -> None:
-        if tenant_id is None:
-            self._store.clear()
-            return
-        for key in list(self._store.keys()):
-            if key[0] == tenant_id:
-                self._store.pop(key, None)
+    def invalidate(self, tenant_id: Optional[str] = None) -> int:
+        """Backward-compatible.  Returns the number of entries removed."""
+        with self._lock:
+            if tenant_id is None:
+                n = len(self._store)
+                self._store.clear()
+                return n
+            keys = [k for k in self._store if k[0] == tenant_id]
+            for k in keys:
+                self._store.pop(k, None)
+            return len(keys)
 
 
 __all__ = ["ExecutionCache"]

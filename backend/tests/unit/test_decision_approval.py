@@ -108,7 +108,10 @@ def test_registry_register_rejects_blank_name():
         def required_approvers(self, ctx): return []
         def evaluate(self, ctx): return ApprovalPolicyResult(requires_approval=False)
 
-    with pytest.raises(ValueError):
+    # R19: now raises the typed ValidationError (which is also a
+    # ValueError via project exception hierarchy).
+    from app.core.exceptions import ValidationError as _ValidationError
+    with pytest.raises((ValueError, _ValidationError)):
         registry.register(_Blank())
 
 

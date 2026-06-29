@@ -14,6 +14,11 @@ from typing import Optional
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import (
+    InvalidStrategyTransitionError,
+    NotFoundError,
+    StrategyNotFoundError,
+)
 from ..constants import VALID_STRATEGY_TRANSITIONS, StrategyState
 from ..models.strategy import DecisionStrategy, StrategyHistory, StrategyVersion
 from .strategy_serializer import serialize_strategy_snapshot
@@ -47,13 +52,14 @@ class DecisionStrategyLifecycleManager:
         )
         strategy = result.scalar_one_or_none()
         if strategy is None:
-            raise ValueError(f"DecisionStrategy {strategy_id} not found")
+            raise StrategyNotFoundError(strategy_id)
 
         current = strategy.state
         allowed = VALID_STRATEGY_TRANSITIONS.get(current, [])
         if to_state not in allowed:
-            raise ValueError(
-                f"Invalid strategy transition: {current} -> {to_state}"
+            raise InvalidStrategyTransitionError(
+                from_state=str(current.value if hasattr(current, "value") else current),
+                to_state=str(to_state.value if hasattr(to_state, "value") else to_state),
             )
 
         strategy.state = to_state
@@ -84,7 +90,7 @@ class DecisionStrategyLifecycleManager:
         )
         strategy = result.scalar_one_or_none()
         if strategy is None:
-            raise ValueError(f"DecisionStrategy {strategy_id} not found")
+            raise StrategyNotFoundError(strategy_id)
 
         last = await self.db.execute(
             select(StrategyVersion.version_number)
@@ -122,8 +128,8 @@ class DecisionStrategyLifecycleManager:
         )
         version = result.scalar_one_or_none()
         if version is None:
-            raise ValueError(
-                f"StrategyVersion {version_number} for strategy {strategy_id} not found"
+            raise NotFoundError(
+                f"StrategyVersion(strategy_id={strategy_id}, version_number={version_number})"
             )
 
         snap = version.snapshot
@@ -133,7 +139,7 @@ class DecisionStrategyLifecycleManager:
         )
         strategy = strat_res.scalar_one_or_none()
         if strategy is None:
-            raise ValueError(f"DecisionStrategy {strategy_id} not found")
+            raise StrategyNotFoundError(strategy_id)
 
         # Restore mutable fields only
         strategy.priority    = snap.get("priority", strategy.priority)

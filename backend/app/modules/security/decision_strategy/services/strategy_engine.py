@@ -14,8 +14,9 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
+from app.core.exceptions import StrategyInvariantError
 from ..constants import STRATEGY_CACHE_TTL_SECONDS, StrategyState
 from ..models.strategy import (
     DecisionStrategy,
@@ -30,7 +31,6 @@ from .strategy_cache import DecisionStrategyCache
 from .strategy_candidate_builder import StrategyCandidateBuilder
 from .strategy_comparator import DecisionStrategyComparator
 from .strategy_interfaces import (
-    StrategyCandidateData,
     StrategyEvaluationResult,
 )
 from .strategy_ranking_engine import StrategyRankingEngine
@@ -118,6 +118,23 @@ class DecisionStrategyEngine:
         started = time.monotonic()
 
         candidates = self._builder.build_candidates(decision, context, statistics)
+        # R27: propagate tenant/decision/correlation_id/trace_id/back-pointer
+        # onto each candidate so downstream persistence can use them without
+        # relying on getattr-with-fallback gymnastics.  The factory defaults
+        # these to "default" / "" / None — that breaks NOT NULL constraints
+        # at INSERT time and loses tenant isolation.
+        decision_correlation = getattr(decision, "correlation_id", None)
+        decision_trace = getattr(decision, "trace_id", None)
+        for c in candidates:
+            if not c.tenant_id or c.tenant_id == "default":
+                c.tenant_id = tenant_id
+            if not c.decision_id:
+                c.decision_id = decision_id
+            if not c.correlation_id and decision_correlation:
+                c.correlation_id = decision_correlation
+            if not c.trace_id and decision_trace:
+                c.trace_id = decision_trace
+            c.decision = decision
         ranked = self._ranking.rank(candidates)
         winner = self._selector.select(ranked)
 
@@ -150,18 +167,38 @@ class DecisionStrategyEngine:
         self,
         result: StrategyEvaluationResult,
         db_session: Any,
+        *,
+        context: Any = None,
     ) -> DecisionStrategy:
         """
         Convert the in-memory winning candidate into ORM rows.
         Called by the pipeline (which owns the transaction).
 
         Returns the persisted DecisionStrategy (with .id populated).
+
+        R10: accept ``context`` explicitly so context-level metadata
+        (raw_data key/value pairs) can be persisted as StrategyMetadata
+        rows.  When ``context`` is None the metadata block is skipped
+        — the previous `if 'context' in locals()` guard was always
+        False in this scope and silently dropped every metadata row.
         """
         if result.winner is None:
-            raise ValueError("Cannot persist a StrategyEvaluationResult with no winner")
+            raise StrategyInvariantError("Cannot persist a StrategyEvaluationResult with no winner")
 
         win = result.winner
         decision = win.decision  # attached during build
+
+        # R27 / DecisionBase contract: ``correlation_id`` is NOT NULL
+        # on every security model.  When the upstream Decision (or the
+        # candidate itself) does not carry one — e.g. when callers pass
+        # a SimpleNamespace stand-in — fall back to a deterministic
+        # placeholder derived from the decision_id so the INSERT
+        # satisfies the constraint and the row remains traceable.
+        effective_correlation_id = (
+            win.correlation_id
+            or getattr(decision, "correlation_id", None)
+            or f"strategy-stats:{result.decision_id}"
+        )
 
         # Persist the DecisionStrategy row first (so FK targets exist)
         strategy_row = DecisionStrategy(
@@ -181,7 +218,7 @@ class DecisionStrategyEngine:
             expected_downtime_min=win.expected_downtime_min,
             requires_human_approval=win.requires_human_approval,
             is_reversible=win.is_reversible,
-            correlation_id=win.correlation_id,
+            correlation_id=effective_correlation_id,
             trace_id=win.trace_id,
         )
         db_session.add(strategy_row)
@@ -197,7 +234,7 @@ class DecisionStrategyEngine:
             rank=win.rank if win.rank is not None else 1,
             is_valid=win.is_valid,
             rejected_reason=str(win.rejection_reason) if win.rejection_reason else None,
-            correlation_id=win.correlation_id,
+            correlation_id=effective_correlation_id,
             trace_id=win.trace_id,
         )
         db_session.add(winning_candidate)
@@ -219,7 +256,7 @@ class DecisionStrategyEngine:
                 constraint_type=str(c_type)[:100],
                 is_met=bool(c_met),
                 details=str(c_detail)[:1000],
-                correlation_id=win.correlation_id,
+                correlation_id=effective_correlation_id,
                 trace_id=win.trace_id,
             ))
 
@@ -236,7 +273,7 @@ class DecisionStrategyEngine:
                 strategy_id=strategy_row.id,
                 requirement_type=str(r_type)[:100],
                 value=str(r_val)[:2000],
-                correlation_id=win.correlation_id,
+                correlation_id=effective_correlation_id,
                 trace_id=win.trace_id,
             ))
 
@@ -248,7 +285,7 @@ class DecisionStrategyEngine:
                 reason_code=r.reason_code,
                 description=r.description,
                 category="TECHNICAL",
-                correlation_id=win.correlation_id,
+                correlation_id=effective_correlation_id,
                 trace_id=win.trace_id,
             ))
 
@@ -261,23 +298,28 @@ class DecisionStrategyEngine:
                 value=s.value,
                 weight=s.weight,
                 contribution=s.contribution,
-                correlation_id=win.correlation_id,
+                correlation_id=effective_correlation_id,
                 trace_id=win.trace_id,
             ))
 
-        # Persist metadata (key/value, only for scalar values)
-        ctx_meta = getattr(context, "raw_data", None) if 'context' in locals() else None  # noqa: F821
-        if isinstance(ctx_meta, dict):
-            for k, v in ctx_meta.items():
-                if isinstance(v, (str, int, float, bool)):
-                    db_session.add(StrategyMetadata(
-                        tenant_id=win.tenant_id,
-                        strategy_id=strategy_row.id,
-                        key=str(k)[:128],
-                        value=str(v)[:2000],
-                        correlation_id=win.correlation_id,
-                        trace_id=win.trace_id,
-                    ))
+        # Persist metadata (key/value, only for scalar values).
+        # R10: ``context`` is now an explicit keyword argument so its raw_data
+        # dict is actually visible at this scope — the previous `if 'context'
+        # in locals()` guard was always False in `persist_winner` and silently
+        # dropped every metadata row.
+        if context is not None:
+            ctx_meta = getattr(context, "raw_data", None)
+            if isinstance(ctx_meta, dict):
+                for k, v in ctx_meta.items():
+                    if isinstance(v, (str, int, float, bool)):
+                        db_session.add(StrategyMetadata(
+                            tenant_id=win.tenant_id,
+                            strategy_id=strategy_row.id,
+                            key=str(k)[:128],
+                            value=str(v)[:2000],
+                            correlation_id=effective_correlation_id,
+                            trace_id=win.trace_id,
+                        ))
 
         await db_session.flush()
         return strategy_row
@@ -296,6 +338,10 @@ class DecisionStrategyEngine:
         for c in result.candidates:
             if c is result.winner:
                 continue
+            alt_corr = (
+                getattr(c, "correlation_id", None)
+                or f"strategy-alternatives:{result.decision_id}"
+            )
             row = StrategyCandidate(
                 tenant_id=c.tenant_id or result.tenant_id,
                 strategy_id=winning_strategy_id,
@@ -305,7 +351,7 @@ class DecisionStrategyEngine:
                 rejected_reason=str(c.rejection_reason) if c.rejection_reason else None,
                 composite_score=c.composite_score,
                 feasibility_score=c.feasibility_score,
-                correlation_id=c.correlation_id,
+                correlation_id=alt_corr,
                 trace_id=c.trace_id,
             )
             db_session.add(row)

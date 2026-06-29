@@ -15,7 +15,12 @@ Stages:
 
 Mirrors `decision_approval/services/approval_pipeline.py`.
 
-All stages run inside a single transaction owned by the caller.
+Transaction Contract (Sprint 2 R16):
+  - The caller owns the outer transaction boundary.
+  - Stages 1-5 run inside a single ``TransactionManager.run_in_transaction``
+    call; commit on success, rollback on any failure.
+  - Stages 6-7 (statistics + audit) are best-effort post-commit side
+    effects that never fail the call.
 """
 from __future__ import annotations
 
@@ -25,6 +30,8 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import MissingUpstreamError
+from app.modules.security._shared import TransactionManager
 from ..constants import (
     ExecutionAuditEvent,
     ExecutionPackageState,
@@ -95,6 +102,7 @@ class ExecutionPipeline:
         self.statistics_service = statistics_service or ExecutionStatisticsService(db)
         self.audit_service = audit_service or ExecutionAuditService(db)
         self.cache = cache or ExecutionCache()
+        self.tx = TransactionManager(db)
 
     # ── Public entry ──────────────────────────────────────────────
     async def run(
@@ -111,138 +119,153 @@ class ExecutionPipeline:
         actor_id: str = "system",
     ) -> ExecutionEvaluationResult:
         """
-        Execute all 7 stages.  Always returns an `ExecutionEvaluationResult`
-        even when the candidate is rejected — the result carries the
-        rejection reason so the API can surface it.
+        Execute all 7 stages under a single transaction.
+
+        R16 contract: commit once after Stage 5 succeeds; rollback on
+        any exception.  Stages 6-7 are best-effort post-commit side
+        effects.  Returns an `ExecutionEvaluationResult` even on
+        rejection so the API can surface the rejection reason.
         """
         if decision is None:
-            raise ValueError("Decision is required")
+            raise MissingUpstreamError("Decision", "")
 
         overall_started = time.monotonic()
 
-        # ── Stage 1: Preparation ──────────────────────────────────
-        logger.debug("execution pipeline[1/7] preparation decision=%s", getattr(decision, "id", "?"))
-        snapshot: ExecutionPreparationSnapshot = self.preparation_service.prepare(
-            decision=decision,
-            strategy=strategy,
-            approval=approval,
-            tenant_id=tenant_id,
-            raw_data=raw_data,
-        )
+        async def _persistence_stages() -> ExecutionEvaluationResult:
+            # ── Stage 1: Preparation ──────────────────────────────
+            logger.debug("execution pipeline[1/7] preparation decision=%s", getattr(decision, "id", "?"))
+            snapshot: ExecutionPreparationSnapshot = self.preparation_service.prepare(
+                decision=decision,
+                strategy=strategy,
+                approval=approval,
+                tenant_id=tenant_id,
+                raw_data=raw_data,
+            )
 
-        # Cache lookup — only if the upstream is buildable
-        if snapshot.is_complete:
-            cached = self.cache.get(snapshot.tenant_id, snapshot.decision_id, snapshot)
-            if cached is not None and cached.package_id:
-                logger.debug(
-                    "execution cache hit tenant=%s decision=%s",
-                    snapshot.tenant_id, snapshot.decision_id,
+            if snapshot.is_complete:
+                cached = self.cache.get(snapshot.tenant_id, snapshot.decision_id, snapshot)
+                if cached is not None and cached.package_id:
+                    logger.debug(
+                        "execution cache hit tenant=%s decision=%s",
+                        snapshot.tenant_id, snapshot.decision_id,
+                    )
+                    return cached
+
+            candidate: ExecutionCandidateData = self.package_factory.build_candidate(
+                snapshot,
+                metadata=metadata,
+                requirements=requirements,
+                summary=summary,
+            )
+            if not candidate.is_valid:
+                return self._build_rejection_result(candidate, snapshot, overall_started)
+
+            context = self._build_context(snapshot, decision, strategy, approval, raw_data)
+
+            # ── Stage 2: Readiness Validation ────────────────────
+            logger.debug("execution pipeline[2/7] readiness_validation decision=%s", candidate.decision_id)
+            readiness_started = time.monotonic()
+            self.readiness_engine.run(candidate, context)
+            readiness_ms = (time.monotonic() - readiness_started) * 1000.0
+            candidate.readiness_ms = readiness_ms
+
+            # ── Stage 3: Dependency Resolution ───────────────────
+            logger.debug("execution pipeline[3/7] dependency_resolution decision=%s", candidate.decision_id)
+            await self.dependency_resolver.resolve(candidate, context)
+
+            # ── Stage 4: Constraint Validation ───────────────────
+            logger.debug("execution pipeline[4/7] constraint_validation decision=%s", candidate.decision_id)
+            self.constraint_validator.validate(candidate, context)
+
+            # ── Pre-flight validation ────────────────────────────
+            errors = self.package_validator.validate(candidate)
+            if errors or candidate.readiness_failed > 0:
+                candidate.is_valid = False
+                candidate.rejection_reason = candidate.rejection_reason or errors[0] if errors else "READINESS_FAILED"
+                return await self._persist_rejected(
+                    candidate, snapshot, context, overall_started, actor_id,
                 )
-                return cached
 
-        candidate: ExecutionCandidateData = self.package_factory.build_candidate(
-            snapshot,
-            metadata=metadata,
-            requirements=requirements,
-            summary=summary,
-        )
-        if not candidate.is_valid:
-            return self._build_rejection_result(candidate, snapshot, overall_started)
+            # ── Stage 5: Package Build ────────────────────────────
+            logger.debug("execution pipeline[5/7] package_build decision=%s", candidate.decision_id)
+            package = await self.package_builder.build(
+                candidate, snapshot, actor_id=actor_id,
+            )
+            await self._drive_package(package, candidate, context, actor_id)
 
-        # Build a context object the readiness + dependency + constraint
-        # stages can read.  This mirrors the way `ApprovalContext` is
-        # assembled in the approval engine.
-        context = self._build_context(snapshot, decision, strategy, approval, raw_data)
-
-        # ── Stage 2: Readiness Validation ────────────────────────
-        logger.debug("execution pipeline[2/7] readiness_validation decision=%s", candidate.decision_id)
-        readiness_started = time.monotonic()
-        self.readiness_engine.run(candidate, context)
-        readiness_ms = (time.monotonic() - readiness_started) * 1000.0
-        candidate.readiness_ms = readiness_ms
-
-        # ── Stage 3: Dependency Resolution ───────────────────────
-        logger.debug("execution pipeline[3/7] dependency_resolution decision=%s", candidate.decision_id)
-        await self.dependency_resolver.resolve(candidate, context)
-
-        # ── Stage 4: Constraint Validation ───────────────────────
-        logger.debug("execution pipeline[4/7] constraint_validation decision=%s", candidate.decision_id)
-        self.constraint_validator.validate(candidate, context)
-
-        # ── Pre-flight validation ─────────────────────────────────
-        errors = self.package_validator.validate(candidate)
-        if errors or candidate.readiness_failed > 0:
-            candidate.is_valid = False
-            candidate.rejection_reason = candidate.rejection_reason or errors[0] if errors else "READINESS_FAILED"
-            return await self._persist_rejected(
-                candidate, snapshot, context, overall_started, actor_id,
+            result = ExecutionEvaluationResult(
+                tenant_id=candidate.tenant_id,
+                decision_id=candidate.decision_id,
+                candidate=candidate,
+                package_id=package.id,
+                final_state=package.package_state,
+                ranking_stable=True,
+                evaluation_duration_ms=int((time.monotonic() - overall_started) * 1000.0),
+                rejection_reason=None,
             )
 
-        # ── Stage 5: Package Build ────────────────────────────────
-        logger.debug("execution pipeline[5/7] package_build decision=%s", candidate.decision_id)
-        package = await self.package_builder.build(
-            candidate, snapshot, target_state=ExecutionPackageState.BUILT, actor_id=actor_id,
+            if package.is_ready and snapshot.is_complete:
+                self.cache.put(snapshot.tenant_id, snapshot.decision_id, snapshot, result)
+
+            return result
+
+        async def _stats_and_audit(result: ExecutionEvaluationResult) -> None:
+            # ── Stage 6: Statistics Update ───────────────────────
+            logger.debug("execution pipeline[6/7] statistics_update package=%s", result.package_id)
+            try:
+                if result.package_id is None:
+                    return
+                duration_ms = (time.monotonic() - overall_started) * 1000.0
+                # Fetch the package we just committed for stats
+                from sqlalchemy import select
+                pkg_stmt = select(ExecutionPackage).where(ExecutionPackage.id == result.package_id)
+                pkg_row = (await self.db.execute(pkg_stmt)).scalar_one_or_none()
+                if pkg_row is not None:
+                    await self.statistics_service.record(
+                        pkg_row,
+                        duration_ms=duration_ms,
+                        size_kb=pkg_row.package_size_kb,
+                        rejected=pkg_row.is_rejected,
+                        ready=pkg_row.is_ready,
+                    )
+            except Exception:  # pragma: no cover - non-fatal
+                logger.exception("execution statistics update failed (non-fatal)")
+
+            # ── Stage 7: Audit ──────────────────────────────────
+            logger.debug("execution pipeline[7/7] audit package=%s", result.package_id)
+            try:
+                if result.package_id is None:
+                    return
+                from sqlalchemy import select
+                pkg_stmt = select(ExecutionPackage).where(ExecutionPackage.id == result.package_id)
+                pkg_row = (await self.db.execute(pkg_stmt)).scalar_one_or_none()
+                if pkg_row is not None:
+                    await self.audit_service.record(
+                        pkg_row,
+                        event_type=(
+                            ExecutionAuditEvent.PACKAGE_READY.value
+                            if pkg_row.is_ready
+                            else ExecutionAuditEvent.PACKAGE_PERSISTED.value
+                        ),
+                        actor_id=actor_id,
+                        actor_role="SYSTEM",
+                        details={
+                            "duration_ms":    int((time.monotonic() - overall_started) * 1000.0),
+                            "dependencies":   len(result.candidate.dependencies),
+                            "constraints":    len(result.candidate.constraints),
+                            "metadata_count": len(result.candidate.metadata),
+                            "size_kb":        pkg_row.package_size_kb,
+                            "package_state":  pkg_row.package_state.value,
+                        },
+                    )
+            except Exception:  # pragma: no cover - non-fatal
+                logger.exception("execution audit update failed (non-fatal)")
+
+        return await self.tx.run_in_transaction(
+            _persistence_stages,
+            side_effects=[_stats_and_audit],
+            pipeline="execution",
         )
-
-        # Drive the package through CREATED → READINESS_* → BUILT → READY.
-        await self._drive_package(package, candidate, context, actor_id)
-
-        # ── Stage 6: Statistics Update ───────────────────────────
-        logger.debug("execution pipeline[6/7] statistics_update package=%s", package.id)
-        try:
-            duration_ms = (time.monotonic() - overall_started) * 1000.0
-            candidate.evaluation_duration_ms = int(duration_ms)
-            await self.statistics_service.record(
-                package,
-                duration_ms=duration_ms,
-                size_kb=package.package_size_kb,
-                rejected=package.is_rejected,
-                ready=package.is_ready,
-            )
-        except Exception:  # pragma: no cover - non-fatal
-            logger.exception("execution statistics update failed (non-fatal)")
-
-        # ── Stage 7: Audit ────────────────────────────────────────
-        logger.debug("execution pipeline[7/7] audit package=%s", package.id)
-        try:
-            await self.audit_service.record(
-                package,
-                event_type=(
-                    ExecutionAuditEvent.PACKAGE_READY.value
-                    if package.is_ready
-                    else ExecutionAuditEvent.PACKAGE_PERSISTED.value
-                ),
-                actor_id=actor_id,
-                actor_role="SYSTEM",
-                details={
-                    "duration_ms":    candidate.evaluation_duration_ms,
-                    "dependencies":   len(candidate.dependencies),
-                    "constraints":    len(candidate.constraints),
-                    "metadata_count": len(candidate.metadata),
-                    "size_kb":        package.package_size_kb,
-                    "package_state":  package.package_state.value,
-                },
-            )
-        except Exception:  # pragma: no cover - non-fatal
-            logger.exception("execution audit update failed (non-fatal)")
-
-        result = ExecutionEvaluationResult(
-            tenant_id=candidate.tenant_id,
-            decision_id=candidate.decision_id,
-            candidate=candidate,
-            package_id=package.id,
-            final_state=package.package_state,
-            ranking_stable=True,
-            evaluation_duration_ms=candidate.evaluation_duration_ms,
-            rejection_reason=None,
-        )
-
-        # Cache only READY packages — partial states shouldn't be served
-        # from cache.
-        if package.is_ready and snapshot.is_complete:
-            self.cache.put(snapshot.tenant_id, snapshot.decision_id, snapshot, result)
-
-        return result
 
     # ── Internal helpers ──────────────────────────────────────────
     async def _drive_package(
@@ -279,6 +302,7 @@ class ExecutionPipeline:
                 # progression by collapsing the path.
                 continue
             await self.lifecycle_manager.transition(
+                package.tenant_id,
                 package.id,
                 to_state,
                 changed_by=actor_id,
@@ -365,24 +389,28 @@ class ExecutionPipeline:
     ) -> ExecutionEvaluationResult:
         """Persist a minimal rejected package so the rejection is auditable."""
         try:
+            # Sprint 2 R14: dead `target_state` argument removed.
             package = await self.package_builder.build(
-                candidate, snapshot, target_state=ExecutionPackageState.REJECTED, actor_id=actor_id,
+                candidate, snapshot, actor_id=actor_id,
             )
             package.is_rejected = True
             package.is_immutable = True
             await self.lifecycle_manager.transition(
+                package.tenant_id,
                 package.id,
                 ExecutionPackageState.READINESS_VALIDATING,
                 changed_by=actor_id,
                 reason="Pre-flight rejection",
             )
             await self.lifecycle_manager.transition(
+                package.tenant_id,
                 package.id,
                 ExecutionPackageState.READINESS_FAILED,
                 changed_by=actor_id,
                 reason=candidate.rejection_reason or "READINESS_FAILED",
             )
             await self.lifecycle_manager.transition(
+                package.tenant_id,
                 package.id,
                 ExecutionPackageState.REJECTED,
                 changed_by=actor_id,

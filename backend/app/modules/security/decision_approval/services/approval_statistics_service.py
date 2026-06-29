@@ -9,11 +9,10 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..constants import ApprovalState, ApprovalType
-from ..models.approval import ApprovalRequest, ApprovalStatistics
+from ..models.approval import ApprovalStatistics
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +23,12 @@ class ApprovalStatisticsService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
+    # R27: every ApprovalStatistics row inherits the DecisionBase
+    # mixin, which makes ``correlation_id`` NOT NULL.  All four
+    # write helpers below accept an optional ``correlation_id``;
+    # callers that cannot supply one (legacy paths, post-commit
+    # side-effect invocations) get a deterministic placeholder so
+    # the INSERT satisfies the constraint.
     async def record_evaluation(
         self,
         *,
@@ -32,10 +37,12 @@ class ApprovalStatisticsService:
         duration_ms: int,
         chain_length: int,
         automatic: bool,
+        correlation_id: Optional[str] = None,
     ) -> None:
         try:
             row = ApprovalStatistics(
                 tenant_id=tenant_id,
+                correlation_id=correlation_id or f"approval-stats:{tenant_id}:{approval_type.value}",
                 approval_type=approval_type,
                 approval_state=ApprovalState.CREATED,
                 count=1,
@@ -58,10 +65,12 @@ class ApprovalStatisticsService:
         duration_ms: int,
         chain_length: int,
         automatic: bool,
+        correlation_id: Optional[str] = None,
     ) -> None:
         try:
             row = ApprovalStatistics(
                 tenant_id=tenant_id,
+                correlation_id=correlation_id or f"approval-stats:{tenant_id}:{to_state.value}",
                 approval_type=approval_type,
                 approval_state=to_state,
                 count=1,
@@ -80,10 +89,12 @@ class ApprovalStatisticsService:
         *,
         tenant_id: str,
         approval_type: ApprovalType,
+        correlation_id: Optional[str] = None,
     ) -> None:
         try:
             row = ApprovalStatistics(
                 tenant_id=tenant_id,
+                correlation_id=correlation_id or f"approval-stats:{tenant_id}:REJECTED",
                 approval_type=approval_type,
                 approval_state=ApprovalState.REJECTED,
                 count=1,
@@ -102,10 +113,12 @@ class ApprovalStatisticsService:
         *,
         tenant_id: str,
         approval_type: ApprovalType,
+        correlation_id: Optional[str] = None,
     ) -> None:
         try:
             row = ApprovalStatistics(
                 tenant_id=tenant_id,
+                correlation_id=correlation_id or f"approval-stats:{tenant_id}:EXPIRED",
                 approval_type=approval_type,
                 approval_state=ApprovalState.EXPIRED,
                 count=1,

@@ -140,7 +140,53 @@ class ApprovalStatisticsSchema(BaseModel):
     generated_at: Optional[str] = None
 
 
+# ─────────────────────────────────────────────────────────────────────
+#  Sprint 2 R24: mutation request / response schemas
+# ─────────────────────────────────────────────────────────────────────
+class ApprovalActionRequest(BaseModel):
+    """
+    Payload for ``POST /security/decision-approvals/{id}/actions``.
+
+    Exactly one of ``approve`` / ``reject`` / ``cancel`` / ``archive`` must be
+    supplied.  ``reason`` is optional but recommended for audit traceability.
+    """
+    approve: Optional[bool] = None
+    reject: Optional[bool] = None
+    cancel: Optional[bool] = None
+    archive: Optional[bool] = None
+    reason: Optional[str] = Field(default=None, max_length=2000)
+    actor_id: Optional[str] = Field(default=None, max_length=100)
+    actor_role: Optional[str] = Field(default=None, max_length=100)
+
+
+class ApprovalActionResponse(BaseModel):
+    """Returned by every mutating endpoint."""
+    approval_id: str
+    tenant_id: str
+    previous_state: ApprovalState
+    new_state: ApprovalState
+    version: int
+    changed_by: str
+    change_reason: Optional[str] = None
+    idempotency_key: Optional[str] = None
+    replayed: bool = False
+    occurred_at: datetime
+
+
+class IdempotencyRecord(BaseModel):
+    """Persisted record used to satisfy Idempotency-Key semantics."""
+
+    tenant_id: str
+    key: str
+    request_id: str
+    payload_hash: str
+    response_snapshot: Dict[str, Any]
+    created_at: datetime
+
+
 __all__ = [
+    "ApprovalActionRequest",
+    "ApprovalActionResponse",
     "ApprovalActorRole",
     "ApprovalAuditEntrySchema",
     "ApprovalConstraintSchema",
@@ -153,4 +199,5 @@ __all__ = [
     "ApprovalRequestSchema",
     "ApprovalRequirementSchema",
     "ApprovalStatisticsSchema",
+    "IdempotencyRecord",
 ]

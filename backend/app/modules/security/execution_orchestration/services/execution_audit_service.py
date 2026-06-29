@@ -8,7 +8,7 @@ approval_audit_service.py`.
 from __future__ import annotations
 
 import logging
-import time
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,7 +40,7 @@ class ExecutionAuditService:
             actor_id=(actor_id or "system")[:100] if actor_id is not None else None,
             actor_role=(actor_role or "SYSTEM")[:100] if actor_role is not None else None,
             details=details,
-            occurred_at=time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime()),
+            occurred_at=datetime.now(timezone.utc),
             correlation_id=package.correlation_id,
             trace_id=package.trace_id,
         )

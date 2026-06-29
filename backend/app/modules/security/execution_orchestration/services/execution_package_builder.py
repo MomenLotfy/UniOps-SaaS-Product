@@ -16,11 +16,12 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import time
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import ValidationError
 from ..constants import (
     ExecutionAuditEvent,
     ExecutionPackageState,
@@ -63,11 +64,19 @@ class ExecutionPackageBuilder:
         candidate: ExecutionCandidateData,
         snapshot: ExecutionPreparationSnapshot,
         *,
-        target_state: ExecutionPackageState = ExecutionPackageState.READY,
         actor_id: str = "system",
     ) -> ExecutionPackage:
+        """
+        Build the canonical ORM rows for one ``ExecutionPackage``.
+
+        Sprint 2 R14: removed the dead ``target_state`` parameter — it
+        was accepted but never referenced inside the body.  The
+        resulting package is always created in ``CREATED`` state and
+        the caller (pipeline) drives subsequent transitions through
+        ``ExecutionLifecycleManager``.
+        """
         if candidate is None:
-            raise ValueError("ExecutionCandidateData is required")
+            raise ValidationError("ExecutionCandidateData is required", field="candidate")
 
         # ── 1. ExecutionPackage (root) ────────────────────────────
         package = ExecutionPackage(
@@ -95,10 +104,13 @@ class ExecutionPackageBuilder:
         await self.db.flush()
 
         # ── 2. ExecutionPreparation (snapshot) ────────────────────
+        # R17: the preparation model no longer carries an explicit
+        # decision_id column (FK to the ExecutionPackage is the only
+        # up-chain reference).  The decision_id is derivable via the
+        # package row.
         prep = ExecutionPreparation(
             tenant_id=candidate.tenant_id,
             package_id=package.id,
-            decision_id=candidate.decision_id,
             decision_snapshot=snapshot.decision_snapshot or {},
             strategy_snapshot=snapshot.strategy_snapshot or {},
             approval_snapshot=snapshot.approval_snapshot or {},
@@ -209,7 +221,8 @@ class ExecutionPackageBuilder:
             to_state=ExecutionPackageState.CREATED,
             changed_by=actor_id,
             change_reason="Package created from upstream decision + strategy + approval",
-            changed_at=time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime()),
+            # Sprint 2 R22: changed_at is now a timezone-aware datetime.
+            changed_at=datetime.now(timezone.utc),
             correlation_id=candidate.correlation_id,
             trace_id=candidate.trace_id,
         ))
@@ -228,7 +241,7 @@ class ExecutionPackageBuilder:
                 "is_valid":    candidate.is_valid,
                 "rejection_reason": candidate.rejection_reason,
             },
-            occurred_at=time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime()),
+            occurred_at=datetime.now(timezone.utc),
             correlation_id=candidate.correlation_id,
             trace_id=candidate.trace_id,
         ))

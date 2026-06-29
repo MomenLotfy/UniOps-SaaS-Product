@@ -1,0 +1,20 @@
+---
+# Sprint 4 — persistent volume for backup artefacts.
+# Sized to retain 14 daily compressed pg_dumps (~50MB each) with
+# headroom.  Operators on a managed service (RDS / Cloud SQL) should
+# swap this for a snapshot-based strategy and remove the PVC.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backup-pvc
+  namespace: uniops
+  labels:
+    app.kubernetes.io/name: uniops-backup
+    app.kubernetes.io/component: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: standard

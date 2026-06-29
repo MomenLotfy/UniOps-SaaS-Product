@@ -1,0 +1,153 @@
+---
+name: UniOps CI
+
+on:
+  push:
+    branches: [main, develop, "sprint/**"]
+  pull_request:
+    branches: [main, develop, "sprint/**"]
+
+# Cancel any in-flight run for the same ref — we don't queue builds behind
+# a stuck one.  Concurrency key is branch+PR.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Backend ──────────────────────────────────────────────────────────────
+  backend:
+    name: Backend (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      # Sprint 4: Python version unified to 3.12 across the entire
+      # toolchain (Dockerfile, pyproject, this matrix).
+      matrix:
+        python: ["3.12"]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: uniops
+          POSTGRES_PASSWORD: uniops_password
+          POSTGRES_DB: uniops_db
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://uniops:uniops_password@localhost:5432/uniops_db
+      TESTING: "true"
+      APP_ENV: test
+      SECRET_KEY: ci-test-secret-key-not-for-production-use-only
+      JWT_SECRET_KEY: ci-test-jwt-secret-not-for-production-use-only
+      LOG_FORMAT: json
+      OTEL_SDK_DISABLED: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest==8.0.0 pytest-asyncio==0.23.5 pytest-cov==5.0.0 mypy ruff httpx
+
+      - name: Ruff lint
+        working-directory: backend
+        run: make lint
+
+      - name: Mypy (new + strict-typed modules)
+        working-directory: backend
+        run: make typecheck
+
+      - name: Alembic upgrade head
+        working-directory: backend
+        run: |
+          alembic upgrade head
+
+      - name: Security tests (Sprint 1+2+3 domain)
+        working-directory: backend
+        run: make security
+
+      - name: Coverage gate (≥70%)
+        working-directory: backend
+        run: make coverage
+
+      - name: Kubernetes manifests static validation
+        run: |
+          python -c "
+          import os, yaml, sys
+          base = 'infra/k8s'
+          placeholders = ['<<', 'REPLACE_ME', 'TODO', 'latest:']
+          problems = []
+          for root, _, files in os.walk(base):
+              for f in files:
+                  if not f.endswith(('.yaml', '.yml')):
+                      continue
+                  p = os.path.join(root, f)
+                  with open(p) as fh:
+                      txt = fh.read()
+                  for ph in placeholders:
+                      if ph in txt:
+                          problems.append((p, ph))
+          if problems:
+              for p, ph in problems:
+                  print(f'PLACEHOLDER FOUND ({ph}) in {p}', file=sys.stderr)
+              sys.exit(1)
+          print('All k8s manifests clean — no placeholders')
+          "
+
+  # ── Frontend ─────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["20"]
+    defaults:
+      run:
+        working-directory: artifacts/uniops
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: "pnpm"
+          cache-dependency-path: artifacts/uniops/package.json
+
+      - name: Install dependencies
+        run: |
+          npm install -g pnpm@9
+          pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+        env:
+          VITE_API_URL: "/api/v1"

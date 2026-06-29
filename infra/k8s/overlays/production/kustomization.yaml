@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: uniops
+
+resources:
+  - ../../kustomization.yaml
+
+# Production overlay: replace the example secret manifest with the
+# real ExternalSecret-managed one.  This patch points at a Secret
+# named ``uniops-secrets-prod`` that the cluster operator must create
+# (typically via ExternalSecrets Operator pulling from AWS Secrets
+# Manager).
+patches:
+  - target:
+      kind: Secret
+      name: uniops-secrets
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: uniops-secrets-prod
