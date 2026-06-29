@@ -1,0 +1,182 @@
+Transform the Security Center → Repositories page into a production-grade enterprise repository management dashboard.
+
+Requirements:
+
+- Do NOT use any mock, fake, placeholder, demo or generated data.
+- Render ONLY real backend data returned by APIs.
+- If no repositories exist, display a polished empty state with onboarding guidance instead of fake cards.
+- Keep every existing route, API, component and business logic intact.
+- Improve UI only without breaking other pages.
+
+Layout:
+
+1. Top KPI cards
+
+Display:
+
+• Total Repositories
+• Healthy Repositories
+• Repositories At Risk
+• Scan Coverage %
+
+2. Repository Filters
+
+Support:
+
+- Provider
+- Organization
+- Owner
+- Repository
+- Branch
+- Visibility
+- Risk
+- Health
+- Language
+- Last Scan
+
+3. Repository Grid
+
+Each repository should be displayed as a modern enterprise card.
+
+Each card must show:
+
+Repository name
+
+Provider icon
+
+Owner
+
+Visibility
+
+Primary language
+
+Default branch
+
+Risk Score
+
+Health Score
+
+Critical
+
+High
+
+Medium
+
+Low
+
+Secrets count
+
+Misconfigurations
+
+SBOM Status
+
+Pipeline Status
+
+Last Scan
+
+Last Commit
+
+Deployment Status
+
+Coverage
+
+Open Pull Requests
+
+4. Clicking a repository opens a right-side Drawer.
+
+The drawer should display:
+
+Repository details
+
+Security overview
+
+Dependency summary
+
+Secrets
+
+Misconfigurations
+
+Recent findings
+
+Recent commits
+
+Recent pull requests
+
+Recent releases
+
+Contributors
+
+CI/CD information
+
+Integrations
+
+Scan history
+
+AI summary (only if backend provides it)
+
+5. Charts
+
+Add:
+
+Risk Distribution
+
+Scan Success Rate
+
+Repository Health Distribution
+
+Top Risk Repositories
+
+Recent Scan Activity
+
+6. Recent Activity timeline
+
+Show only real events.
+
+7. Empty States
+
+If integrations are not configured:
+
+Display professional onboarding cards inviting users to connect:
+
+- GitHub
+- GitLab
+- Azure DevOps
+- Bitbucket
+
+Do not fabricate repositories.
+
+Backend Integration
+
+Consume only existing backend APIs.
+
+Never generate fake repository information.
+
+If backend data is missing, gracefully show "No data available".
+
+UI Requirements
+
+Use enterprise dashboard spacing.
+
+Use responsive cards.
+
+Use loading skeletons.
+
+Use smooth animations.
+
+Use badges for severity.
+
+Use consistent typography.
+
+Use professional icons.
+
+Support dark mode.
+
+Support accessibility.
+
+Do not change routing.
+
+Do not modify backend contracts.
+
+Do not remove existing functionality.
+
+The result should look comparable to enterprise platforms such as GitHub Advanced Security, Wiz, Prisma Cloud and Microsoft Defender for Cloud while remaining fully driven by real backend data.
