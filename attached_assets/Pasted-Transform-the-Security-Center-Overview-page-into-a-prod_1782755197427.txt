@@ -1,0 +1,200 @@
+Transform the Security Center → Overview page into a production-grade executive security dashboard.
+
+Requirements
+
+- Never use mock, fake, placeholder or demo data.
+- Display only real backend data.
+- If backend returns no data, render professional empty states.
+- Do not change routing, backend contracts or existing APIs.
+- Improve UI without affecting other pages.
+
+Layout
+
+1. Executive KPI cards
+
+Display:
+
+- Total Repositories
+- Total Assets
+- Active Kubernetes Clusters
+- Critical Vulnerabilities
+- Active Threats
+- Compliance Score
+- Overall Risk Score
+- Open Remediations
+
+2. Overall Security Score
+
+Display:
+
+- Overall score
+- Trend
+- Grade
+- Last updated
+
+3. Charts
+
+Add:
+
+- Overall Security Trend
+- Risk Distribution
+- Vulnerability Trend
+- Threat Trend
+- Compliance Trend
+- Repository Health
+- Remediation Progress
+- Scan Coverage
+- Assets by Cloud
+- Top Risk Repositories
+
+4. Repository Health Summary
+
+Display real repository health statistics.
+
+5. Infrastructure Summary
+
+Display:
+
+- Repositories
+- Assets
+- Clusters
+- Nodes
+- Pods
+- Containers
+- Images
+- Deployments
+- Namespaces
+
+6. Threat Summary
+
+Display:
+
+- Active Threats
+- Resolved Threats
+- MITRE Techniques
+- Attack Paths
+- High Risk Alerts
+
+7. Top Critical Findings
+
+Display only highest priority findings.
+
+Each finding must include:
+
+Severity
+
+Repository
+
+Asset
+
+CVE
+
+CVSS
+
+Status
+
+Source
+
+Detection Time
+
+8. Compliance Summary
+
+Display framework cards for:
+
+- SOC2
+- ISO27001
+- CIS
+- NIST
+- PCI DSS
+
+Each card displays:
+
+Score
+
+Passed
+
+Failed
+
+Warnings
+
+9. Recent Security Activity
+
+Render a real activity timeline using backend events.
+
+10. Remediation Summary
+
+Display:
+
+Pending
+
+Running
+
+Completed
+
+Failed
+
+Approval Required
+
+11. Threat Intelligence Summary
+
+Display:
+
+Latest CVEs
+
+KEV Matches
+
+EPSS High Risk
+
+Zero-day alerts
+
+Threat Feed Updates
+
+12. AI Executive Summary
+
+Render only if backend provides AI summary.
+
+Do not generate AI text on the frontend.
+
+Filters
+
+Support:
+
+- Organization
+- Repository
+- Environment
+- Cloud Provider
+- Severity
+- Owner
+- Date Range
+
+Backend Integration
+
+Consume only existing backend APIs.
+
+Never generate or estimate values.
+
+If an API returns empty data, show "No data available" with a professional empty state.
+
+UI Requirements
+
+Use enterprise dashboard design.
+
+Responsive layout.
+
+Loading skeletons.
+
+Smooth animations.
+
+Professional spacing.
+
+Accessible components.
+
+Dark mode support.
+
+Consistent severity badges.
+
+Interactive charts.
+
+No fake metrics.
+
+The final result should resemble enterprise security platforms such as Microsoft Defender for Cloud, Wiz, Prisma Cloud, CrowdStrike Falcon and GitHub Advanced Security while remaining completely powered by real backend data.
