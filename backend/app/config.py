@@ -6,10 +6,16 @@ matches a known placeholder / default / empty value.  The check is
 deliberately permissive in development (APP_ENV != "production") so
 local dev workflows continue to work with the documented default.
 """
+import os
 from functools import lru_cache
+from pathlib import Path
 from typing import List
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Resolve .env relative to this file's directory (backend/app/), so it works
+# regardless of the working directory the process is launched from.
+_ENV_FILE = Path(__file__).parent.parent / ".env"
 
 
 # Values that explicitly must NOT appear as a production SECRET_KEY.
@@ -32,7 +38,7 @@ _FORBIDDEN_SECRET_SUBSTRINGS = (
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=str(_ENV_FILE), extra="ignore")
 
     APP_NAME: str = "UniOps"
     APP_ENV: str = "development"

@@ -34,9 +34,13 @@ from __future__ import annotations
 
 import threading
 from collections.abc import Iterator
+from typing import TypeVar, Generic
+
+K = TypeVar("K")
+V = TypeVar("V")
 
 
-class ThreadSafeRegistry[K, V]:
+class ThreadSafeRegistry(Generic[K, V]):
     """
     Concurrent-safe key/value registry.
 

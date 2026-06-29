@@ -29,9 +29,12 @@ from __future__ import annotations
 
 import threading
 import time
+from typing import TypeVar, Generic
+
+V = TypeVar("V")
 
 
-class BaseCache[V]:
+class BaseCache(Generic[V]):
     """
     Monotonic-clock TTL cache with thread-safe store.
 

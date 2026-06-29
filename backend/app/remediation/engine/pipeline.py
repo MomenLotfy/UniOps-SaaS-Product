@@ -31,8 +31,9 @@ class ExecutionPipeline:
     This class does not contain business logic; it coordinates the call
     to the appropriate plugins and validators for each stage.
     """
-    def __init__(self, orchestrator: Any):
+    def __init__(self, orchestrator: Any, db: Any = None):
         self.orchestrator = orchestrator
+        self.db = db
         self.stages = [
             PipelineStage.PRE_VALIDATION,
             PipelineStage.POLICY_VALIDATION,
