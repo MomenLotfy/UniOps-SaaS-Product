@@ -1,0 +1,456 @@
+You are improving ONLY the Security Center → Threats tab.
+
+Do NOT modify any other page.
+
+=========================
+OBJECTIVE
+=========================
+
+Build a real Enterprise Threat Detection dashboard.
+
+NO demo data.
+
+NO fake alerts.
+
+NO random threat cards.
+
+Everything must come from backend APIs and threat intelligence providers.
+
+If data is unavailable, show proper empty states instead of generating fake threats.
+
+=========================
+PAGE PURPOSE
+=========================
+
+The page answers:
+
+What threats currently affect my environment?
+
+Which vulnerabilities are actively exploited?
+
+Which assets are under attack?
+
+Which threats require immediate action?
+
+=========================
+DATA SOURCES
+=========================
+
+Load ONLY from backend APIs.
+
+Backend aggregates data from:
+
+Threat Intelligence
+
+- NVD
+- CISA KEV
+- EPSS
+- VulnCheck
+- OSV
+- MITRE ATT&CK
+- CAPEC
+- CWE
+- VirusTotal
+- AlienVault OTX
+- AbuseIPDB
+- GreyNoise
+- URLHaus
+- MalwareBazaar
+
+Infrastructure
+
+Repositories
+
+Kubernetes
+
+Cloud Assets
+
+Images
+
+SBOM
+
+Findings Database
+
+Remediation Engine
+
+=========================
+TOP SUMMARY
+=========================
+
+Show summary cards
+
+Active Threats
+
+Critical Threats
+
+Threats Exploited In The Wild
+
+Assets Affected
+
+Repositories Affected
+
+Containers Affected
+
+Kubernetes Clusters Affected
+
+Average Risk Score
+
+Highest EPSS
+
+Open Remediations
+
+=========================
+THREAT PRIORITY
+=========================
+
+Show prioritized threats.
+
+Each threat displays
+
+Title
+
+Severity
+
+EPSS %
+
+CVSS
+
+KEV Status
+
+Exploit Available
+
+Threat Actor
+
+Attack Technique
+
+Affected Assets
+
+Detection Time
+
+Current Status
+
+Owner
+
+=========================
+MAIN TABLE
+=========================
+
+Columns
+
+Threat
+
+Severity
+
+EPSS
+
+CVSS
+
+KEV
+
+Threat Actor
+
+MITRE Technique
+
+Affected Assets
+
+Affected Repositories
+
+Affected Clusters
+
+Affected Containers
+
+Detected
+
+Status
+
+Assigned
+
+Actions
+
+=========================
+THREAT DETAILS
+=========================
+
+Click row
+
+Open side panel
+
+Panel contains
+
+Threat Overview
+
+Technical Description
+
+Affected Assets
+
+Affected Containers
+
+Affected Images
+
+Affected Repositories
+
+Affected Kubernetes Resources
+
+Attack Timeline
+
+MITRE ATT&CK Mapping
+
+CAPEC Mapping
+
+Related CVEs
+
+Related CWEs
+
+Related Malware
+
+Related Campaigns
+
+Available Fixes
+
+Recommended Remediation
+
+Current Exceptions
+
+Open Pull Requests
+
+Related Policies
+
+Related Findings
+
+=========================
+ATTACK TIMELINE
+=========================
+
+Visual timeline
+
+Threat discovered
+
+Exploit published
+
+EPSS increased
+
+Asset detected
+
+Alert generated
+
+Remediation started
+
+Remediation completed
+
+Verification completed
+
+=========================
+MITRE VIEW
+=========================
+
+Display
+
+Tactic
+
+Technique
+
+Sub-technique
+
+Description
+
+Coverage
+
+Detection Status
+
+=========================
+ATTACK PATH
+=========================
+
+If backend supports relationships
+
+Display attack graph
+
+Threat
+
+↓
+
+Asset
+
+↓
+
+Repository
+
+↓
+
+Container
+
+↓
+
+Cluster
+
+↓
+
+Remediation
+
+=========================
+FILTERS
+=========================
+
+Severity
+
+Threat Type
+
+Repository
+
+Cluster
+
+Namespace
+
+Asset
+
+Cloud
+
+Threat Actor
+
+MITRE Tactic
+
+Status
+
+EPSS Range
+
+KEV
+
+Search
+
+=========================
+SEARCH
+=========================
+
+Search across
+
+Threat Name
+
+CVE
+
+Threat Actor
+
+MITRE
+
+Repository
+
+Asset
+
+Cluster
+
+Container
+
+=========================
+ACTIONS
+=========================
+
+View Details
+
+Open Vulnerability
+
+View Asset
+
+Open Repository
+
+Open Kubernetes Resource
+
+Start Investigation
+
+Open Remediation
+
+Generate Patch
+
+Assign Owner
+
+Export Report
+
+=========================
+SECURITY SCORING
+=========================
+
+Risk score must be calculated from backend.
+
+Use
+
+Severity
+
+EPSS
+
+CVSS
+
+Exploit Availability
+
+KEV
+
+Asset Criticality
+
+Exposure
+
+Business Impact
+
+Do not calculate anything in frontend.
+
+=========================
+EMPTY STATES
+=========================
+
+If no threats exist
+
+Show
+
+"No active threats detected."
+
+Never create fake alerts.
+
+=========================
+REAL-TIME
+=========================
+
+Auto refresh
+
+WebSocket if available.
+
+Otherwise polling every 60 seconds.
+
+=========================
+PERFORMANCE
+=========================
+
+Pagination
+
+Virtual scrolling
+
+Server-side filtering
+
+Lazy loading
+
+Request cancellation
+
+=========================
+UI
+=========================
+
+Enterprise SOC dashboard.
+
+Professional dark mode.
+
+Compact tables.
+
+Sticky filters.
+
+Color severity badges.
+
+Responsive layout.
+
+No flashy animations.
+
+=========================
+SUCCESS
+=========================
+
+The page should feel comparable to Wiz, Microsoft Defender, CrowdStrike Falcon, or Prisma Cloud Threats.
+
+Everything must be backed by real APIs.
+
+No demo data.
+
+No placeholder content.

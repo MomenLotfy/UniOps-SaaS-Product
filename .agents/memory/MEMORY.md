@@ -1,0 +1,1 @@
+- [Security Center tab architecture](security-center-tabs.md) — KubernetesSecurity and Threats tabs are fully API-driven; no mock data; key backend fields and operator mixing rules documented.
