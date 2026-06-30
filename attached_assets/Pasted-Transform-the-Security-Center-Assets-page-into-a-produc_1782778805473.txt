@@ -1,0 +1,198 @@
+Transform the Security Center → Assets page into a production-grade enterprise asset inventory dashboard.
+
+Requirements
+
+- Never use demo, mock, fake or generated data.
+- Display only real backend responses.
+- Preserve all existing APIs, routing and business logic.
+- Improve only UI/UX and presentation.
+- Do not fabricate any asset information.
+
+Layout
+
+1. Executive KPI cards
+
+Display:
+
+- Total Assets
+- Critical Assets
+- Internet Exposed Assets
+- Unmanaged Assets
+- High Risk Assets
+- Recently Discovered Assets
+- Asset Coverage %
+- Average Risk Score
+
+2. Asset Type Overview
+
+Display counts for:
+
+- Virtual Machines
+- Containers
+- Kubernetes Pods
+- Nodes
+- Images
+- Repositories
+- Databases
+- Buckets
+- Functions
+- Load Balancers
+
+3. Filters
+
+Support:
+
+- Asset Type
+- Cloud Provider
+- Environment
+- Region
+- Cluster
+- Namespace
+- Repository
+- Owner
+- Business Unit
+- Risk
+- Compliance
+- Exposure
+- Status
+- Last Seen
+
+4. Asset Inventory
+
+Support both Card View and Table View.
+
+Each asset must display:
+
+Basic Information
+
+- Name
+- Type
+- Asset ID
+- Provider
+- Region
+- Environment
+- Owner
+- Status
+- Tags
+- Last Seen
+
+Security Information
+
+- Risk Score
+- Security Grade
+- Compliance Score
+- Critical Findings
+- High Findings
+- Medium Findings
+- Low Findings
+- Active Threats
+- Open Remediations
+
+Infrastructure Information
+
+- Cluster
+- Namespace
+- Node
+- Pod
+- Container
+- Image
+- Repository
+- Deployment
+
+Network Information
+
+- Public IP
+- Private IP
+- DNS
+- Open Ports
+- Internet Exposure
+
+Scanning Information
+
+- Last Scan
+- Scanner
+- Scan Duration
+- SBOM Status
+- Secret Scan
+- Dependency Scan
+- Container Scan
+- IaC Scan
+
+5. Charts
+
+Display:
+
+- Assets by Risk
+- Assets by Cloud
+- Assets by Environment
+- Assets by Type
+
+6. High Risk Assets
+
+Display the highest risk assets ranked by backend risk score.
+
+7. Recently Discovered Assets
+
+Render a real backend timeline.
+
+8. Asset Relationships
+
+Visualize relationships between repositories, images, containers, pods, nodes and clusters.
+
+If graph data is unavailable, gracefully fall back to a hierarchical table.
+
+Actions
+
+Each asset should support:
+
+- View Details
+- View Findings
+- View Vulnerabilities
+- View Threats
+- View SBOM
+- Run Scan
+- Start Remediation
+- Open Repository
+- Open Kubernetes Resource
+- Export Metadata
+
+Backend Integration
+
+Consume only existing backend APIs.
+
+Never estimate values.
+
+Never generate placeholder assets.
+
+If backend returns no assets, display a professional empty state:
+
+"No assets discovered yet."
+
+Offer onboarding actions:
+
+- Connect Cloud Provider
+- Connect Kubernetes
+- Connect Git Repository
+- Run First Discovery
+
+UI Requirements
+
+Enterprise-grade responsive dashboard.
+
+Modern cards and tables.
+
+Loading skeletons.
+
+Dark mode.
+
+Accessible components.
+
+Professional severity badges.
+
+Smooth animations.
+
+Interactive charts.
+
+Support pagination, sorting and advanced filtering.
+
+The final experience should be comparable to Wiz Asset Inventory, Prisma Cloud Asset Explorer and Microsoft Defender for Cloud while remaining fully powered by real backend data.
