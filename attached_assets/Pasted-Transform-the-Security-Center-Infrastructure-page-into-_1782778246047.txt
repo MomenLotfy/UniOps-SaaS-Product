@@ -1,0 +1,249 @@
+Transform the Security Center → Infrastructure page into a production-grade enterprise infrastructure dashboard.
+
+Requirements
+
+- Never use demo, fake, placeholder or generated data.
+- Render only real backend responses.
+- Keep existing APIs and routing unchanged.
+- Improve only UI/UX and data presentation.
+- Do not fabricate cloud resources.
+
+Layout
+
+1. Executive KPI cards
+
+Display:
+
+- Total Cloud Accounts
+- Total Environments
+- Active Clusters
+- Running Nodes
+- Running Containers
+- Running Virtual Machines
+- Infrastructure Risk Score
+- Last Infrastructure Sync
+
+2. Connected Providers
+
+Display provider cards for:
+
+- AWS
+- Azure
+- GCP
+- Kubernetes
+- VMware
+- On-Prem
+
+Each provider card must include:
+
+Connection Status
+
+Connected Accounts
+
+Assets Count
+
+Findings Count
+
+Last Sync
+
+Health Status
+
+3. Cloud Accounts Table
+
+Display:
+
+Account Name
+
+Provider
+
+Account ID
+
+Region
+
+Environment
+
+Assets Count
+
+Risk Score
+
+Status
+
+Last Sync
+
+4. Infrastructure Inventory
+
+Display counts for:
+
+Clusters
+
+Nodes
+
+Pods
+
+Containers
+
+Images
+
+Virtual Machines
+
+Databases
+
+Networks
+
+Security Groups
+
+Buckets
+
+Load Balancers
+
+5. Infrastructure Health
+
+Display:
+
+Healthy
+
+Warning
+
+Critical
+
+Unknown
+
+Offline
+
+6. Security Summary
+
+Display:
+
+Critical Findings
+
+High Findings
+
+Misconfigurations
+
+Public Resources
+
+Weak IAM Policies
+
+Secrets
+
+Exposed Ports
+
+Unencrypted Storage
+
+7. Cloud Cost Overview
+
+Render only if backend provides billing information.
+
+Display:
+
+Current Spend
+
+Forecast
+
+Top Services
+
+Top Accounts
+
+Monthly Trend
+
+8. Charts
+
+Add:
+
+Resources by Cloud
+
+Resources by Region
+
+Resources by Environment
+
+Infrastructure Health
+
+Risk Distribution
+
+Asset Growth
+
+9. Recent Infrastructure Events
+
+Display only backend events.
+
+10. Infrastructure Alerts
+
+Display:
+
+Connection Failures
+
+Expired Credentials
+
+Offline Resources
+
+Critical Infrastructure Alerts
+
+Filters
+
+Support:
+
+Provider
+
+Environment
+
+Region
+
+Project
+
+Account
+
+Subscription
+
+Cluster
+
+Namespace
+
+Status
+
+Severity
+
+Backend Integration
+
+Consume only existing backend APIs.
+
+Never estimate values.
+
+If backend returns empty results, show professional empty states.
+
+Empty State
+
+Display:
+
+"No infrastructure connected."
+
+Actions:
+
+- Connect AWS
+
+- Connect Azure
+
+- Connect GCP
+
+- Connect Kubernetes
+
+UI Requirements
+
+Enterprise dashboard.
+
+Responsive layout.
+
+Loading skeletons.
+
+Accessible components.
+
+Dark mode.
+
+Professional charts.
+
+Consistent badges.
+
+Modern cards.
+
+No demo content.
+
+The page should feel comparable to Wiz, Prisma Cloud, Microsoft Defender for Cloud and AWS Security Hub while remaining completely powered by real backend data.
