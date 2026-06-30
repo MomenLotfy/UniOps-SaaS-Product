@@ -1,0 +1,419 @@
+You are improving ONLY the Security Center → Security Posture tab.
+
+Do NOT modify any other page.
+
+=========================================
+OBJECTIVE
+=========================================
+
+Build a production-grade Cloud Security Posture Management (CSPM) dashboard.
+
+NO demo data.
+
+NO fake scores.
+
+Everything must come from backend APIs.
+
+If no cloud accounts or clusters are connected, show proper empty states.
+
+Never fabricate posture information.
+
+=========================================
+PAGE PURPOSE
+=========================================
+
+This page answers:
+
+How secure is my environment?
+
+Which cloud resources are misconfigured?
+
+Which security controls are failing?
+
+Where is my highest risk?
+
+How is my posture changing over time?
+
+=========================================
+BACKEND DATA SOURCES
+=========================================
+
+Load ONLY from backend APIs.
+
+Backend aggregates data from:
+
+Cloud Providers
+
+- AWS
+- Azure
+- Google Cloud
+
+Kubernetes
+
+Repositories
+
+Assets
+
+IAM
+
+Network
+
+Policies
+
+Compliance Engine
+
+Threat Intelligence
+
+Risk Scoring Engine
+
+Infrastructure Inventory
+
+=========================================
+TOP SUMMARY
+=========================================
+
+Summary Cards
+
+Overall Security Score
+
+Cloud Accounts
+
+Connected Clusters
+
+Protected Assets
+
+Misconfigurations
+
+Critical Risks
+
+Internet Exposed Assets
+
+Identity Risks
+
+Network Risks
+
+Compliance Score
+
+Policy Violations
+
+Average Risk Score
+
+=========================================
+POSTURE SCORE
+=========================================
+
+Display a score from backend only.
+
+Break down score into:
+
+Identity
+
+Compute
+
+Containers
+
+Kubernetes
+
+Networking
+
+Storage
+
+Secrets
+
+IAM
+
+Policies
+
+Compliance
+
+=========================================
+POSTURE TREND
+=========================================
+
+Show trend charts
+
+Security Score Over Time
+
+Critical Findings
+
+Misconfigurations
+
+Compliance Score
+
+Risk Score
+
+Resolved Findings
+
+New Findings
+
+=========================================
+MAIN TABLE
+=========================================
+
+Columns
+
+Resource
+
+Resource Type
+
+Cloud Provider
+
+Account
+
+Region
+
+Risk Score
+
+Security Score
+
+Critical Findings
+
+Policy Violations
+
+Compliance Status
+
+Owner
+
+Last Scan
+
+Actions
+
+=========================================
+DETAIL PANEL
+=========================================
+
+Click resource
+
+Open right drawer
+
+Contains
+
+Overview
+
+Cloud Metadata
+
+Security Score
+
+Detected Risks
+
+Misconfigurations
+
+Compliance Status
+
+IAM Permissions
+
+Network Exposure
+
+Related Assets
+
+Related Vulnerabilities
+
+Related Threats
+
+Related Policies
+
+Remediation Recommendations
+
+Recent Changes
+
+Timeline
+
+=========================================
+MISCONFIGURATIONS
+=========================================
+
+Show grouped by
+
+Critical
+
+High
+
+Medium
+
+Low
+
+Examples
+
+Public S3 Buckets
+
+Open Security Groups
+
+Weak IAM Policies
+
+Public Databases
+
+Unencrypted Storage
+
+Disabled Logging
+
+Missing MFA
+
+Open Kubernetes Dashboard
+
+Privileged Pods
+
+Missing Network Policies
+
+=========================================
+RISK BREAKDOWN
+=========================================
+
+Risk categories
+
+Identity
+
+Network
+
+Compute
+
+Containers
+
+Storage
+
+Kubernetes
+
+Secrets
+
+Compliance
+
+Data Protection
+
+Exposure
+
+=========================================
+FILTERS
+=========================================
+
+Cloud Provider
+
+Account
+
+Region
+
+Cluster
+
+Namespace
+
+Repository
+
+Severity
+
+Risk
+
+Compliance Framework
+
+Owner
+
+Status
+
+Search
+
+=========================================
+SEARCH
+=========================================
+
+Search across
+
+Assets
+
+Cloud Accounts
+
+Resources
+
+Repositories
+
+Clusters
+
+Namespaces
+
+Resource IDs
+
+Owners
+
+=========================================
+ACTIONS
+=========================================
+
+View Details
+
+Open Asset
+
+Open Repository
+
+Open Kubernetes
+
+View Vulnerabilities
+
+View Threats
+
+Open Remediation
+
+View Policies
+
+Export Report
+
+=========================================
+EMPTY STATE
+=========================================
+
+If no cloud provider connected
+
+Show
+
+"No cloud accounts connected."
+
+Display a Connect Cloud button.
+
+Never generate fake posture.
+
+=========================================
+REAL TIME
+=========================================
+
+WebSocket if supported.
+
+Otherwise polling every 60 seconds.
+
+=========================================
+PERFORMANCE
+=========================================
+
+Virtual scrolling
+
+Server-side filtering
+
+Pagination
+
+Lazy loading
+
+Abort previous requests
+
+=========================================
+UI
+=========================================
+
+Enterprise CSPM dashboard.
+
+Executive-quality visuals.
+
+Professional score cards.
+
+Modern tables.
+
+Dark mode.
+
+Responsive.
+
+No flashy animations.
+
+=========================================
+SUCCESS
+=========================================
+
+The page should feel comparable to Wiz Security Graph, Prisma Cloud CSPM, Orca Security, Lacework, and Microsoft Defender for Cloud.
+
+Everything must come from backend APIs.
+
+No demo data.
+
+No placeholders.

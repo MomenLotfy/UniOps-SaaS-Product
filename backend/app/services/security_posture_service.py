@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime, timezone, timedelta
 from typing import Optional
-from sqlalchemy import select, func
+from sqlalchemy import select, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.security_posture import SecurityPostureScore
@@ -261,8 +261,8 @@ class SecurityPostureService(BaseService):
                 RepositoryRiskHistory.tenant_id   == tenant_id,
                 RepositoryRiskHistory.recorded_at >= cutoff,
             )
-            .group_by(func.date_trunc("day", RepositoryRiskHistory.recorded_at))
-            .order_by(func.date_trunc("day", RepositoryRiskHistory.recorded_at).asc())
+            .group_by(text("1"))
+            .order_by(text("1"))
         )).all()
         risk_trend = [
             {
@@ -310,8 +310,8 @@ class SecurityPostureService(BaseService):
                 ScanModel.completed_at >= cutoff,
                 ScanModel.completed_at.isnot(None),
             )
-            .group_by(func.date_trunc("day", ScanModel.completed_at))
-            .order_by(func.date_trunc("day", ScanModel.completed_at).asc())
+            .group_by(text("1"))
+            .order_by(text("1"))
         )).all()
         remediation_trend = [
             {
