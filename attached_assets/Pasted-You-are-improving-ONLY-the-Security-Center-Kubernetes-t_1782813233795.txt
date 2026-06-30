@@ -1,0 +1,390 @@
+You are improving ONLY the Security Center → Kubernetes tab.
+
+Do NOT modify anything outside this page.
+
+=========================
+OBJECTIVE
+=========================
+
+Transform the Kubernetes tab into a real production Kubernetes Security Dashboard.
+
+NO demo data.
+
+NO mocked clusters.
+
+Everything must come from the backend APIs.
+
+Never generate fake resources.
+
+If backend data is missing,
+display Empty States with explanation instead of fake values.
+
+=========================
+PAGE LAYOUT
+=========================
+
+Top Summary Cards
+
+Cluster Health
+Connected Clusters
+Namespaces
+Running Pods
+Deployments
+DaemonSets
+StatefulSets
+Jobs
+CronJobs
+Nodes
+CPU Usage
+Memory Usage
+
+--------------------------------
+
+Second Row
+
+Cluster Status
+
+Cluster Version
+
+Provider
+
+Last Sync
+
+Kubernetes Distribution
+
+API Server Version
+
+--------------------------------
+
+Third Row
+
+Resource Usage
+
+CPU %
+
+Memory %
+
+Pods
+
+Running Pods
+
+Pending Pods
+
+Failed Pods
+
+Restart Count
+
+--------------------------------
+
+Fourth Row
+
+Security Summary
+
+Critical Findings
+
+High Findings
+
+Misconfigurations
+
+Exposed Services
+
+Privileged Containers
+
+Root Containers
+
+Containers with latest image
+
+Unsigned Images
+
+Image Pull Errors
+
+--------------------------------
+
+Main Layout
+
+Left (70%)
+
+Namespaces Table
+
+Columns
+
+Namespace
+
+Pods
+
+Deployments
+
+CPU
+
+Memory
+
+Restarts
+
+Network Policies
+
+Security Score
+
+Status
+
+Actions
+
+--------------------------------
+
+Click Namespace
+
+opens Drawer
+
+Drawer contains
+
+Pods
+
+Deployments
+
+Services
+
+Ingress
+
+Secrets
+
+ConfigMaps
+
+Events
+
+Security Findings
+
+Resource Usage
+
+Recent Activity
+
+Logs Shortcut
+
+Exec Shortcut
+
+YAML Viewer
+
+--------------------------------
+
+Right Side
+
+Cluster Topology
+
+Show
+
+Nodes
+
+Namespaces
+
+Pods
+
+Services
+
+Ingress
+
+Connections
+
+Render real graph.
+
+--------------------------------
+
+Bottom
+
+Recent Kubernetes Events
+
+Timestamp
+
+Namespace
+
+Kind
+
+Reason
+
+Object
+
+Severity
+
+=========================
+BACKEND
+=========================
+
+Use ONLY backend APIs.
+
+Never fabricate data.
+
+Load
+
+Clusters
+
+Nodes
+
+Namespaces
+
+Pods
+
+Deployments
+
+ReplicaSets
+
+DaemonSets
+
+StatefulSets
+
+Services
+
+Ingress
+
+Secrets metadata
+
+Events
+
+Metrics
+
+Resource quotas
+
+Network policies
+
+RBAC summary
+
+If metrics-server exists,
+show live metrics.
+
+Otherwise show
+
+Metrics unavailable.
+
+=========================
+Security
+=========================
+
+Calculate
+
+Pod Security
+
+Privileged Containers
+
+HostNetwork
+
+HostPID
+
+HostIPC
+
+Root Containers
+
+Latest Tag Images
+
+Unsigned Images
+
+ImagePullPolicy
+
+Capabilities
+
+HostPath
+
+Dangerous Volumes
+
+NetworkPolicy Coverage
+
+Namespace Isolation
+
+Service Exposure
+
+Node Risk
+
+=========================
+Filtering
+=========================
+
+Provider
+
+Namespace
+
+Cluster
+
+Severity
+
+Resource Type
+
+Node
+
+Status
+
+Search
+
+=========================
+Actions
+=========================
+
+View YAML
+
+Copy kubectl command
+
+Open Logs
+
+Open Terminal
+
+Open Resource
+
+Download YAML
+
+View Security Report
+
+=========================
+Performance
+=========================
+
+Virtual scrolling
+
+Pagination
+
+Lazy loading
+
+Memoization
+
+Abort previous requests
+
+Skeleton loaders
+
+=========================
+UI
+=========================
+
+Professional enterprise UI.
+
+Dark mode support.
+
+Resizable panels.
+
+Modern tables.
+
+Sticky filters.
+
+Responsive layout.
+
+Animations under 150ms.
+
+No flashy effects.
+
+=========================
+Empty State
+=========================
+
+If no cluster connected
+
+Show
+
+"No Kubernetes cluster connected."
+
+with
+
+Connect Cluster button.
+
+Never display demo clusters.
+
+=========================
+Success Criteria
+=========================
+
+The page should feel like an actual Kubernetes Operations Console used by enterprise platform teams.
+
+No fake data.
+
+Everything must be API-driven.
