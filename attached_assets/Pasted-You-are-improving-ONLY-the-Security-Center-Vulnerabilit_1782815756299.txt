@@ -1,0 +1,485 @@
+You are improving ONLY the Security Center → Vulnerabilities tab.
+
+Do NOT modify any other page.
+
+=========================================
+OBJECTIVE
+=========================================
+
+Build a production-grade Vulnerability Management dashboard.
+
+NO demo data.
+
+NO fake CVEs.
+
+Everything must come from backend APIs.
+
+If no vulnerabilities exist, show proper Empty States.
+
+Never fabricate any vulnerability.
+
+=========================================
+PAGE PURPOSE
+=========================================
+
+This page answers:
+
+Which vulnerabilities exist?
+
+Which ones are exploitable?
+
+Which assets are affected?
+
+Which vulnerabilities should be fixed first?
+
+Which fixes already exist?
+
+=========================================
+BACKEND DATA SOURCES
+=========================================
+
+Use ONLY backend APIs.
+
+Backend aggregates data from:
+
+Scanning
+
+- Trivy
+- Grype
+- OSV
+
+Threat Intelligence
+
+- NVD
+- CISA KEV
+- EPSS
+- VulnCheck
+- MITRE CVE
+- CWE
+- CAPEC
+
+Repositories
+
+Containers
+
+SBOM
+
+Docker Images
+
+Kubernetes
+
+Cloud Assets
+
+Packages
+
+Dependencies
+
+Remediation Engine
+
+=========================================
+TOP SUMMARY
+=========================================
+
+Summary Cards
+
+Total Vulnerabilities
+
+Critical
+
+High
+
+Medium
+
+Low
+
+Exploitable
+
+KEV Listed
+
+Fix Available
+
+No Fix Available
+
+Average EPSS
+
+Average CVSS
+
+Affected Assets
+
+Affected Images
+
+Affected Repositories
+
+Affected Clusters
+
+=========================================
+MAIN TABLE
+=========================================
+
+Columns
+
+CVE
+
+Severity
+
+CVSS
+
+EPSS
+
+KEV
+
+Package
+
+Installed Version
+
+Fixed Version
+
+Asset
+
+Repository
+
+Image
+
+Namespace
+
+Cluster
+
+Exploit Available
+
+Detected
+
+Status
+
+Owner
+
+Actions
+
+=========================================
+DETAIL PANEL
+=========================================
+
+Click any vulnerability
+
+Open right drawer
+
+Contains
+
+Overview
+
+Description
+
+CVSS Vector
+
+EPSS
+
+KEV Status
+
+Exploit Availability
+
+Affected Assets
+
+Affected Images
+
+Affected Containers
+
+Affected Repositories
+
+Affected Packages
+
+Affected Kubernetes Resources
+
+Affected Cloud Resources
+
+Dependency Chain
+
+Root Cause
+
+Attack Scenarios
+
+Business Impact
+
+References
+
+Fix Version
+
+Upgrade Recommendation
+
+Remediation Status
+
+Open Pull Requests
+
+Policy Exceptions
+
+Related Threats
+
+Related Findings
+
+Timeline
+
+=========================================
+DEPENDENCY GRAPH
+=========================================
+
+Visual dependency tree
+
+Application
+
+↓
+
+Package
+
+↓
+
+Dependency
+
+↓
+
+Vulnerability
+
+↓
+
+Available Fix
+
+=========================================
+RISK PRIORITIZATION
+=========================================
+
+Risk comes ONLY from backend.
+
+Do NOT calculate in frontend.
+
+Backend combines
+
+Severity
+
+CVSS
+
+EPSS
+
+KEV
+
+Exploit
+
+Internet Exposure
+
+Business Criticality
+
+Reachability
+
+Asset Criticality
+
+Age
+
+=========================================
+FILTERS
+=========================================
+
+Severity
+
+Repository
+
+Cluster
+
+Namespace
+
+Image
+
+Package
+
+Language
+
+Operating System
+
+KEV
+
+Fix Available
+
+Exploitable
+
+Status
+
+Owner
+
+Cloud Provider
+
+Search
+
+=========================================
+SEARCH
+=========================================
+
+Search
+
+CVE
+
+Package
+
+Repository
+
+Image
+
+Container
+
+Namespace
+
+Cluster
+
+Owner
+
+=========================================
+GROUPING
+=========================================
+
+Allow grouping by
+
+Severity
+
+Repository
+
+Package
+
+Image
+
+Namespace
+
+Cluster
+
+Cloud Account
+
+Language
+
+Operating System
+
+=========================================
+ACTIONS
+=========================================
+
+View Details
+
+View Asset
+
+View Repository
+
+View Image
+
+View SBOM
+
+Open Threat
+
+Open Remediation
+
+Generate Patch
+
+Create Pull Request
+
+Assign Owner
+
+Export CSV
+
+Export JSON
+
+Export PDF
+
+=========================================
+FIXES
+=========================================
+
+Show
+
+Available Version
+
+Upgrade Path
+
+Breaking Changes (if backend provides)
+
+Fix Confidence
+
+Patch Status
+
+Auto Fix Available
+
+=========================================
+TIMELINE
+=========================================
+
+Timeline
+
+Published
+
+Detected
+
+Exploit Published
+
+KEV Added
+
+Remediation Started
+
+PR Created
+
+Merged
+
+Verified
+
+=========================================
+EMPTY STATE
+=========================================
+
+If no vulnerabilities
+
+Show
+
+"No vulnerabilities detected."
+
+Never create fake CVEs.
+
+=========================================
+REAL TIME
+=========================================
+
+WebSocket if available.
+
+Otherwise polling every 60 seconds.
+
+=========================================
+PERFORMANCE
+=========================================
+
+Server-side pagination
+
+Virtual scrolling
+
+Lazy loading
+
+Abort previous requests
+
+Memoization
+
+=========================================
+UI
+=========================================
+
+Enterprise Vulnerability Management UI.
+
+Professional tables.
+
+Dark mode.
+
+Sticky filters.
+
+Resizable columns.
+
+Fast rendering.
+
+No flashy effects.
+
+=========================================
+SUCCESS
+=========================================
+
+The page should feel comparable to Wiz, Snyk, Prisma Cloud, Microsoft Defender, Tenable, or Qualys.
+
+Everything must come from backend APIs.
+
+No demo data.
+
+No placeholders.
