@@ -1786,6 +1786,7 @@ dependencies = [
     { name = "redis" },
     { name = "scikit-learn" },
     { name = "sendgrid" },
+    { name = "sentry-sdk", extra = ["fastapi"] },
     { name = "slack-sdk" },
     { name = "sqlalchemy" },
     { name = "stripe" },
@@ -1831,6 +1832,7 @@ requires-dist = [
     { name = "redis", specifier = "==5.0.4" },
     { name = "scikit-learn", specifier = "==1.5.2" },
     { name = "sendgrid", specifier = "==6.11.0" },
+    { name = "sentry-sdk", extras = ["fastapi"], specifier = "==2.7.0" },
     { name = "slack-sdk", specifier = "==3.27.1" },
     { name = "sqlalchemy", specifier = "==2.0.30" },
     { name = "stripe", specifier = "==9.5.0" },
@@ -2041,6 +2043,24 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/df/48/d5bb52b65456da8a40d1b083bdd78168e3f26180dc2a18d92b315a79dcc3/sendgrid-6.11.0.tar.gz", hash = "sha256:71424b2a97f5a034121ea3b2666c653ba0ed315982f0d57b7851c0c9503dc5ab", size = 49923, upload-time = "2023-12-01T05:18:37.468Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/08/5f/16c45fdf3205db65ca4409528069cc25f74383610e902716462d9bb944fd/sendgrid-6.11.0-py3-none-any.whl", hash = "sha256:43ecf5bb742ea5850c7cfe68f5e7d9948772352306d4e83e119899959538b884", size = 101921, upload-time = "2023-12-01T05:18:34.883Z" },
+]
+
+[[package]]
+name = "sentry-sdk"
+version = "2.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/22/b6/4495ccf334c59ff5c66e813baa698dee2997d375982b7da34db4338f9143/sentry_sdk-2.7.0.tar.gz", hash = "sha256:d846a211d4a0378b289ced3c434480945f110d0ede00450ba631fc2852e7a0d4", size = 273279, upload-time = "2024-06-26T10:54:35.646Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7c/e0/97f1bee2a80886ef303be9abecedad1b51e501e1c11d19ff2d6cd6f5e8c9/sentry_sdk-2.7.0-py2.py3-none-any.whl", hash = "sha256:db9594c27a4d21c1ebad09908b1f0dc808ef65c2b89c1c8e7e455143262e37c1", size = 300126, upload-time = "2024-06-26T10:54:31.682Z" },
+]
+
+[package.optional-dependencies]
+fastapi = [
+    { name = "fastapi" },
 ]
 
 [[package]]

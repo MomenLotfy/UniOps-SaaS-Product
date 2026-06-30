@@ -5,6 +5,7 @@ stack = "BEST_EFFORT_FALLBACK"
 
 [nix]
 channel = "stable-25_05"
+packages = ["cargo", "glibcLocales", "libiconv", "libxcrypt", "openssl", "pkg-config", "postgresql", "rustc"]
 
 [workflows]
 runButton = "Project"
@@ -58,3 +59,18 @@ externalPort = 80
 deploymentTarget = "autoscale"
 run = ["sh", "-c", "cd backend && uvicorn app.main:app --host 0.0.0.0 --port 5000"]
 build = ["pnpm", "--filter", "@workspace/uniops", "run", "build"]
+
+[userenv]
+
+[userenv.shared]
+APP_ENV = "development"
+DEBUG = "true"
+SECRET_KEY = "k4Qwg2ys9ius4sdqhA7gdZYqJZ_TqbmztPt811MYwLCL5axTkF5oIiybWQaCUfYV"
+JWT_SECRET_KEY = "k4Qwg2ys9ius4sdqhA7gdZYqJZ_TqbmztPt811MYwLCL5axTkF5oIiybWQaCUfYV"
+REDIS_URL = "redis://localhost:6379/0"
+CELERY_BROKER_URL = "redis://localhost:6379/1"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/2"
+LOG_LEVEL = "INFO"
+LOG_FORMAT = "text"
+OTEL_SDK_DISABLED = "true"
+RATE_LIMIT_ENABLED = "false"
