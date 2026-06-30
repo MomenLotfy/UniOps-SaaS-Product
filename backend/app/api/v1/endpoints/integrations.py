@@ -340,15 +340,47 @@ async def _bg_test_and_sync(
                 except Exception as pipe_exc:
                     logger.warning(f"[bg] Initial pipeline sync failed (non-fatal): {pipe_exc}")
             elif result.success and integration_type == "aws":
-                # Trigger AWS cost sync immediately after a successful connection test
-                # so cost data appears without waiting for the hourly beat schedule.
-                logger.info(f"[bg] AWS connection OK — triggering cost sync for tenant {tenant_id}")
+                # ── After a successful AWS connection, immediately pull all data ──
+                # 1. Cost data (Cost Explorer)
+                logger.info(f"[bg] AWS connection OK — triggering full data sync for tenant {tenant_id}")
                 try:
                     from app.tasks.sync_costs import sync_aws_costs_async
                     await sync_aws_costs_async(tenant_id=tenant_id)
                     logger.info(f"[bg] AWS cost sync completed for tenant {tenant_id}")
                 except Exception as sync_exc:
                     logger.warning(f"[bg] AWS cost sync failed (non-fatal): {sync_exc}")
+
+                # 2. Asset discovery (EC2, S3, IAM, RDS)
+                try:
+                    from app.core.database import AsyncSessionLocal
+                    from app.services.asset_discovery_service import AssetDiscoveryService
+                    async with AsyncSessionLocal() as asset_db:
+                        svc = AssetDiscoveryService(asset_db)
+                        asset_result = await svc.sync_all(tenant_id)
+                        await asset_db.commit()
+                    logger.info(f"[bg] AWS asset discovery completed for tenant {tenant_id}: {asset_result.get('synced', {})}")
+                except Exception as asset_exc:
+                    logger.warning(f"[bg] AWS asset discovery failed (non-fatal): {asset_exc}")
+
+                # 3. Security Hub findings (threats, vulnerabilities, compliance)
+                try:
+                    from app.tasks.sync_security import sync_aws_security_async
+                    sec_result = await sync_aws_security_async(tenant_id=tenant_id)
+                    logger.info(f"[bg] AWS security sync completed for tenant {tenant_id}: {sec_result}")
+                except Exception as sec_exc:
+                    logger.warning(f"[bg] AWS security sync failed (non-fatal): {sec_exc}")
+
+                # 4. Posture snapshot (so Security Center scores update immediately)
+                try:
+                    from app.core.database import AsyncSessionLocal
+                    from app.services.security_posture_service import SecurityPostureService
+                    async with AsyncSessionLocal() as posture_db:
+                        posture_svc = SecurityPostureService(posture_db)
+                        await posture_svc.take_snapshot(tenant_id)
+                        await posture_db.commit()
+                    logger.info(f"[bg] Posture snapshot taken for tenant {tenant_id}")
+                except Exception as posture_exc:
+                    logger.warning(f"[bg] Posture snapshot failed (non-fatal): {posture_exc}")
             elif not result.success:
                 logger.warning(
                     f"[bg] Connection test FAILED for {integration_id}: {result.message}"
@@ -384,15 +416,47 @@ async def _bg_sync(integration_id: str, integration_type: str) -> None:
         else:
             tenant_id = None
 
-        # For AWS: persist cost data via sync_aws_costs_async (svc.sync() only
-        # updates metadata, not the CostMetric rows that the UI reads).
+        # For AWS: full sync — costs + asset discovery + security hub + posture
         if integration_type == "aws" and tenant_id:
+            # 1. Cost data
             try:
                 from app.tasks.sync_costs import sync_aws_costs_async
                 await sync_aws_costs_async(tenant_id=tenant_id)
                 logger.info(f"[bg] AWS cost sync completed for integration {integration_id}")
             except Exception as cost_exc:
                 logger.warning(f"[bg] AWS cost sync failed (non-fatal): {cost_exc}")
+
+            # 2. Asset discovery (EC2, S3, IAM, RDS)
+            try:
+                from app.core.database import AsyncSessionLocal
+                from app.services.asset_discovery_service import AssetDiscoveryService
+                async with AsyncSessionLocal() as asset_db:
+                    svc = AssetDiscoveryService(asset_db)
+                    asset_result = await svc.sync_all(tenant_id)
+                    await asset_db.commit()
+                logger.info(f"[bg] AWS asset sync completed for integration {integration_id}: {asset_result.get('synced', {})}")
+            except Exception as asset_exc:
+                logger.warning(f"[bg] AWS asset sync failed (non-fatal): {asset_exc}")
+
+            # 3. Security Hub findings
+            try:
+                from app.tasks.sync_security import sync_aws_security_async
+                sec_result = await sync_aws_security_async(tenant_id=tenant_id)
+                logger.info(f"[bg] AWS security sync completed for integration {integration_id}: {sec_result}")
+            except Exception as sec_exc:
+                logger.warning(f"[bg] AWS security sync failed (non-fatal): {sec_exc}")
+
+            # 4. Posture snapshot
+            try:
+                from app.core.database import AsyncSessionLocal
+                from app.services.security_posture_service import SecurityPostureService
+                async with AsyncSessionLocal() as posture_db:
+                    posture_svc = SecurityPostureService(posture_db)
+                    await posture_svc.take_snapshot(tenant_id)
+                    await posture_db.commit()
+                logger.info(f"[bg] Posture snapshot taken for integration {integration_id}")
+            except Exception as posture_exc:
+                logger.warning(f"[bg] Posture snapshot failed (non-fatal): {posture_exc}")
 
         # For GitHub/GitLab: trigger full pipeline sync so "Sync Now" in the UI
         # actually pulls fresh CI/CD runs (not just repo metadata).
