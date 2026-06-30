@@ -2,36 +2,29 @@ from __future__ import annotations
 """Security utilities — JWT creation/decoding and password hashing."""
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
-import warnings
 
-# Suppress bcrypt/passlib version mismatch warning
-warnings.filterwarnings("ignore", ".*error reading bcrypt version.*")
-warnings.filterwarnings("ignore", ".*AttributeError.*__about__.*")
-
-# Monkey-patch passlib bcrypt to avoid AttributeError with bcrypt>=4.x
-try:
-    import bcrypt
-    if not hasattr(bcrypt, '__about__'):
-        bcrypt.__about__ = type('obj', (object,), {'__version__': bcrypt.__version__})()
-except Exception:
-    pass
-
+import bcrypt
 import jwt as PyJWT
-from passlib.context import CryptContext
-from app.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from app.config import settings
 
 JWTError = PyJWT.exceptions.PyJWTError
 ExpiredSignatureError = PyJWT.exceptions.ExpiredSignatureError
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password[:72])
+    password_bytes = password.encode("utf-8")[:72]
+    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password[:72], hashed_password)
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8")[:72],
+            hashed_password.encode("utf-8"),
+        )
+    except Exception:
+        return False
 
 
 def create_access_token(
