@@ -1,0 +1,505 @@
+You are improving ONLY the Security Center → Compliance tab.
+
+Do NOT modify any other page.
+
+=========================================
+OBJECTIVE
+=========================================
+
+Build a production-grade Compliance Management Center.
+
+This page must continuously evaluate compliance posture using real evidence collected from the environment.
+
+NO demo data.
+
+NO fake compliance scores.
+
+NO hardcoded percentages.
+
+Everything must come from backend APIs.
+
+If no compliance frameworks are configured, display an appropriate empty state.
+
+=========================================
+PAGE PURPOSE
+=========================================
+
+This page answers:
+
+Which compliance frameworks are enabled?
+
+Which controls are passing or failing?
+
+Which assets violate compliance?
+
+Which repositories are non-compliant?
+
+Which Kubernetes resources violate policies?
+
+Which evidence supports every control?
+
+=========================================
+SUPPORTED FRAMEWORKS
+=========================================
+
+Support any framework returned by backend.
+
+Examples include
+
+SOC 2
+
+ISO 27001
+
+NIST CSF
+
+NIST 800-53
+
+CIS Kubernetes
+
+CIS Docker
+
+PCI DSS
+
+HIPAA
+
+GDPR
+
+FedRAMP
+
+AWS Well-Architected
+
+Azure Security Benchmark
+
+Custom Frameworks
+
+=========================================
+BACKEND DATA SOURCES
+=========================================
+
+Use ONLY backend APIs.
+
+Backend aggregates data from
+
+Compliance Engine
+
+Policy Engine
+
+Repositories
+
+Assets
+
+Cloud Inventory
+
+Kubernetes
+
+SBOM
+
+Security Findings
+
+Remediation Engine
+
+Audit Logs
+
+Evidence Store
+
+Risk Engine
+
+Identity Provider
+
+=========================================
+TOP SUMMARY
+=========================================
+
+Summary Cards
+
+Compliance Score
+
+Enabled Frameworks
+
+Passing Controls
+
+Failed Controls
+
+Controls Missing Evidence
+
+Assets Out Of Compliance
+
+Repositories Out Of Compliance
+
+Clusters Out Of Compliance
+
+Critical Compliance Findings
+
+Open Compliance Remediations
+
+Latest Assessment
+
+=========================================
+FRAMEWORK OVERVIEW
+=========================================
+
+Display all enabled frameworks.
+
+Columns
+
+Framework
+
+Version
+
+Status
+
+Compliance %
+
+Passing Controls
+
+Failed Controls
+
+Not Applicable
+
+Last Assessment
+
+=========================================
+CONTROLS TABLE
+=========================================
+
+Columns
+
+Control ID
+
+Title
+
+Framework
+
+Category
+
+Severity
+
+Status
+
+Evidence
+
+Owner
+
+Last Evaluated
+
+Next Evaluation
+
+Actions
+
+=========================================
+DETAIL PANEL
+=========================================
+
+Click any control.
+
+Open side drawer.
+
+Display
+
+Overview
+
+Control Description
+
+Framework
+
+Mapped Policies
+
+Mapped Assets
+
+Mapped Repositories
+
+Mapped Kubernetes Resources
+
+Mapped Cloud Resources
+
+Evidence
+
+Related Findings
+
+Related Vulnerabilities
+
+Related Threats
+
+Related Remediations
+
+Exceptions
+
+Audit History
+
+Timeline
+
+=========================================
+EVIDENCE
+=========================================
+
+Display evidence collected automatically.
+
+Each evidence item shows
+
+Source
+
+Collection Time
+
+Collected By
+
+Status
+
+Verification
+
+Associated Control
+
+Evidence Type
+
+Download
+
+=========================================
+NON-COMPLIANT RESOURCES
+=========================================
+
+Display
+
+Repositories
+
+Assets
+
+Clusters
+
+Namespaces
+
+Pods
+
+VMs
+
+Cloud Resources
+
+Containers
+
+Each row shows
+
+Resource
+
+Reason
+
+Severity
+
+Related Controls
+
+Suggested Remediation
+
+=========================================
+POLICY MAPPING
+=========================================
+
+Display mapping
+
+Framework
+
+↓
+
+Control
+
+↓
+
+Policy
+
+↓
+
+Finding
+
+↓
+
+Remediation
+
+=========================================
+ASSESSMENTS
+=========================================
+
+Display assessment history
+
+Assessment Date
+
+Framework
+
+Score
+
+Passed
+
+Failed
+
+Evidence Count
+
+Duration
+
+=========================================
+EXCEPTIONS
+=========================================
+
+Display
+
+Exception
+
+Reason
+
+Expiration
+
+Owner
+
+Approved By
+
+Status
+
+=========================================
+FILTERS
+=========================================
+
+Framework
+
+Control
+
+Severity
+
+Status
+
+Owner
+
+Evidence Status
+
+Repository
+
+Cluster
+
+Cloud
+
+Search
+
+=========================================
+SEARCH
+=========================================
+
+Search across
+
+Framework
+
+Control
+
+Policy
+
+Repository
+
+Asset
+
+Evidence
+
+Finding
+
+Owner
+
+=========================================
+ACTIONS
+=========================================
+
+View Details
+
+Open Policy
+
+Open Repository
+
+Open Asset
+
+Open Finding
+
+Open Remediation
+
+Download Evidence
+
+Export Assessment
+
+Export PDF
+
+Export CSV
+
+=========================================
+TIMELINE
+=========================================
+
+Timeline
+
+Assessment Started
+
+Evidence Collected
+
+Control Evaluated
+
+Violation Detected
+
+Remediation Started
+
+Control Passed
+
+Audit Logged
+
+=========================================
+EMPTY STATE
+=========================================
+
+If no compliance framework is configured
+
+Show
+
+"No compliance frameworks configured."
+
+Display Configure Frameworks button.
+
+Never generate fake compliance scores.
+
+=========================================
+REAL TIME
+=========================================
+
+Auto refresh.
+
+Use WebSocket if available.
+
+Otherwise poll every 5 minutes.
+
+=========================================
+PERFORMANCE
+=========================================
+
+Server-side filtering
+
+Pagination
+
+Virtual scrolling
+
+Lazy loading
+
+Abort previous requests
+
+=========================================
+UI
+=========================================
+
+Enterprise compliance dashboard.
+
+Professional auditor experience.
+
+Dark mode.
+
+Sticky filters.
+
+Fast search.
+
+Modern tables.
+
+=========================================
+SUCCESS
+=========================================
+
+The page should feel comparable to Drata, Vanta, Sprinto, Prisma Cloud Compliance, and Wiz Compliance.
+
+Everything must come from backend APIs.
+
+No demo data.
+
+No placeholders.

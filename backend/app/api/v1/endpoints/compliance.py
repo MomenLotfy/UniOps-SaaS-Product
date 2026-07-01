@@ -601,6 +601,259 @@ async def list_compliance_exceptions(
     })
 
 
+# ── Policy Mapping ────────────────────────────────────────────────────────────
+
+@router.get("/policy-mapping")
+async def get_policy_mapping(
+    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    framework: Optional[str] = Query(None),
+):
+    """
+    Framework → Control → Policy → Finding → Remediation drill-down chain.
+    Returns a tree that lets auditors trace every compliance obligation to
+    concrete evidence in the environment.
+    """
+    # Load frameworks
+    fw_stmt = select(Compliance).where(Compliance.tenant_id == tenant_id)
+    if framework:
+        fw_stmt = fw_stmt.where(Compliance.framework == framework)
+    rows_q = await db.execute(fw_stmt)
+    rows = rows_q.scalars().all()
+
+    # Load all active policies
+    policies_q = await db.execute(
+        select(SecurityPolicy).where(SecurityPolicy.tenant_id == tenant_id, SecurityPolicy.status == "active")
+    )
+    all_policies = policies_q.scalars().all()
+
+    # Load open threats
+    threats_q = await db.execute(
+        select(Threat)
+        .where(Threat.tenant_id == tenant_id, Threat.status == "open")
+        .order_by(Threat.detected_at.desc())
+        .limit(200)
+    )
+    threats = threats_q.scalars().all()
+
+    # Load open vulnerabilities
+    vulns_q = await db.execute(
+        select(Vulnerability)
+        .where(Vulnerability.tenant_id == tenant_id, Vulnerability.status == "open")
+        .order_by(Vulnerability.cvss_score.desc().nullslast())
+        .limit(200)
+    )
+    vulns = vulns_q.scalars().all()
+
+    # Build per-framework tree
+    tree = []
+    for row in rows:
+        controls = _extract_controls([row])
+        fw_node = {
+            "framework":      row.framework,
+            "framework_id":   row.id,
+            "score":          round(row.score, 1),
+            "status":         row.status,
+            "controls":       [],
+        }
+
+        # Policies that mention this framework
+        fw_policies = [
+            p for p in all_policies if row.framework in (p.frameworks or [])
+        ]
+
+        for ctrl in controls[:50]:  # cap per framework
+            # Policies for this control (by framework match)
+            policy_nodes = []
+            for p in fw_policies:
+                # Findings linked to this policy (by category/source heuristic)
+                finding_nodes: list[dict] = []
+                for t in threats:
+                    if p.category and p.category.lower() in (t.category or "").lower():
+                        finding_nodes.append({
+                            "id":       t.id,
+                            "type":     "threat",
+                            "title":    t.title,
+                            "severity": t.severity,
+                            "status":   t.status,
+                            "source":   t.source,
+                            "resource": t.resource,
+                            "remediation": {
+                                "available": False,
+                                "action":    f"Investigate: {t.title}",
+                            },
+                        })
+                for v in vulns:
+                    if v.severity in ("critical", "high"):
+                        finding_nodes.append({
+                            "id":       v.id,
+                            "type":     "vulnerability",
+                            "title":    v.title,
+                            "severity": v.severity,
+                            "status":   v.status,
+                            "cve_id":   v.cve_id,
+                            "cvss":     v.cvss_score,
+                            "remediation": {
+                                "available":        bool(v.fixed_version),
+                                "fixed_version":    v.fixed_version,
+                                "action":           f"Upgrade {v.package_name} to {v.fixed_version}" if v.fixed_version else "No fix available",
+                            },
+                        })
+
+                policy_nodes.append({
+                    "id":          p.id,
+                    "name":        p.name,
+                    "category":    p.category,
+                    "severity":    p.severity,
+                    "enforcement": p.enforcement,
+                    "violations":  p.violations_count,
+                    "findings":    finding_nodes[:10],
+                    "finding_count": len(finding_nodes),
+                })
+
+            fw_node["controls"].append({
+                "id":          ctrl.get("id"),
+                "control_id":  ctrl.get("control_id"),
+                "title":       ctrl.get("title"),
+                "category":    ctrl.get("category"),
+                "severity":    ctrl.get("severity"),
+                "status":      ctrl.get("status"),
+                "has_evidence":ctrl.get("has_evidence"),
+                "policies":    policy_nodes,
+                "policy_count": len(policy_nodes),
+            })
+
+        tree.append(fw_node)
+
+    return APIResponse(data=tree)
+
+
+# ── Timeline ──────────────────────────────────────────────────────────────────
+
+@router.get("/timeline")
+async def get_compliance_timeline(
+    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    framework: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+):
+    """
+    Ordered timeline of compliance-relevant events:
+    Assessment Started, Evidence Collected, Control Evaluated,
+    Violation Detected, Remediation Started, Control Passed, Audit Logged.
+    """
+    from app.models.audit_log import AuditLog
+
+    events: list[dict] = []
+
+    # Assessment events from scans
+    scans_q = await db.execute(
+        select(Scan)
+        .where(Scan.tenant_id == tenant_id, Scan.status == "completed")
+        .order_by(Scan.completed_at.desc())
+        .limit(30)
+    )
+    for scan in scans_q.scalars().all():
+        if scan.started_at:
+            events.append({
+                "type":       "assessment_started",
+                "label":      "Assessment Started",
+                "description": f"Security scan initiated (branch: {scan.branch or 'default'})",
+                "timestamp":  scan.started_at.isoformat(),
+                "actor":      scan.triggered_by,
+                "severity":   "info",
+                "icon":       "play",
+            })
+        if scan.completed_at:
+            events.append({
+                "type":       "evidence_collected",
+                "label":      "Evidence Collected",
+                "description": f"Scan complete — {(scan.critical_count or 0) + (scan.high_count or 0)} critical/high findings",
+                "timestamp":  scan.completed_at.isoformat(),
+                "actor":      "system",
+                "severity":   "critical" if (scan.critical_count or 0) > 0 else "info",
+                "icon":       "file-check",
+            })
+            events.append({
+                "type":       "control_evaluated",
+                "label":      "Control Evaluated",
+                "description": f"Compliance controls re-evaluated after scan",
+                "timestamp":  scan.completed_at.isoformat(),
+                "actor":      "system",
+                "severity":   "info",
+                "icon":       "check-square",
+            })
+
+    # Violation events from threats
+    threats_q = await db.execute(
+        select(Threat)
+        .where(Threat.tenant_id == tenant_id, Threat.detected_at.isnot(None))
+        .order_by(Threat.detected_at.desc())
+        .limit(30)
+    )
+    for t in threats_q.scalars().all():
+        events.append({
+            "type":       "violation_detected",
+            "label":      "Violation Detected",
+            "description": t.title,
+            "timestamp":  t.detected_at.isoformat() if t.detected_at else None,
+            "actor":      t.source,
+            "severity":   t.severity,
+            "icon":       "alert-triangle",
+            "resource":   t.resource,
+        })
+        if t.resolved_at:
+            events.append({
+                "type":       "control_passed",
+                "label":      "Control Passed",
+                "description": f"Threat resolved: {t.title}",
+                "timestamp":  t.resolved_at.isoformat(),
+                "actor":      "system",
+                "severity":   "info",
+                "icon":       "check-circle",
+            })
+
+    # Compliance row updates
+    rows_q = await db.execute(
+        select(Compliance).where(Compliance.tenant_id == tenant_id)
+    )
+    for row in rows_q.scalars().all():
+        if framework and row.framework != framework:
+            continue
+        events.append({
+            "type":       "control_evaluated",
+            "label":      "Framework Evaluated",
+            "description": f"{row.framework} — score: {round(row.score, 1)}%",
+            "timestamp":  row.updated_at.isoformat() if row.updated_at else None,
+            "actor":      "compliance_engine",
+            "severity":   "info" if row.score >= 80 else "medium" if row.score >= 60 else "high",
+            "icon":       "shield",
+        })
+
+    # Audit log events
+    audit_q = await db.execute(
+        select(AuditLog)
+        .where(AuditLog.tenant_id == tenant_id)
+        .order_by(AuditLog.created_at.desc())
+        .limit(20)
+    )
+    for log in audit_q.scalars().all():
+        events.append({
+            "type":       "audit_logged",
+            "label":      "Audit Logged",
+            "description": f"{log.action} on {log.resource}",
+            "timestamp":  log.created_at.isoformat() if log.created_at else None,
+            "actor":      log.user_id,
+            "severity":   "info",
+            "icon":       "file-text",
+            "status":     log.status,
+        })
+
+    # Sort descending
+    events = [e for e in events if e.get("timestamp")]
+    events.sort(key=lambda e: e["timestamp"], reverse=True)
+
+    return APIResponse(data=events[:limit])
+
+
 # ── Score (existing) ──────────────────────────────────────────────────────────
 
 @router.get("/score")
