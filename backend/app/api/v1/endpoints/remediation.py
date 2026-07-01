@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Any, Optional
 import uuid
@@ -8,7 +8,7 @@ from app.remediation.manager import RemediationManager
 from app.remediation.registry.provider import get_remediation_registry
 from app.remediation.interfaces.base import RemediationContext, ExecutionPlan
 from app.remediation.models.models import RemediationPlan, RemediationExecutionHistory, RemediationStateHistory, RemediationExecutionMetrics, PluginMetadata
-from sqlalchemy import select
+from sqlalchemy import select, func, or_
 
 from app.services.copilot_service import CopilotService
 from app.remediation.engine.orchestrator import ExecutionOrchestrator
@@ -31,6 +31,125 @@ async def get_controller(
     orchestrator: ExecutionOrchestrator = Depends(get_orchestrator)
 ):
     return ExecutionController(orchestrator, db)
+
+def _plan_to_dict(p: RemediationPlan) -> dict:
+    return {
+        "id": p.id,
+        "tenant_id": p.tenant_id,
+        "finding_id": p.finding_id,
+        "finding_type": p.finding_type,
+        "target_technology": p.target_technology,
+        "capability_id": p.capability_id,
+        "strategy_id": p.strategy_id,
+        "priority": p.priority,
+        "status": p.status.value if hasattr(p.status, "value") else str(p.status),
+        "version": p.version,
+        "created_by": p.created_by,
+        "change_reason": p.change_reason,
+        "required_inputs": p.required_inputs or {},
+        "expected_outputs": p.expected_outputs or [],
+        "execution_context": p.execution_context or {},
+        "created_at": p.created_at.isoformat() if p.created_at else None,
+        "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+    }
+
+
+@router.get("/summary")
+async def get_remediation_summary(
+    tenant_id: str = Depends(get_tenant_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Aggregate counts by status and priority for the summary KPI bar."""
+    status_result = await db.execute(
+        select(RemediationPlan.status, func.count().label("cnt"))
+        .where(RemediationPlan.tenant_id == tenant_id)
+        .group_by(RemediationPlan.status)
+    )
+    by_status = {str(row.status.value if hasattr(row.status, "value") else row.status): row.cnt
+                 for row in status_result.all()}
+
+    priority_result = await db.execute(
+        select(RemediationPlan.priority, func.count().label("cnt"))
+        .where(RemediationPlan.tenant_id == tenant_id)
+        .group_by(RemediationPlan.priority)
+    )
+    by_priority = {str(row.priority): row.cnt for row in priority_result.all()}
+
+    terminal = {"COMPLETED", "CANCELLED"}
+    open_count = sum(v for k, v in by_status.items() if k not in terminal)
+
+    return {
+        "total": sum(by_status.values()),
+        "open": open_count,
+        "by_status": by_status,
+        "by_priority": by_priority,
+        "critical": by_priority.get("critical", 0),
+        "high": by_priority.get("high", 0),
+        "medium": by_priority.get("medium", 0),
+        "executing": by_status.get("EXECUTING", 0),
+        "completed": by_status.get("COMPLETED", 0),
+        "failed": by_status.get("FAILED", 0),
+        "rolled_back": by_status.get("ROLLED_BACK", 0),
+        "ready_for_execution": by_status.get("READY_FOR_EXECUTION", 0),
+        "waiting_for_validation": by_status.get("WAITING_FOR_VALIDATION", 0),
+        "waiting_for_capability": by_status.get("WAITING_FOR_CAPABILITY", 0),
+        "capability_selected": by_status.get("CAPABILITY_SELECTED", 0),
+        "planning": by_status.get("PLANNING", 0),
+        "created": by_status.get("CREATED", 0),
+        "cancelled": by_status.get("CANCELLED", 0),
+    }
+
+
+@router.get("/plans")
+async def list_plans(
+    tenant_id: str = Depends(get_tenant_id),
+    db: AsyncSession = Depends(get_db),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    status_filter: Optional[str] = Query(None, alias="status"),
+    priority: Optional[str] = Query(None),
+    finding_type: Optional[str] = Query(None),
+    technology: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+):
+    """List all remediation plans for this tenant with pagination and filters."""
+    base = select(RemediationPlan).where(RemediationPlan.tenant_id == tenant_id)
+
+    if status_filter:
+        base = base.where(RemediationPlan.status == status_filter)
+    if priority:
+        base = base.where(RemediationPlan.priority == priority)
+    if finding_type:
+        base = base.where(RemediationPlan.finding_type.ilike(f"%{finding_type}%"))
+    if technology:
+        base = base.where(RemediationPlan.target_technology.ilike(f"%{technology}%"))
+    if search:
+        base = base.where(
+            or_(
+                RemediationPlan.finding_id.ilike(f"%{search}%"),
+                RemediationPlan.finding_type.ilike(f"%{search}%"),
+                RemediationPlan.target_technology.ilike(f"%{search}%"),
+                RemediationPlan.capability_id.ilike(f"%{search}%"),
+                RemediationPlan.strategy_id.ilike(f"%{search}%"),
+            )
+        )
+
+    count_q = select(func.count()).select_from(base.subquery())
+    total = (await db.execute(count_q)).scalar_one()
+
+    offset = (page - 1) * page_size
+    rows = (await db.execute(
+        base.order_by(RemediationPlan.updated_at.desc()).offset(offset).limit(page_size)
+    )).scalars().all()
+
+    return {
+        "data": [_plan_to_dict(p) for p in rows],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": max(1, (total + page_size - 1) // page_size),
+    }
+
 
 @router.post("/propose", status_code=status.HTTP_200_OK)
 async def propose_remediation(

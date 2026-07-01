@@ -1,0 +1,547 @@
+You are improving ONLY the Security Center → Remediation tab.
+
+Do NOT modify any other page.
+
+=========================================
+OBJECTIVE
+=========================================
+
+Build a production-grade Closed-Loop Remediation Center.
+
+This page must manage the complete remediation lifecycle.
+
+NO demo data.
+
+NO fake remediation plans.
+
+Everything must come from backend APIs.
+
+Never fabricate remediation items.
+
+=========================================
+PAGE PURPOSE
+=========================================
+
+This page answers:
+
+What requires remediation?
+
+What can be automatically fixed?
+
+Which fixes are waiting for approval?
+
+Which fixes are deployed?
+
+Which fixes failed?
+
+=========================================
+BACKEND DATA SOURCES
+=========================================
+
+Use ONLY backend APIs.
+
+Backend aggregates data from
+
+Repositories
+
+Vulnerabilities
+
+Threats
+
+Compliance
+
+Policies
+
+Assets
+
+Kubernetes
+
+SBOM
+
+Patch Generator
+
+Validation Engine
+
+Git Providers
+
+Deployment Engine
+
+Approval Engine
+
+Execution Engine
+
+Investigation Engine
+
+Audit Logs
+
+=========================================
+TOP SUMMARY
+=========================================
+
+Summary Cards
+
+Open Remediations
+
+Critical
+
+High
+
+Auto Remediation Ready
+
+Pending Approval
+
+Pull Requests Open
+
+Merged
+
+Deployment Running
+
+Verification Running
+
+Completed
+
+Failed
+
+Rollback Required
+
+=========================================
+PIPELINE VIEW
+=========================================
+
+Visual remediation pipeline
+
+Finding
+
+↓
+
+Analysis
+
+↓
+
+Fix Generation
+
+↓
+
+Validation
+
+↓
+
+Approval
+
+↓
+
+Pull Request
+
+↓
+
+Merge
+
+↓
+
+Deployment
+
+↓
+
+Verification
+
+↓
+
+Audit
+
+Each stage displays
+
+Status
+
+Duration
+
+Owner
+
+Timestamp
+
+=========================================
+MAIN TABLE
+=========================================
+
+Columns
+
+Title
+
+Severity
+
+Type
+
+Affected Resource
+
+Repository
+
+Cluster
+
+Fix Type
+
+Risk Score
+
+Owner
+
+Approval Status
+
+Deployment Status
+
+Verification Status
+
+Created
+
+Last Updated
+
+Actions
+
+=========================================
+DETAIL PANEL
+=========================================
+
+Click remediation
+
+Open side drawer
+
+Contains
+
+Overview
+
+Affected Assets
+
+Affected Repository
+
+Affected Kubernetes Resources
+
+Affected Containers
+
+Related Threats
+
+Related Vulnerabilities
+
+Related Findings
+
+Generated Patch
+
+Git Diff
+
+Changed Files
+
+Validation Results
+
+Policy Checks
+
+CI Results
+
+Security Scan Results
+
+Approval History
+
+Deployment History
+
+Verification Results
+
+Rollback Status
+
+Audit Trail
+
+Timeline
+
+=========================================
+PATCH GENERATION
+=========================================
+
+Display
+
+Suggested Fix
+
+Generated Patch
+
+Changed Files
+
+Unified Git Diff
+
+Patch Confidence
+
+Estimated Risk Reduction
+
+Breaking Change Risk
+
+Fix Explanation
+
+=========================================
+VALIDATION
+=========================================
+
+Show validation results
+
+Unit Tests
+
+Integration Tests
+
+Security Tests
+
+Policy Checks
+
+Static Analysis
+
+Container Scan
+
+SBOM Scan
+
+Compliance Validation
+
+=========================================
+APPROVAL
+=========================================
+
+Approval workflow
+
+Pending
+
+Approved
+
+Rejected
+
+Escalated
+
+Delegated
+
+Expired
+
+Display
+
+Approvers
+
+Comments
+
+History
+
+=========================================
+DEPLOYMENT
+=========================================
+
+Deployment Status
+
+Pending
+
+Running
+
+Completed
+
+Failed
+
+Rolled Back
+
+Display
+
+Target Environment
+
+Deployment Strategy
+
+Canary
+
+Blue Green
+
+Rolling
+
+=========================================
+VERIFICATION
+=========================================
+
+Verification results
+
+Smoke Tests
+
+Health Checks
+
+Security Scan
+
+Compliance Scan
+
+Regression Tests
+
+Production Verification
+
+=========================================
+ROLLBACK
+=========================================
+
+Display
+
+Rollback Availability
+
+Rollback Status
+
+Rollback Reason
+
+Rollback Commit
+
+Rollback Timestamp
+
+=========================================
+FILTERS
+=========================================
+
+Severity
+
+Status
+
+Repository
+
+Cluster
+
+Namespace
+
+Owner
+
+Approval
+
+Deployment
+
+Verification
+
+Type
+
+Cloud
+
+Search
+
+=========================================
+SEARCH
+=========================================
+
+Search
+
+Repository
+
+Finding
+
+CVE
+
+Threat
+
+Asset
+
+Cluster
+
+Namespace
+
+Owner
+
+=========================================
+ACTIONS
+=========================================
+
+View Details
+
+Approve
+
+Reject
+
+Delegate
+
+Generate Patch
+
+View Git Diff
+
+Open Pull Request
+
+Deploy
+
+Verify
+
+Rollback
+
+Assign Owner
+
+Export Report
+
+=========================================
+TIMELINE
+=========================================
+
+Timeline
+
+Finding Created
+
+Fix Generated
+
+Validation Completed
+
+Approval Granted
+
+PR Opened
+
+Merged
+
+Deployment Started
+
+Deployment Finished
+
+Verification Completed
+
+Audit Logged
+
+=========================================
+EMPTY STATE
+=========================================
+
+If no remediation exists
+
+Show
+
+"No remediation tasks available."
+
+Never create fake remediation.
+
+=========================================
+REAL TIME
+=========================================
+
+Use WebSocket if available.
+
+Otherwise polling every 30 seconds.
+
+=========================================
+PERFORMANCE
+=========================================
+
+Server-side filtering
+
+Pagination
+
+Virtual scrolling
+
+Lazy loading
+
+Abort previous requests
+
+=========================================
+UI
+=========================================
+
+Enterprise DevSecOps dashboard.
+
+Professional pipeline visualization.
+
+Modern tables.
+
+Dark mode.
+
+Responsive.
+
+Sticky filters.
+
+Fast rendering.
+
+=========================================
+SUCCESS
+=========================================
+
+The page should feel comparable to GitHub Advanced Security, Snyk Fix, Prisma Cloud, and Microsoft Defender, but with full closed-loop remediation.
+
+Everything must be backed by real APIs.
+
+No demo data.
+
+No placeholders.
