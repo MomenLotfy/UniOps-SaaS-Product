@@ -1,1 +1,2 @@
 - [Security Center tab architecture](security-center-tabs.md) — KubernetesSecurity and Threats tabs are fully API-driven; no mock data; key backend fields and operator mixing rules documented.
+- [AWS integration full sync fix](aws-integration-sync.md) — after connecting AWS, must trigger costs + asset discovery + security hub + posture snapshot; previously only costs ran.

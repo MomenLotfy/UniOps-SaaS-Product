@@ -34,9 +34,12 @@ export default function AWSIntegration() {
         region: form.region,
         name: form.name,
       });
-      setResult({ success: true, message: 'AWS connected! Syncing data in background...' });
+      setResult({
+        success: true,
+        message: 'AWS connected! Discovering assets (EC2, S3, IAM, RDS) and pulling Security Hub findings — Security Center will populate in ~60 seconds.',
+      });
       setForm(f => ({ ...f, accessKeyId: '', secretAccessKey: '' }));
-      setTimeout(() => refetch(), 3000);
+      setTimeout(() => refetch(), 5000);
     } catch (err: any) {
       setResult({ success: false, message: err.message });
     } finally {
@@ -48,8 +51,11 @@ export default function AWSIntegration() {
     setSyncing(true);
     try {
       await apiPost(`/integrations/${integrationId}/sync`, {});
-      setResult({ success: true, message: 'Sync started — costs and threats will update in ~30 seconds' });
-      setTimeout(() => refetch(), 5000);
+      setResult({
+        success: true,
+        message: 'Full sync started — costs, assets (EC2/S3/IAM/RDS), and Security Hub findings are refreshing. Security Center will update in ~60 seconds.',
+      });
+      setTimeout(() => refetch(), 8000);
     } catch (err: any) {
       setResult({ success: false, message: err.message });
     } finally {

@@ -376,7 +376,7 @@ async def _bg_test_and_sync(
                     from app.services.security_posture_service import SecurityPostureService
                     async with AsyncSessionLocal() as posture_db:
                         posture_svc = SecurityPostureService(posture_db)
-                        await posture_svc.take_snapshot(tenant_id)
+                        await posture_svc.record_snapshot(tenant_id)
                         await posture_db.commit()
                     logger.info(f"[bg] Posture snapshot taken for tenant {tenant_id}")
                 except Exception as posture_exc:
@@ -452,7 +452,7 @@ async def _bg_sync(integration_id: str, integration_type: str) -> None:
                 from app.services.security_posture_service import SecurityPostureService
                 async with AsyncSessionLocal() as posture_db:
                     posture_svc = SecurityPostureService(posture_db)
-                    await posture_svc.take_snapshot(tenant_id)
+                    await posture_svc.record_snapshot(tenant_id)
                     await posture_db.commit()
                 logger.info(f"[bg] Posture snapshot taken for integration {integration_id}")
             except Exception as posture_exc:
