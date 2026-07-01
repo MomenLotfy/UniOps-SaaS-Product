@@ -1,0 +1,549 @@
+You are improving ONLY the Security Center → Intelligence tab.
+
+Do NOT modify any other page.
+
+=========================================
+OBJECTIVE
+=========================================
+
+Build a production-grade Threat Intelligence Platform (TIP).
+
+This page is the central intelligence hub for the entire UniOps platform.
+
+NO demo data.
+
+NO fake feeds.
+
+NO placeholder indicators.
+
+Everything must come from backend APIs.
+
+If providers are not configured, show proper empty states.
+
+=========================================
+PAGE PURPOSE
+=========================================
+
+This page answers:
+
+What does global threat intelligence say?
+
+Which CVEs are actively exploited?
+
+Which attacks are trending?
+
+Which indicators affect my environment?
+
+Which intelligence sources contributed to a decision?
+
+=========================================
+BACKEND DATA SOURCES
+=========================================
+
+Use ONLY backend APIs.
+
+Backend aggregates intelligence from
+
+NVD
+
+CISA KEV
+
+EPSS
+
+VulnCheck
+
+OSV
+
+MITRE ATT&CK
+
+MITRE CAPEC
+
+MITRE CWE
+
+CVE.org
+
+VirusTotal
+
+AlienVault OTX
+
+AbuseIPDB
+
+GreyNoise
+
+URLHaus
+
+MalwareBazaar
+
+Shodan (optional)
+
+Security Advisories
+
+GitHub Security Advisories
+
+Vendor Advisories
+
+Internal Findings Database
+
+Asset Inventory
+
+Repositories
+
+Kubernetes
+
+Cloud Inventory
+
+=========================================
+TOP SUMMARY
+=========================================
+
+Summary Cards
+
+Total Intelligence Records
+
+Critical Advisories
+
+New CVEs Today
+
+KEV CVEs
+
+High EPSS
+
+Active Campaigns
+
+Known Threat Actors
+
+Malware Families
+
+Indicators of Compromise
+
+High Confidence Intelligence
+
+Last Feed Update
+
+=========================================
+INTELLIGENCE FEEDS
+=========================================
+
+Display all configured providers.
+
+Columns
+
+Provider
+
+Status
+
+Last Sync
+
+Records
+
+Errors
+
+Latency
+
+Health
+
+Sync Button
+
+=========================================
+MAIN TABLE
+=========================================
+
+Columns
+
+Title
+
+Type
+
+Severity
+
+CVSS
+
+EPSS
+
+KEV
+
+Threat Actor
+
+Malware
+
+MITRE Technique
+
+Affected Products
+
+Published
+
+Updated
+
+Confidence
+
+Source
+
+Actions
+
+=========================================
+DETAIL PANEL
+=========================================
+
+Click any intelligence record.
+
+Open right drawer.
+
+Display
+
+Overview
+
+Description
+
+References
+
+Source Providers
+
+CVEs
+
+CWEs
+
+CAPEC
+
+MITRE ATT&CK
+
+Threat Actors
+
+Malware Families
+
+Campaigns
+
+Affected Products
+
+Affected Versions
+
+EPSS History
+
+KEV Status
+
+Exploit Availability
+
+Observed In Environment
+
+Affected Assets
+
+Affected Repositories
+
+Affected Clusters
+
+Recommended Actions
+
+Related Policies
+
+Related Remediations
+
+Timeline
+
+=========================================
+IOC SECTION
+=========================================
+
+Display Indicators of Compromise.
+
+IP Addresses
+
+Domains
+
+URLs
+
+Hashes
+
+Emails
+
+File Names
+
+Registry Keys
+
+Processes
+
+Mutexes
+
+Certificates
+
+Each IOC must display
+
+Type
+
+Value
+
+Confidence
+
+First Seen
+
+Last Seen
+
+Source
+
+Observed Internally (Yes/No)
+
+=========================================
+THREAT ACTORS
+=========================================
+
+Display
+
+Actor Name
+
+Aliases
+
+Country
+
+Motivation
+
+Known Campaigns
+
+Known Malware
+
+MITRE Techniques
+
+Target Industries
+
+Target Countries
+
+Associated CVEs
+
+Associated IOCs
+
+=========================================
+MALWARE
+=========================================
+
+Display
+
+Family
+
+Category
+
+Severity
+
+Associated Threat Actor
+
+Delivery Method
+
+Persistence
+
+MITRE Mapping
+
+Related CVEs
+
+=========================================
+ATTACK TECHNIQUES
+=========================================
+
+Display MITRE ATT&CK mapping
+
+Tactic
+
+Technique
+
+Sub-Technique
+
+Coverage
+
+Affected Assets
+
+Observed Events
+
+=========================================
+TIMELINE
+=========================================
+
+Timeline
+
+CVE Published
+
+Exploit Released
+
+EPSS Updated
+
+KEV Added
+
+Observed
+
+Finding Created
+
+Remediation Started
+
+Resolved
+
+=========================================
+FILTERS
+=========================================
+
+Provider
+
+Severity
+
+Threat Actor
+
+Malware
+
+MITRE
+
+CVE
+
+KEV
+
+EPSS
+
+IOC Type
+
+Published Date
+
+Search
+
+=========================================
+SEARCH
+=========================================
+
+Search across
+
+CVE
+
+Threat Actor
+
+Malware
+
+MITRE
+
+IOC
+
+Campaign
+
+Vendor
+
+Product
+
+Repository
+
+Asset
+
+=========================================
+ACTIONS
+=========================================
+
+View Details
+
+Open Threat
+
+Open Vulnerability
+
+Open Asset
+
+Open Repository
+
+Open Remediation
+
+Export JSON
+
+Export CSV
+
+Export STIX
+
+Export PDF
+
+=========================================
+INTELLIGENCE GRAPH
+=========================================
+
+If backend supports graph relationships,
+
+Display interactive graph.
+
+Threat Actor
+
+↓
+
+Campaign
+
+↓
+
+Malware
+
+↓
+
+CVE
+
+↓
+
+Asset
+
+↓
+
+Repository
+
+↓
+
+Remediation
+
+=========================================
+EMPTY STATE
+=========================================
+
+If no providers configured,
+
+Show
+
+"No intelligence providers connected."
+
+Provide Configure Providers button.
+
+Never create fake intelligence.
+
+=========================================
+REAL TIME
+=========================================
+
+Auto refresh.
+
+WebSocket if available.
+
+Otherwise polling every 5 minutes.
+
+=========================================
+PERFORMANCE
+=========================================
+
+Server-side filtering
+
+Pagination
+
+Virtual scrolling
+
+Lazy loading
+
+Abort previous requests
+
+=========================================
+UI
+=========================================
+
+Enterprise Threat Intelligence Platform.
+
+Professional analyst interface.
+
+Dark mode.
+
+Fast search.
+
+Advanced filters.
+
+Sticky toolbar.
+
+Modern tables.
+
+=========================================
+SUCCESS
+=========================================
+
+The page should feel comparable to Microsoft Defender Threat Intelligence, Recorded Future, Mandiant Advantage, Anomali ThreatStream, or OpenCTI.
+
+Everything must come from backend APIs.
+
+No demo data.
+
+No placeholders.
