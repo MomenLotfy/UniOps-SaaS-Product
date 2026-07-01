@@ -854,6 +854,495 @@ async def get_compliance_timeline(
     return APIResponse(data=events[:limit])
 
 
+# ── PDF Export ────────────────────────────────────────────────────────────────
+
+@router.get("/export/pdf")
+async def export_compliance_pdf(
+    current_user: CurrentUser,
+    tenant_id: TenantID,
+    db: DBSession,
+    framework: Optional[str] = Query(None, description="Filter to a single framework, or all if omitted"),
+):
+    """
+    Generate a formal compliance audit report PDF.
+    Returns a PDF binary response suitable for direct browser download.
+    """
+    import io
+    from fastapi.responses import StreamingResponse
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import mm, cm
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+        HRFlowable, PageBreak, KeepTogether,
+    )
+    from reportlab.platypus.flowables import BalancedColumns
+
+    # ── Fetch data ────────────────────────────────────────────────────────────
+
+    fw_stmt = select(Compliance).where(Compliance.tenant_id == tenant_id)
+    if framework:
+        fw_stmt = fw_stmt.where(Compliance.framework == framework)
+    rows_q  = await db.execute(fw_stmt)
+    rows    = rows_q.scalars().all()
+
+    policies_q  = await db.execute(select(SecurityPolicy).where(SecurityPolicy.tenant_id == tenant_id))
+    policies    = policies_q.scalars().all()
+
+    threats_q   = await db.execute(
+        select(Threat).where(Threat.tenant_id == tenant_id, Threat.status == "open").limit(200)
+    )
+    threats = threats_q.scalars().all()
+
+    vulns_q     = await db.execute(
+        select(Vulnerability).where(Vulnerability.tenant_id == tenant_id, Vulnerability.status == "open").limit(200)
+    )
+    vulns = vulns_q.scalars().all()
+
+    scans_q     = await db.execute(
+        select(Scan).where(Scan.tenant_id == tenant_id, Scan.status == "completed")
+        .order_by(Scan.completed_at.desc()).limit(10)
+    )
+    scans = scans_q.scalars().all()
+
+    from app.models.security_exception import SecurityException
+    exc_q       = await db.execute(select(SecurityException).where(SecurityException.tenant_id == tenant_id))
+    exceptions  = exc_q.scalars().all()
+
+    # ── Computed metrics ──────────────────────────────────────────────────────
+
+    total_score   = round(sum(r.score for r in rows) / len(rows), 1) if rows else 0.0
+    total_passed  = sum(r.passed  for r in rows)
+    total_failed  = sum(r.failed  for r in rows)
+    total_controls= sum(r.total   for r in rows)
+    critical_vulns= sum(1 for v in vulns if v.severity == "critical")
+    high_vulns    = sum(1 for v in vulns if v.severity == "high")
+    last_scan_ts  = scans[0].completed_at.strftime("%Y-%m-%d %H:%M UTC") if scans else "N/A"
+    generated_at  = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    fw_label      = framework if framework else "All Frameworks"
+    tenant_email  = current_user.email if hasattr(current_user, "email") else "—"
+
+    # ── Colour palette ────────────────────────────────────────────────────────
+
+    BG_DARK   = colors.HexColor("#0f1117")
+    BG_CARD   = colors.HexColor("#1c1e26")
+    BORDER    = colors.HexColor("#2a2d38")
+    ACCENT    = colors.HexColor("#3b82f6")
+    GREEN     = colors.HexColor("#22c55e")
+    YELLOW    = colors.HexColor("#eab308")
+    RED       = colors.HexColor("#ef4444")
+    ORANGE    = colors.HexColor("#f97316")
+    TEXT_MAIN = colors.HexColor("#f1f5f9")
+    TEXT_MUTED= colors.HexColor("#94a3b8")
+    WHITE     = colors.white
+
+    score_color = GREEN if total_score >= 80 else YELLOW if total_score >= 60 else RED
+
+    # ── Styles ────────────────────────────────────────────────────────────────
+
+    styles = getSampleStyleSheet()
+
+    def S(name, **kw):
+        base = styles["Normal"]
+        return ParagraphStyle(name, parent=base, **kw)
+
+    H1   = S("H1",   fontSize=22, textColor=TEXT_MAIN, spaceAfter=4,  leading=28, fontName="Helvetica-Bold")
+    H2   = S("H2",   fontSize=13, textColor=TEXT_MAIN, spaceAfter=6,  leading=18, fontName="Helvetica-Bold")
+    H3   = S("H3",   fontSize=10, textColor=ACCENT,    spaceAfter=4,  leading=14, fontName="Helvetica-Bold")
+    BODY = S("BODY", fontSize=8,  textColor=TEXT_MAIN, spaceAfter=2,  leading=12)
+    MUTED= S("MUTED",fontSize=7,  textColor=TEXT_MUTED,spaceAfter=2,  leading=10)
+    CTR  = S("CTR",  fontSize=8,  textColor=TEXT_MUTED,alignment=TA_CENTER)
+    BIG  = S("BIG",  fontSize=32, textColor=score_color, fontName="Helvetica-Bold", alignment=TA_CENTER, leading=40)
+    COVER_SUB = S("CSUB", fontSize=10, textColor=TEXT_MUTED, spaceAfter=4, alignment=TA_CENTER)
+
+    TH_STYLE = ParagraphStyle("TH", parent=styles["Normal"],
+        fontSize=7, textColor=TEXT_MUTED, fontName="Helvetica-Bold",
+        leading=10, spaceAfter=0)
+    TD_STYLE = ParagraphStyle("TD", parent=styles["Normal"],
+        fontSize=7.5, textColor=TEXT_MAIN, leading=11, spaceAfter=0)
+    TD_MONO  = ParagraphStyle("TDMONO", parent=styles["Normal"],
+        fontSize=7, textColor=ACCENT, fontName="Courier", leading=10)
+
+    def table_style(header_rows=1, zebra=True):
+        cmds = [
+            ("BACKGROUND",    (0, 0), (-1, 0),          BG_CARD),
+            ("TEXTCOLOR",     (0, 0), (-1, 0),          TEXT_MUTED),
+            ("FONTNAME",      (0, 0), (-1, 0),          "Helvetica-Bold"),
+            ("FONTSIZE",      (0, 0), (-1, 0),          7),
+            ("ROWBACKGROUND", (0, 0), (-1, -1),         BG_DARK),
+            ("GRID",          (0, 0), (-1, -1),         0.4, BORDER),
+            ("LEFTPADDING",   (0, 0), (-1, -1),         6),
+            ("RIGHTPADDING",  (0, 0), (-1, -1),         6),
+            ("TOPPADDING",    (0, 0), (-1, -1),         4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1),         4),
+            ("VALIGN",        (0, 0), (-1, -1),         "MIDDLE"),
+        ]
+        if zebra:
+            cmds.append(("ROWBACKGROUND", (0, 1), (-1, -1), BG_CARD))
+        return TableStyle(cmds)
+
+    def badge(text: str, color: colors.Color):
+        return Paragraph(
+            f'<font color="#{_hex(color)}">[{text.upper()}]</font>',
+            ParagraphStyle("badge", parent=styles["Normal"],
+                fontSize=6.5, fontName="Helvetica-Bold", leading=9, textColor=color)
+        )
+
+    def _hex(c: colors.Color) -> str:
+        return "".join(f"{int(x*255):02x}" for x in (c.red, c.green, c.blue))
+
+    def sev_color(sev: str) -> colors.Color:
+        return {"critical": RED, "high": ORANGE, "medium": YELLOW, "low": ACCENT, "info": TEXT_MUTED}.get(sev, TEXT_MUTED)
+
+    # ── Document setup ────────────────────────────────────────────────────────
+
+    buf = io.BytesIO()
+    PAGE_W, PAGE_H = A4
+    MARGIN = 1.8 * cm
+
+    page_num = [0]
+
+    def on_page(canvas, doc):
+        page_num[0] += 1
+        canvas.saveState()
+        # Header bar
+        canvas.setFillColor(BG_CARD)
+        canvas.rect(0, PAGE_H - 1.1*cm, PAGE_W, 1.1*cm, fill=1, stroke=0)
+        canvas.setFillColor(ACCENT)
+        canvas.rect(0, PAGE_H - 0.15*cm, PAGE_W, 0.15*cm, fill=1, stroke=0)
+        canvas.setFillColor(TEXT_MUTED)
+        canvas.setFont("Helvetica", 7)
+        canvas.drawString(MARGIN, PAGE_H - 0.75*cm, f"UniOps Compliance Report — {fw_label}")
+        canvas.drawRightString(PAGE_W - MARGIN, PAGE_H - 0.75*cm, f"Generated {generated_at}")
+        # Footer
+        canvas.setFillColor(BG_CARD)
+        canvas.rect(0, 0, PAGE_W, 0.9*cm, fill=1, stroke=0)
+        canvas.setFillColor(TEXT_MUTED)
+        canvas.setFont("Helvetica", 7)
+        canvas.drawString(MARGIN, 0.35*cm, f"CONFIDENTIAL  ·  {tenant_email}")
+        canvas.drawRightString(PAGE_W - MARGIN, 0.35*cm, f"Page {page_num[0]}")
+        canvas.restoreState()
+
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4,
+        leftMargin=MARGIN, rightMargin=MARGIN,
+        topMargin=1.6*cm, bottomMargin=1.2*cm,
+    )
+
+    story = []
+    W = PAGE_W - 2 * MARGIN
+
+    def section_title(text: str) -> list:
+        return [
+            Spacer(1, 0.4*cm),
+            Paragraph(text, H2),
+            HRFlowable(width=W, thickness=0.5, color=BORDER, spaceAfter=6),
+        ]
+
+    # ══ COVER PAGE ════════════════════════════════════════════════════════════
+
+    story += [Spacer(1, 2.5*cm)]
+
+    # Logo-like block
+    story += [
+        Paragraph("🛡 UniOps", S("LOGO", fontSize=24, textColor=ACCENT,
+            fontName="Helvetica-Bold", alignment=TA_CENTER, leading=30)),
+        Spacer(1, 0.3*cm),
+        Paragraph("Compliance Audit Report", H1),
+        Spacer(1, 0.2*cm),
+        Paragraph(fw_label, COVER_SUB),
+        Spacer(1, 1.2*cm),
+    ]
+
+    # Score circle (table-simulated)
+    cover_tbl = Table([[
+        Paragraph(f"{total_score}%", BIG),
+    ]], colWidths=[W])
+    cover_tbl.setStyle(TableStyle([
+        ("BACKGROUND", (0,0), (-1,-1), BG_CARD),
+        ("ALIGN",      (0,0), (-1,-1), "CENTER"),
+        ("TOPPADDING", (0,0), (-1,-1), 18),
+        ("BOTTOMPADDING",(0,0),(-1,-1),18),
+        ("ROUNDEDCORNERS",(0,0),(-1,-1), 8),
+        ("BOX",        (0,0), (-1,-1), 0.5, BORDER),
+    ]))
+    story += [cover_tbl, Spacer(1, 0.3*cm)]
+    story += [Paragraph("Overall Compliance Score", COVER_SUB), Spacer(1, 1.2*cm)]
+
+    # Cover meta table
+    meta_data = [
+        [Paragraph("Framework", TH_STYLE), Paragraph("Assessment Date", TH_STYLE),
+         Paragraph("Generated By", TH_STYLE), Paragraph("Classification", TH_STYLE)],
+        [Paragraph(fw_label, TD_STYLE), Paragraph(last_scan_ts, TD_STYLE),
+         Paragraph(tenant_email, TD_STYLE), Paragraph("CONFIDENTIAL", TD_STYLE)],
+    ]
+    meta_tbl = Table(meta_data, colWidths=[W/4]*4)
+    meta_tbl.setStyle(table_style())
+    story += [meta_tbl, PageBreak()]
+
+    # ══ EXECUTIVE SUMMARY ════════════════════════════════════════════════════
+
+    story += section_title("Executive Summary")
+
+    kpi_data = [
+        ["METRIC", "VALUE", "METRIC", "VALUE"],
+        ["Compliance Score",       f"{total_score}%",
+         "Enabled Frameworks",     str(len(rows))],
+        ["Passing Controls",       str(total_passed),
+         "Failing Controls",       str(total_failed)],
+        ["Total Controls",         str(total_controls),
+         "Pass Rate",              f"{round(total_passed/total_controls*100,1)}%" if total_controls else "—"],
+        ["Open Threats",           str(len(threats)),
+         "Open Vulnerabilities",   str(len(vulns))],
+        ["Critical Vulnerabilities",str(critical_vulns),
+         "High Vulnerabilities",   str(high_vulns)],
+        ["Active Policies",        str(len(policies)),
+         "Compliance Exceptions",  str(len(exceptions))],
+        ["Last Assessment",        last_scan_ts,
+         "Report Generated",       generated_at],
+    ]
+    kpi_tbl = Table(
+        [[Paragraph(str(c), TH_STYLE if i == 0 else (TD_STYLE if j%2==0 else S("VAL", fontSize=9, textColor=ACCENT, fontName="Helvetica-Bold", leading=12)))
+          for j, c in enumerate(row)]
+         for i, row in enumerate(kpi_data)],
+        colWidths=[W*0.30, W*0.20, W*0.30, W*0.20]
+    )
+    kpi_tbl.setStyle(table_style())
+    story += [kpi_tbl, Spacer(1, 0.5*cm)]
+
+    # Score interpretation
+    if total_score >= 80:
+        verdict = "COMPLIANT"
+        v_color = GREEN
+        v_text  = "The organisation meets or exceeds the required compliance thresholds across all evaluated frameworks."
+    elif total_score >= 60:
+        verdict = "AT RISK"
+        v_color = YELLOW
+        v_text  = "The organisation partially meets compliance requirements. Remediation is recommended before the next formal assessment."
+    else:
+        verdict = "NON-COMPLIANT"
+        v_color = RED
+        v_text  = "The organisation does not meet the minimum compliance thresholds. Immediate remediation is required."
+
+    verdict_tbl = Table([[
+        Paragraph(verdict, S("VERDICT", fontSize=14, textColor=v_color,
+            fontName="Helvetica-Bold", alignment=TA_CENTER, leading=18)),
+        Paragraph(v_text, S("VT", fontSize=8, textColor=TEXT_MAIN, leading=12)),
+    ]], colWidths=[W*0.22, W*0.78])
+    verdict_tbl.setStyle(TableStyle([
+        ("BACKGROUND",    (0,0),(-1,-1), BG_CARD),
+        ("BOX",           (0,0),(-1,-1), 0.5, v_color),
+        ("GRID",          (0,0),(-1,-1), 0, colors.transparent),
+        ("LEFTPADDING",   (0,0),(-1,-1), 12),
+        ("RIGHTPADDING",  (0,0),(-1,-1), 12),
+        ("TOPPADDING",    (0,0),(-1,-1), 10),
+        ("BOTTOMPADDING", (0,0),(-1,-1), 10),
+        ("VALIGN",        (0,0),(-1,-1), "MIDDLE"),
+    ]))
+    story += [verdict_tbl]
+
+    # ══ FRAMEWORK DETAILS ════════════════════════════════════════════════════
+
+    story += section_title("Framework Details")
+
+    fw_header = ["Framework", "Version", "Score", "Passed", "Failed", "N/A", "Status", "Last Assessment"]
+    fw_rows   = [[
+        Paragraph(r.framework, TD_STYLE),
+        Paragraph(r.details[0].get("version","—") if r.details and isinstance(r.details,list) and r.details else "—", TD_STYLE),
+        Paragraph(f"{round(r.score,1)}%", S("SC", fontSize=8, fontName="Helvetica-Bold",
+            textColor=GREEN if r.score>=80 else YELLOW if r.score>=60 else RED, leading=11)),
+        Paragraph(str(r.passed), S("P", fontSize=8, textColor=GREEN, leading=11)),
+        Paragraph(str(r.failed), S("F", fontSize=8, textColor=RED,   leading=11)),
+        Paragraph(str(max(0, r.total - r.passed - r.failed)), TD_STYLE),
+        Paragraph(r.status.upper(), S("ST", fontSize=6.5, textColor=GREEN if "compliant"==r.status else RED, fontName="Helvetica-Bold", leading=9)),
+        Paragraph(r.updated_at.strftime("%Y-%m-%d") if r.updated_at else "—", TD_STYLE),
+    ] for r in rows]
+
+    fw_tbl = Table(
+        [[Paragraph(h, TH_STYLE) for h in fw_header]] + fw_rows,
+        colWidths=[W*0.20, W*0.09, W*0.09, W*0.08, W*0.08, W*0.08, W*0.15, W*0.13],
+    )
+    fw_tbl.setStyle(table_style())
+    story += [fw_tbl]
+
+    # ══ CONTROLS SUMMARY ═════════════════════════════════════════════════════
+
+    story += section_title("Controls Summary")
+
+    all_controls = _extract_controls(rows)
+    failing_controls = [c for c in all_controls if c.get("status") in ("non_compliant","failing","fail")]
+    passing_controls = [c for c in all_controls if c.get("status") in ("compliant","passing","pass")]
+
+    story += [Paragraph(
+        f"Total controls evaluated: <b>{len(all_controls)}</b>  ·  "
+        f"Passing: <b>{len(passing_controls)}</b>  ·  "
+        f"Failing: <b>{len(failing_controls)}</b>",
+        BODY
+    ), Spacer(1, 0.2*cm)]
+
+    if failing_controls:
+        story += [Paragraph("Failing Controls", H3)]
+        fail_header = ["Control ID", "Title", "Framework", "Severity", "Evidence"]
+        fail_rows   = [[
+            Paragraph(c.get("control_id","—"), TD_MONO),
+            Paragraph((c.get("title","") or "")[:55], TD_STYLE),
+            Paragraph(c.get("framework","—"), TD_STYLE),
+            Paragraph(c.get("severity","—").upper(), S("SEV", fontSize=7, fontName="Helvetica-Bold",
+                textColor=sev_color(c.get("severity","info")), leading=10)),
+            Paragraph("Yes" if c.get("has_evidence") else "No",
+                S("EV", fontSize=7, textColor=GREEN if c.get("has_evidence") else RED, leading=10)),
+        ] for c in failing_controls[:40]]
+        fail_tbl = Table(
+            [[Paragraph(h, TH_STYLE) for h in fail_header]] + fail_rows,
+            colWidths=[W*0.18, W*0.38, W*0.22, W*0.12, W*0.10],
+        )
+        fail_tbl.setStyle(table_style())
+        story += [fail_tbl]
+
+    # ══ VULNERABILITIES ═══════════════════════════════════════════════════════
+
+    if vulns:
+        story += section_title("Open Vulnerabilities (Critical & High)")
+        crit_high = [v for v in vulns if v.severity in ("critical","high")][:30]
+        if crit_high:
+            vul_header = ["CVE ID", "Package", "Severity", "CVSS", "Status", "Fix Available"]
+            vul_rows   = [[
+                Paragraph(v.cve_id or "—", TD_MONO),
+                Paragraph(f"{v.package_name or '—'} {v.package_version or ''}", TD_STYLE),
+                Paragraph(v.severity.upper(), S("SEV2", fontSize=7, fontName="Helvetica-Bold",
+                    textColor=sev_color(v.severity), leading=10)),
+                Paragraph(f"{v.cvss_score:.1f}" if v.cvss_score else "—", TD_STYLE),
+                Paragraph(v.status.upper(), TD_STYLE),
+                Paragraph(f"→ {v.fixed_version}" if v.fixed_version else "None", TD_STYLE),
+            ] for v in crit_high]
+            vul_tbl = Table(
+                [[Paragraph(h, TH_STYLE) for h in vul_header]] + vul_rows,
+                colWidths=[W*0.18, W*0.25, W*0.12, W*0.08, W*0.12, W*0.25],
+            )
+            vul_tbl.setStyle(table_style())
+            story += [vul_tbl]
+
+    # ══ OPEN THREATS ══════════════════════════════════════════════════════════
+
+    if threats:
+        story += section_title("Open Threats")
+        thr_header = ["Title", "Severity", "Source", "Resource", "Detected"]
+        thr_rows   = [[
+            Paragraph((t.title or "")[:50], TD_STYLE),
+            Paragraph(t.severity.upper(), S("TSEV", fontSize=7, fontName="Helvetica-Bold",
+                textColor=sev_color(t.severity), leading=10)),
+            Paragraph(t.source or "—", TD_STYLE),
+            Paragraph((t.resource or "—")[:35], TD_MONO),
+            Paragraph(t.detected_at.strftime("%Y-%m-%d") if t.detected_at else "—", TD_STYLE),
+        ] for t in threats[:30]]
+        thr_tbl = Table(
+            [[Paragraph(h, TH_STYLE) for h in thr_header]] + thr_rows,
+            colWidths=[W*0.32, W*0.12, W*0.14, W*0.26, W*0.16],
+        )
+        thr_tbl.setStyle(table_style())
+        story += [thr_tbl]
+
+    # ══ ACTIVE POLICIES ═══════════════════════════════════════════════════════
+
+    if policies:
+        story += section_title("Active Policies")
+        pol_header = ["Policy Name", "Category", "Severity", "Enforcement", "Violations"]
+        pol_rows   = [[
+            Paragraph(p.name or "—", TD_STYLE),
+            Paragraph(p.category or "—", TD_STYLE),
+            Paragraph((p.severity or "—").upper(), S("PSEV", fontSize=7, fontName="Helvetica-Bold",
+                textColor=sev_color(p.severity or "info"), leading=10)),
+            Paragraph((p.enforcement or "—").upper(), TD_STYLE),
+            Paragraph(str(p.violations_count or 0),
+                S("VIO", fontSize=8, fontName="Helvetica-Bold",
+                  textColor=RED if (p.violations_count or 0)>0 else GREEN, leading=11)),
+        ] for p in policies[:30]]
+        pol_tbl = Table(
+            [[Paragraph(h, TH_STYLE) for h in pol_header]] + pol_rows,
+            colWidths=[W*0.32, W*0.18, W*0.12, W*0.18, W*0.20],
+        )
+        pol_tbl.setStyle(table_style())
+        story += [pol_tbl]
+
+    # ══ COMPLIANCE EXCEPTIONS ════════════════════════════════════════════════
+
+    story += section_title("Compliance Exceptions & Waivers")
+    if exceptions:
+        exc_header = ["Exception", "Type", "Owner", "Approved By", "Expires", "Status"]
+        exc_rows   = [[
+            Paragraph((e.title or "—")[:45], TD_STYLE),
+            Paragraph((e.exception_type or "—").replace("_"," ").title(), TD_STYLE),
+            Paragraph((e.requested_by or "—")[:20], TD_STYLE),
+            Paragraph((e.approved_by or "—")[:20], TD_STYLE),
+            Paragraph(e.expires_at.strftime("%Y-%m-%d") if e.expires_at else "—", TD_STYLE),
+            Paragraph((e.status or "—").upper(), S("ESEV", fontSize=7, fontName="Helvetica-Bold",
+                textColor=GREEN if e.status=="approved" else YELLOW if e.status=="pending" else RED, leading=10)),
+        ] for e in exceptions]
+        exc_tbl = Table(
+            [[Paragraph(h, TH_STYLE) for h in exc_header]] + exc_rows,
+            colWidths=[W*0.28, W*0.15, W*0.15, W*0.15, W*0.12, W*0.15],
+        )
+        exc_tbl.setStyle(table_style())
+        story += [exc_tbl]
+    else:
+        story += [Paragraph("No compliance exceptions recorded.", MUTED)]
+
+    # ══ RECENT ASSESSMENTS ═══════════════════════════════════════════════════
+
+    if scans:
+        story += section_title("Recent Security Assessments")
+        scan_header = ["Scan ID", "Branch", "Status", "Critical", "High", "Started", "Completed"]
+        scan_rows   = [[
+            Paragraph(str(s.id)[:12], TD_MONO),
+            Paragraph(s.branch or "default", TD_STYLE),
+            Paragraph(s.status.upper(), TD_STYLE),
+            Paragraph(str(s.critical_count or 0),
+                S("CR", fontSize=8, fontName="Helvetica-Bold", textColor=RED, leading=11)),
+            Paragraph(str(s.high_count or 0),
+                S("HI", fontSize=8, fontName="Helvetica-Bold", textColor=ORANGE, leading=11)),
+            Paragraph(s.started_at.strftime("%Y-%m-%d %H:%M") if s.started_at else "—", TD_STYLE),
+            Paragraph(s.completed_at.strftime("%Y-%m-%d %H:%M") if s.completed_at else "—", TD_STYLE),
+        ] for s in scans]
+        scan_tbl = Table(
+            [[Paragraph(h, TH_STYLE) for h in scan_header]] + scan_rows,
+            colWidths=[W*0.12, W*0.12, W*0.10, W*0.09, W*0.09, W*0.24, W*0.24],
+        )
+        scan_tbl.setStyle(table_style())
+        story += [scan_tbl]
+
+    # ══ CLOSING ══════════════════════════════════════════════════════════════
+
+    story += [
+        PageBreak(),
+        Spacer(1, 3*cm),
+        Paragraph("End of Compliance Audit Report", S("END", fontSize=11, textColor=TEXT_MUTED,
+            alignment=TA_CENTER, fontName="Helvetica-Bold", leading=16)),
+        Spacer(1, 0.4*cm),
+        Paragraph(f"Generated by UniOps on {generated_at}  ·  {tenant_email}", COVER_SUB),
+        Spacer(1, 0.4*cm),
+        Paragraph(
+            "This report is confidential and intended solely for the authorised recipient. "
+            "Redistribution is prohibited without prior written consent.",
+            S("DISC", fontSize=7, textColor=TEXT_MUTED, alignment=TA_CENTER, leading=10)),
+    ]
+
+    # ── Build ─────────────────────────────────────────────────────────────────
+
+    doc.build(story, onFirstPage=on_page, onLaterPages=on_page)
+    buf.seek(0)
+
+    safe_name = (framework or "all-frameworks").lower().replace(" ", "-").replace("/", "-")
+    filename  = f"compliance-report-{safe_name}-{datetime.now(timezone.utc).strftime('%Y%m%d')}.pdf"
+
+    return StreamingResponse(
+        buf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ── Score (existing) ──────────────────────────────────────────────────────────
 
 @router.get("/score")
