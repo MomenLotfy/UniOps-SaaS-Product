@@ -1,0 +1,459 @@
+You are improving ONLY the Security Center → Exceptions tab.
+
+Do NOT modify any other page.
+
+=========================================
+OBJECTIVE
+=========================================
+
+Build a production-grade Security Exceptions Management page.
+
+NO demo data.
+
+NO hardcoded exceptions.
+
+Everything must come from backend APIs.
+
+If no exceptions exist, display a proper empty state.
+
+=========================================
+PAGE PURPOSE
+=========================================
+
+This page manages approved security exceptions across the platform.
+
+Exceptions may temporarily waive policies, vulnerabilities, compliance findings, secrets, infrastructure findings, or remediation actions.
+
+Every exception must be auditable, time-bound, approved, and traceable.
+
+=========================================
+DATA SOURCES
+=========================================
+
+Backend APIs only.
+
+Data comes from
+
+Policy Engine
+
+Remediation Engine
+
+Vulnerability Engine
+
+Threat Intelligence
+
+Compliance Engine
+
+Repositories
+
+Assets
+
+Kubernetes
+
+Cloud Inventory
+
+Identity Provider
+
+Audit Logs
+
+Approval Engine
+
+Workflow Engine
+
+=========================================
+TOP SUMMARY
+=========================================
+
+Summary Cards
+
+Total Exceptions
+
+Active Exceptions
+
+Expired Exceptions
+
+Pending Approval
+
+Rejected
+
+Resources Covered
+
+Policies Waived
+
+Average Exception Duration
+
+Exceptions Expiring Soon
+
+=========================================
+EXCEPTIONS TABLE
+=========================================
+
+Columns
+
+Exception ID
+
+Title
+
+Type
+
+Affected Resource
+
+Policy / Finding
+
+Severity
+
+Risk Accepted
+
+Business Justification
+
+Owner
+
+Requested By
+
+Approved By
+
+Approval Status
+
+Created At
+
+Expiration Date
+
+Days Remaining
+
+Current Status
+
+Actions
+
+=========================================
+SUPPORTED EXCEPTION TYPES
+=========================================
+
+Policy Exception
+
+Vulnerability Exception
+
+Compliance Waiver
+
+Threat Exception
+
+Secret Exception
+
+Kubernetes Exception
+
+Cloud Exception
+
+Container Exception
+
+SBOM Exception
+
+Runtime Exception
+
+Repository Exception
+
+Custom Exception
+
+=========================================
+EXCEPTION DETAILS
+=========================================
+
+Click any exception.
+
+Open right-side drawer.
+
+Display
+
+Overview
+
+Description
+
+Business Justification
+
+Affected Resource
+
+Repository
+
+Cluster
+
+Namespace
+
+Container
+
+Policy
+
+Finding
+
+Severity
+
+Risk Score
+
+Risk Acceptance
+
+Owner
+
+Requester
+
+Approver
+
+Approval Workflow
+
+Expiration
+
+Review Schedule
+
+Related Remediation
+
+Audit History
+
+Timeline
+
+Linked Compliance Controls
+
+Linked Assets
+
+=========================================
+APPROVAL WORKFLOW
+=========================================
+
+Display
+
+Requested
+
+Under Review
+
+Approved
+
+Rejected
+
+Expired
+
+Renewed
+
+Revoked
+
+Include
+
+Approver
+
+Comments
+
+Decision Time
+
+=========================================
+RISK INFORMATION
+=========================================
+
+Display
+
+Original Severity
+
+Residual Risk
+
+Business Impact
+
+Likelihood
+
+Risk Acceptance Reason
+
+Risk Owner
+
+=========================================
+EXPIRATION MANAGEMENT
+=========================================
+
+Highlight
+
+Expired
+
+Expiring Today
+
+Expiring Within 7 Days
+
+Expiring Within 30 Days
+
+Allow filtering by expiration.
+
+=========================================
+TIMELINE
+=========================================
+
+Display complete lifecycle.
+
+Exception Requested
+
+Approval Started
+
+Approved
+
+Used
+
+Reviewed
+
+Renewed
+
+Expired
+
+Revoked
+
+=========================================
+FILTERS
+=========================================
+
+Status
+
+Type
+
+Severity
+
+Repository
+
+Cluster
+
+Cloud Provider
+
+Owner
+
+Approver
+
+Policy
+
+Finding
+
+Expiration
+
+Search
+
+=========================================
+SEARCH
+=========================================
+
+Search across
+
+Exception ID
+
+Repository
+
+Asset
+
+Cluster
+
+Policy
+
+Owner
+
+Requester
+
+Approver
+
+=========================================
+RELATED RESOURCES
+=========================================
+
+Each exception links to
+
+Repository
+
+Asset
+
+Kubernetes Resource
+
+Container
+
+Finding
+
+Policy
+
+Compliance Control
+
+Remediation
+
+Threat
+
+=========================================
+ACTIONS
+=========================================
+
+View Details
+
+Open Repository
+
+Open Asset
+
+Open Policy
+
+Open Finding
+
+Open Remediation
+
+Renew Exception
+
+Revoke Exception
+
+Export Exception
+
+=========================================
+EMPTY STATE
+=========================================
+
+If no exceptions exist
+
+Display
+
+"No security exceptions found."
+
+Provide Create Exception button.
+
+Never create fake exceptions.
+
+=========================================
+REAL TIME
+=========================================
+
+Use WebSocket if available.
+
+Otherwise poll every 5 minutes.
+
+=========================================
+PERFORMANCE
+=========================================
+
+Server-side filtering
+
+Pagination
+
+Virtual scrolling
+
+Lazy loading
+
+Abort previous requests
+
+=========================================
+UI
+=========================================
+
+Enterprise-grade exception management.
+
+Dark mode.
+
+Professional tables.
+
+Timeline visualization.
+
+Risk badges.
+
+Approval badges.
+
+Sticky filters.
+
+Responsive.
+
+=========================================
+SUCCESS
+=========================================
+
+Comparable to Microsoft Defender, Wiz, Prisma Cloud and ServiceNow Risk Acceptance.
+
+Everything must come from backend APIs.
+
+No demo data.
+
+No placeholders.
