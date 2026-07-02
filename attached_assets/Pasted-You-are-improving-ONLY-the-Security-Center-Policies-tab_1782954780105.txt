@@ -1,0 +1,393 @@
+You are improving ONLY the Security Center → Policies tab.
+
+Do NOT modify any other page.
+
+=========================================
+OBJECTIVE
+=========================================
+
+Build a production-grade Security Policy Management Center.
+
+NO demo data.
+
+NO hardcoded policies.
+
+Everything must come from backend APIs.
+
+If no policies exist, show an appropriate empty state.
+
+=========================================
+PAGE PURPOSE
+=========================================
+
+This page manages every security policy applied across the platform.
+
+Policies can evaluate repositories, cloud resources, Kubernetes, containers, SBOMs, identities and compliance controls.
+
+=========================================
+DATA SOURCES
+=========================================
+
+Backend APIs only.
+
+Data comes from
+
+Policy Engine
+
+OPA
+
+Kyverno
+
+Repositories
+
+Assets
+
+Kubernetes
+
+Cloud Inventory
+
+SBOM
+
+Vulnerability Engine
+
+Compliance Engine
+
+Identity Provider
+
+Remediation Engine
+
+Audit Logs
+
+=========================================
+TOP SUMMARY
+=========================================
+
+Summary Cards
+
+Total Policies
+
+Enabled Policies
+
+Disabled Policies
+
+Violating Policies
+
+Resources Evaluated
+
+Resources Violating Policies
+
+Auto Remediation Enabled
+
+Policy Exceptions
+
+Last Evaluation
+
+=========================================
+POLICIES TABLE
+=========================================
+
+Columns
+
+Policy Name
+
+Category
+
+Engine
+
+Severity
+
+Scope
+
+Status
+
+Resources Evaluated
+
+Violations
+
+Auto Remediation
+
+Owner
+
+Last Evaluation
+
+Actions
+
+=========================================
+POLICY DETAILS
+=========================================
+
+Click a policy.
+
+Open side drawer.
+
+Display
+
+Overview
+
+Description
+
+Policy Logic
+
+Engine
+
+Scope
+
+Severity
+
+Category
+
+Evaluation Frequency
+
+Mapped Controls
+
+Mapped Compliance Frameworks
+
+Mapped Resources
+
+Violation History
+
+Affected Assets
+
+Affected Repositories
+
+Affected Clusters
+
+Affected Containers
+
+Exceptions
+
+Remediation Actions
+
+Audit History
+
+Timeline
+
+=========================================
+POLICY CATEGORIES
+=========================================
+
+Repository Security
+
+Secrets Detection
+
+Container Security
+
+Kubernetes Security
+
+Cloud Security
+
+Identity Security
+
+Compliance
+
+Runtime Security
+
+Network Security
+
+SBOM Policies
+
+Supply Chain
+
+Custom Policies
+
+=========================================
+SUPPORTED ENGINES
+=========================================
+
+OPA
+
+Kyverno
+
+Trivy
+
+Custom Rules Engine
+
+Future engines
+
+=========================================
+VIOLATIONS
+=========================================
+
+Display all policy violations.
+
+Columns
+
+Resource
+
+Policy
+
+Severity
+
+Detected At
+
+Current Status
+
+Owner
+
+Suggested Remediation
+
+=========================================
+EXCEPTIONS
+=========================================
+
+Display
+
+Exception
+
+Reason
+
+Expiration
+
+Approved By
+
+Owner
+
+Status
+
+=========================================
+FILTERS
+=========================================
+
+Category
+
+Severity
+
+Status
+
+Engine
+
+Repository
+
+Cluster
+
+Cloud
+
+Owner
+
+Search
+
+=========================================
+SEARCH
+=========================================
+
+Search across
+
+Policies
+
+Repositories
+
+Assets
+
+Clusters
+
+Namespaces
+
+Containers
+
+Controls
+
+=========================================
+ACTIONS
+=========================================
+
+View Details
+
+View Violations
+
+Open Repository
+
+Open Asset
+
+Open Kubernetes Resource
+
+Open Compliance Control
+
+Open Remediation
+
+Export Policy
+
+Export Violations
+
+=========================================
+TIMELINE
+=========================================
+
+Display timeline
+
+Policy Created
+
+Policy Updated
+
+Policy Evaluated
+
+Violation Found
+
+Exception Approved
+
+Remediation Triggered
+
+Violation Resolved
+
+=========================================
+EMPTY STATE
+=========================================
+
+If no policies exist
+
+Display
+
+"No security policies configured."
+
+Show Create Policy button.
+
+Never generate fake policies.
+
+=========================================
+REAL TIME
+=========================================
+
+Use WebSocket if available.
+
+Otherwise poll every 5 minutes.
+
+=========================================
+PERFORMANCE
+=========================================
+
+Server-side filtering
+
+Pagination
+
+Virtual scrolling
+
+Lazy loading
+
+Abort previous requests
+
+=========================================
+UI
+=========================================
+
+Enterprise-grade policy management dashboard.
+
+Dark mode.
+
+Professional tables.
+
+Sticky filters.
+
+Fast search.
+
+Responsive.
+
+=========================================
+SUCCESS
+=========================================
+
+Comparable to Wiz Policies, Prisma Cloud Policies and Microsoft Defender CSPM.
+
+Everything must come from backend APIs.
+
+No demo data.
+
+No placeholders.
