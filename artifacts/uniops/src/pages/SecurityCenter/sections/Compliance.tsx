@@ -261,6 +261,65 @@ const RESOURCE_TYPE_ICON: Record<string, React.ElementType> = {
   container:  Database,
 };
 
+// ─── PDF Download ─────────────────────────────────────────────────────────────
+
+async function downloadCompliancePdf(framework?: string): Promise<void> {
+  const qs = framework ? `?framework=${encodeURIComponent(framework)}` : '';
+  const token = localStorage.getItem('uniops_token') ?? '';
+  const res = await fetch(`/api/v1/compliance/export/pdf${qs}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`PDF export failed: ${res.status}`);
+  const blob = await res.blob();
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const safe = (framework ?? 'all-frameworks').toLowerCase().replace(/\s+/g, '-');
+  a.href     = url;
+  a.download = `compliance-report-${safe}-${new Date().toISOString().slice(0,10)}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+const ExportPdfButton = memo(({ framework, label = 'Export PDF', size = 'sm' }: {
+  framework?: string;
+  label?: string;
+  size?: 'sm' | 'xs';
+}) => {
+  const [busy, setBusy] = useState(false);
+  const [err,  setErr]  = useState<string | null>(null);
+
+  const handleClick = useCallback(async () => {
+    setBusy(true); setErr(null);
+    try { await downloadCompliancePdf(framework); }
+    catch (e: any) { setErr(e?.message ?? 'Export failed'); }
+    finally { setBusy(false); }
+  }, [framework]);
+
+  return (
+    <div className="relative inline-flex flex-col items-end gap-1">
+      <button
+        onClick={handleClick}
+        disabled={busy}
+        className={clsx(
+          'flex items-center gap-1.5 font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white rounded-lg border border-blue-500/50 transition-colors',
+          size === 'xs' ? 'px-2 py-1 text-[10px]' : 'px-3 py-1.5 text-xs'
+        )}
+      >
+        {busy
+          ? <RefreshCw size={size === 'xs' ? 10 : 12} className="animate-spin" />
+          : <Download  size={size === 'xs' ? 10 : 12} />
+        }
+        {busy ? 'Generating…' : label}
+      </button>
+      {err && (
+        <span className="text-[10px] text-red-400 max-w-[160px] text-right">{err}</span>
+      )}
+    </div>
+  );
+});
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const StatusBadge = memo(({ status }: { status: string }) => (
@@ -873,14 +932,14 @@ const FrameworksTab = memo(({ frameworks, loading }: { frameworks: Framework[]; 
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-white/8 bg-surface-1/30">
-            {['Framework', 'Version', 'Status', 'Compliance %', 'Passing', 'Failed', 'N/A', 'Controls', 'Last Assessment', 'Policies'].map(h => (
+            {['Framework', 'Version', 'Status', 'Compliance %', 'Passing', 'Failed', 'N/A', 'Controls', 'Last Assessment', 'Policies', ''].map(h => (
               <th key={h} className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {frameworks.map(fw => (
-            <tr key={fw.id} className="border-b border-white/4 hover:bg-white/3 transition-colors">
+            <tr key={fw.id} className="border-b border-white/4 hover:bg-white/3 transition-colors group">
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
                   <span className="text-base">{FRAMEWORK_ICON[fw.framework] || '📋'}</span>
@@ -905,6 +964,11 @@ const FrameworksTab = memo(({ frameworks, loading }: { frameworks: Framework[]; 
               <td className="px-4 py-3 text-muted-foreground font-mono">{fw.controls_count}</td>
               <td className="px-4 py-3 text-muted-foreground">{fmt(fw.last_assessment)}</td>
               <td className="px-4 py-3 text-muted-foreground font-mono">{fw.mapped_policies.length}</td>
+              <td className="px-4 py-3">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ExportPdfButton framework={fw.framework} label="PDF" size="xs" />
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -1290,8 +1354,9 @@ const ResourcesTab = memo(() => {
 
 // ─── Assessments Tab ──────────────────────────────────────────────────────────
 
-const AssessmentsTab = memo(() => {
+const AssessmentsTab = memo(({ frameworks }: { frameworks: Framework[] }) => {
   const [page, setPage] = useState(1);
+  const [fwFilter, setFwFilter] = useState('');
   const qs = `page=${page}&page_size=20`;
   const { data, loading, error } = useApi<{ data: Assessment[]; total: number; pages: number }>(`/compliance/assessments?${qs}`);
   const assessments = data?.data ?? [];
@@ -1300,11 +1365,14 @@ const AssessmentsTab = memo(() => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">{total.toLocaleString()} assessments</span>
-        <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-surface-2 border border-white/10 hover:bg-white/10 text-foreground rounded-lg transition-colors">
-          <Download size={12} /> Export PDF
-        </button>
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-xs text-muted-foreground flex-1">{total.toLocaleString()} assessment{total !== 1 ? 's' : ''}</span>
+        <select value={fwFilter} onChange={e => setFwFilter(e.target.value)}
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-blue-500/50">
+          <option value="">All Frameworks</option>
+          {frameworks.map(f => <option key={f.id} value={f.framework}>{f.framework}</option>)}
+        </select>
+        <ExportPdfButton framework={fwFilter || undefined} label="Export PDF Report" />
       </div>
 
       {loading && assessments.length === 0 ? (
@@ -1318,15 +1386,15 @@ const AssessmentsTab = memo(() => {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-white/8 bg-surface-1/30">
-                {['Date', 'Framework', 'Score', 'Passed', 'Failed', 'Evidence', 'Duration', 'Status'].map(h => (
+                {['Date', 'Framework', 'Score', 'Passed', 'Failed', 'Evidence', 'Duration', 'Status', ''].map(h => (
                   <th key={h} className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-3">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {assessments.map(a => (
-                <tr key={a.id} className="border-b border-white/4 hover:bg-white/3 transition-colors">
-                  <td className="px-3 py-2.5 text-muted-foreground">{fmtTime(a.assessment_date)}</td>
+                <tr key={a.id} className="border-b border-white/4 hover:bg-white/3 transition-colors group">
+                  <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">{fmtTime(a.assessment_date)}</td>
                   <td className="px-3 py-2.5">
                     <span className="flex items-center gap-1">
                       <span>{FRAMEWORK_ICON[a.framework] || '📋'}</span>
@@ -1343,6 +1411,11 @@ const AssessmentsTab = memo(() => {
                   <td className="px-3 py-2.5 text-muted-foreground font-mono">{a.evidence_count}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{fmtDur(a.duration_seconds)}</td>
                   <td className="px-3 py-2.5"><StatusBadge status={a.status} /></td>
+                  <td className="px-3 py-2.5">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ExportPdfButton framework={a.framework} label="PDF" size="xs" />
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1771,9 +1844,7 @@ export default function ComplianceSection() {
             <RefreshCw size={12} className={(sumLoading || fwLoading) ? 'animate-spin' : ''} />
             Refresh
           </button>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-surface-2 hover:bg-white/10 border border-white/10 text-foreground rounded-lg transition-colors">
-            <Download size={12} /> Export CSV
-          </button>
+          <ExportPdfButton label="Export Full Report" />
         </div>
       </div>
 
@@ -1800,7 +1871,7 @@ export default function ComplianceSection() {
         {activeTab === 'evidence'       && <EvidenceTab frameworks={frameworks} />}
         {activeTab === 'policy_mapping' && <PolicyMappingTab frameworks={frameworks} />}
         {activeTab === 'resources'      && <ResourcesTab />}
-        {activeTab === 'assessments'    && <AssessmentsTab />}
+        {activeTab === 'assessments'    && <AssessmentsTab frameworks={frameworks} />}
         {activeTab === 'exceptions'     && <ExceptionsTab />}
         {activeTab === 'timeline'       && <TimelineTab frameworks={frameworks} />}
       </div>
