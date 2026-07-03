@@ -1,4 +1,4 @@
-modules = ["python-3.11", "nodejs-20", "web", "bash"]
+modules = ["python-3.11", "nodejs-20", "web", "bash", "postgresql-16"]
 [agent]
 expertMode = true
 stack = "BEST_EFFORT_FALLBACK"
@@ -23,6 +23,18 @@ args = "Backend API"
 task = "workflow.run"
 args = "Start application"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Redis Server"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Celery Worker"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Celery Beat"
+
 [[workflows.workflow]]
 name = "Backend API"
 author = "agent"
@@ -32,7 +44,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd backend && uvicorn app.main:app --host 0.0.0.0 --port 3001"
+args = "cd backend && venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001"
 waitForPort = 3001
 
 [[workflows.workflow]]
@@ -47,6 +59,40 @@ task = "shell.exec"
 args = "PORT=5000 pnpm --filter @workspace/uniops run dev"
 waitForPort = 5000
 
+[[workflows.workflow]]
+name = "Redis Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "redis-server --port 6379 --loglevel notice"
+waitForPort = 6379
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "Celery Worker"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd backend && until redis-cli -p 6379 ping 2>/dev/null | grep -q PONG; do sleep 2; done && venv/bin/celery -A app.core.celery_app worker --loglevel=info -c 2"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "Celery Beat"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd backend && until redis-cli -p 6379 ping 2>/dev/null | grep -q PONG; do sleep 2; done && venv/bin/celery -A app.core.celery_app beat --loglevel=info"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[ports]]
 localPort = 3001
 externalPort = 3001
@@ -54,6 +100,10 @@ externalPort = 3001
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 6379
+externalPort = 3000
 
 [deployment]
 deploymentTarget = "autoscale"

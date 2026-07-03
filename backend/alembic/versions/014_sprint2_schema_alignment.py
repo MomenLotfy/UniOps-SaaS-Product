@@ -131,25 +131,34 @@ def upgrade() -> None:
     decision_statistics_state_enum.create(bind, checkfirst=True)
 
     if inspector.has_table("security_decision_statistics"):
-        # Normalize legacy values to upper-case enum values before the type cast.
-        op.execute(
-            "UPDATE security_decision_statistics "
-            "SET state = UPPER(COALESCE(state, 'CREATED')) "
-            "WHERE state IS NOT NULL"
+        cols = {c["name"]: c for c in inspector.get_columns("security_decision_statistics")}
+        state_col = cols.get("state")
+        # If state is already an enum type (created by an earlier bridge migration),
+        # skip the String-to-Enum conversion — the data is already in canonical form.
+        state_is_enum = state_col is not None and isinstance(
+            state_col.get("type"), sa.Enum
         )
-        op.execute(
-            "UPDATE security_decision_statistics "
-            "SET state = 'CREATED' "
-            "WHERE state NOT IN ('CREATED','CONTEXT_BUILDING','VALIDATING','READY','REJECTED','ARCHIVED')"
-        )
-        op.alter_column(
-            "security_decision_statistics",
-            "state",
-            existing_type=sa.String(50),
-            type_=decision_statistics_state_enum,
-            existing_nullable=True,
-            postgresql_using="state::decision_statistics_state_enum",
-        )
+        if not state_is_enum:
+            # Normalize legacy String values to upper-case enum values before cast.
+            op.execute(
+                "UPDATE security_decision_statistics "
+                "SET state = UPPER(COALESCE(state::text, 'CREATED')) "
+                "WHERE state IS NOT NULL"
+            )
+            op.execute(
+                "UPDATE security_decision_statistics "
+                "SET state = 'CREATED' "
+                "WHERE state NOT IN "
+                "('CREATED','CONTEXT_BUILDING','VALIDATING','READY','REJECTED','ARCHIVED')"
+            )
+            op.alter_column(
+                "security_decision_statistics",
+                "state",
+                existing_type=sa.String(50),
+                type_=decision_statistics_state_enum,
+                existing_nullable=True,
+                postgresql_using="state::decision_statistics_state_enum",
+            )
 
     # ─────────────────────────────────────────────────────────────────────
     #  R20 — Unique constraints for concurrency safety

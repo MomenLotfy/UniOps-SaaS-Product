@@ -1,4 +1,4 @@
-#!/home/moamen-lotfy/Desktop/uniops/UniOps-SaaS-Product/backend/venv/bin/python3
+#!/home/runner/workspace/backend/venv/bin/python
 
 import sys
 import json

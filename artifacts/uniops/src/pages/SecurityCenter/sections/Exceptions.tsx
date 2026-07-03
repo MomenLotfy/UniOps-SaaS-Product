@@ -4,7 +4,7 @@ import {
   AlertTriangle, Clock, User, Calendar, Shield, Timer, Search, X,
   ChevronRight, Info, Activity, History, FileText, Lock, Box,
   Server, Cloud, Code, GitBranch, Layers, Bell, ShieldAlert,
-  ShieldCheck, ShieldOff, RotateCcw, Ban, Download,
+  ShieldCheck, ShieldOff, RotateCcw, Ban, Download, Filter,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useApi } from '@/hooks/use-api';
@@ -198,9 +198,24 @@ const ExceptionDrawer = memo(({ exc, onClose, onReview, onRefresh, canApprove }:
   canApprove: boolean;
 }) => {
   const [tab, setTab] = useState<'overview' | 'risk' | 'approval' | 'timeline'>('overview');
+  const [revoking, setRevoking] = useState(false);
   const cat = getCategory(exc);
   const CatIcon = cat.icon;
   const days = daysUntil(exc.expires_at);
+
+  const handleRevoke = useCallback(async () => {
+    if (!confirm('Revoke this exception? The associated policy will re-apply immediately.')) return;
+    setRevoking(true);
+    try {
+      await apiClient.post(`/security-exceptions/${exc.id}/revoke`);
+      onRefresh();
+      onClose();
+    } catch (err: any) {
+      alert(`Revoke failed: ${err?.response?.data?.detail ?? err?.message ?? 'Unknown error'}`);
+    } finally {
+      setRevoking(false);
+    }
+  }, [exc.id, onRefresh, onClose]);
 
   const TABS = [
     { id: 'overview', label: 'Overview',          icon: Info },
@@ -234,17 +249,28 @@ const ExceptionDrawer = memo(({ exc, onClose, onReview, onRefresh, canApprove }:
             </button>
           </div>
 
-          {/* Quick actions for pending */}
-          {canApprove && exc.status === 'pending' && (
-            <div className="flex gap-2 mt-3">
-              <button onClick={() => onReview(exc, 'approve')}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-green-600 hover:bg-green-500 text-white font-semibold transition-colors">
-                <CheckCircle size={12} /> Approve
-              </button>
-              <button onClick={() => onReview(exc, 'reject')}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-red-600 hover:bg-red-500 text-white font-semibold transition-colors">
-                <XCircle size={12} /> Reject
-              </button>
+          {/* Quick actions */}
+          {canApprove && (
+            <div className="flex gap-2 mt-3 flex-wrap">
+              {exc.status === 'pending' && (
+                <>
+                  <button onClick={() => onReview(exc, 'approve')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-green-600 hover:bg-green-500 text-white font-semibold transition-colors">
+                    <CheckCircle size={12} /> Approve
+                  </button>
+                  <button onClick={() => onReview(exc, 'reject')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-red-600 hover:bg-red-500 text-white font-semibold transition-colors">
+                    <XCircle size={12} /> Reject
+                  </button>
+                </>
+              )}
+              {(exc.status === 'approved' || exc.status === 'pending') && (
+                <button onClick={handleRevoke} disabled={revoking}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50">
+                  {revoking ? <Loader2 size={12} className="animate-spin" /> : <Ban size={12} />}
+                  Revoke
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -844,9 +870,11 @@ export default function ExceptionsSection() {
   const qs = useMemo(() => {
     const p: Record<string, string> = { page: String(page), page_size: '20' };
     if (status)   p.status = status;
-    if (category) p.exception_type = category;
+    // FIX: category maps to finding_type on the backend, NOT exception_type
+    if (category) p.category = category;
+    if (dSearch)  p.search   = dSearch;
     return new URLSearchParams(p).toString();
-  }, [page, status, category]);
+  }, [page, status, category, dSearch]);
 
   const { data: raw, loading, refetch } = useApi<any>(`/security-exceptions?${qs}`);
   const { data: statsRaw, refetch: refetchStats } = useApi<any>('/security-exceptions/stats');
@@ -857,19 +885,15 @@ export default function ExceptionsSection() {
   const pages      = result?.pages ?? 1;
   const stats      = statsRaw?.data ?? statsRaw ?? {};
 
-  // Client-side expiry + search filter
+  // 5-minute polling for live updates
+  useEffect(() => {
+    const id = setInterval(() => { refetch(); refetchStats(); }, 5 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [refetch, refetchStats]);
+
+  // Client-side expiry filter only (search is now server-side)
   const exceptions = useMemo(() => {
     let list = allExceptions;
-    if (dSearch) {
-      const q = dSearch.toLowerCase();
-      list = list.filter(e =>
-        e.title.toLowerCase().includes(q) ||
-        e.id.toLowerCase().includes(q) ||
-        e.justification.toLowerCase().includes(q) ||
-        (e.requested_by ?? '').toLowerCase().includes(q) ||
-        (e.approved_by ?? '').toLowerCase().includes(q)
-      );
-    }
     if (expiry) {
       list = list.filter(e => {
         const d = daysUntil(e.expires_at);
@@ -881,12 +905,30 @@ export default function ExceptionsSection() {
       });
     }
     return list;
-  }, [allExceptions, dSearch, expiry]);
+  }, [allExceptions, expiry]);
 
   const handleRefresh = useCallback(() => { refetch(); refetchStats(); }, [refetch, refetchStats]);
   const handleCreated = useCallback(() => { handleRefresh(); }, [handleRefresh]);
   const clearFilters  = () => { setSearch(''); setDSearch(''); setStatus(''); setCategory(''); setExpiry(''); setPage(1); };
   const hasFilters    = !!(dSearch || status || category || expiry);
+
+  // CSV export
+  const handleExport = useCallback(() => {
+    if (!exceptions.length) return;
+    const headers = ['ID', 'Title', 'Status', 'Type', 'Category', 'Requested By', 'Approved By', 'Created', 'Expires'];
+    const rows = exceptions.map(e => [
+      e.id, e.title, e.status, e.exception_type,
+      e.finding_type ?? '',
+      e.requested_by ?? '', e.approved_by ?? '',
+      e.created_at ? new Date(e.created_at).toISOString() : '',
+      e.expires_at ? new Date(e.expires_at).toISOString() : '',
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'exceptions.csv'; a.click();
+    URL.revokeObjectURL(url);
+  }, [exceptions]);
 
   // Pending alert bar
   const pendingCount = stats.pending ?? 0;
@@ -921,8 +963,13 @@ export default function ExceptionsSection() {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleRefresh}
-            className="p-1.5 rounded-lg border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors">
+            className="p-1.5 rounded-lg border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+            title="Refresh (also polls every 5 min)">
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+          </button>
+          <button onClick={handleExport} disabled={exceptions.length === 0}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+            <Download size={12} /> Export
           </button>
           <button onClick={() => setShowCreate(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors">
@@ -964,7 +1011,7 @@ export default function ExceptionsSection() {
 
         {/* Status filter */}
         <div className="flex rounded-lg border border-white/10 overflow-hidden">
-          {(['', 'pending', 'approved', 'rejected', 'expired'] as const).map(s => (
+          {(['', 'pending', 'approved', 'rejected', 'expired', 'revoked'] as const).map(s => (
             <button key={s} onClick={() => { setStatus(s); setPage(1); }}
               className={clsx('px-3 py-1.5 text-[11px] font-medium capitalize transition-colors',
                 status === s ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-foreground hover:bg-white/5')}>

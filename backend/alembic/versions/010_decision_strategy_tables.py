@@ -1,7 +1,7 @@
 """Add decision strategy tables (Module 0 / Part 4).
 
 Revision ID: 010_decision_strategy_tables
-Revises: 009_detected_by
+Revises: 009a_decision_engine_core_tables
 Create Date: 2026-06-27
 
 Creates 13 tables for the Decision Strategy Engine:
@@ -31,7 +31,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 # Revision identifiers
 revision = "010_decision_strategy_tables"
-down_revision = "009_detected_by"
+down_revision = "009a_decision_engine_core_tables"
 branch_labels = None
 depends_on = None
 

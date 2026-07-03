@@ -405,9 +405,9 @@ def upgrade() -> None:
         sa.Column("delegated_by", sa.String(100), nullable=True),
         sa.ForeignKeyConstraint(["request_id"], ["security_decision_approvals.id"], name="fk_apact_request"),
     )
-    op.create_index("ix_apa_request", "security_decision_approval_actors", ["request_id"])
-    op.create_index("ix_apa_actor",   "security_decision_approval_actors", ["actor_id"])
-    op.create_index("ix_apa_role",    "security_decision_approval_actors", ["role"])
+    op.create_index("ix_apact_request", "security_decision_approval_actors", ["request_id"])
+    op.create_index("ix_apact_actor",   "security_decision_approval_actors", ["actor_id"])
+    op.create_index("ix_apact_role",    "security_decision_approval_actors", ["role"])
 
     # ── 15. security_decision_approval_groups ─────────────────────
     op.create_table(

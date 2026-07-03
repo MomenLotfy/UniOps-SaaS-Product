@@ -1,2 +1,4 @@
 - [Security Center tab architecture](security-center-tabs.md) — KubernetesSecurity and Threats tabs are fully API-driven; no mock data; key backend fields and operator mixing rules documented.
 - [AWS integration full sync fix](aws-integration-sync.md) — after connecting AWS, must trigger costs + asset discovery + security hub + posture snapshot; previously only costs ran.
+- [Alembic migration quirks](alembic-migration-quirks.md) — asyncpg incompatibilities, version_num column width fix, bridge migration pattern for missing FK targets.
+- [Exceptions tab filters](exceptions-tab-filters.md) — category filter maps to finding_type (not exception_type); revoke endpoint requires tenant_id for IDOR prevention; severity uses JSON key accessor.
