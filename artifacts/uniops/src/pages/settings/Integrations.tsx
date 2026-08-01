@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Cloud, GitBranch, Server, MessageSquare, Activity,
   CheckCircle, XCircle, AlertCircle, RefreshCw, X, Eye, EyeOff, Loader2,
   Key, ExternalLink, ShieldCheck, ArrowRight, Copy, Database, Clock,
+  Container, Shield, Ticket, HardDrive, BarChart3, Bell,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelative } from '@/lib/formatters';
@@ -14,18 +15,60 @@ import { useNotifications } from '@/contexts/NotificationContext';
 import { useIntegrationsCtx } from '@/contexts/IntegrationsContext';
 
 const PROVIDER_META: Record<string, { icon: any; color: string; description: string; category: string }> = {
-  aws:        { icon: Cloud,         color: 'text-orange-400', description: 'Monitor EC2, S3, RDS, and 200+ AWS services', category: 'Cloud' },
-  gcp:        { icon: Cloud,         color: 'text-blue-400',   description: 'GKE, Cloud Run, BigQuery and more', category: 'Cloud' },
-  azure:      { icon: Cloud,         color: 'text-cyan-400',   description: 'AKS, Azure Monitor and Azure services', category: 'Cloud' },
-  github:     { icon: GitBranch,     color: 'text-white',      description: 'Repositories, Actions CI/CD pipelines', category: 'Version Control' },
-  gitlab:     { icon: GitBranch,     color: 'text-orange-500', description: 'GitLab CI/CD and repository monitoring', category: 'Version Control' },
-  kubernetes: { icon: Server,        color: 'text-blue-400',   description: 'Cluster monitoring, pods and deployments', category: 'Orchestration' },
-  slack:      { icon: MessageSquare, color: 'text-green-400',  description: 'Send alerts and reports to Slack channels', category: 'Communication' },
-  teams:      { icon: MessageSquare, color: 'text-purple-400', description: 'Send notifications to Teams channels', category: 'Communication' },
-  datadog:    { icon: Activity,      color: 'text-purple-400', description: 'Import metrics and dashboards', category: 'Monitoring' },
+  // Cloud
+  aws:        { icon: Cloud,         color: 'text-orange-400', description: 'Monitor EC2, S3, RDS, ECR, EKS, CloudWatch and 200+ AWS services', category: 'Cloud' },
+  gcp:        { icon: Cloud,         color: 'text-blue-400',   description: 'GKE, Cloud Run, BigQuery, Cloud Storage and more', category: 'Cloud' },
+  azure:      { icon: Cloud,         color: 'text-cyan-400',   description: 'AKS, Azure Monitor, Blob Storage, Entra ID and Azure services', category: 'Cloud' },
+  // VCS
+  github:           { icon: GitBranch, color: 'text-white',     description: 'Repositories, Actions CI/CD pipelines, code scanning', category: 'Version Control' },
+  gitlab:           { icon: GitBranch, color: 'text-orange-500', description: 'GitLab CI/CD and repository monitoring', category: 'Version Control' },
+  bitbucket:        { icon: GitBranch, color: 'text-blue-300',  description: 'Bitbucket repositories and Bitbucket Pipelines', category: 'Version Control' },
+  azure_devops:     { icon: GitBranch, color: 'text-blue-500',  description: 'Azure DevOps repos, pipelines and Boards', category: 'Version Control' },
+  // Containers / Orchestration
+  kubernetes:       { icon: Server,    color: 'text-blue-400',   description: 'Cluster monitoring, pods, deployments and namespaces', category: 'Orchestration' },
+  docker_registry:  { icon: Container, color: 'text-blue-300',   description: 'Docker Hub / generic registry image scanning', category: 'Orchestration' },
+  harbor:           { icon: Container, color: 'text-teal-400',   description: 'Harbor container registry image scanning', category: 'Orchestration' },
+  terraform:        { icon: Server,    color: 'text-purple-400', description: 'Terraform Cloud workspaces, runs and state', category: 'Orchestration' },
+  // CI/CD
+  github_actions:   { icon: Activity,  color: 'text-white',     description: 'Monitor GitHub Actions workflow runs', category: 'CI/CD' },
+  gitlab_ci:        { icon: Activity,  color: 'text-orange-500', description: 'Monitor GitLab CI pipeline runs', category: 'CI/CD' },
+  jenkins:          { icon: Activity,  color: 'text-red-400',   description: 'Jenkins build jobs, pipelines and agents', category: 'CI/CD' },
+  argocd:           { icon: Activity,  color: 'text-orange-400', description: 'ArgoCD applications, sync status and clusters', category: 'CI/CD' },
+  // Communication
+  slack:            { icon: MessageSquare, color: 'text-green-400',  description: 'Send alerts and reports to Slack channels', category: 'Communication' },
+  teams:            { icon: MessageSquare, color: 'text-purple-400', description: 'Send notifications to Teams channels', category: 'Communication' },
+  discord:          { icon: MessageSquare, color: 'text-indigo-400', description: 'Post alerts to Discord channels via webhook', category: 'Communication' },
+  email:            { icon: Bell,         color: 'text-yellow-400',  description: 'Send email digests and alerts via SMTP', category: 'Communication' },
+  // Monitoring
+  prometheus:       { icon: BarChart3, color: 'text-orange-500', description: 'Pull Prometheus metrics and alerts', category: 'Monitoring' },
+  grafana:          { icon: BarChart3, color: 'text-orange-400', description: 'Import Grafana dashboards and alert rules', category: 'Monitoring' },
+  datadog:          { icon: Activity,  color: 'text-purple-400', description: 'Import metrics, dashboards and monitors', category: 'Monitoring' },
+  loki:             { icon: Activity,  color: 'text-yellow-500', description: 'Aggregate logs from Grafana Loki', category: 'Monitoring' },
+  // Security
+  trivy:            { icon: Shield,    color: 'text-blue-400',  description: 'Aggregate Trivy scanner results', category: 'Security' },
+  defectdojo:       { icon: Shield,    color: 'text-red-400',   description: 'Sync findings with DefectDojo', category: 'Security' },
+  snyk:             { icon: Shield,    color: 'text-purple-500', description: 'Snyk vulnerability and license data', category: 'Security' },
+  wiz:              { icon: Shield,    color: 'text-cyan-300',  description: 'Wiz cloud security posture findings', category: 'Security' },
+  // Identity
+  okta:             { icon: Key,       color: 'text-blue-500',  description: 'Okta SSO, users and group sync', category: 'Identity' },
+  auth0:            { icon: Key,       color: 'text-orange-500', description: 'Auth0 tenants, clients and users', category: 'Identity' },
+  entra_id:         { icon: Key,       color: 'text-blue-400',  description: 'Microsoft Entra ID (Azure AD) users and groups', category: 'Identity' },
+  // Ticketing
+  jira:             { icon: Ticket,    color: 'text-blue-500',  description: 'Create Jira issues from findings', category: 'Ticketing' },
+  servicenow:       { icon: Ticket,    color: 'text-green-500', description: 'Create ServiceNow incidents and CMDB updates', category: 'Ticketing' },
+  linear:           { icon: Ticket,    color: 'text-purple-400', description: 'Create Linear issues from findings', category: 'Ticketing' },
+  pagerduty:        { icon: Bell,      color: 'text-green-400', description: 'Trigger PagerDuty incidents from critical alerts', category: 'Ticketing' },
+  // Storage
+  s3:               { icon: HardDrive, color: 'text-orange-300', description: 'AWS S3 bucket inventory (alias of AWS)', category: 'Storage' },
+  azure_blob:       { icon: HardDrive, color: 'text-blue-300',   description: 'Azure Blob Storage container inventory', category: 'Storage' },
+  gcs:              { icon: HardDrive, color: 'text-blue-400',   description: 'Google Cloud Storage bucket inventory', category: 'Storage' },
+  // Misc
+  webhook:          { icon: Activity,  color: 'text-gray-300',   description: 'Generic webhook for custom integrations', category: 'Other' },
 };
 
-const TOKEN_PROVIDERS: Record<string, { label: string; placeholder: string; helpUrl: string; helpText: string; extraField?: string }> = {
+// Token-style providers: the connect modal shows a "paste your token" form.
+// Each entry configures label, placeholder, help link, and optional extra fields.
+const TOKEN_PROVIDERS: Record<string, { label: string; placeholder: string; helpUrl: string; helpText: string; extraField?: 'gitlab_url' | 'gitea_url' | 'host' | 'webhook_url' | 'channel' | 'jira_url' | 'okta_domain' | 'auth0_domain' | 'entra_tenant' | 'argocd_url' | 'loki_url' | 'prometheus_url' | 'grafana_url' | 'dd_site' | 'docker_registry_url' | 'harbor_url' | 'gcs_project' | 'azure_storage_account' }> = {
   github: {
     label: 'GitHub Personal Access Token',
     placeholder: 'ghp_xxxxxxxxxxxxxxxxxxxx',
@@ -38,6 +81,186 @@ const TOKEN_PROVIDERS: Record<string, { label: string; placeholder: string; help
     helpUrl: 'https://gitlab.com/-/user_settings/personal_access_tokens',
     helpText: 'Create a token with api, read_repository scopes.',
     extraField: 'gitlab_url',
+  },
+  bitbucket: {
+    label: 'Bitbucket App Password',
+    placeholder: 'bitbucket app password (with repo scope)',
+    helpUrl: 'https://bitbucket.org/account/settings/app-passwords/',
+    helpText: 'Use your Atlassian account email + app password. Required scopes: repository:read, pullrequest:read.',
+    extraField: 'webhook_url',
+  },
+  azure_devops: {
+    label: 'Azure DevOps Personal Access Token',
+    placeholder: 'azure devops pat',
+    helpUrl: 'https://dev.azure.com/<org>/_usersSettings/tokens',
+    helpText: 'Create a PAT with Code (read), Build (read) and Project and Team (read) scopes.',
+    extraField: 'webhook_url',
+  },
+  slack: {
+    label: 'Slack Webhook URL (or Bot Token)',
+    placeholder: 'https://hooks.slack.com/services/...',
+    helpUrl: 'https://api.slack.com/messaging/webhooks',
+    helpText: 'Create an Incoming Webhook in your Slack workspace.',
+    extraField: 'channel',
+  },
+  teams: {
+    label: 'Microsoft Teams Webhook URL',
+    placeholder: 'https://outlook.office.com/webhook/...',
+    helpUrl: 'https://learn.microsoft.com/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook',
+    helpText: 'Add the Incoming Webhook connector to a Teams channel.',
+  },
+  discord: {
+    label: 'Discord Webhook URL',
+    placeholder: 'https://discord.com/api/webhooks/...',
+    helpUrl: 'https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks',
+    helpText: 'Create a webhook in your Discord server settings.',
+  },
+  prometheus: {
+    label: 'Prometheus Bearer Token (optional)',
+    placeholder: 'leave blank if unauthenticated',
+    helpUrl: 'https://prometheus.io/docs/prometheus/latest/configuration/https/',
+    helpText: 'Optional Basic/Bearer auth for Prometheus server.',
+    extraField: 'prometheus_url',
+  },
+  grafana: {
+    label: 'Grafana API Key (Service Account)',
+    placeholder: 'glsa_...',
+    helpUrl: 'https://grafana.com/docs/grafana/latest/administration/service-accounts/',
+    helpText: 'Create a service account token with Viewer+ role.',
+    extraField: 'grafana_url',
+  },
+  datadog: {
+    label: 'Datadog API Key',
+    placeholder: 'datadog api key',
+    helpUrl: 'https://docs.datadoghq.com/account_management/api-app-keys/',
+    helpText: 'Create an API key in Datadog → Org Settings → API Keys.',
+    extraField: 'dd_site',
+  },
+  loki: {
+    label: 'Loki / Grafana Cloud API Key',
+    placeholder: 'loki api key',
+    helpUrl: 'https://grafana.com/docs/loki/latest/',
+    helpText: 'Use a Loki or Grafana Cloud API key with read scope.',
+    extraField: 'loki_url',
+  },
+  trivy: {
+    label: 'Trivy Server / Aqua API Key',
+    placeholder: 'trivy server token (optional)',
+    helpUrl: 'https://aquasecurity.github.io/trivy/v0.45/docs/supply-chain/attestation/sbom/',
+    helpText: 'Trivy scans run inline; this key is for optional remote report submission.',
+  },
+  defectdojo: {
+    label: 'DefectDojo API Key',
+    placeholder: 'defectdojo api token',
+    helpUrl: 'https://defectdojo.github.io/django-DefectDojo/api-v2-docs/',
+    helpText: 'Generate an API token in DefectDojo → user settings.',
+    extraField: 'host',
+  },
+  snyk: {
+    label: 'Snyk API Token',
+    placeholder: 'snyk api token',
+    helpUrl: 'https://docs.snyk.io/snyk-api-info/authentication-for-api',
+    helpText: 'Generate a Snyk API token in your Snyk account settings.',
+  },
+  wiz: {
+    label: 'Wiz API Client ID + Secret',
+    placeholder: 'wiz client id (leave secret in credentials.token)',
+    helpUrl: 'https://docs.wiz.io/wiz-docs/docs/api',
+    helpText: 'Create a service account with API access in Wiz.',
+  },
+  okta: {
+    label: 'Okta API Token',
+    placeholder: '00xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    helpUrl: 'https://developer.okta.com/docs/guides/create-an-api-token/main/',
+    helpText: 'Create an API token in Okta → Security → API → Tokens.',
+    extraField: 'okta_domain',
+  },
+  auth0: {
+    label: 'Auth0 Client Secret (Client ID configured separately)',
+    placeholder: 'auth0 client secret',
+    helpUrl: 'https://auth0.com/docs/secure/tokens/access-tokens/management-api-access-tokens',
+    helpText: 'Create a Machine-to-Machine application authorized for the Management API.',
+    extraField: 'auth0_domain',
+  },
+  entra_id: {
+    label: 'Entra ID Client Secret',
+    placeholder: 'azure ad client secret',
+    helpUrl: 'https://learn.microsoft.com/entra/identity-platform/v2-oauth2-client-creds-grant-flow',
+    helpText: 'Use an app registration with Directory.Read.All permission.',
+    extraField: 'entra_tenant',
+  },
+  jira: {
+    label: 'Jira API Token',
+    placeholder: 'jira api token',
+    helpUrl: 'https://id.atlassian.com/manage-profile/security/api-tokens',
+    helpText: 'Create an Atlassian API token, then supply your Jira URL.',
+    extraField: 'jira_url',
+  },
+  servicenow: {
+    label: 'ServiceNow OAuth Refresh Token',
+    placeholder: 'servicenow refresh token',
+    helpUrl: 'https://developer.servicenow.com/dev.do#!/reference/api/rome/rest/',
+    helpText: 'Configure an OAuth endpoint in ServiceNow and supply a refresh token.',
+  },
+  linear: {
+    label: 'Linear API Key',
+    placeholder: 'lin_api_...',
+    helpUrl: 'https://developers.linear.app/docs/graphql/working-with-the-graphql-api',
+    helpText: 'Create a personal API key in Linear → Settings → API.',
+  },
+  pagerduty: {
+    label: 'PagerDuty REST API Key',
+    placeholder: 'pagerduty api key',
+    helpUrl: 'https://support.pagerduty.com/docs/api-access-keys',
+    helpText: 'Create a REST API key in PagerDuty → Integrations → API Access Keys.',
+  },
+  docker_registry: {
+    label: 'Docker Registry Username + Password',
+    placeholder: 'username (token goes in password field)',
+    helpUrl: 'https://docs.docker.com/docker-hub/access-tokens/',
+    helpText: 'Use a Docker Hub access token as the password.',
+    extraField: 'docker_registry_url',
+  },
+  harbor: {
+    label: 'Harbor Robot Account Secret',
+    placeholder: 'harbor robot secret',
+    helpUrl: 'https://goharbor.io/docs/latest/administration/managing-users/',
+    helpText: 'Create a robot account with pull-only access to projects you want scanned.',
+    extraField: 'harbor_url',
+  },
+  jenkins: {
+    label: 'Jenkins API Token',
+    placeholder: 'jenkins api token',
+    helpUrl: 'https://www.jenkins.io/doc/book/using/remote-access-api/',
+    helpText: 'Issue a token from your Jenkins user → Configure → API Token.',
+    extraField: 'host',
+  },
+  argocd: {
+    label: 'ArgoCD API Token',
+    placeholder: 'argocd api token',
+    helpUrl: 'https://argo-cd.readthedocs.io/en/stable/operator-manual/api/',
+    helpText: 'Generate a session token via `argocd account generate-token`.',
+    extraField: 'argocd_url',
+  },
+  gcs: {
+    label: 'GCP Service Account JSON (paste entire JSON)',
+    placeholder: '{"type":"service_account","project_id":...}',
+    helpUrl: 'https://cloud.google.com/iam/docs/keys-create-delete',
+    helpText: 'Create a service account with Storage Object Viewer role.',
+    extraField: 'gcs_project',
+  },
+  azure_blob: {
+    label: 'Azure Storage Account Key',
+    placeholder: 'azure storage account key',
+    helpUrl: 'https://learn.microsoft.com/azure/storage/common/storage-account-keys-manage',
+    helpText: 'Copy the key from Storage Account → Security + networking → Access keys.',
+    extraField: 'azure_storage_account',
+  },
+  webhook: {
+    label: 'Webhook URL',
+    placeholder: 'https://example.com/webhook',
+    helpUrl: 'https://docs.uniops.io/integrations/webhook',
+    helpText: 'We POST JSON events to this URL when a new scan completes.',
   },
 };
 
@@ -658,6 +881,32 @@ function GitHubPATWizard({
 }
 
 // ── Token Connect Modal ───────────────────────────────────────────────────────
+//
+// Generic credential modal for the wide range of token-style integrations
+// (Slack/Teams/Discord/Jira/Snyk/Okta/etc.). The "extraField" config controls
+// the second input shown alongside the primary credential (channel name, host
+// URL, domain, etc.).
+const EXTRA_FIELDS: Record<string, { label: string; placeholder: string; defaultValue?: string }> = {
+  gitlab_url:            { label: 'GitLab Instance URL',  placeholder: 'https://gitlab.com',   defaultValue: 'https://gitlab.com' },
+  gitea_url:             { label: 'Gitea Instance URL',   placeholder: 'https://gitea.example.com' },
+  host:                  { label: 'Service Host',         placeholder: 'https://service.example.com' },
+  webhook_url:           { label: 'Webhook URL',          placeholder: 'https://example.com/webhook' },
+  channel:               { label: 'Default Channel',      placeholder: '#alerts' },
+  jira_url:              { label: 'Jira URL',             placeholder: 'https://your-org.atlassian.net' },
+  okta_domain:           { label: 'Okta Domain',          placeholder: 'your-org.okta.com' },
+  auth0_domain:          { label: 'Auth0 Domain',         placeholder: 'your-tenant.us.auth0.com' },
+  entra_tenant:          { label: 'Azure AD Tenant ID',   placeholder: '00000000-0000-0000-0000-000000000000' },
+  argocd_url:            { label: 'ArgoCD Server URL',    placeholder: 'https://argocd.example.com' },
+  loki_url:              { label: 'Loki Server URL',      placeholder: 'https://logs.example.com' },
+  prometheus_url:        { label: 'Prometheus Server URL',placeholder: 'https://prom.example.com' },
+  grafana_url:           { label: 'Grafana Server URL',   placeholder: 'https://grafana.example.com' },
+  dd_site:               { label: 'Datadog Site',         placeholder: 'datadoghq.com', defaultValue: 'datadoghq.com' },
+  docker_registry_url:   { label: 'Docker Registry URL',  placeholder: 'https://registry.hub.docker.com', defaultValue: 'https://registry.hub.docker.com' },
+  harbor_url:            { label: 'Harbor URL',           placeholder: 'https://harbor.example.com' },
+  gcs_project:           { label: 'GCP Project ID',       placeholder: 'my-gcp-project' },
+  azure_storage_account: { label: 'Azure Storage Account',placeholder: 'mystorageaccount' },
+};
+
 function TokenConnectModal({
   integration,
   onClose,
@@ -669,14 +918,19 @@ function TokenConnectModal({
 }) {
   const provider = integration.provider ?? integration.type;
   const meta = TOKEN_PROVIDERS[provider];
+  const extra = meta?.extraField ? EXTRA_FIELDS[meta.extraField] : null;
   const [token, setToken]         = useState('');
-  const [extraValue, setExtraValue] = useState('https://gitlab.com');
+  const [extraValue, setExtraValue] = useState(extra?.defaultValue ?? '');
   const [showToken, setShowToken] = useState(false);
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState<string | null>(null);
 
   const handleConnect = async () => {
     if (!token.trim()) { setError('Token is required'); return; }
+    if (extra && !extraValue.trim()) {
+      setError(`${extra.label} is required`);
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -688,20 +942,49 @@ function TokenConnectModal({
       } else if (provider === 'gitlab') {
         connectedIntegration = await integrationsApi.connectGitLab(token.trim(), integration?.name);
       } else {
-        // Fallback: PATCH status for other providers
-        await apiPatch(`/integrations/${integration.id}`, {
-          credentials: { token: token.trim() },
-          status: 'connected',
+        // Generic path: POST /integrations with the typed credentials.
+        // Backend's create() is idempotent for singleton providers, so a
+        // second connect MERGES onto the existing record (no duplicates).
+        const credentials: Record<string, string> = { token: token.trim() };
+        const config: Record<string, string> = {};
+        if (extra) {
+          // Map the UI's extra field to the right key the backend expects.
+          if (meta?.extraField === 'gitlab_url')        config.gitlab_url = extraValue.trim();
+          else if (meta?.extraField === 'gitea_url')     config.gitea_url  = extraValue.trim();
+          else if (meta?.extraField === 'host')          config.host       = extraValue.trim();
+          else if (meta?.extraField === 'channel')       config.channel    = extraValue.trim();
+          else if (meta?.extraField === 'jira_url')      config.url        = extraValue.trim();
+          else if (meta?.extraField === 'okta_domain')   config.domain     = extraValue.trim();
+          else if (meta?.extraField === 'auth0_domain')  config.domain     = extraValue.trim();
+          else if (meta?.extraField === 'entra_tenant')  config.tenant_id  = extraValue.trim();
+          else if (meta?.extraField === 'argocd_url')    config.url        = extraValue.trim();
+          else if (meta?.extraField === 'loki_url')      config.url        = extraValue.trim();
+          else if (meta?.extraField === 'prometheus_url')config.url        = extraValue.trim();
+          else if (meta?.extraField === 'grafana_url')   config.url        = extraValue.trim();
+          else if (meta?.extraField === 'dd_site')       config.site       = extraValue.trim();
+          else if (meta?.extraField === 'docker_registry_url') config.url  = extraValue.trim();
+          else if (meta?.extraField === 'harbor_url')    config.url        = extraValue.trim();
+          else if (meta?.extraField === 'gcs_project')   config.project_id = extraValue.trim();
+          else if (meta?.extraField === 'azure_storage_account') config.account_name = extraValue.trim();
+          else                                          config.url        = extraValue.trim();
+        }
+
+        const resp: any = await apiPost('/integrations', {
+          name: integration?.name ?? provider,
+          type: provider,
+          credentials,
+          config,
           is_active: true,
         });
-        connectedIntegration = integration;
+        connectedIntegration = resp;
       }
 
-      const syncId = connectedIntegration?.id ?? integration.id;
-      if (syncId) {
-        try { await apiPost(`/integrations/${syncId}/sync`, {}); } catch (_) {}
+      // Kick a background test+sync for the freshly-connected integration.
+      const intgId = connectedIntegration?.id ?? integration?.id;
+      if (intgId) {
+        try { await apiPost(`/integrations/${intgId}/test`, {}); } catch (_) {}
+        try { await apiPost(`/integrations/${intgId}/sync`, {}); } catch (_) {}
       }
-      try { await apiPost('/security/repos/sync', {}); } catch (_) {}
 
       await onConnected();
       onClose();
@@ -735,14 +1018,14 @@ function TokenConnectModal({
         </div>
 
         <div className="p-5 space-y-4">
-          {meta?.extraField && (
+          {extra && (
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">GitLab Instance URL</label>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">{extra.label}</label>
               <input
-                type="url"
+                type="text"
                 value={extraValue}
                 onChange={e => setExtraValue(e.target.value)}
-                placeholder="https://gitlab.com"
+                placeholder={extra.placeholder}
                 className="w-full px-3 py-2.5 rounded-lg text-sm border outline-none focus:ring-2 focus:ring-blue-500/40"
                 style={inputStyle}
               />
@@ -822,11 +1105,28 @@ export default function Integrations() {
   const { integrations: rawIntegrations, isLoading: loading, refetch: ctxRefetch } = useIntegrationsCtx();
   const integrations: any[] = rawIntegrations;
 
-  // Refetch immediately, then retry at 3s / 8s / 15s to catch background test result.
+  // Refetch immediately, then poll at 3s / 8s / 15s / 30s to catch background
+  // test results that land after the user clicks "Connect" or "Test".
+  // All pending timers are tracked so a fast second action (e.g. clicking
+  // Test then immediately Disconnect) cancels the in-flight poll chain and
+  // doesn't fire stale refetches against an unmounted component.
+  const pollTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => {
+    pollTimersRef.current.forEach(clearTimeout);
+    pollTimersRef.current = [];
+  }, []);
+
   const refetch = useCallback(async () => {
+    // Cancel any pending poll chain so the next one starts fresh.
+    pollTimersRef.current.forEach(clearTimeout);
+    pollTimersRef.current = [];
+
     await ctxRefetch();
-    const delays = [3000, 8000, 15000];
-    delays.forEach(ms => setTimeout(() => ctxRefetch(), ms));
+    const delays = [3000, 8000, 15000, 30000];
+    delays.forEach(ms => {
+      const t = setTimeout(() => { ctxRefetch().catch(() => {}); }, ms);
+      pollTimersRef.current.push(t);
+    });
   }, [ctxRefetch]);
 
   const providerOf = (i: any) => i.provider ?? i.type ?? '';
@@ -850,7 +1150,18 @@ export default function Integrations() {
     setTesting(id);
     try {
       await apiPost(`/integrations/${id}/test`, {});
+      addNotification({
+        title: 'Connection test started',
+        message: 'Status will update in a few seconds.',
+        type: 'info',
+      });
       refetch();
+    } catch (e: any) {
+      addNotification({
+        title: 'Test failed',
+        message: e?.message ?? 'Could not start connection test.',
+        type: 'error',
+      });
     } finally {
       setTesting(null);
     }
@@ -865,7 +1176,7 @@ export default function Integrations() {
         message: `${name} is syncing in the background. Data will update shortly.`,
         type: 'success',
       });
-      setTimeout(refetch, 3000);
+      refetch();
     } catch (e: any) {
       addNotification({
         title: 'Sync failed',
@@ -877,15 +1188,23 @@ export default function Integrations() {
     }
   };
 
-  const handleDisconnect = async (id: string) => {
+  const handleDisconnect = async (id: string, name: string) => {
     if (id.startsWith('placeholder-')) return;
     setDisconnecting(true);
     try {
       await apiDelete(`/integrations/${id}`);
-      addNotification({ title: 'Integration disconnected', message: 'The integration has been removed successfully.', type: 'success' });
+      addNotification({
+        title: 'Integration disconnected',
+        message: `${name} has been removed. Credentials are cleared; historical data is preserved.`,
+        type: 'success',
+      });
       refetch();
     } catch (e: any) {
-      addNotification({ title: 'Disconnect failed', message: e?.message ?? 'Could not remove integration. Try again.', type: 'error' });
+      addNotification({
+        title: 'Disconnect failed',
+        message: e?.message ?? 'Could not remove integration. Try again.',
+        type: 'error',
+      });
     } finally {
       setDisconnecting(false);
       setDisconnectConfirm(null);
@@ -1051,7 +1370,7 @@ export default function Integrations() {
                   style={{ borderColor: 'hsl(230 15% 20%)' }}>
                   Cancel
                 </button>
-                <button onClick={() => handleDisconnect(disconnectConfirm.id)} disabled={disconnecting}
+                <button onClick={() => handleDisconnect(disconnectConfirm.id, disconnectConfirm.name)} disabled={disconnecting}
                   className="px-4 py-2 text-xs rounded-lg font-semibold bg-red-500 hover:bg-red-600 text-white flex items-center gap-2 transition-all disabled:opacity-60">
                   {disconnecting && <Loader2 className="w-3 h-3 animate-spin" />}
                   {disconnecting ? 'Disconnecting…' : 'Yes, Disconnect'}
@@ -1064,7 +1383,7 @@ export default function Integrations() {
 
       {/* Connect modals */}
       <AnimatePresence>
-        {connectModal && providerOf(connectModal) === 'github' && (
+        {connectModal && providerOf(connectModal) === 'github' && !TOKEN_PROVIDERS[providerOf(connectModal)] && (
           <GitHubPATWizard
             integration={connectModal}
             onClose={() => setConnectModal(null)}
@@ -1085,7 +1404,7 @@ export default function Integrations() {
             onConnected={refetch}
           />
         )}
-        {connectModal && TOKEN_PROVIDERS[providerOf(connectModal)] && providerOf(connectModal) !== 'github' && (
+        {connectModal && TOKEN_PROVIDERS[providerOf(connectModal)] && (
           <TokenConnectModal
             integration={connectModal}
             onClose={() => setConnectModal(null)}

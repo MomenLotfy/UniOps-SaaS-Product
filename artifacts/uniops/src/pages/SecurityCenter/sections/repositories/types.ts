@@ -51,6 +51,11 @@ export interface ScanHistoryEntry {
   repo?: string;
   repo_id?: string;
   scan_id?: string;
+  status?: 'queued' | 'cloning' | 'scanning' | 'analyzing' | 'completed' | 'failed';
+  error_message?: string | null;
+  duration_secs?: number | null;
+  branch?: string | null;
+  commit_sha?: string | null;
 }
 
 export interface RepoScore {

@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String, ForeignKey, JSON, DateTime, Text
+from sqlalchemy import String, ForeignKey, JSON, DateTime, Text, Integer, Index
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import BaseModel
 
@@ -27,3 +27,16 @@ class Threat(BaseModel):
     raw_data:        Mapped[dict]          = mapped_column(JSON, default=dict)
     detected_at:     Mapped[datetime|None] = mapped_column(DateTime(timezone=True))
     resolved_at:     Mapped[datetime|None] = mapped_column(DateTime(timezone=True))
+
+    # ── Deduplication support ──────────────────────────────────────────────
+    # `fingerprint` is sha256(tenant_id|repo_id|scanner|rule_id|file_path|line)
+    # — 64-char hex. Indexed uniquely with tenant_id so dedup is O(log n).
+    fingerprint:     Mapped[str | None]    = mapped_column(String(64), nullable=True, index=True)
+    occurrence_count:Mapped[int]           = mapped_column(Integer, default=1, nullable=False)
+    first_seen_at:   Mapped[datetime|None] = mapped_column(DateTime(timezone=True))
+    last_seen_at:    Mapped[datetime|None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (
+        # Composite index that powers `_upsert_threat` lookups
+        Index("ix_threats_tenant_repo_fingerprint", "tenant_id", "repo_id", "fingerprint"),
+    )

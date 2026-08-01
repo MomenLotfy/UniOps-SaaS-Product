@@ -241,7 +241,11 @@ class AssetDiscoveryService(BaseService):
         return count
 
     async def _sync_aws(self, tenant_id: str, intg: Integration, config: dict) -> dict[str, int]:
-        """Discover EC2, S3, IAM users/roles, RDS via boto3 in a thread pool."""
+        """
+        Discover EC2, S3, IAM users/roles, RDS, ECR, EKS, CloudWatch via boto3
+        in a thread pool. Each (tenant_id, source, external_id) tuple is the
+        natural key for upsert so re-running is idempotent.
+        """
         from app.integrations.aws.client import AWSClient
         aws_client = AWSClient(config)
         session = aws_client.get_session()
@@ -256,11 +260,23 @@ class AssetDiscoveryService(BaseService):
             loop.run_in_executor(None, lambda: self._aws_s3(tenant_id, intg.id, session, account_id)),
             loop.run_in_executor(None, lambda: self._aws_iam(tenant_id, intg.id, session, account_id)),
             loop.run_in_executor(None, lambda: self._aws_rds(tenant_id, intg.id, session, region, account_id)),
+            loop.run_in_executor(None, lambda: self._aws_ecr(tenant_id, intg.id, session, region, account_id)),
+            loop.run_in_executor(None, lambda: self._aws_eks(tenant_id, intg.id, session, region, account_id)),
+            loop.run_in_executor(None, lambda: self._aws_cloudwatch(tenant_id, intg.id, session, region, account_id)),
         ]
 
-        ec2_data, s3_data, iam_data, rds_data = await asyncio.gather(*tasks, return_exceptions=True)
+        ec2_data, s3_data, iam_data, rds_data, ecr_data, eks_data, cw_data = await asyncio.gather(
+            *tasks, return_exceptions=True
+        )
 
-        for label, data in [("aws_ec2", ec2_data), ("aws_s3", s3_data), ("aws_rds", rds_data)]:
+        for label, data in [
+            ("aws_ec2", ec2_data),
+            ("aws_s3", s3_data),
+            ("aws_rds", rds_data),
+            ("aws_ecr_repository", ecr_data),
+            ("aws_eks_cluster", eks_data),
+            ("aws_cloudwatch_alarm", cw_data),
+        ]:
             if isinstance(data, Exception):
                 logger.warning(f"[asset_sync:aws] {label} failed: {data}")
                 continue
@@ -273,6 +289,13 @@ class AssetDiscoveryService(BaseService):
                 await self._upsert_asset(**asset)
             counts["aws_iam_user"] = sum(1 for a in iam_data if a["asset_type"] == "aws_iam_user")
             counts["aws_iam_role"] = sum(1 for a in iam_data if a["asset_type"] == "aws_iam_role")
+
+        # CloudWatch returns alarms + log groups — split the count
+        if not isinstance(cw_data, Exception):
+            counts["aws_cloudwatch_alarm"] = sum(1 for a in cw_data if a["asset_type"] == "aws_cloudwatch_alarm")
+            counts["aws_cloudwatch_log_group"] = sum(
+                1 for a in cw_data if a["asset_type"] == "aws_cloudwatch_log_group"
+            )
 
         return counts
 
@@ -460,6 +483,145 @@ class AssetDiscoveryService(BaseService):
                     ))
         except Exception as exc:
             logger.warning(f"[aws_rds_sync] region={region}: {exc}")
+        return assets
+
+    def _aws_ecr(self, tenant_id: str, intg_id: str, session, region: str, account_id: str | None) -> list[dict]:
+        """Discover ECR repositories (private container image registry)."""
+        assets = []
+        try:
+            ecr = session.client("ecr", region_name=region)
+            paginator = ecr.get_paginator("describe_repositories")
+            for page in paginator.paginate():
+                for repo in page.get("repositories", []):
+                    repo_name = repo.get("repositoryName", "")
+                    repo_arn = repo.get("repositoryArn", "")
+                    assets.append(dict(
+                        tenant_id=tenant_id, integration_id=intg_id,
+                        asset_type="aws_ecr_repository", source="aws",
+                        external_id=repo_arn or repo_name,
+                        name=repo_name, environment="production",
+                        region=region, account_id=account_id,
+                        owner=None, team=None,
+                        description=f"ECR repo · {repo.get('imageTagMutability', 'MUTABLE')}",
+                        url=f"https://{region}.console.aws.amazon.com/ecr/repositories/{repo_name}/",
+                        tags={},
+                        meta={
+                            "arn": repo_arn,
+                            "uri": repo.get("repositoryUri"),
+                            "created_at": str(repo.get("createdAt", "")),
+                            "image_tag_mutability": repo.get("imageTagMutability"),
+                            "scan_on_push": repo.get("imageScanningConfiguration", {}).get("scanOnPush", False),
+                            "encryption_type": repo.get("encryptionConfiguration", {}).get("encryptionType"),
+                        },
+                        is_critical=True,
+                        last_scanned_at=None,
+                    ))
+        except Exception as exc:
+            logger.warning(f"[aws_ecr_sync] region={region}: {exc}")
+        return assets
+
+    def _aws_eks(self, tenant_id: str, intg_id: str, session, region: str, account_id: str | None) -> list[dict]:
+        """Discover EKS clusters."""
+        assets = []
+        try:
+            eks = session.client("eks", region_name=region)
+            paginator = eks.get_paginator("list_clusters")
+            for page in paginator.paginate():
+                for cluster_name in page.get("clusters", []):
+                    try:
+                        detail = eks.describe_cluster(name=cluster_name).get("cluster", {})
+                    except Exception:
+                        detail = {"name": cluster_name}
+                    arn = detail.get("arn", cluster_name)
+                    assets.append(dict(
+                        tenant_id=tenant_id, integration_id=intg_id,
+                        asset_type="aws_eks_cluster", source="aws",
+                        external_id=arn,
+                        name=cluster_name, environment="production",
+                        region=region, account_id=account_id,
+                        owner=None, team=None,
+                        description=f"EKS {detail.get('version', '?')} · {detail.get('status', 'unknown')}",
+                        url=f"https://{region}.console.aws.amazon.com/eks/home#/clusters/{cluster_name}",
+                        tags={},
+                        meta={
+                            "arn": arn,
+                            "version": detail.get("version"),
+                            "status": detail.get("status"),
+                            "endpoint": detail.get("endpoint"),
+                            "vpc_id": detail.get("resourcesVpcConfig", {}).get("vpcId"),
+                            "subnet_count": len(detail.get("resourcesVpcConfig", {}).get("subnetIds", [])),
+                            "role_arn": detail.get("roleArn"),
+                            "created_at": str(detail.get("createdAt", "")),
+                        },
+                        is_critical=True,
+                        last_scanned_at=None,
+                    ))
+        except Exception as exc:
+            logger.warning(f"[aws_eks_sync] region={region}: {exc}")
+        return assets
+
+    def _aws_cloudwatch(self, tenant_id: str, intg_id: str, session, region: str, account_id: str | None) -> list[dict]:
+        """Discover CloudWatch alarms and log groups (monitoring surface area)."""
+        assets: list[dict] = []
+        try:
+            cw = session.client("cloudwatch", region_name=region)
+            logs = session.client("logs", region_name=region)
+
+            # Alarms
+            try:
+                paginator = cw.get_paginator("describe_alarms")
+                for page in paginator.paginate():
+                    for alarm in page.get("MetricAlarms", []):
+                        alarm_name = alarm.get("AlarmName", "")
+                        assets.append(dict(
+                            tenant_id=tenant_id, integration_id=intg_id,
+                            asset_type="aws_cloudwatch_alarm", source="aws",
+                            external_id=f"alarm:{region}:{alarm_name}",
+                            name=alarm_name, environment="production",
+                            region=region, account_id=account_id,
+                            owner=None, team=None,
+                            description=f"Alarm · {alarm.get('MetricName', '?')} {alarm.get('ComparisonOperator', '?')} {alarm.get('Threshold', '?')}",
+                            url=None, tags={},
+                            meta={
+                                "state": alarm.get("StateValue"),
+                                "metric_name": alarm.get("MetricName"),
+                                "namespace": alarm.get("Namespace"),
+                                "threshold": alarm.get("Threshold"),
+                                "comparison_operator": alarm.get("ComparisonOperator"),
+                            },
+                            last_scanned_at=None,
+                        ))
+            except Exception as exc:
+                logger.warning(f"[aws_cw_alarms_sync] region={region}: {exc}")
+
+            # Log groups
+            try:
+                paginator = logs.get_paginator("describe_log_groups")
+                for page in paginator.paginate():
+                    for lg in page.get("logGroups", []):
+                        lg_name = lg.get("logGroupName", "")
+                        arn = lg.get("arn", lg_name)
+                        assets.append(dict(
+                            tenant_id=tenant_id, integration_id=intg_id,
+                            asset_type="aws_cloudwatch_log_group", source="aws",
+                            external_id=arn,
+                            name=lg_name, environment="production",
+                            region=region, account_id=account_id,
+                            owner=None, team=None,
+                            description=f"Log group · retention {lg.get('retentionInDays', 'never')}",
+                            url=None, tags={},
+                            meta={
+                                "arn": arn,
+                                "retention_in_days": lg.get("retentionInDays"),
+                                "stored_bytes": lg.get("storedBytes", 0),
+                                "kms_key_id": lg.get("kmsKeyId"),
+                            },
+                            last_scanned_at=None,
+                        ))
+            except Exception as exc:
+                logger.warning(f"[aws_cw_logs_sync] region={region}: {exc}")
+        except Exception as exc:
+            logger.warning(f"[aws_cloudwatch_sync] region={region}: {exc}")
         return assets
 
     async def _sync_kubernetes(self, tenant_id: str, intg: Integration, config: dict) -> dict[str, int]:

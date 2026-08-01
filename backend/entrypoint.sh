@@ -75,13 +75,14 @@ if ! alembic upgrade head 2>&1; then
     fi
     echo "  ⚠ alembic migration failed in $APP_ENV_LC — falling back to SQLAlchemy create_all"
     python -c "
-import asyncio, sys
+import asyncio, sys, logging
+logging.disable(logging.CRITICAL)  # silence 'table already exists' noise
 sys.path.insert(0, '/app')
 async def create_tables():
     from app.core.database import engine, Base
     import app.models  # noqa: registers all models
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(Base.metadata.create_all, checkfirst=True)
     print('  Tables created via SQLAlchemy fallback')
 asyncio.run(create_tables())
 " || echo "  ⚠ table creation fallback also failed — continuing anyway"

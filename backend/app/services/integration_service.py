@@ -101,15 +101,48 @@ class IntegrationService(BaseService):
     # Write
     # ─────────────────────────────────────────────────────────────────────────
 
+    # Provider types that are singleton-per-tenant: connecting a second
+    # account of the same provider always REPLACES the existing one (merges
+    # credentials, never duplicates). This is how OAuth providers like GitHub
+    # or Slack work — one tenant, one connection.
+    SINGLETON_PROVIDER_TYPES: frozenset[str] = frozenset({
+        "github", "gitlab", "bitbucket", "azure_devops",
+        "aws", "gcp", "azure",
+        "slack", "teams", "discord", "email",
+        "prometheus", "grafana", "datadog", "loki",
+        "jira", "servicenow", "linear", "pagerduty",
+        "okta", "auth0", "entra_id",
+        "trivy", "defectdojo", "snyk", "wiz",
+        "s3", "azure_blob", "gcs",
+        "github_actions", "gitlab_ci", "jenkins", "argocd",
+        "docker_registry", "harbor",
+        "terraform", "kubernetes", "webhook",
+    })
+
     async def create(self, tenant_id: str, data: IntegrationCreate) -> IntegrationResponse:
-        if data.type in ("github", "gitlab"):
+        """
+        Create (or upsert) an integration.
+
+        Duplicate prevention policy:
+          • If the integration type is in SINGLETON_PROVIDER_TYPES and a record
+            of that type already exists for this tenant, we MERGE credentials
+            onto the existing record rather than creating a duplicate. This
+            matches how every modern integration hub works — connecting GitHub
+            twice means "re-authenticate the same connection", not "add a
+            second GitHub connection".
+          • Otherwise we fall back to the legacy (name, type) uniqueness check
+            and return 409 on collision.
+        """
+        is_singleton = data.type in self.SINGLETON_PROVIDER_TYPES
+
+        if is_singleton:
             existing = await self.db.execute(
                 select(Integration).where(
                     Integration.tenant_id == tenant_id,
                     Integration.type == data.type,
-                )
+                ).order_by(Integration.created_at.asc())
             )
-            existing_integration = existing.scalar_one_or_none()
+            existing_integration = existing.scalars().first()
             if existing_integration:
                 existing_decrypted = self._decrypt_credentials(existing_integration.credentials or {})
                 merged_credentials = {
@@ -462,6 +495,13 @@ class IntegrationService(BaseService):
                 else:
                     repos = await _fetch_gitlab_repos(config)
 
+                # ── Probe Dockerfile / CI files without cloning ────────────
+                # Best-effort. Probe failure → fields stay False; the first
+                # real scan will set them via scan_engine._detect_repo_capabilities.
+                repos = await _enrich_with_capabilities(
+                    repos, integration.type, config,
+                )
+
                 for repo_data in repos:
                     await self._upsert_repository(tenant_id, integration, repo_data)
                     synced += 1
@@ -677,6 +717,8 @@ async def _fetch_github_repos(config: dict) -> list[dict]:
             "default_branch": r.get("default_branch", "main"),
             "is_private": r.get("private", True),
             "language": (r.get("language") or "unknown").lower(),
+            "has_dockerfile": False,  # filled in by probe
+            "has_cicd":       False,  # filled in by probe
         }
         for r in repos
     ]
@@ -712,5 +754,199 @@ async def _fetch_gitlab_repos(config: dict) -> list[dict]:
                     "default_branch": r.get("default_branch", "main"),
                     "is_private": r.get("visibility", "private") != "public",
                     "language": None,
+                    "has_dockerfile": False,  # filled in by probe
+                    "has_cicd":       False,  # filled in by probe
                 })
+    return repos
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Capability probing — fills has_dockerfile / has_cicd without a full clone
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Mirrors the recursive patterns in scan_engine.ContainerScanner + CiCdScanner.
+_GITHUB_PROBE_PATHS = (
+    # Dockerfile (root + well-known nested locations)
+    ("has_dockerfile", "Dockerfile"),
+    ("has_dockerfile", "Dockerfile.prod"),
+    ("has_dockerfile", "Dockerfile.dev"),
+    ("has_dockerfile", "docker/Dockerfile"),
+    ("has_dockerfile", "containers/Dockerfile"),
+    ("has_dockerfile", "deploy/Dockerfile"),
+    # CI/CD configurations
+    ("has_cicd", ".github/workflows/main.yml"),
+    ("has_cicd", ".github/workflows/ci.yml"),
+    ("has_cicd", ".github/workflows/build.yml"),
+    ("has_cicd", ".github/workflows/test.yml"),
+    ("has_cicd", ".github/workflows/deploy.yml"),
+    ("has_cicd", ".github/workflows/release.yml"),
+    ("has_cicd", ".github/workflows/publish.yml"),
+    ("has_cicd", ".github/workflows/lint.yml"),
+    ("has_cicd", ".github/workflows/ci.yaml"),
+    ("has_cicd", ".github/workflows/build.yaml"),
+    ("has_cicd", ".gitlab-ci.yml"),
+    ("has_cicd", ".gitlab-ci.yaml"),
+    ("has_cicd", "Jenkinsfile"),
+    ("has_cicd", ".circleci/config.yml"),
+    ("has_cicd", ".circleci/config.yaml"),
+    ("has_cicd", "azure-pipelines.yml"),
+    ("has_cicd", "azure-pipelines.yaml"),
+    ("has_cicd", "bitbucket-pipelines.yml"),
+)
+
+
+async def _probe_github_capabilities(client, headers: dict, full_name: str, default_branch: str) -> tuple[bool, bool]:
+    """
+    Probe a GitHub repo's contents tree to detect Dockerfile / CI files
+    WITHOUT cloning the entire repository. We use a single recursive tree
+    call (truncated to 100 entries) which is fast and within rate limits.
+    """
+    has_docker = False
+    has_cicd   = False
+    try:
+        # 1) Cheap tree-list call (depth=1, no submodules)
+        resp = await client.get(
+            f"https://api.github.com/repos/{full_name}/git/trees/{default_branch}",
+            headers=headers,
+            params={"recursive": "1"},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            tree = (resp.json() or {}).get("tree", []) or []
+            for entry in tree:
+                path = (entry.get("path") or "").lower()
+                if not path:
+                    continue
+                # Dockerfile at root or under docker/, containers/, deploy/
+                if path == "dockerfile" or path.startswith("dockerfile.") \
+                   or path.startswith("docker/") or path.startswith("containers/") \
+                   or path.startswith("deploy/") or path.endswith("/dockerfile") \
+                   or path.endswith(".dockerfile"):
+                    has_docker = True
+                # CI/CD
+                if path.startswith(".github/workflows/") \
+                   or path in {".gitlab-ci.yml", ".gitlab-ci.yaml", "jenkinsfile",
+                               ".circleci/config.yml", ".circleci/config.yaml",
+                               "azure-pipelines.yml", "azure-pipelines.yaml",
+                               "bitbucket-pipelines.yml"} \
+                   or path.startswith("argocd/") or path.startswith("tekton/"):
+                    has_cicd = True
+            return has_docker, has_cicd
+        # 2) Fallback: probe individual known paths
+        for key, path in _GITHUB_PROBE_PATHS:
+            probe = await client.head(
+                f"https://api.github.com/repos/{full_name}/contents/{path}",
+                headers=headers,
+                timeout=5,
+            )
+            if probe.status_code == 200:
+                if key == "has_dockerfile":
+                    has_docker = True
+                else:
+                    has_cicd = True
+            if has_docker and has_cicd:
+                break
+    except Exception:
+        # Best-effort — never fail sync because of probe errors
+        pass
+    return has_docker, has_cicd
+
+
+async def _probe_gitlab_capabilities(client, base: str, headers: dict, project_id: str, default_branch: str) -> tuple[bool, bool]:
+    """
+    Probe a GitLab project's repository tree for Dockerfile / CI files.
+    Falls back to a HEAD on .gitlab-ci.yml + Dockerfile if the tree call fails.
+    """
+    has_docker = False
+    has_cicd   = False
+    try:
+        # 1) Recursive tree call
+        resp = await client.get(
+            f"{base}/api/v4/projects/{project_id}/repository/tree",
+            headers=headers,
+            params={"recursive": "true", "per_page": 100, "ref": default_branch},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            for entry in resp.json() or []:
+                path = (entry.get("path") or "").lower()
+                if not path:
+                    continue
+                if path == "dockerfile" or path.startswith("dockerfile.") \
+                   or path.startswith("docker/") or path.startswith("containers/") \
+                   or path.startswith("deploy/") or path.endswith("/dockerfile") \
+                   or path.endswith(".dockerfile"):
+                    has_docker = True
+                if path in {".gitlab-ci.yml", ".gitlab-ci.yaml", "jenkinsfile"} \
+                   or path.startswith(".github/workflows/") \
+                   or path in {".circleci/config.yml", ".circleci/config.yaml",
+                               "azure-pipelines.yml", "azure-pipelines.yaml",
+                               "bitbucket-pipelines.yml"} \
+                   or path.startswith("argocd/") or path.startswith("tekton/"):
+                    has_cicd = True
+            return has_docker, has_cicd
+        # 2) Fallback — check .gitlab-ci.yml and Jenkinsfile
+        for path in (".gitlab-ci.yml", ".gitlab-ci.yaml", "Jenkinsfile", "Dockerfile"):
+            probe = await client.head(
+                f"{base}/api/v4/projects/{project_id}/repository/files/{path}",
+                headers=headers,
+                params={"ref": default_branch},
+                timeout=5,
+            )
+            if probe.status_code == 200:
+                if path.lower().startswith("dockerfile"):
+                    has_docker = True
+                else:
+                    has_cicd = True
+            if has_docker and has_cicd:
+                break
+    except Exception:
+        pass
+    return has_docker, has_cicd
+
+
+async def _enrich_with_capabilities(
+    repos: list[dict],
+    integration_type: str,
+    config: dict,
+) -> list[dict]:
+    """
+    For each repo dict, call the matching provider's capability probe and
+    stamp has_dockerfile / has_cicd. Best-effort: probe failures are
+    silent (False) — they will be corrected on the first real scan.
+    """
+    import httpx
+    if not repos:
+        return repos
+
+    if integration_type == "github":
+        token = config.get("token") or config.get("access_token", "")
+        if not token:
+            return repos
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github.v3+json",
+        }
+        async with httpx.AsyncClient(timeout=20) as client:
+            for r in repos:
+                hd, hc = await _probe_github_capabilities(
+                    client, headers, r["full_name"], r.get("default_branch", "main"),
+                )
+                r["has_dockerfile"] = hd
+                r["has_cicd"] = hc
+
+    elif integration_type == "gitlab":
+        token = config.get("token") or config.get("access_token", "")
+        base  = config.get("url", "https://gitlab.com")
+        if not token:
+            return repos
+        headers = {"PRIVATE-TOKEN": token}
+        async with httpx.AsyncClient(timeout=20) as client:
+            for r in repos:
+                hd, hc = await _probe_gitlab_capabilities(
+                    client, base, headers, r["external_id"], r.get("default_branch", "main"),
+                )
+                r["has_dockerfile"] = hd
+                r["has_cicd"] = hc
+
     return repos

@@ -25,3 +25,8 @@ class PaginatedResponse(BaseModel, Generic[T]):
     page: int
     page_size: int
     pages: int
+
+
+# Alias used by routers that import a unified paginated wrapper
+APIPaginatedResponse = PaginatedResponse
+

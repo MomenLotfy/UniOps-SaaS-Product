@@ -523,8 +523,8 @@ class ContainerScanner:
     ]
 
     async def run(self, repo_path: str) -> list[RawFinding]:
-        dockerfile = Path(repo_path) / "Dockerfile"
-        if not dockerfile.exists():
+        dockerfiles = self._find_dockerfiles(repo_path)
+        if not dockerfiles:
             return []
 
         if _get_docker_available():
@@ -533,7 +533,57 @@ class ContainerScanner:
             except Exception as e:
                 logger.warning(f"Trivy failed: {e}")
 
-        return self._lint_dockerfile(dockerfile, repo_path)
+        # Lint every Dockerfile we found (root + nested) — not just the first
+        findings: list[RawFinding] = []
+        for dockerfile in dockerfiles:
+            findings.extend(self._lint_dockerfile(dockerfile, repo_path))
+        return findings
+
+    @staticmethod
+    def _find_dockerfiles(repo_path: str) -> list[Path]:
+        """
+        Recursively find all Dockerfiles in the repo.
+
+        Detects:
+          - Dockerfile, Dockerfile.prod, Dockerfile.dev, Dockerfile.* (root)
+          - docker/Dockerfile, docker/Dockerfile.*
+          - containers/Dockerfile, containers/Dockerfile.*
+          - deploy/Dockerfile, deploy/Dockerfile.*
+          - Any *.dockerfile (case-insensitive) anywhere in the tree
+
+        Skips node_modules, .git, vendor, dist, build, __pycache__.
+        """
+        root = Path(repo_path)
+        if not root.exists():
+            return []
+        skip_dirs = {"node_modules", ".git", "vendor", "dist", "build", "__pycache__", ".venv", "venv"}
+        out: list[Path] = []
+
+        # 1) Common well-known names (rglob) — captures root + nested in one pass
+        for pattern in (
+            "Dockerfile",
+            "Dockerfile.*",
+            "*.dockerfile",
+            "*.Dockerfile",
+        ):
+            for p in root.rglob(pattern):
+                if not p.is_file():
+                    continue
+                if any(part in skip_dirs for part in p.parts):
+                    continue
+                if p not in out:
+                    out.append(p)
+
+        # 2) Common nested folders with a Dockerfile inside
+        for sub in ("docker", "containers", "deploy", "ops", "build", "images"):
+            for p in (root / sub).rglob("Dockerfile*"):
+                if p.is_file() and p not in out and not any(part in skip_dirs for part in p.parts):
+                    out.append(p)
+            for p in (root / sub).rglob("*.dockerfile"):
+                if p.is_file() and p not in out and not any(part in skip_dirs for part in p.parts):
+                    out.append(p)
+
+        return out
 
     async def _trivy(self, repo_path: str) -> list[RawFinding]:
         cmd = [
@@ -683,14 +733,63 @@ class CiCdScanner:
         return findings
 
     def _find_ci_files(self, repo_path: str) -> list[str]:
-        files = []
-        root  = Path(repo_path)
+        """
+        Recursively find every CI/CD config file we know about.
+
+        Supported (root + nested in `ci/`, `.github/`, etc.):
+          - .github/workflows/*.yml, .github/workflows/*.yaml
+          - .gitlab-ci.yml, .gitlab-ci.yaml
+          - Jenkinsfile (root + anywhere)
+          - .circleci/config.yml, .circleci/config.yaml
+          - azure-pipelines.yml, azure-pipelines.yaml
+          - bitbucket-pipelines.yml
+          - argocd/ (any *.yaml/*.yml under it)
+          - tekton/ (any *.yaml/*.yml under it)
+        """
+        files: list[str] = []
+        root = Path(repo_path)
+        if not root.exists():
+            return files
+
+        skip_dirs = {"node_modules", ".git", "vendor", "dist", "build", "__pycache__", ".venv", "venv"}
+
+        def _add(p: Path):
+            if p.is_file() and str(p) not in files:
+                files.append(str(p))
+
+        # Glob patterns
         for pattern in [
-            ".github/workflows/*.yml", ".github/workflows/*.yaml",
-            ".gitlab-ci.yml", ".gitlab-ci.yaml",
-            "Jenkinsfile", ".circleci/config.yml",
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".gitlab-ci.yml",
+            ".gitlab-ci.yaml",
+            ".circleci/config.yml",
+            ".circleci/config.yaml",
+            "azure-pipelines.yml",
+            "azure-pipelines.yaml",
+            "bitbucket-pipelines.yml",
         ]:
-            files.extend(str(f) for f in root.glob(pattern) if f.is_file())
+            for f in root.glob(pattern):
+                _add(f)
+
+        # Recursive patterns
+        for pattern in ["Jenkinsfile", "Jenkinsfile.*", "*jenkinsfile*"]:
+            for f in root.rglob(pattern):
+                if any(part in skip_dirs for part in f.parts):
+                    continue
+                _add(f)
+
+        # argocd/ and tekton/ directories — any yaml inside
+        for sub in ("argocd", "tekton", ".argo"):
+            sub_path = root / sub
+            if not sub_path.exists():
+                continue
+            for ext in ("*.yml", "*.yaml"):
+                for f in sub_path.rglob(ext):
+                    if any(part in skip_dirs for part in f.parts):
+                        continue
+                    _add(f)
+
         return files
 
 
@@ -710,7 +809,12 @@ class ResultAdapter:
         """
         Convert raw scan findings to Threat dicts.
         repo_id is stored on every record so queries can be repo-isolated.
+
+        Each Threat dict includes a stable `fingerprint` so the caller can
+        dedup against existing rows. Fingerprint formula:
+            sha256(tenant_id|repo_id|scanner|rule_id|file_path|line)
         """
+        import hashlib
         threats = []
         for f in findings:
             if f.cve_id:
@@ -723,6 +827,16 @@ class ResultAdapter:
                 "deps":      "vulnerable_dependency",
             }
             loc = f"{f.file_path}:{f.line}" if f.file_path and f.line else (f.file_path or repo_full_name)
+            raw = f.raw_data or {}
+            fingerprint_src = "|".join([
+                str(tenant_id or ""),
+                str(repo_id or ""),
+                str(f.scanner or ""),
+                str(f.rule_id or f.title or ""),
+                str(f.file_path or ""),
+                str(f.line or 0),
+            ])
+            fingerprint = hashlib.sha256(fingerprint_src.encode("utf-8")).hexdigest()
             threats.append({
                 "tenant_id":       tenant_id,
                 "scan_id":         scan_id,
@@ -743,6 +857,7 @@ class ResultAdapter:
                     "line":    f.line,
                     "rule_id": f.rule_id,
                 },
+                "fingerprint":     fingerprint,
             })
         return threats
 
@@ -855,17 +970,67 @@ class AiAnalyzer:
         )
 
     def _fallback(self, repo_name: str, findings: list[RawFinding], score: float) -> tuple[str, list[str]]:
-        critical = sum(1 for f in findings if f.severity == "critical")
-        secrets  = sum(1 for f in findings if f.scanner == "secrets")
-        parts    = [f"Scan of {repo_name}: {len(findings)} issues found (score: {score}/100)."]
-        if critical: parts.append(f"{critical} critical issues need immediate attention.")
-        if secrets:  parts.append(f"⚠️ {secrets} secret(s) detected — rotate credentials immediately.")
-        suggestions = []
-        if secrets:  suggestions.append("Rotate all leaked credentials and purge them from git history.")
-        if critical: suggestions.append("Fix all critical severity issues before next deployment.")
-        suggestions.append("Pin GitHub Actions to full commit SHAs to prevent supply-chain attacks.")
-        suggestions.append("Enable Dependabot for automated dependency updates.")
-        suggestions.append("Add SAST scanning to your CI/CD pipeline.")
+        """
+        Findings-driven fallback used when the LLM call fails.
+
+        Every suggestion is emitted only when its trigger finding actually
+        exists in the scan — we never recommend fixing something that wasn't
+        detected. The summary and suggestions are explicit so the UI can mark
+        them as "Generated locally" (not LLM-generated).
+        """
+        critical   = sum(1 for f in findings if f.severity == "critical")
+        high       = sum(1 for f in findings if f.severity == "high")
+        medium     = sum(1 for f in findings if f.severity == "medium")
+        sast       = sum(1 for f in findings if f.scanner == "sast")
+        secrets    = sum(1 for f in findings if f.scanner == "secrets")
+        deps       = sum(1 for f in findings if f.scanner == "deps")
+        container  = sum(1 for f in findings if f.scanner == "container")
+        cicd       = sum(1 for f in findings if f.scanner == "cicd")
+
+        # ── Summary (factual) ─────────────────────────────────────────────
+        if not findings:
+            parts = [f"Scan of {repo_name}: no issues found (score: {score}/100)."]
+        else:
+            parts = [
+                f"Scan of {repo_name}: {len(findings)} findings "
+                f"({critical}C / {high}H / {medium}M), score {score}/100."
+            ]
+            if secrets:   parts.append(f"⚠️ {secrets} secret(s) detected — rotate immediately.")
+            if container: parts.append(f"{container} container misconfigurations need attention.")
+            if cicd:      parts.append(f"{cicd} CI/CD misconfigurations detected.")
+
+        # ── Suggestions (only when their trigger is present) ──────────────
+        suggestions: list[str] = []
+        if secrets:
+            suggestions.append(
+                f"Rotate the {secrets} leaked credential(s) and purge them from git history."
+            )
+        if critical:
+            suggestions.append(
+                f"Fix the {critical} critical severity finding(s) before the next deployment."
+            )
+        if sast:
+            suggestions.append(
+                f"Address the {sast} SAST finding(s) — review the cited files and refactor."
+            )
+        if deps:
+            suggestions.append(
+                f"Upgrade the {deps} vulnerable dependency(ies) using `npm audit fix` "
+                f"or `pip-audit --fix`."
+            )
+        if cicd:
+            suggestions.append(
+                f"Tighten CI/CD: pin GitHub Actions to commit SHAs and review the {cicd} issue(s)."
+            )
+        if container:
+            suggestions.append(
+                f"Add a non-root `USER` directive to the Dockerfile and review the {container} misconfig(s)."
+            )
+        if not suggestions:
+            suggestions.append(
+                "Schedule regular scans and keep dependencies updated to maintain this score."
+            )
+
         return " ".join(parts), suggestions[:5]
 
 
@@ -974,8 +1139,9 @@ class ScanOrchestrator:
         """
         result   = ScanResult()
         language = self._detect_language(work_dir)
-        has_docker = (Path(work_dir) / "Dockerfile").exists()
-        has_cicd   = bool(CiCdScanner()._find_ci_files(work_dir))
+        capabilities = self._detect_repo_capabilities(work_dir)
+        has_docker = capabilities["has_dockerfile"]
+        has_cicd   = capabilities["has_cicd"]
 
         logger.info(
             f"[scan:{scan_id}] Starting scan — "
@@ -1088,4 +1254,38 @@ class ScanOrchestrator:
             if any((root / f).exists() for f in files):
                 return lang
         return "unknown"
+
+    def _detect_repo_capabilities(self, repo_path: str) -> dict:
+        """
+        Detect repo capabilities (Dockerfile / CI/CD / k8s / terraform)
+        using the same recursive helpers the scanners use.
+
+        Returns dict with keys: has_dockerfile, has_cicd, has_kubernetes, has_terraform.
+        """
+        root = Path(repo_path)
+        if not root.exists():
+            return {"has_dockerfile": False, "has_cicd": False,
+                    "has_kubernetes": False, "has_terraform": False}
+        skip_dirs = {"node_modules", ".git", "vendor", "dist", "build", "__pycache__", ".venv", "venv"}
+
+        has_dockerfile = bool(ContainerScanner._find_dockerfiles(repo_path))
+        has_cicd       = bool(CiCdScanner()._find_ci_files(repo_path))
+
+        has_k8s = any(
+            not any(part in skip_dirs for part in p.parts)
+            for p in root.rglob("*.yaml")
+            if any(t in p.name.lower() for t in ("deployment", "service", "statefulset",
+                                                  "daemonset", "configmap", "ingress"))
+        ) or any((root / f).exists() for f in ("kustomization.yaml", "kustomization.yml"))
+        has_tf = any(
+            not any(part in skip_dirs for part in p.parts)
+            for p in root.rglob("*.tf")
+        )
+
+        return {
+            "has_dockerfile": has_dockerfile,
+            "has_cicd":       has_cicd,
+            "has_kubernetes": has_k8s,
+            "has_terraform":  has_tf,
+        }
 

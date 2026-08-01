@@ -41,6 +41,15 @@ from app.models.finding_sla import FindingSLA
 from app.models.security_ticket import SecurityTicket
 from app.models.policy_violation import PolicyViolation
 from app.models.copilot import CopilotConversation, CopilotMessage
+from app.models.ownership import (
+    OwnershipMapping,
+    OwnershipAuditLog,
+    OwnershipDefault,
+)
+from app.models.report import Report, ReportTemplate, REPORT_TEMPLATES
+from app.models.sla import SLA, SLAMonitoring
+from app.models.remediation import RemediationTask
+from app.models.compliance_check import ComplianceCheck
 
 __all__ = [
     "BaseModel", "Tenant", "User", "Role", "Permission", "Subscription",
@@ -60,4 +69,9 @@ __all__ = [
     "SecurityTicket",
     "PolicyViolation",
     "CopilotConversation", "CopilotMessage",
+    "OwnershipMapping", "OwnershipAuditLog", "OwnershipDefault",
+    "Report", "ReportTemplate", "REPORT_TEMPLATES",
+    "SLA", "SLAMonitoring",
+    "RemediationTask",
+    "ComplianceCheck",
 ]

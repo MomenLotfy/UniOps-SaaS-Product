@@ -1,10 +1,26 @@
 export type IntegrationProvider =
+  // Cloud
   | 'aws' | 'gcp' | 'azure'
-  | 'github' | 'gitlab' | 'bitbucket'
-  | 'kubernetes' | 'terraform'
-  | 'slack' | 'teams' | 'pagerduty'
-  | 'datadog' | 'grafana' | 'prometheus'
-  | 'webhook';
+  // VCS
+  | 'github' | 'gitlab' | 'bitbucket' | 'azure_devops'
+  // Containers
+  | 'kubernetes' | 'docker_registry' | 'harbor'
+  // CI/CD
+  | 'github_actions' | 'gitlab_ci' | 'jenkins' | 'argocd'
+  // Communication
+  | 'slack' | 'teams' | 'discord' | 'email'
+  // Monitoring
+  | 'prometheus' | 'grafana' | 'datadog' | 'loki'
+  // Security
+  | 'trivy' | 'defectdojo' | 'snyk' | 'wiz'
+  // Identity
+  | 'okta' | 'auth0' | 'entra_id'
+  // Ticketing
+  | 'jira' | 'servicenow' | 'linear' | 'pagerduty'
+  // Storage
+  | 's3' | 'azure_blob' | 'gcs'
+  // Misc
+  | 'terraform' | 'webhook';
 
 export type IntegrationStatus =
   | 'connected'          // credentials verified — all systems go
@@ -32,8 +48,8 @@ export interface IntegrationMeta {
   label: string;
   description: string;
   icon: string;
-  category: 'cloud' | 'vcs' | 'orchestration' | 'communication' | 'monitoring';
-  authType: 'oauth' | 'api_key' | 'iam_role' | 'kubeconfig' | 'webhook';
+  category: 'cloud' | 'vcs' | 'orchestration' | 'communication' | 'monitoring' | 'security' | 'identity' | 'ticketing' | 'storage';
+  authType: 'oauth' | 'api_key' | 'iam_role' | 'kubeconfig' | 'webhook' | 'none';
   docsUrl: string;
 }
 

@@ -232,12 +232,16 @@ class ScanService(BaseService):
         """
         Returns scan history for the Threat Timeline chart.
         Pass repo_id to scope history to a single repository.
-        Each entry: {date, score, critical, high, medium, low, secrets, repo, repo_id, scan_id}
+        Each entry: {date, score, critical, high, medium, low, secrets, repo, repo_id, scan_id, status}
+
+        Includes BOTH completed and failed scans (audit traceability — never
+        silently drop failed runs). The frontend uses the `status` field to
+        mark entries red when the scan errored.
         """
         query = (
             select(Scan, Repository.full_name)
             .join(Repository, Scan.repo_id == Repository.id, isouter=True)
-            .where(Scan.tenant_id == tenant_id, Scan.status == "completed")
+            .where(Scan.tenant_id == tenant_id)
         )
 
         if repo_id:
@@ -271,6 +275,11 @@ class ScanService(BaseService):
                 "repo":     repo_name,
                 "repo_id":  s.repo_id,
                 "scan_id":  s.id,
+                "status":   s.status,
+                "error_message": s.error_message,
+                "duration_secs": s.duration_secs,
+                "branch":      s.branch,
+                "commit_sha":  s.commit_sha,
             }
             for s, repo_name in reversed(rows)  # chronological order
         ]
@@ -289,6 +298,11 @@ class ScanService(BaseService):
         Returns the latest security score for the dashboard.
         Pass repo_id to get the score for a specific repository only.
         Without repo_id, returns the most recent scan across all repos.
+
+        The `breakdown` field is computed from `raw_results` (real per-scanner
+        penalty values from the scan engine), NOT from score-minus-arbitrary-N.
+        Scanners that were SKIPPED (e.g. container with no Dockerfile) return
+        `null` so the frontend can render "N/A" instead of a synthetic 0.
         """
         from sqlalchemy import desc
 
@@ -299,6 +313,14 @@ class ScanService(BaseService):
                 Scan.ai_suggestions,
                 Scan.completed_at,
                 Scan.repo_id,
+                Scan.raw_results,
+                Scan.critical_count,
+                Scan.high_count,
+                Scan.medium_count,
+                Scan.low_count,
+                Scan.secret_count,
+                Scan.misconfig_count,
+                Scan.scanners_run,
                 Repository.full_name,
             )
             .join(Repository, Scan.repo_id == Repository.id, isouter=True)
@@ -319,19 +341,8 @@ class ScanService(BaseService):
         result = await self.db.execute(query.order_by(desc(Scan.completed_at)).limit(1))
         row = result.fetchone()
 
-        scan_score   = float(row[0]) if row and row[0] is not None else None
-        ai_summary   = row[1] if row else None
-        ai_suggestions = row[2] if row else []
-        completed_at = row[3] if row else None
-        scanned_repo_id   = row[4] if row else None
-        scanned_repo_name = row[5] if row else None
-
-        logger.info(
-            f"[scan:score] score={scan_score} repo={scanned_repo_name} "
-            f"repo_id={repo_id}"
-        )
-
-        if scan_score is None:
+        if not row:
+            logger.info(f"[scan:score] No scan found for tenant={tenant_id[:8]} repo_id={repo_id}")
             return {
                 "score":         None,
                 "status":        "no_scan",
@@ -344,29 +355,45 @@ class ScanService(BaseService):
                     "Review the Security Center to configure scan settings",
                 ],
                 "last_scan_at":  None,
-                "breakdown": {
-                    "Code Security": None,
-                    "Dependencies":  None,
-                    "Secrets":       None,
-                    "CI/CD Security":None,
-                    "Containers":    None,
-                },
+                "breakdown": None,
+            }
+
+        (scan_score, ai_summary, ai_suggestions, completed_at,
+         scanned_repo_id, raw_results,
+         critical, high, medium, low, secrets, misconfig,
+         scanners_run, scanned_repo_name) = row
+
+        breakdown = _compute_per_scanner_health(
+            raw_results=raw_results or {},
+            scanners_run=scanners_run or {},
+        )
+
+        logger.info(
+            f"[scan:score] score={scan_score} repo={scanned_repo_name} "
+            f"repo_id={repo_id} breakdown={breakdown}"
+        )
+
+        if scan_score is None:
+            return {
+                "score":         None,
+                "status":        "no_score",
+                "repo_id":       scanned_repo_id,
+                "repo_name":     scanned_repo_name,
+                "ai_summary":    ai_summary,
+                "ai_suggestions": ai_suggestions or [],
+                "last_scan_at":  completed_at.isoformat() if completed_at else None,
+                "breakdown":     breakdown,
             }
 
         return {
             "score":          scan_score,
+            "status":         "completed",
             "repo_id":        scanned_repo_id,
             "repo_name":      scanned_repo_name,
             "ai_summary":     ai_summary,
             "ai_suggestions": ai_suggestions or [],
             "last_scan_at":   completed_at.isoformat() if completed_at else None,
-            "breakdown": {
-                "Code Security":  max(0, round(scan_score - 10, 1)),
-                "Dependencies":   max(0, round(scan_score - 5,  1)),
-                "Secrets":        max(0, min(scan_score + 15, 100)),
-                "CI/CD Security": max(0, round(scan_score - 8,  1)),
-                "Containers":     max(0, round(scan_score - 3,  1)),
-            },
+            "breakdown":      breakdown,
         }
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -406,6 +433,165 @@ class ScanService(BaseService):
                 scan.error_message = error[:1000]
                 scan.completed_at = datetime.now(timezone.utc)
                 await db.commit()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Per-scanner health computation
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Penalty per finding, mirroring ScoreCalculator in scan_engine.py
+# These are NOT arbitrary — they mirror the cap logic in
+# scan_engine.ScoreCalculator so a UI gauge rounds-trips back to a real number.
+_SAST_PEN      = {"critical": 20, "high": 10, "medium": 5, "low": 1}
+_SAST_CAP      = {"critical": 40, "high": 30, "medium": 15, "low": 5}
+_DEPS_PEN      = {"critical": 20, "high": 10, "medium": 5, "low": 1}
+_DEPS_CAP      = {"critical": 40, "high": 30, "medium": 15, "low": 5}
+_SECRET_PEN    = 25
+_SECRET_CAP    = 50
+_CONTAINER_PEN = 8
+_CONTAINER_CAP = 16
+_CICD_PEN      = 8
+_CICD_CAP      = 16
+
+# Cap of 100 mirrors scan_engine.ScoreCalculator.compute
+_HEALTH_CAP = 100
+
+
+def _per_scanner_penalty(
+    findings: dict | list | None,
+    per: dict | int,
+    cap: dict | int,
+) -> float:
+    """
+    Sum the penalty of a scanner's findings, capped per-severity and total.
+    `per` and `cap` may be either {severity: int} dicts or flat ints.
+    Returns 0.0 for no findings.
+    """
+    if not findings:
+        return 0.0
+    if isinstance(findings, list):
+        # items: [{severity, ...}, ...]
+        grouped: dict[str, int] = {}
+        for f in findings:
+            sev = (f.get("severity") or f.get("level") or "low").lower()
+            grouped[sev] = grouped.get(sev, 0) + 1
+        findings = grouped
+
+    total = 0.0
+    for sev, count in (findings or {}).items():
+        if isinstance(per, dict):
+            p = per.get(sev, 0)
+            c = cap.get(sev, 999)
+        else:
+            p = per
+            c = cap
+        total += min(int(count) * p, c)
+    return total
+
+
+def _compute_per_scanner_health(
+    raw_results: dict,
+    scanners_run: dict,
+) -> dict:
+    """
+    Build a per-scanner health breakdown (0..100) from real `raw_results`.
+
+    Returns:
+        {
+          "sast":      100,        # 100 means clean, 0 means full of critical findings
+          "deps":      75,
+          "secrets":   null,       # scanner skipped (not applicable to this repo)
+          "container": 90,
+          "cicd":      null,
+        }
+
+    A scanner is "skipped" if scanners_run[key] == "skipped" OR it never ran.
+    We never fabricate a 0/100 for a scanner that didn't run.
+    """
+    breakdown: dict[str, float | None] = {
+        "sast":      None,
+        "deps":      None,
+        "secrets":   None,
+        "container": None,
+        "cicd":      None,
+    }
+
+    def _ran(key: str) -> bool:
+        s = (scanners_run or {}).get(key)
+        return s in ("completed", "running", "ok") or (s not in ("skipped", "failed", "not_applicable") and s is not None)
+
+    # ── SAST ───────────────────────────────────────────────────────────────
+    sast_findings = (
+        (raw_results or {}).get("sast")
+        or (raw_results or {}).get("sast_findings")
+        or {}
+    )
+    if _ran("sast"):
+        pen = _per_scanner_penalty(sast_findings, _SAST_PEN, _SAST_CAP)
+        breakdown["sast"] = round(max(0.0, _HEALTH_CAP - pen), 1)
+
+    # ── Deps ───────────────────────────────────────────────────────────────
+    deps_findings = (
+        (raw_results or {}).get("deps")
+        or (raw_results or {}).get("dependency")
+        or (raw_results or {}).get("dependencies")
+        or {}
+    )
+    if _ran("deps"):
+        pen = _per_scanner_penalty(deps_findings, _DEPS_PEN, _DEPS_CAP)
+        breakdown["deps"] = round(max(0.0, _HEALTH_CAP - pen), 1)
+
+    # ── Secrets ────────────────────────────────────────────────────────────
+    secrets_findings = (
+        (raw_results or {}).get("secrets")
+        or (raw_results or {}).get("secret")
+        or {}
+    )
+    if isinstance(secrets_findings, dict):
+        secret_count = int(secrets_findings.get("count", 0))
+    elif isinstance(secrets_findings, list):
+        secret_count = len(secrets_findings)
+    elif isinstance(secrets_findings, (int, float)):
+        secret_count = int(secrets_findings)
+    else:
+        secret_count = 0
+    if _ran("secrets"):
+        pen = min(secret_count * _SECRET_PEN, _SECRET_CAP)
+        breakdown["secrets"] = round(max(0.0, _HEALTH_CAP - pen), 1)
+
+    # ── Container ──────────────────────────────────────────────────────────
+    container_findings = (
+        (raw_results or {}).get("container")
+        or (raw_results or {}).get("containers")
+        or {}
+    )
+    if _ran("container"):
+        if isinstance(container_findings, dict):
+            c_count = int(container_findings.get("count", 0))
+        elif isinstance(container_findings, list):
+            c_count = len(container_findings)
+        else:
+            c_count = 0
+        pen = min(c_count * _CONTAINER_PEN, _CONTAINER_CAP)
+        breakdown["container"] = round(max(0.0, _HEALTH_CAP - pen), 1)
+
+    # ── CI/CD ──────────────────────────────────────────────────────────────
+    cicd_findings = (
+        (raw_results or {}).get("cicd")
+        or (raw_results or {}).get("ci_cd")
+        or {}
+    )
+    if _ran("cicd"):
+        if isinstance(cicd_findings, dict):
+            ci_count = int(cicd_findings.get("count", 0))
+        elif isinstance(cicd_findings, list):
+            ci_count = len(cicd_findings)
+        else:
+            ci_count = 0
+        pen = min(ci_count * _CICD_PEN, _CICD_CAP)
+        breakdown["cicd"] = round(max(0.0, _HEALTH_CAP - pen), 1)
+
+    return breakdown
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -3,8 +3,8 @@ import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   GitBranch, RefreshCw, Search, Filter, X, ChevronDown,
-  Shield, AlertTriangle, CheckCircle, Activity, ScanLine,
-  Play, Loader2, CheckSquare, Github, Gitlab,
+  Shield, AlertTriangle, CheckCircle, Activity,
+  Play, Loader2, Github, Gitlab,
 } from 'lucide-react';
 import { useApi, apiPost } from '@/hooks/use-api';
 import apiClient from '@/services/api/client';
@@ -331,20 +331,6 @@ export default function RepositoriesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {canScan && merged.filter(r => !r.risk?.risk_level).length > 0 && (
-            <button
-              onClick={async () => {
-                try {
-                  await apiPost('/security/scan/batch', { max_repos: 5 });
-                  setTimeout(() => { refetchRepos(); refetchRisk(); }, 5000);
-                } catch { /* ignore */ }
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-400 hover:bg-purple-600/30 transition-colors"
-            >
-              <ScanLine className="w-3.5 h-3.5" />
-              Scan All (Top 5)
-            </button>
-          )}
           <button
             onClick={handleSync} disabled={syncing || reposLoading}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"

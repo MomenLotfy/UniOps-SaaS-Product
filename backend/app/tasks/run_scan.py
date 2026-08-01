@@ -157,6 +157,26 @@ async def _run_scan_async(scan_id: str) -> None:
 
             result = await orchestrator.scan_repo(work_dir, scan_id, full_name)
 
+            # ── Persist real repo capabilities (Dockerfile / CI / k8s / tf) ─
+            # Detection already happened during the scan — write it back to
+            # the Repository row so the UI shows the truth, even before the
+            # first time the user explicitly inspects capabilities.
+            try:
+                capabilities = orchestrator._detect_repo_capabilities(work_dir)
+                await db.execute(
+                    update(Repository).where(Repository.id == repo_id).values(
+                        has_dockerfile = bool(capabilities.get("has_dockerfile")),
+                        has_cicd       = bool(capabilities.get("has_cicd")),
+                    )
+                )
+                logger.info(
+                    f"[scan:{scan_id}] Repo capabilities persisted: "
+                    f"dockerfile={capabilities.get('has_dockerfile')} "
+                    f"cicd={capabilities.get('has_cicd')}"
+                )
+            except Exception as cap_exc:
+                logger.warning(f"[scan:{scan_id}] Capability persist failed (non-fatal): {cap_exc}")
+
             # scanning → analyzing (COMMIT)
             await _set_status(db, scan_id, "analyzing")
             logger.info(
@@ -179,7 +199,15 @@ async def _run_scan_async(scan_id: str) -> None:
             )
 
             for td in threat_dicts:
-                db.add(Threat(**td))
+                stored = await _upsert_threat(db, td)
+                if stored == "merged":
+                    dedup_count += 1
+
+            logger.info(
+                f"[scan:{scan_id}] Threat dedup: "
+                f"{len(threat_dicts)} raw → {dedup_count} merged, "
+                f"{len(threat_dicts) - dedup_count} new"
+            )
 
             # ── Vulnerability deduplication — upsert by (tenant_id, cve_id, package_name)
             dedup_count = 0
@@ -353,6 +381,86 @@ async def _run_scan_async(scan_id: str) -> None:
                 _shutil.rmtree(work_dir, ignore_errors=True)
                 logger.info(f"[scan:{scan_id}] Temp clone dir removed")
             await _release_scan_lock(repo_id)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Threat Deduplication — upsert by fingerprint
+# ─────────────────────────────────────────────────────────────────────────────
+
+_SEVERITY_RANK = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+
+
+async def _upsert_threat(db, td: dict) -> str:
+    """
+    Insert a new Threat or merge it into an existing one.
+
+    Deduplication key: (tenant_id, repo_id, fingerprint)
+    A match requires a fingerprint and repo_id. If found:
+      - bump occurrence_count
+      - update last_seen_at
+      - raise severity if the new one is higher
+      - update scan_id to the latest scan that observed it
+
+    Returns "merged" if deduped into an existing record, "new" otherwise.
+    """
+    from app.models.threat import Threat
+
+    tenant_id   = td.get("tenant_id")
+    repo_id     = td.get("repo_id")
+    fingerprint = td.get("fingerprint")
+
+    if not fingerprint or not tenant_id:
+        # No fingerprint = no dedup, just insert
+        now = datetime.now(timezone.utc)
+        threat = Threat(
+            **td,
+            first_seen_at=now,
+            last_seen_at=now,
+        )
+        db.add(threat)
+        await db.flush()
+        return "new"
+
+    existing_res = await db.execute(
+        select(Threat).where(
+            Threat.tenant_id   == tenant_id,
+            Threat.repo_id     == repo_id,
+            Threat.fingerprint == fingerprint,
+        ).limit(1)
+    )
+    existing = existing_res.scalar_one_or_none()
+    now = datetime.now(timezone.utc)
+
+    if existing:
+        # Merge — bump counters, update timestamps, raise severity if higher
+        new_sev = (td.get("severity") or "low").lower()
+        cur_sev = (existing.severity or "low").lower()
+        new_rank = _SEVERITY_RANK.get(new_sev, 1)
+        cur_rank = _SEVERITY_RANK.get(cur_sev, 1)
+        merged_severity = new_sev if new_rank > cur_rank else cur_sev
+
+        await db.execute(
+            update(Threat).where(Threat.id == existing.id).values(
+                occurrence_count = (existing.occurrence_count or 1) + 1,
+                last_seen_at     = now,
+                severity         = merged_severity,
+                scan_id          = td.get("scan_id") or existing.scan_id,
+                status           = existing.status if existing.status in ("open",) else "open",
+            )
+        )
+        await db.flush()
+        return "merged"
+
+    # New threat — insert
+    threat = Threat(
+        **td,
+        first_seen_at    = now,
+        last_seen_at     = now,
+        occurrence_count = 1,
+    )
+    db.add(threat)
+    await db.flush()
+    return "new"
 
 
 # ─────────────────────────────────────────────────────────────────────────────

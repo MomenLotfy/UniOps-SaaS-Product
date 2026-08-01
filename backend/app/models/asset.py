@@ -14,8 +14,11 @@ from app.models.base import BaseModel
 
 
 ASSET_TYPES = {
-    "github_repo", "gitlab_repo",
+    "github_repo", "gitlab_repo", "bitbucket_repo", "azure_devops_repo",
     "aws_ec2", "aws_s3", "aws_iam_user", "aws_iam_role", "aws_rds",
+    "aws_ecr_repository", "aws_eks_cluster",
+    "aws_cloudwatch_alarm", "aws_cloudwatch_log_group",
+    "gcp_storage_bucket", "azure_blob_container",
     "docker_image",
     "k8s_cluster", "k8s_namespace", "k8s_pod",
 }

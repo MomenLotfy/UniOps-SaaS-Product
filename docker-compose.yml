@@ -54,8 +54,7 @@ services:
     networks:
       - uniops_net
     command: redis-server --save "" --appendonly no
-    ports:
-      - "6379:6379"
+    # No host port binding - container-to-container only via Docker DNS
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
