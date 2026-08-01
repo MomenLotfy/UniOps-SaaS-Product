@@ -1,0 +1,364 @@
+You are working on UniOps, a production-grade multi-tenant DevSecOps SaaS platform.
+
+This is NOT a prototype.
+
+This is NOT a demo.
+
+Every feature must operate using real integrations, real scanners, real backend APIs and real data.
+
+Global Rules
+
+Never:
+
+generate demo data
+generate fake metrics
+hardcode scan results
+mock API responses
+simulate repository findings
+invent vulnerabilities
+create placeholder summaries
+replace missing integrations with static JSON
+
+If functionality is incomplete:
+
+identify why
+implement it correctly
+or leave a TODO
+
+Never fake success.
+
+Architecture Rules
+
+Do not change the architecture.
+
+Keep:
+
+FastAPI
+PostgreSQL
+Redis
+Celery Worker
+Celery Beat
+React
+Docker
+Kubernetes integrations
+GitHub integrations
+AWS integrations
+
+Do not simplify the project.
+
+Security Center Goal
+
+The Security Center must become a real DevSecOps operational console.
+
+Every tab must work using live backend APIs.
+
+No static values.
+
+No fake charts.
+
+No placeholder widgets.
+
+Repository becomes the source of truth
+
+Every repository connected through GitHub becomes the source for:
+
+Overview
+Findings
+SAST
+Secrets
+Dependency scanning
+Container scanning
+CI/CD inspection
+SBOM
+Compliance
+Security posture
+AI Copilot context
+Reports
+
+Every other Security Center page consumes repository data.
+
+Repository Scan
+
+Repository Scan must inspect:
+
+Repository metadata
+
+Languages
+
+Frameworks
+
+Dependencies
+
+Dockerfiles
+
+Docker Compose
+
+Helm Charts
+
+Terraform
+
+GitHub Actions
+
+GitLab CI
+
+Jenkins
+
+Azure Pipelines
+
+Secrets
+
+Kubernetes manifests
+
+SBOM
+
+License information
+
+CVEs
+
+Misconfigurations
+
+IaC
+
+Supply chain
+
+Container images
+
+Use real scanners whenever possible.
+
+Examples include:
+
+Trivy
+
+Gitleaks
+
+Semgrep
+
+Syft
+
+Grype
+
+TruffleHog
+
+Checkov
+
+OSV
+
+NVD
+
+GitHub Security APIs
+
+Never fake scanner output.
+
+Risk Score
+
+Risk Score must be calculated from actual findings.
+
+It must not be hardcoded.
+
+Include:
+
+Critical
+
+High
+
+Medium
+
+Low
+
+Secrets
+
+Container
+
+Dependencies
+
+Compliance
+
+Exposure
+
+Repository visibility
+
+Branch protection
+
+Security settings
+
+The scoring algorithm must be transparent.
+
+AI Security Summary
+
+Never generate static text.
+
+Generate the summary from the real scan results.
+
+The AI summary must explain:
+
+what was scanned
+
+what was found
+
+why it matters
+
+recommended remediation
+
+priority
+
+confidence
+
+If no LLM is configured:
+
+return TODO
+
+never invent AI output.
+
+Repository Details
+
+Repository Details must come from GitHub API.
+
+Examples:
+
+language
+
+visibility
+
+default branch
+
+owner
+
+Dockerfile
+
+GitHub Actions
+
+Jenkinsfile
+
+Terraform
+
+Helm
+
+Kubernetes manifests
+
+Container images
+
+Never return incorrect "No" values if files exist.
+
+Scan History
+
+Persist every scan.
+
+Store:
+
+timestamp
+
+scanner versions
+
+repository
+
+findings
+
+score
+
+duration
+
+Every new scan creates a historical record.
+
+No fake history.
+
+Every Security Center tab
+
+Every tab must use backend APIs.
+
+Every chart must use live data.
+
+Every metric must come from scanners or integrations.
+
+Never static.
+
+Never mocked.
+
+Integrations
+
+GitHub
+
+GitLab
+
+AWS
+
+Azure
+
+GCP
+
+Kubernetes
+
+Slack
+
+Teams
+
+Datadog
+
+Every integration must:
+
+connect
+
+disconnect
+
+refresh
+
+sync
+
+store credentials securely
+
+avoid duplicate connections
+
+avoid duplicate repositories
+
+update all Security Center pages automatically.
+
+Validation
+
+Before considering the work complete, verify:
+
+No mocked data exists.
+
+No placeholder text exists.
+
+No fake findings exist.
+
+No fake AI summaries exist.
+
+No duplicated repositories exist.
+
+No duplicated scans exist.
+
+Docker detection works.
+
+CI/CD detection works.
+
+Repository metadata matches GitHub.
+
+Risk scores match findings.
+
+Security Center pages stay synchronized.
+
+Deliverables
+
+At the end produce a report containing:
+
+Completed features
+
+Remaining TODOs
+
+Architecture changes (if any)
+
+New APIs
+
+Database changes
+
+Scanner integrations
+
+Files modified
+
+Issues discovered
+
+Issues fixed
+
+Known limitations
+
+No fake completion claims.
