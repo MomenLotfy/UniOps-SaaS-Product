@@ -19,6 +19,11 @@ class GraphRepository:
         """
         # Simplified upsert logic
         entity_id = entity_data["id"]
+        # The API/builder payload historically calls this field `metadata`;
+        # map it to the SQLAlchemy-safe model attribute.
+        entity_data = dict(entity_data)
+        if "metadata" in entity_data:
+            entity_data["graph_metadata"] = entity_data.pop("metadata")
         result = await self.db.execute(select(GraphEntity).where(GraphEntity.id == entity_id))
         existing = result.scalar_one_or_none()
 

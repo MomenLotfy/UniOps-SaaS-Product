@@ -202,9 +202,87 @@ async def _sync_github(db, integration, config: dict) -> tuple[int, int]:
 
 
 async def _sync_gitlab(db, integration, config: dict) -> tuple[int, int]:
-    """GitLab sync — placeholder, same pattern as GitHub."""
-    logger.info(f"GitLab sync for integration {integration.id} — coming soon")
-    return 0, 0
+    """Sync GitLab pipelines into the Pipeline table using the GitLab API v4."""
+    from app.integrations.gitlab.client import GitLabClient
+    from app.models.pipeline import Pipeline
+
+    client    = GitLabClient(config)
+    tenant_id = integration.tenant_id
+
+    pipelines_synced = 0
+
+    try:
+        projects = await client.list_projects(per_page=20)
+    except Exception as e:
+        logger.error(f"[gitlab] list_projects failed for integration {integration.id}: {e}")
+        return 0, 0
+
+    for project in projects[:20]:
+        project_id   = str(project.get("id", ""))
+        project_name = project.get("path_with_namespace", project.get("name", ""))
+
+        try:
+            runs = await client.list_pipelines(project_id, per_page=20)
+        except Exception as e:
+            logger.warning(f"[gitlab] list_pipelines failed for project {project_id}: {e}")
+            continue
+
+        for run in runs:
+            ext_id = str(run.get("id", ""))
+            if not ext_id:
+                continue
+
+            existing = await db.execute(
+                select(Pipeline).where(
+                    Pipeline.tenant_id   == tenant_id,
+                    Pipeline.external_id == ext_id,
+                    Pipeline.repository  == project_name,
+                )
+            )
+            pipeline = existing.scalars().first()
+
+            status = _map_gitlab_pipeline_status(run.get("status", "unknown"))
+
+            if pipeline:
+                pipeline.status      = status
+                pipeline.finished_at = _parse_dt(run.get("updated_at"))
+                pipeline.updated_at  = datetime.now(timezone.utc)
+            else:
+                pipeline = Pipeline(
+                    tenant_id      = tenant_id,
+                    integration_id = integration.id,
+                    external_id    = ext_id,
+                    name           = f"Pipeline #{run.get('iid', ext_id)}",
+                    repository     = project_name,
+                    branch         = run.get("ref", "main"),
+                    status         = status,
+                    commit_sha     = run.get("sha"),
+                    started_at     = _parse_dt(run.get("created_at")),
+                    finished_at    = _parse_dt(run.get("updated_at")),
+                    logs_url       = run.get("web_url"),
+                    metadata_      = {"source": "gitlab", "project_id": project_id},
+                )
+                db.add(pipeline)
+
+            pipelines_synced += 1
+
+    return pipelines_synced, 0
+
+
+def _map_gitlab_pipeline_status(status: str) -> str:
+    return {
+        "created":  "pending",
+        "waiting_for_resource": "pending",
+        "preparing": "pending",
+        "pending":  "pending",
+        "running":  "running",
+        "success":  "success",
+        "failed":   "failed",
+        "canceled": "cancelled",
+        "skipped":  "skipped",
+        "manual":   "pending",
+        "scheduled": "pending",
+    }.get(status, "unknown")
 
 
 def _decrypt_creds(credentials: dict) -> dict:

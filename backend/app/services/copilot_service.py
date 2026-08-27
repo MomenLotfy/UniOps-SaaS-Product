@@ -185,26 +185,71 @@ class CopilotService(BaseService):
 
     async def _call_llm(self, prompt: str) -> tuple[str, dict]:
         """
-        Interface to the LLM provider.
+        Call Anthropic Claude via HTTP.  Falls back to a findings-driven
+        deterministic response if the API key is absent.
         """
-        # This is where the actual API call to Claude/OpenAI happens.
-        # Since we are in a controlled environment, we simulate a real response
-        # based on the prompt content to maintain "production-grade" flow
-        # while avoiding fake "mock" generators.
+        import os, httpx
 
-        # In reality, this would be:
-        # response = await anthropic_client.messages.create(...)
-        # return response.content[0].text, {"model": "claude-3-5-sonnet", "tokens": ...}
+        api_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
 
-        # SIMULATION FOR VALIDATION:
-        # We'll use a basic a-priori response logic that depends on the context
-        # to simulate a real AI without using hardcoded dummy text.
-        import asyncio
-        await asyncio.sleep(0.5) # Simulate latency
+        if api_key:
+            # ── Real Anthropic call ──────────────────────────────────────────
+            try:
+                payload = {
+                    "model": "claude-sonnet-4-5",
+                    "max_tokens": 1024,
+                    "messages": [{"role": "user", "content": prompt}],
+                }
+                async with httpx.AsyncClient(timeout=30) as client:
+                    resp = await client.post(
+                        "https://api.anthropic.com/v1/messages",
+                        headers={
+                            "x-api-key": api_key,
+                            "anthropic-version": "2023-06-01",
+                            "content-type": "application/json",
+                        },
+                        json=payload,
+                    )
+                if resp.status_code == 200:
+                    body = resp.json()
+                    text = body["content"][0]["text"]
+                    usage = body.get("usage", {})
+                    return text, {
+                        "model": body.get("model", "claude-sonnet-4-5"),
+                        "tokens": usage.get("input_tokens", 0) + usage.get("output_tokens", 0),
+                    }
+                logger.warning(
+                    f"[copilot] Anthropic API {resp.status_code}: "
+                    f"{resp.text[:200]} — using deterministic fallback"
+                )
+            except Exception as llm_exc:
+                logger.warning(f"[copilot] Anthropic call failed ({llm_exc}) — using fallback")
 
-        if "Critical CVE" in prompt:
-            return "This finding is critical because it allows remote code execution (RCE). I recommend upgrading the package immediately to the fixed version mentioned in the context.", {"model": "claude-3-5-sonnet", "tokens": 120}
+        # ── Deterministic fallback (no API key or API error) ─────────────────
+        # Build a minimal but real response driven by context clues in the prompt
+        keywords = {
+            "critical": "This is a **critical** finding that requires immediate attention. "
+                        "Review the affected component, apply the available patch, and verify "
+                        "the fix before next deployment.",
+            "secret": "A **secret or credential** was detected in the repository. "
+                      "Rotate the credential immediately, remove it from Git history "
+                      "using `git filter-repo`, and store it in a secrets manager.",
+            "cve": "This **CVE** has a published fix. Upgrade the affected dependency to the "
+                   "version listed in the vulnerability details and re-run the scan to confirm.",
+            "vulnerability": "Upgrade the affected package to its patched version. "
+                             "If no patch exists, consider adding a compensating control "
+                             "or suppressing with a documented exception.",
+        }
+        prompt_lower = prompt.lower()
+        for kw, advice in keywords.items():
+            if kw in prompt_lower:
+                return advice, {"model": "fallback", "tokens": 0}
 
-        return "I have analyzed the security context. Based on the current posture and active policies, I recommend reviewing the related vulnerabilities in the identified repository.", {"model": "claude-3-5-sonnet", "tokens": 90}
+        return (
+            "I have analyzed the current security context. Review the open findings in the "
+            "repository, prioritise by severity (Critical → High → Medium), and apply the "
+            "suggested remediations. Run a new scan after each fix to track progress.",
+            {"model": "fallback", "tokens": 0},
+        )
 
 import json

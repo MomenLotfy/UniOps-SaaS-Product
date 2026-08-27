@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import Any, Dict, List, Optional
-from sqlalchemy import and_, or_, op
-from sqlalchemy.sql import SQLAlchemyExpression
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Query
 
 class FilterEngine:
@@ -27,7 +26,7 @@ class FilterEngine:
             "is_null": lambda col, val: col.is_(None) if val else col.is_not(None),
         }
 
-    def build_filter_expression(self, model: Any, filters: Dict[str, Any]) -> Optional[SQLAlchemyExpression]:
+    def build_filter_expression(self, model: Any, filters: Dict[str, Any]) -> Optional[Any]:
         """
         Transforms a dictionary of filters into a SQLAlchemy expression.
 

@@ -18,7 +18,9 @@ class GraphEntity(BaseModel):
 
     # Canonical identity and metadata
     canonical_id: Mapped[Optional[str]] = mapped_column(String(255), index=True)
-    metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    # `metadata` is reserved by SQLAlchemy's Declarative API. Keep the
+    # existing database column name while using a safe Python attribute.
+    graph_metadata: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
 
     # Quality & Trust
     confidence: Mapped[float] = mapped_column(Float, default=1.0)

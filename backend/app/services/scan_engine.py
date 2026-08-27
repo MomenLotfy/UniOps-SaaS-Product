@@ -128,14 +128,42 @@ def _get_docker_available() -> bool:
 
 class SastScanner:
     """
-    Docker available   → Semgrep (comprehensive)
-    No Docker          → bandit (Python) or built-in regex patterns
+    Priority order (Docker-free first since Replit has no Docker):
+      1. semgrep binary on $PATH (installed via Nix / pip)
+      2. Semgrep via Docker (when Docker is available)
+      3. bandit (Python repos) — .pythonlibs/bin or $PATH
+      4. Built-in regex patterns (always works)
     """
 
     SONARQUBE_URL   = os.getenv("SONARQUBE_URL", "")
     SONARQUBE_TOKEN = os.getenv("SONARQUBE_TOKEN", "")
 
+    # Potential binary locations (Nix runtime path, pythonlibs, system PATH)
+    _SEMGREP_CANDIDATES = [
+        shutil.which("semgrep"),
+        "/nix/store/jj9hkc8i90yb3dpcyyqlncijyj71w9id-replit-runtime-path/bin/semgrep",
+        "/home/runner/workspace/.pythonlibs/bin/semgrep",
+    ]
+
+    @classmethod
+    def _semgrep_binary(cls) -> str | None:
+        for p in cls._SEMGREP_CANDIDATES:
+            if p and os.path.isfile(p) and os.access(p, os.X_OK):
+                return p
+        return None
+
     async def run(self, repo_path: str, language: str) -> list[RawFinding]:
+        # 1. Try semgrep binary first (available in Replit via Nix)
+        semgrep_bin = self._semgrep_binary()
+        if semgrep_bin:
+            try:
+                findings = await self._semgrep_binary_scan(repo_path, language, semgrep_bin)
+                if findings is not None:
+                    return findings
+            except Exception as e:
+                logger.warning(f"Semgrep binary failed: {e}")
+
+        # 2. Try Docker if available
         if _get_docker_available():
             try:
                 findings = await self._semgrep_docker(repo_path, language)
@@ -144,8 +172,54 @@ class SastScanner:
             except Exception as e:
                 logger.warning(f"Semgrep Docker failed: {e}")
 
-        # Fallback: bandit for Python, built-in regex for others
+        # 3. Fallback: bandit for Python, built-in regex for others
         return await self._fallback_sast(repo_path, language)
+
+    async def _semgrep_binary_scan(self, repo_path: str, language: str, semgrep_bin: str) -> list[RawFinding]:
+        """Run semgrep binary directly — no Docker needed."""
+        rules = "p/security-audit"
+        if language == "python":
+            rules = "p/security-audit p/python p/owasp-top-ten"
+        elif language in ("javascript", "typescript"):
+            rules = "p/security-audit p/javascript p/owasp-top-ten"
+        elif language == "java":
+            rules = "p/security-audit p/java"
+        elif language == "go":
+            rules = "p/security-audit p/golang"
+
+        # semgrep accepts space-separated --config values; use auto for broad coverage
+        cmd = [
+            semgrep_bin, "scan",
+            "--config", "auto",
+            "--json", "--quiet",
+            "--no-git-ignore",
+            "--timeout", "60",
+            repo_path,
+        ]
+        rc, stdout, stderr = await _run(cmd, timeout=120)
+        if rc not in (0, 1):
+            logger.warning(f"Semgrep binary exited {rc}: {stderr[:200]}")
+            return []
+        try:
+            data = json.loads(stdout)
+        except Exception:
+            return []
+
+        findings = []
+        for r in data.get("results", []):
+            meta = r.get("extra", {})
+            findings.append(RawFinding(
+                scanner=    "sast",
+                severity=   _norm_severity(meta.get("severity", "warning")),
+                title=      r.get("check_id", "SAST Finding"),
+                description=meta.get("message", ""),
+                file_path=  r.get("path", "").replace(repo_path + "/", ""),
+                line=       r.get("start", {}).get("line"),
+                rule_id=    r.get("check_id"),
+                raw=        r,
+            ))
+        logger.info(f"Semgrep binary found {len(findings)} SAST findings")
+        return findings
 
     async def _semgrep_docker(self, repo_path: str, language: str) -> list[RawFinding]:
         rules = "p/security-audit,p/owasp-top-ten,p/secrets"
@@ -193,10 +267,16 @@ class SastScanner:
         """
         findings = []
 
-        # Try bandit for Python
-        if language == "python" and shutil.which("bandit"):
+        # Try bandit for Python — check multiple install locations
+        _bandit_candidates = [
+            shutil.which("bandit"),
+            "/home/runner/workspace/.pythonlibs/bin/bandit",
+            "/home/runner/workspace/backend/venv/bin/bandit",
+        ]
+        _bandit_bin = next((p for p in _bandit_candidates if p and os.path.isfile(p) and os.access(p, os.X_OK)), None)
+        if language == "python" and _bandit_bin:
             rc, stdout, _ = await _run(
-                ["bandit", "-r", repo_path, "-f", "json", "-q"],
+                [_bandit_bin, "-r", repo_path, "-f", "json", "-q"],
                 timeout=60,
             )
             if rc in (0, 1):
@@ -328,13 +408,27 @@ class DependencyScanner:
         shutil.rmtree(report_dir, ignore_errors=True)
         return findings
 
+    @staticmethod
+    def _pip_audit_binary() -> str | None:
+        """Locate pip-audit binary (Replit installs it in .pythonlibs/bin)."""
+        candidates = [
+            shutil.which("pip-audit"),
+            "/home/runner/workspace/.pythonlibs/bin/pip-audit",
+            "/home/runner/workspace/backend/venv/bin/pip-audit",
+        ]
+        for p in candidates:
+            if p and os.path.isfile(p) and os.access(p, os.X_OK):
+                return p
+        return None
+
     async def _pip_audit(self, repo_path: str) -> list[RawFinding]:
-        # Install pip-audit if not present
-        if not shutil.which("pip-audit"):
-            await _run(["pip", "install", "--quiet", "pip-audit"], timeout=60)
+        pip_audit = self._pip_audit_binary()
+        if not pip_audit:
+            logger.warning("pip-audit not found — skipping Python dependency scan")
+            return []
 
         rc, stdout, _ = await _run(
-            ["pip-audit", "--format", "json", "--progress-spinner", "off"],
+            [pip_audit, "--format", "json", "--progress-spinner", "off"],
             cwd=repo_path, timeout=120,
         )
         try:
@@ -414,10 +508,35 @@ class SecretsScanner:
     SKIP_EXTS  = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg", ".woff", ".woff2",
                   ".ttf", ".eot", ".mp4", ".mp3", ".zip", ".tar", ".gz", ".lock"}
 
+    # Gitleaks binary candidates (Nix installs here after `installSystemDependencies`)
+    _GITLEAKS_CANDIDATES = [
+        shutil.which("gitleaks"),
+        "/nix/store/qca382a1kzpnbf62x39wfij9p73sfh66-gitleaks-8.26.0/bin/gitleaks",
+    ]
+
+    @classmethod
+    def _gitleaks_binary(cls) -> str | None:
+        for p in cls._GITLEAKS_CANDIDATES:
+            if p and os.path.isfile(p) and os.access(p, os.X_OK):
+                return p
+        # Fall back to any gitleaks on PATH
+        return shutil.which("gitleaks")
+
     async def run(self, repo_path: str) -> list[RawFinding]:
+        # 1. Try gitleaks binary (installed via Nix)
+        gitleaks_bin = self._gitleaks_binary()
+        if gitleaks_bin:
+            try:
+                findings = await self._gitleaks_binary_scan(repo_path, gitleaks_bin)
+                if findings is not None:
+                    return findings
+            except Exception as e:
+                logger.warning(f"Gitleaks binary failed: {e}")
+
+        # 2. Try Docker if available
         if _get_docker_available():
             try:
-                findings = await self._gitleaks(repo_path)
+                findings = await self._gitleaks_docker(repo_path)
                 if findings is not None:
                     return findings
             except Exception as e:
@@ -425,7 +544,46 @@ class SecretsScanner:
 
         return await self._regex_scan(repo_path)
 
-    async def _gitleaks(self, repo_path: str) -> list[RawFinding]:
+    async def _gitleaks_binary_scan(self, repo_path: str, gitleaks_bin: str) -> list[RawFinding]:
+        """Run gitleaks binary directly — no Docker needed."""
+        report_file = tempfile.mktemp(suffix=".json")
+        cmd = [
+            gitleaks_bin, "detect",
+            "--source", repo_path,
+            "--report-format", "json",
+            "--report-path", report_file,
+            "--no-git",
+            "--exit-code", "0",
+        ]
+        rc, _, stderr = await _run(cmd, timeout=90)
+        try:
+            data = json.loads(Path(report_file).read_text())
+        except Exception:
+            return []
+        finally:
+            try:
+                os.unlink(report_file)
+            except Exception:
+                pass
+
+        findings = []
+        for leak in (data if isinstance(data, list) else []):
+            findings.append(RawFinding(
+                scanner=     "secrets",
+                severity=    "critical",
+                title=       f"Secret Leaked: {leak.get('RuleID', 'unknown')}",
+                description= f"Possible {leak.get('Description', 'secret')} found in "
+                             f"{leak.get('File', '?')}:{leak.get('StartLine', '?')}",
+                file_path=   leak.get("File"),
+                line=        leak.get("StartLine"),
+                rule_id=     leak.get("RuleID"),
+                mitre_tactic="TA0006",
+                raw=         {k: v for k, v in leak.items() if k != "Secret"},
+            ))
+        logger.info(f"Gitleaks binary found {len(findings)} secret findings")
+        return findings
+
+    async def _gitleaks_docker(self, repo_path: str) -> list[RawFinding]:
         report_file = tempfile.mktemp(suffix=".json")
         report_dir  = os.path.dirname(report_file)
         cmd = [
@@ -507,9 +665,24 @@ class SecretsScanner:
 
 class ContainerScanner:
     """
-    Docker available → Trivy
-    No Docker        → Built-in Dockerfile lint rules
+    Priority order:
+      1. trivy binary on $PATH (installed via Nix)
+      2. Trivy via Docker
+      3. Built-in Dockerfile lint rules (always works)
     """
+
+    # Trivy binary candidates
+    _TRIVY_CANDIDATES = [
+        shutil.which("trivy"),
+        "/nix/store/bwlnh6ibsfm073n506xknd2f47vqfzxx-trivy-0.61.1/bin/trivy",
+    ]
+
+    @classmethod
+    def _trivy_binary(cls) -> str | None:
+        for p in cls._TRIVY_CANDIDATES:
+            if p and os.path.isfile(p) and os.access(p, os.X_OK):
+                return p
+        return shutil.which("trivy")
 
     DOCKERFILE_RULES = [
         (r"^FROM\s+\S+:latest",    "high",   "Using :latest tag makes builds non-reproducible", "CONT-001"),
@@ -527,16 +700,79 @@ class ContainerScanner:
         if not dockerfiles:
             return []
 
+        # 1. Try trivy binary first (installed via Nix)
+        trivy_bin = self._trivy_binary()
+        if trivy_bin:
+            try:
+                findings = await self._trivy_binary_scan(repo_path, trivy_bin)
+                if findings:
+                    return findings
+            except Exception as e:
+                logger.warning(f"Trivy binary failed: {e}")
+
+        # 2. Try Docker if available
         if _get_docker_available():
             try:
                 return await self._trivy(repo_path)
             except Exception as e:
-                logger.warning(f"Trivy failed: {e}")
+                logger.warning(f"Trivy Docker failed: {e}")
 
-        # Lint every Dockerfile we found (root + nested) — not just the first
-        findings: list[RawFinding] = []
+        # 3. Lint every Dockerfile we found (root + nested) — not just the first
+        findings_lint: list[RawFinding] = []
         for dockerfile in dockerfiles:
-            findings.extend(self._lint_dockerfile(dockerfile, repo_path))
+            findings_lint.extend(self._lint_dockerfile(dockerfile, repo_path))
+        return findings_lint
+
+    async def _trivy_binary_scan(self, repo_path: str, trivy_bin: str) -> list[RawFinding]:
+        """Run trivy binary directly for filesystem/config scanning — no Docker needed."""
+        cmd = [
+            trivy_bin, "fs",
+            "--format", "json",
+            "--exit-code", "0",
+            "--quiet",
+            "--scanners", "misconfig,vuln",
+            repo_path,
+        ]
+        rc, stdout, stderr = await _run(cmd, timeout=180)
+        if rc not in (0, 1):
+            logger.warning(f"Trivy binary exited {rc}: {stderr[:300]}")
+            return []
+        try:
+            data = json.loads(stdout)
+        except Exception:
+            return []
+
+        findings: list[RawFinding] = []
+        for result in data.get("Results", []):
+            target = result.get("Target", "")
+            # Misconfigurations (Dockerfile, K8s manifests, Terraform, etc.)
+            for mis in result.get("Misconfigurations", []) or []:
+                findings.append(RawFinding(
+                    scanner=    "container",
+                    severity=   _norm_severity(mis.get("Severity", "medium")),
+                    title=      mis.get("Title", "Misconfiguration"),
+                    description=mis.get("Description", ""),
+                    file_path=  target,
+                    rule_id=    mis.get("ID"),
+                    raw=        mis,
+                ))
+            # Vulnerabilities in dependencies found by trivy
+            for vuln in result.get("Vulnerabilities", []) or []:
+                sev = _norm_severity(vuln.get("Severity", "medium"))
+                findings.append(RawFinding(
+                    scanner=    "deps",
+                    severity=   sev,
+                    title=      vuln.get("Title") or vuln.get("VulnerabilityID", "CVE"),
+                    description=vuln.get("Description", ""),
+                    cve_id=     vuln.get("VulnerabilityID"),
+                    package=    vuln.get("PkgName"),
+                    version=    vuln.get("InstalledVersion"),
+                    fixed_in=   vuln.get("FixedVersion", ""),
+                    file_path=  target,
+                    rule_id=    vuln.get("VulnerabilityID"),
+                    raw=        vuln,
+                ))
+        logger.info(f"Trivy binary found {len(findings)} findings in {repo_path}")
         return findings
 
     @staticmethod
@@ -937,26 +1173,38 @@ class AiAnalyzer:
                 f"No security issues found in {repo_name}. Security score: {score}/100.",
                 ["Schedule regular scans.", "Keep dependencies updated."],
             )
-        try:
-            import httpx
-            async with httpx.AsyncClient(timeout=20) as c:
-                resp = await c.post(
-                    "https://api.anthropic.com/v1/messages",
-                    headers={"Content-Type": "application/json"},
-                    json={
-                        "model":    "claude-sonnet-4-20250514",
-                        "max_tokens": 800,
-                        "system":   "DevSecOps engineer. Respond ONLY with JSON: {\"summary\": \"string\", \"suggestions\": [\"string\"]}. No markdown.",
-                        "messages": [{"role": "user", "content": self._build_prompt(repo_name, findings, score)}],
-                    },
-                )
-            text   = resp.json()["content"][0]["text"]
-            text   = re.sub(r"```json|```", "", text).strip()
-            parsed = json.loads(text)
-            return parsed.get("summary", ""), parsed.get("suggestions", [])
-        except Exception as e:
-            logger.warning(f"AI analysis failed (non-fatal): {e}")
-            return self._fallback(repo_name, findings, score)
+
+        # Try LLM if API key is configured
+        api_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
+        if api_key:
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=30) as c:
+                    resp = await c.post(
+                        "https://api.anthropic.com/v1/messages",
+                        headers={
+                            "Content-Type": "application/json",
+                            "x-api-key": api_key,
+                            "anthropic-version": "2023-06-01",
+                        },
+                        json={
+                            "model":    "claude-sonnet-4-20250514",
+                            "max_tokens": 800,
+                            "system":   "DevSecOps engineer. Respond ONLY with JSON: {\"summary\": \"string\", \"suggestions\": [\"string\"]}. No markdown.",
+                            "messages": [{"role": "user", "content": self._build_prompt(repo_name, findings, score)}],
+                        },
+                    )
+                if resp.status_code == 200:
+                    text   = resp.json()["content"][0]["text"]
+                    text   = re.sub(r"```json|```", "", text).strip()
+                    parsed = json.loads(text)
+                    return parsed.get("summary", ""), parsed.get("suggestions", [])
+                logger.warning(f"AI analysis HTTP {resp.status_code}: {resp.text[:200]}")
+            except Exception as e:
+                logger.warning(f"AI analysis failed (non-fatal): {e}")
+
+        # Findings-driven fallback — never invents data
+        return self._fallback(repo_name, findings, score)
 
     def _build_prompt(self, repo_name: str, findings: list[RawFinding], score: float) -> str:
         counts = {}

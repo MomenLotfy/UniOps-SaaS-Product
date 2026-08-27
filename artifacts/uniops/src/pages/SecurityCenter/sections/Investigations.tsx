@@ -1,35 +1,61 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Table } from '../../../components/ui/table';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
-import { Search, Filter, Clock, Share2, Bookmark, History, Target, Activity, Layers } from 'lucide-react';
+import { Search, Clock, Share2, Bookmark, History, Target, Activity, Layers } from 'lucide-react';
+import apiClient from '@/services/api/client';
+
+type SearchEntity = {
+  id: string;
+  type: string;
+  summary?: string;
+  risk?: number;
+  priority?: string;
+  assets?: number;
+};
+
+type SearchResponse = {
+  results?: SearchEntity[];
+  data?: SearchEntity[];
+  total?: number;
+};
 
 const InvestigationsSection = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('search');
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedEntity, setSelectedEntity] = useState(null);
-
-  const mockResults = [
-    { id: 'CVE-2024-1234', type: 'CVE', summary: 'Critical Remote Code Execution', risk: 9.8, assets: 45, priority: 'critical' },
-    { id: 'Repo-Auth-Service', type: 'Repository', summary: 'Authentication Microservice', risk: 4.2, assets: 12, priority: 'medium' },
-    { id: 'Prod-Cluster-01', type: 'Cluster', summary: 'Production US-East-1', risk: 6.5, assets: 150, priority: 'high' },
-    { id: 'Package-Libxml2', type: 'Package', summary: 'XML Parsing Library', risk: 7.1, assets: 200, priority: 'high' },
-  ];
+  const [searchQuery, setSearchQuery]     = useState('');
+  const [activeTab, setActiveTab]         = useState('search');
+  const [results, setResults]             = useState<SearchEntity[]>([]);
+  const [loading, setLoading]             = useState(false);
+  const [selectedEntity, setSelectedEntity] = useState<SearchEntity | null>(null);
+  const [error, setError]                 = useState<string | null>(null);
 
   const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
     setLoading(true);
-    // Simulate API call to /security/search
-    setTimeout(() => {
-      setResults(mockResults.filter(r =>
-        r.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        r.summary.toLowerCase().includes(searchQuery.toLowerCase())
-      ));
+    setError(null);
+    try {
+      const res = await apiClient.post('/api/v1/investigation/search', {
+        query: searchQuery,
+        entity_types: ['vulnerability', 'threat', 'repository', 'asset', 'package'],
+        limit: 50,
+      });
+      const body: SearchResponse = res.data ?? res;
+      const list = body.results ?? body.data ?? (Array.isArray(body) ? body : []);
+      setResults(list);
+    } catch (e: any) {
+      setError(e?.message ?? 'Search failed');
+      setResults([]);
+    } finally {
       setLoading(false);
-    }, 600);
+    }
+  };
+
+  const priorityColor: Record<string, string> = {
+    critical: 'text-red-400',
+    high:     'text-orange-400',
+    medium:   'text-yellow-400',
+    low:      'text-green-400',
   };
 
   return (
@@ -40,29 +66,27 @@ const InvestigationsSection = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
           <Input
             className="pl-10"
-            placeholder="Search findings, assets, repositories, or packages..."
+            placeholder="Search findings, assets, repositories, packages, CVEs…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
         </div>
-        <Button onClick={handleSearch} disabled={loading}>
-          {loading ? 'Searching...' : 'Investigate'}
+        <Button onClick={handleSearch} disabled={loading || !searchQuery.trim()}>
+          {loading ? 'Searching…' : 'Investigate'}
         </Button>
-        <div className="flex items-center gap-2 ml-auto">
-          <Button variant="ghost" size="sm"><Bookmark size={16} className="mr-2" /> Bookmarks</Button>
-          <Button variant="ghost" size="sm"><History size={16} className="mr-2" /> History</Button>
-        </div>
       </Card>
 
-      {/* Investigation Tabs */}
+      {/* Tabs */}
       <div className="flex gap-4 border-b border-white/10">
-        {['search', 'timeline', 'correlation', 'risk'].map(tab => (
+        {['search', 'timeline', 'correlation'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`pb-2 px-2 text-xs font-medium transition-colors ${
-              activeTab === tab ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-muted-foreground hover:text-foreground'
+              activeTab === tab
+                ? 'text-indigo-400 border-b-2 border-indigo-400'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {tab.toUpperCase()}
@@ -75,39 +99,80 @@ const InvestigationsSection = () => {
         <div className="lg:col-span-2 space-y-6">
           {activeTab === 'search' && (
             <Card className="p-6">
-              <h3 className="text-sm uppercase text-muted-foreground mb-4">Investigation Results</h3>
+              <h3 className="text-sm uppercase text-muted-foreground mb-4">
+                Investigation Results
+                {results.length > 0 && (
+                  <span className="ml-2 text-indigo-400 normal-case">
+                    — {results.length} match{results.length !== 1 ? 'es' : ''}
+                  </span>
+                )}
+              </h3>
+
+              {error && (
+                <p className="text-xs text-red-400 mb-4">Search error: {error}</p>
+              )}
+
               <Table>
                 <thead className="text-xs text-muted-foreground uppercase">
                   <tr>
                     <th className="text-left">Entity</th>
                     <th className="text-left">Type</th>
-                    <th className="text-right">Risk Score</th>
-                    <th className="text-right">Impact</th>
+                    <th className="text-right">Risk</th>
+                    <th className="text-center">Priority</th>
                     <th className="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {results.length > 0 ? results.map(res => (
-                    <tr key={res.id} className="border-t border-white/5 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => setSelectedEntity(res)}>
+                    <tr
+                      key={res.id}
+                      className="border-t border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                      onClick={() => setSelectedEntity(res)}
+                    >
                       <td className="py-3">
                         <div className="flex flex-col">
                           <span className="font-medium text-sm">{res.id}</span>
-                          <span className="text-xs text-muted-foreground">{res.summary}</span>
+                          {res.summary && (
+                            <span className="text-xs text-muted-foreground truncate max-w-xs">
+                              {res.summary}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="py-3">
-                        <Badge variant="outline" className="text-[10px]">{res.type}</Badge>
+                        <Badge variant="outline" className="text-[10px] capitalize">
+                          {res.type}
+                        </Badge>
                       </td>
-                      <td className="py-3 text-right font-mono text-sm">{res.risk}</td>
-                      <td className="py-3 text-right text-xs text-muted-foreground">{res.assets} assets</td>
+                      <td className="py-3 text-right font-mono text-sm">
+                        {res.risk != null ? res.risk : '—'}
+                      </td>
                       <td className="py-3 text-center">
-                        <Button size="sm" variant="ghost" className="text-indigo-400 h-7 px-2">Inspect</Button>
+                        {res.priority ? (
+                          <span className={`text-xs capitalize ${priorityColor[res.priority] ?? 'text-muted-foreground'}`}>
+                            {res.priority}
+                          </span>
+                        ) : '—'}
+                      </td>
+                      <td className="py-3 text-center">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-indigo-400 h-7 px-2"
+                          onClick={(e) => { e.stopPropagation(); setSelectedEntity(res); setActiveTab('timeline'); }}
+                        >
+                          Inspect
+                        </Button>
                       </td>
                     </tr>
                   )) : (
                     <tr>
                       <td colSpan={5} className="py-8 text-center text-muted-foreground text-sm">
-                        {loading ? 'Searching intelligence base...' : 'No entities found. Try a different query.'}
+                        {loading
+                          ? 'Searching intelligence base…'
+                          : searchQuery
+                          ? 'No entities found. Try a broader search term.'
+                          : 'Enter a query above to search across findings, repositories, assets, and packages.'}
                       </td>
                     </tr>
                   )}
@@ -125,21 +190,28 @@ const InvestigationsSection = () => {
                   <span className="text-sm">Select an entity from search results to view its historical timeline.</span>
                 </div>
               ) : (
-                <div className="space-y-6 relative before:absolute before:left-4 before:top-0 before:bottom-0 before:w-px before:bg-white/10">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="relative pl-10">
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Showing activity for <span className="text-foreground font-medium">{selectedEntity.id}</span>
+                    {' '}({selectedEntity.type})
+                  </p>
+                  <div className="space-y-4 relative before:absolute before:left-4 before:top-0 before:bottom-0 before:w-px before:bg-white/10">
+                    <div className="relative pl-10">
                       <div className="absolute left-3 top-1 w-2 h-2 bg-indigo-500 rounded-full ring-4 ring-indigo-500/20" />
                       <div className="p-3 bg-surface-2 rounded-lg border border-white/5">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-xs font-bold text-foreground">Security Event {i}</span>
-                          <span className="text-[10px] text-muted-foreground">2026-06-{(26-i).toString().padStart(2, '0')} 14:20</span>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-bold text-foreground">First Detected</span>
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          Deterministic event detected for {selectedEntity.id}. State changed from 'Low' to 'Critical' risk.
+                          Entity <span className="text-foreground">{selectedEntity.id}</span> entered the
+                          intelligence graph with priority <span className="capitalize">{selectedEntity.priority ?? 'unknown'}</span>.
                         </span>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-4">
+                    Full timeline requires a backend integration with scan history. Connect a scan to see all events.
+                  </p>
                 </div>
               )}
             </Card>
@@ -151,90 +223,70 @@ const InvestigationsSection = () => {
               {!selectedEntity ? (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                   <Share2 size={40} className="mb-4 opacity-20" />
-                  <span className="text-sm">Select an entity to uncover deterministic correlations across the graph.</span>
+                  <span className="text-sm">Select an entity from search to uncover related nodes.</span>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { type: 'Package', id: 'libxml2', rel: 'DEPENDENCY', depth: 1 },
-                    { type: 'Repository', id: 'auth-service', rel: 'CONTAINS', depth: 2 },
-                    { type: 'Asset', id: 'prod-pod-01', rel: 'RUNS_ON', depth: 3 },
-                    { type: 'Team', id: 'Platform-Sec', rel: 'OWNED_BY', depth: 4 },
-                  ].map((corr, idx) => (
-                    <div key={idx} className="p-4 bg-surface-2 rounded-lg border border-white/5 flex items-center gap-4">
-                      <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
-                        <Layers size={16} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-medium">{corr.id}</span>
-                          <Badge variant="outline" className="text-[9px]">{corr.type}</Badge>
-                        </div>
-                        <span className="text-[10px] text-muted-foreground">
-                          Linked via <span className="text-foreground font-semibold">{corr.rel}</span> (Depth: {corr.depth})
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Related entities for <span className="text-foreground font-medium">{selectedEntity.id}</span>
+                  </p>
+                  <div className="p-6 rounded-lg border border-white/10 text-center">
+                    <Layers size={32} className="mx-auto mb-3 text-indigo-400 opacity-50" />
+                    <p className="text-sm text-muted-foreground">
+                      Graph correlation requires entities to be connected via scan findings. Run a scan to build the knowledge graph.
+                    </p>
+                  </div>
                 </div>
               )}
             </Card>
           )}
-
-          {activeTab === 'risk' && (
-            <Card className="p-6">
-              <h3 className="text-sm uppercase text-muted-foreground mb-4">Risk Intelligence Summary</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <span className="text-[10px] text-red-400 uppercase font-bold">Critical Impact</span>
-                  <span className="text-2xl font-bold block">84%</span>
-                </div>
-                <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                  <span className="text-[10px] text-orange-400 uppercase font-bold">Blast Radius</span>
-                  <span className="text-2xl font-bold block">High</span>
-                </div>
-                <div className="p-4 bg-blue-500/10 border border-blue-500/ own-20 rounded-lg">
-                  <span className="text-[10px] text-blue-400 uppercase font-bold">Confidence</span>
-                  <span className="text-2xl font-bold block">Deterministic</span>
-                </div>
-              </div>
-            </Card>
-          )}
         </div>
 
-        {/* Right Sidebar: Investigation Context */}
+        {/* Right Sidebar */}
         <div className="space-y-6">
           <Card className="p-6">
             <h3 className="text-sm uppercase text-muted-foreground mb-4 flex items-center gap-2">
-              <Target size={16} /> Target Context
+              <Target size={16} /> Selected Entity
             </h3>
             {!selectedEntity ? (
-              <span className="text-xs text-muted-foreground italic">No entity selected for deep investigation.</span>
+              <span className="text-xs text-muted-foreground italic">
+                No entity selected. Run a search and click a row.
+              </span>
             ) : (
               <div className="space-y-4">
                 <div className="flex flex-col">
                   <span className="text-[10px] text-muted-foreground uppercase">Entity ID</span>
-                  <span className="text-sm font-medium">{selectedEntity.id}</span>
+                  <span className="text-sm font-medium break-all">{selectedEntity.id}</span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[10px] text-muted-foreground uppercase">Type</span>
-                  <Badge variant="outline" className="text-[10px] w-fit">{selectedEntity.type}</Badge>
+                  <Badge variant="outline" className="text-[10px] w-fit capitalize">
+                    {selectedEntity.type}
+                  </Badge>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-muted-foreground uppercase">Risk Score</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold">{selectedEntity.risk}</span>
-                    <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${selectedEntity.priority === 'critical' ? 'bg-red-500' : 'bg-orange-500'}`}
-                        style={{ width: `${selectedEntity.risk * 10}%` }}
-                      />
+                {selectedEntity.risk != null && (
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-muted-foreground uppercase">Risk Score</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold">{selectedEntity.risk}</span>
+                      <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${selectedEntity.priority === 'critical' ? 'bg-red-500' : 'bg-orange-500'}`}
+                          style={{ width: `${Math.min(100, (selectedEntity.risk ?? 0) * 10)}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+                {selectedEntity.summary && (
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-muted-foreground uppercase">Summary</span>
+                    <span className="text-xs text-muted-foreground">{selectedEntity.summary}</span>
+                  </div>
+                )}
                 <div className="pt-4 border-t border-white/5">
-                  <Button className="w-full text-xs h-8" variant="outline">
-                    <Bookmark size={14} className="mr-2" /> Bookmark Entity
+                  <Button className="w-full text-xs h-8" variant="outline" onClick={() => setActiveTab('timeline')}>
+                    <Clock size={14} className="mr-2" /> View Timeline
                   </Button>
                 </div>
               </div>
@@ -242,37 +294,27 @@ const InvestigationsSection = () => {
           </Card>
 
           <Card className="p-6">
-            <h3 className="text-sm uppercase text-muted-s-foreground mb-4 flex items-center gap-2">
-              <Activity size={16} /> Investigation State
+            <h3 className="text-sm uppercase text-muted-foreground mb-4 flex items-center gap-2">
+              <Activity size={16} /> Session
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Session</span>
-                <span className="font-mono text-indigo-400">SESS-923-AX</span>
+                <span className="text-muted-foreground">Results Loaded</span>
+                <span className="font-mono tabular-nums">{results.length}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Filters Active</span>
-                <Badge variant="outline" className="text-[9px]">3</Badge>
+                <span className="text-muted-foreground">Active Entity</span>
+                <span className="font-mono truncate max-w-[100px]">
+                  {selectedEntity?.id ?? '—'}
+                </span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Bookmarks</span>
-                <Badge variant="outline" className="text-[9px]">12</Badge>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Query Time</span>
-                <span className="font-mono">14ms</span>
+                <span className="text-muted-foreground">Current Tab</span>
+                <Badge variant="outline" className="text-[9px] capitalize">{activeTab}</Badge>
               </div>
             </div>
           </Card>
         </div>
-      </div>
-
-      <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
-        <span className="text-[10px] text-indigo-300 leading-relaxed">
-          The Security Investigation Engine provides deterministic reasoning over the Intelligence Platform.
-          It allows security researchers to pivot from a finding to an asset, correlate its blast radius,
-          and reconstruct its historical timeline without any probabilistic AI interference.
-        </span>
       </div>
     </div>
   );

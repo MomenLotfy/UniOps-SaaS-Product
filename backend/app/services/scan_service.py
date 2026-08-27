@@ -385,6 +385,11 @@ class ScanService(BaseService):
                 "breakdown":     breakdown,
             }
 
+        # Determine AI source: was this from a real LLM or the findings-driven fallback?
+        import os as _os
+        _has_llm = bool(_os.getenv("ANTHROPIC_API_KEY", "").strip())
+        _ai_source = "llm" if _has_llm else "fallback"
+
         return {
             "score":          scan_score,
             "status":         "completed",
@@ -392,6 +397,7 @@ class ScanService(BaseService):
             "repo_name":      scanned_repo_name,
             "ai_summary":     ai_summary,
             "ai_suggestions": ai_suggestions or [],
+            "ai_source":      _ai_source,
             "last_scan_at":   completed_at.isoformat() if completed_at else None,
             "breakdown":      breakdown,
         }

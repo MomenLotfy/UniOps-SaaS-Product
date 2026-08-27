@@ -396,10 +396,27 @@ class ReportsService(BaseService):
                 "policies": {"total": p_total, "active": p_active},
                 "exceptions": {"total": e_total, "pending": e_pending},
             }
+            # Compliance score: average of all framework scores
+            comp_rows = (await self.db.execute(
+                select(Compliance.score).where(Compliance.tenant_id == tenant_id)
+            )).scalars().all()
+            compliance_score = round(
+                sum(c for c in comp_rows if c is not None) / len([c for c in comp_rows if c is not None]), 1
+            ) if any(c is not None for c in comp_rows) else 0.0
+
+            # Remediation rate: resolved / total vulnerabilities
+            v_resolved = (await self.db.execute(
+                select(func.count(Vulnerability.id)).where(
+                    Vulnerability.tenant_id == tenant_id,
+                    Vulnerability.status.in_(["resolved", "fixed", "mitigated"]),
+                )
+            )).scalar() or 0
+            remediation_rate = round((v_resolved / v_total) * 100, 1) if v_total else 0.0
+
             metrics = {
                 "overall_risk_score": self._calculate_risk_score(t_open, t_crit, v_open, v_crit),
-                "compliance_score": 85.0,  # TODO: Calculate from actual compliance data
-                "remediation_rate": 75.0,  # TODO: Calculate from remediation data
+                "compliance_score": compliance_score,
+                "remediation_rate": remediation_rate,
             }
             charts = {
                 "risk_trend": self._get_risk_trend(tenant_id, period_start, period_end),
@@ -427,7 +444,9 @@ class ReportsService(BaseService):
                 "total_vulnerabilities": v_total,
                 "open_vulnerabilities": v_open,
                 "critical_vulnerabilities": v_crit,
-                "mean_time_to_remediate": 48.0,  # TODO: Calculate from remediation data
+                # Mean time to remediate: avg hours between first_seen_at and last_seen_at
+                # for vulnerabilities that are now resolved/fixed.
+                "mean_time_to_remediate": await self._compute_mttr(tenant_id),
             }
 
         elif template == "threat_intelligence_report":
@@ -570,6 +589,35 @@ class ReportsService(BaseService):
     # ─────────────────────────────────────────────────────────────────────────────
     # Helper Methods
     # ─────────────────────────────────────────────────────────────────────────────
+
+    async def _compute_mttr(self, tenant_id: str) -> float:
+        """
+        Mean time to remediate in hours.
+        Computed from vulnerabilities that have both first_seen_at and last_seen_at
+        and are now in a resolved/fixed/mitigated state.
+        Returns 0.0 when no resolved vulnerabilities exist.
+        """
+        from sqlalchemy import extract
+        from app.models.vulnerability import Vulnerability as V
+        result = await self.db.execute(
+            select(V.first_seen_at, V.last_seen_at)
+            .where(
+                V.tenant_id == tenant_id,
+                V.status.in_(["resolved", "fixed", "mitigated"]),
+                V.first_seen_at.isnot(None),
+                V.last_seen_at.isnot(None),
+            )
+            .limit(200)
+        )
+        rows = result.all()
+        if not rows:
+            return 0.0
+        hours = [
+            (r.last_seen_at - r.first_seen_at).total_seconds() / 3600
+            for r in rows
+            if r.last_seen_at > r.first_seen_at
+        ]
+        return round(sum(hours) / len(hours), 1) if hours else 0.0
 
     def _calculate_risk_score(self, open_threats: int, critical_threats: int,
                               open_vulns: int, critical_vulns: int) -> float:

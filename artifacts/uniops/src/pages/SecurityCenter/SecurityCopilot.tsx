@@ -13,7 +13,8 @@ import {
   Lock,
   Package,
   Layout,
-  ArrowRight
+  ArrowRight,
+  X
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { policiesApi, exceptionsApi } from '../../services/api/security';
@@ -275,46 +276,50 @@ export default function SecurityCopilot() {
             icon={Layout}
             value={context.repoId}
             placeholder="No repository selected"
-            onChange={(id) => setContext(p => ({ ...p, repoId: id }))}
+             onChange={(id: string | null) => setContext(p => ({ ...p, repoId: id }))}
           />
           <ContextSection
             title="Scan"
             icon={Clock}
             value={context.scanId}
             placeholder="No scan selected"
-            onChange={(id) => setContext(p => ({ ...p, scanId: id }))}
+             onChange={(id: string | null) => setContext(p => ({ ...p, scanId: id }))}
           />
           <ContextSection
             title="Finding"
             icon={AlertCircle}
             value={context.findingId}
             placeholder="No finding selected"
-            onChange={(id) => setContext(p => ({ ...p, findingId: id }))}
+             onChange={(id: string | null) => setContext(p => ({ ...p, findingId: id }))}
           />
-          <div className="pt-4 space-y-3">
-            <div className="text-[10px] font-medium text-muted-foreground uppercase px-1">Quick Insight</div>
-            <div className="p-3 rounded-xl bg-muted/30 border border-border space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Overall Score</span>
-                <span className="font-bold text-primary">84/100</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Critical Risks</span>
-                <span className="font-bold text-red-400">12</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Compliance</span>
-                <span className="font-bold text-green-400">SOC2 Pass</span>
-              </div>
-            </div>
-          </div>
+           <div className="pt-4">
+             <div className="text-[10px] font-medium text-muted-foreground uppercase px-1 mb-2">Context</div>
+             <div className="p-3 rounded-xl bg-muted/30 border border-border">
+               <p className="text-xs text-muted-foreground">
+                 Copilot answers are grounded in the selected repository, scan, and finding context.
+                 Select an entity to provide more precise evidence.
+               </p>
+             </div>
+           </div>
         </div>
       </div>
     </div>
   );
 }
 
-function ContextSection({ title, icon: Icon, value, placeholder, onChange }: any) {
+function ContextSection({
+  title,
+  icon: Icon,
+  value,
+  placeholder,
+  onChange,
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  value: string | null;
+  placeholder: string;
+  onChange: (value: string | null) => void;
+}) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">

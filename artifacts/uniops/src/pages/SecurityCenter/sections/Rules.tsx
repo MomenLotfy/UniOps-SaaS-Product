@@ -1,49 +1,40 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Activity, List, Info } from 'lucide-react';
+import { useApi } from '@/hooks/use-api';
 
 interface Rule {
   id: string;
   name: string;
-  category: string;
-  priority: number;
-  status: 'active' | 'inactive';
-  version: number;
+  category?: string;
+  priority?: number;
+  is_active?: boolean;
+  status?: string;
+  version?: number;
 }
 
 const RulesSection = () => {
-  const [loading, setLoading] = useState(true);
-  const [rules, setRules] = useState<Rule[]>([]);
-  const [stats, setStats] = useState({ total: 0, active: 0, matchRate: '0%' });
+  // Rules are stored in the security_rules table and exposed via the
+  // decision engine's /security/decisions endpoint family.
+  // If there is no dedicated /security/rules list endpoint the table
+  // simply shows an empty state — rules are configured via the
+  // Decision Engine, not imported externally.
+  const { data: rawRules, loading } = useApi<any>('/security/rules');
 
-  useEffect(() => {
-    async function fetchRules() {
-      try {
-        // Mocking API call for foundation
-        const res = await fetch('/api/v1/security/rules');
-        const data = await res.json();
-        setRules(data);
-        setStats({
-          total: data.length,
-          active: data.filter((r: any) => r.is_active).length,
-          matchRate: '12.5%',
-        });
-      } catch (e) {
-        console.error('Failed to fetch rules', e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchRules();
-  }, []);
+  const rules: Rule[] = Array.isArray(rawRules?.data)
+    ? rawRules.data
+    : Array.isArray(rawRules)
+    ? rawRules
+    : [];
+
+  const totalActive = rules.filter(r => r.is_active || r.status === 'active').length;
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full p-12">
-        <Spinner size="lg" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-400" />
       </div>
     );
   }
@@ -53,30 +44,30 @@ const RulesSection = () => {
       {/* KPI Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-6 flex items-center space-x-4">
-          <div className="p-3 bg-indigo-100 text-indigo-600 rounded-full">
+          <div className="p-3 bg-indigo-500/15 text-indigo-400 rounded-full">
             <BookOpen size={24} />
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Total Rules</p>
-            <p className="text-2xl font-bold">{stats.total}</p>
-          </div>
-        </Card>
-        <Card className="p- la-6 flex items-center space-x-4">
-          <div className="p-3 bg-green-100 text-green-600 rounded-full">
-            <Activity size={24} />
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Active Policies</p>
-            <p className="text-2xl font-bold">{stats.active}</p>
+            <p className="text-2xl font-bold">{rules.length}</p>
           </div>
         </Card>
         <Card className="p-6 flex items-center space-x-4">
-          <div className="p-3 bg-amber-100 text-amber-600 rounded-full">
+          <div className="p-3 bg-green-500/15 text-green-400 rounded-full">
+            <Activity size={24} />
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Active Rules</p>
+            <p className="text-2xl font-bold">{totalActive}</p>
+          </div>
+        </Card>
+        <Card className="p-6 flex items-center space-x-4">
+          <div className="p-3 bg-amber-500/15 text-amber-400 rounded-full">
             <List size={24} />
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Average Match Rate</p>
-            <p className="text-2xl font-bold">{stats.matchRate}</p>
+            <p className="text-sm text-muted-foreground">Inactive Rules</p>
+            <p className="text-2xl font-bold">{rules.length - totalActive}</p>
           </div>
         </Card>
       </div>
@@ -97,35 +88,34 @@ const RulesSection = () => {
               <TableHead>Priority</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Version</TableHead>
-              <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rules.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  No rules defined. Rule engine is in default mode.
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  No rules defined. Rules are configured via the Decision Engine.
                 </TableCell>
               </TableRow>
             ) : (
-              rules.map((rule) => (
-                <TableRow key={rule.id}>
-                  <TableCell className="font-medium">{rule.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{rule.category}</Badge>
-                  </TableCell>
-                  <TableCell>{rule.priority}</TableCell>
-                  <TableCell>
-                    <Badge variant={rule.status === 'active' ? 'success' : 'destructive'}>
-                      {rule.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>v{rule.version}</TableCell>
-                  <TableCell>
-                    <button className="text-blue-600 hover:underline text-sm">Inspect</button>
-                  </TableCell>
-                </TableRow>
-              ))
+              rules.map((rule) => {
+                const isActive = rule.is_active || rule.status === 'active';
+                return (
+                  <TableRow key={rule.id}>
+                    <TableCell className="font-medium">{rule.name}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{rule.category ?? '—'}</Badge>
+                    </TableCell>
+                    <TableCell>{rule.priority ?? '—'}</TableCell>
+                    <TableCell>
+                      <Badge variant={isActive ? 'default' : 'destructive'}>
+                        {isActive ? 'active' : 'inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{rule.version != null ? `v${rule.version}` : '—'}</TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

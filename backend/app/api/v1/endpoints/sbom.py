@@ -185,26 +185,62 @@ async def get_enterprise_packages(
     )
     components = components_result.get("data", [])
 
-    # Build enterprise packages with risk analysis
+    # Pre-load all vulnerabilities for this tenant in one query — keyed by
+    # (package_name.lower(), package_version) for fast O(1) lookup below.
+    from app.models.vulnerability import Vulnerability
+    from sqlalchemy import select as _select, or_ as _or
+    from collections import defaultdict
+
+    vuln_rows_q = await db.execute(
+        _select(Vulnerability).where(
+            Vulnerability.tenant_id == tenant_id,
+            Vulnerability.status.in_(["open", "in_progress"]),
+            Vulnerability.package_name.isnot(None),
+        ).limit(5000)
+    )
+    vuln_rows = vuln_rows_q.scalars().all()
+
+    # Index: package_name_lower → list[Vulnerability]
+    vuln_index: dict[str, list] = defaultdict(list)
+    for v in vuln_rows:
+        if v.package_name:
+            vuln_index[v.package_name.lower()].append(v)
+
+    # Build enterprise packages with real vulnerability data
     packages: list[EnterprisePackage] = []
     for comp in components:
-        name = comp.get("name", "")
-        version = comp.get("version", "")
+        name    = comp.get("name", "") or ""
+        version = comp.get("version", "") or ""
 
-        # Get vulnerabilities for this package
-        vulns = []  # TODO: Query vulnerabilities table
-        risk_score = 0.0
-        cvss_max = None
-        cves = []
-        kev = False
+        # Match vulnerabilities by package name (case-insensitive), optionally
+        # narrowed to the exact version if one is recorded.
+        matches = vuln_index.get(name.lower(), [])
+        if version:
+            exact   = [v for v in matches if v.package_version == version]
+            vulns   = exact if exact else matches
+        else:
+            vulns   = matches
+
+        cves       = [v.cve_id for v in vulns if v.cve_id]
+        cvss_vals  = [v.cvss_score for v in vulns if v.cvss_score is not None]
+        cvss_max   = max(cvss_vals) if cvss_vals else None
+        kev        = False  # KEV data requires an external NVD/CISA feed — not ingested yet
+
+        # Risk score: blend of vulnerability count and max CVSS
+        if vulns:
+            base       = min(len(vulns) * 5.0, 40.0)  # 5 pts per vuln, cap 40
+            cvss_boost = ((cvss_max or 0) / 10.0) * 60.0  # up to 60 from CVSS
+            risk_score = round(min(100.0, base + cvss_boost), 1)
+        else:
+            risk_score = 0.0
 
         packages.append(EnterprisePackage(
             id=f"{name}@{version}",
             name=name,
             version=version,
-            latest_version=None,  # TODO: Fetch from package registry
+            latest_version=None,
             purl=comp.get("purl"),
-            cpe=None,  # TODO: Generate CPE
+            cpe=None,
             sha256=None,
             license=comp.get("license"),
             supplier=comp.get("supplier"),
@@ -215,10 +251,10 @@ async def get_enterprise_packages(
             risk_score=risk_score,
             vulnerability_count=len(vulns),
             cvss_max=cvss_max,
-            epss_score=None,  # TODO: Fetch from EPSS
+            epss_score=None,
             kev=kev,
             cves=cves,
-            dependency_depth=0,  # TODO: Calculate from dependency tree
+            dependency_depth=0,
             dependency_type="direct",
             last_updated=comp.get("timestamp", ""),
         ))

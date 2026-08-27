@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     security_policies, security_exceptions, security_reports, security_posture,
     k8s_security, sbom, repository_risk,
     ownership, sla, tickets, copilot, remediation, intelligence, reports,
+    investigation, graph, impact, governance_overview,
 )
 from app.modules.security.decision_engine.api.routes import router as decisions_router
 from app.modules.security.decision_strategy.api.routes import router as decision_strategies_router
@@ -68,6 +69,10 @@ api_router.include_router(tickets.router,            prefix="/tickets",         
 api_router.include_router(remediation.router,         prefix="/remediation",       tags=["Security - Remediation"])
 api_router.include_router(intelligence.router,          prefix="/intelligence",       tags=["Security - Intelligence"])
 api_router.include_router(reports.router,               prefix="/reports",            tags=["Security - Reports"])
+api_router.include_router(investigation.router,          prefix="/investigation",      tags=["Security - Investigation"])
+api_router.include_router(graph.router,                  prefix="/graph",              tags=["Security - Graph"])
+api_router.include_router(impact.router,                 prefix="/impact",             tags=["Security - Impact"])
+api_router.include_router(governance_overview.router,    prefix="/governance",         tags=["Security - Governance"])
 api_router.include_router(decisions_router,              prefix="/security/decisions", tags=["Security - Decisions"])
 api_router.include_router(decision_strategies_router,    prefix="/security",           tags=["Security - Decision Strategies"])
 api_router.include_router(decision_approvals_router,     prefix="/security",           tags=["Security - Decision Approvals"])
