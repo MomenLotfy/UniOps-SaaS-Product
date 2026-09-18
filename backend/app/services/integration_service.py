@@ -43,6 +43,11 @@ from app.utils.encryption import encrypt, decrypt
 from app.utils.logger import logger
 from app.integrations.github.client import GitHubAPIError
 
+
+def _provider_label(itype: str) -> str:
+    """Human-correct provider name (P1.5-GITLAB-1: .capitalize() mangles GitLab)."""
+    return {"github": "GitHub", "gitlab": "GitLab"}.get(itype, itype.capitalize())
+
 # Fields whose values must be stored encrypted at rest.
 # Only these keys are encrypt/decrypted — everything else passes through.
 SENSITIVE_FIELDS: frozenset[str] = frozenset({
@@ -270,19 +275,25 @@ class IntegrationService(BaseService):
         creds = self._decrypt_credentials(integration.credentials or {})
         itype = integration.type
 
-        # ── Demo / seeded integrations with no real credentials ───────────────
-        # For AWS/K8s/GitHub integrations that were seeded without credentials,
-        # mark them as "demo connected" so the UI shows a green state.
-        # Real credentials will override this when provided.
+        # P1.5-DEMO-1: an integration row claiming "connected" without any real
+        # credentials is a LIE — historically this branch even returned success
+        # so the UI would show a green state for a fabricated connection.  It is
+        # unreachable through the API today (proven live: cred-less integrations
+        # stay pending and the connection test fails honestly), and it now stays
+        # unreachable permanently: rows in that impossible state get an honest,
+        # non-green answer; real credentials continue to the provider checks below.
         _no_creds = not any(
             creds.get(k)
             for k in ("token", "access_token", "access_key_id", "secret_access_key", "kubeconfig")
         )
         if _no_creds and integration.status == "connected":
-            # Already marked connected by seed — keep it green
+            logger.warning(
+                f"[integrity] integration {integration_id} ({itype}) is marked "
+                "connected but has NO credentials — refusing to confirm"
+            )
             return IntegrationTestResult(
-                success=True,
-                message="Demo integration — connected (no live credentials configured)",
+                success=False,
+                message="No credentials configured — connectivity cannot be verified",
             )
 
         client = self._build_client(itype, creds, integration.config or {})
@@ -404,22 +415,22 @@ class IntegrationService(BaseService):
                 return IntegrationTestResult(success=True, message="Connection successful")
 
             integration.status = "invalid_token"
-            integration.error_message = "GitHub authentication failed"
+            integration.error_message = f"{_provider_label(itype)} authentication failed"
             await self.db.flush()
             return IntegrationTestResult(success=False, message="Authentication failed")
 
         except GitHubAPIError as exc:
             if exc.status_code == 401:
                 integration.status = "invalid_token"
-                integration.error_message = "Invalid GitHub token"
+                integration.error_message = f"Invalid {_provider_label(itype)} token"
                 await self.db.flush()
-                return IntegrationTestResult(success=False, message="Invalid GitHub token")
+                return IntegrationTestResult(success=False, message=f"Invalid {_provider_label(itype)} token")
 
             if exc.status_code == 403 and "rate limit" in str(exc).lower():
                 integration.status = "error"
-                integration.error_message = "GitHub API rate limit exceeded"
+                integration.error_message = f"{_provider_label(itype)} API rate limit exceeded"
                 await self.db.flush()
-                return IntegrationTestResult(success=False, message="GitHub API rate limit exceeded")
+                return IntegrationTestResult(success=False, message=f"{_provider_label(itype)} API rate limit exceeded")
 
             integration.status = "error"
             integration.error_message = str(exc)[:500]
@@ -456,7 +467,7 @@ class IntegrationService(BaseService):
             logger.error(f"Integration sync failed for {integration_id}: {exc}")
             if exc.status_code == 401:
                 integration.status = "invalid_token"
-                integration.error_message = "Invalid GitHub token"
+                integration.error_message = f"Invalid {_provider_label(itype)} token"
             else:
                 integration.status = "error"
                 integration.error_message = str(exc)[:500]
@@ -531,10 +542,10 @@ class IntegrationService(BaseService):
                 message = str(exc) or "GitHub repo sync failed"
                 if exc.status_code == 401:
                     integration.status = "invalid_token"
-                    integration.error_message = "Invalid GitHub token"
+                    integration.error_message = f"Invalid {_provider_label(itype)} token"
                 elif exc.status_code == 403 and "rate limit" in message.lower():
                     integration.status = "error"
-                    integration.error_message = "GitHub API rate limit exceeded"
+                    integration.error_message = f"{_provider_label(itype)} API rate limit exceeded"
                 else:
                     integration.status = "error"
                     integration.error_message = message[:500]
