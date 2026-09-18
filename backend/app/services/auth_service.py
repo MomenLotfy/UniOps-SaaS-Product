@@ -76,6 +76,14 @@ class AuthService(BaseService):
             if raw:
                 invite_data = json.loads(raw)
                 await _redis_del(_invite_key(data.invite_token))
+            else:
+                # P1.6-INVITE-2: an explicitly supplied invite token that no
+                # longer resolves (consumed, expired, or forged) must FAIL —
+                # silently degrading to a fresh-tenant admin registration is
+                # a fake success: the invitee believes they joined the org
+                # that issued the invite but lands in a new empty tenant.
+                logger.warning(f"Register attempted with unresolved invite token (email={data.email})")
+                raise ConflictError("Invite token is invalid, expired, or already used")
 
         # Create tenant (or use from invite)
         if invite_data:
