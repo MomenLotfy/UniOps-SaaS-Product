@@ -53,10 +53,30 @@ async def change_password(data: ChangePasswordRequest, current_user: CurrentUser
     return APIResponse(message="Password changed successfully")
 
 
+@router.get("/invitations")
+async def list_invitations(current_user: AdminUser, tenant_id: TenantID):
+    """Real pending invitations for THIS tenant (Redis-backed, 48h TTL).
+    Never exposes raw invite tokens — token_hash is only a stable row key.
+    """
+    svc = UserService.__new__(UserService)  # service reads Redis only; no DB session needed here
+    invites = await svc.list_invitations(tenant_id)
+    return APIResponse(data=invites, message="Pending invitations")
+
+
+@router.delete("/invitations/{token_hash}", status_code=status.HTTP_200_OK)
+async def revoke_invitation(token_hash: str, current_user: AdminUser, tenant_id: TenantID):
+    svc = UserService.__new__(UserService)
+    revoked = await svc.revoke_invitation(tenant_id, token_hash)
+    if not revoked:
+        from app.core.exceptions import NotFoundError
+        raise NotFoundError("Invitation not found")
+    return APIResponse(message="Invitation revoked")
+
+
 @router.get("/{user_id}", response_model=APIResponse[UserResponse])
 async def get_user(user_id: str, current_user: AdminUser, db: DBSession):
     svc = UserService(db)
-    user = await svc.get_by_id(user_id)
+    user = await svc.get_by_id(user_id, current_user["tenant_id"])
     return APIResponse(data=user)
 
 
@@ -70,7 +90,7 @@ async def update_user(user_id: str, data: UserUpdate, current_user: AdminUser, d
 @router.delete("/{user_id}", status_code=status.HTTP_200_OK)
 async def deactivate_user(user_id: str, current_user: AdminUser, db: DBSession):
     svc = UserService(db)
-    await svc.deactivate(user_id)
+    await svc.deactivate(user_id, current_user["tenant_id"])
     return APIResponse(message="User deactivated")
 
 

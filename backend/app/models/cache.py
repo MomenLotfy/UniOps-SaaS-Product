@@ -34,10 +34,6 @@ class SyncJob(BaseModel):
 
     provider: Mapped["ProviderMetadata"] = relationship()
 
-# ... (keep other classes) ...
-
-class CacheMetadata(BaseModel):
-# ...
 class CacheMetadata(BaseModel):
     """
     Tracks metadata and statistics for cached intelligence entities.

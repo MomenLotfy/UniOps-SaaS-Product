@@ -29,12 +29,12 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import TypeVar, Generic
+from typing import Generic, TypeVar
 
 V = TypeVar("V")
 
 
-class BaseCache(Generic[V]):
+class BaseCache(Generic[V]):  # noqa: UP046 — PEP 695 class type params require the runtime to be Python ≥3.12; this repo still runs 3.11 in some environments, so the Generic[...] form stays until the toolchain floor is raised
     """
     Monotonic-clock TTL cache with thread-safe store.
 

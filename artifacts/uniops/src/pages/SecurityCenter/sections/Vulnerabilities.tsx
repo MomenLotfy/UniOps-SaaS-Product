@@ -730,7 +730,7 @@ export default function Vulnerabilities() {
   const [page,       setPage]       = useState(1);
   const [selected,   setSelected]   = useState<Vuln | null>(null);
   const [updating,   setUpdating]   = useState(false);
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Debounced search
   useEffect(() => {

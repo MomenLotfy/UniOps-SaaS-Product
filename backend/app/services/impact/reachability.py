@@ -14,7 +14,7 @@ class ReachabilityEngine:
         """
         Checks for a path from any 'Internet-Facing' entity to the target entity.
         """
-        logger.info(f la-logic[ReachabilityEngine] Checking internet reachability for {entity_id}")
+        logger.info(f"[ReachabilityEngine] Checking internet reachability for {entity_id}")
 
         # 1. Find all public endpoints/ingress
         public_nodes = await self.repo.find_entities_by_type("Ingress", tenant_id)

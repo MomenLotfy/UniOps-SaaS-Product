@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { can, isAdmin } from '@/lib/permissions';
+import { can, isAdmin, normalizeRole } from '@/lib/permissions';
 import type { UserRole } from '@/types/user';
 
 type Action = 'read' | 'write' | 'delete' | 'admin';
@@ -7,7 +7,7 @@ type Action = 'read' | 'write' | 'delete' | 'admin';
 export function usePermissions() {
   const { user } = useAuth();
 
-  const role = (user?.role ?? 'viewer') as UserRole;
+  const role = normalizeRole(user?.role);
 
   return {
     role,

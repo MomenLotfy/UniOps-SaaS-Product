@@ -14,6 +14,13 @@ from app.services.base import BaseService
 from app.utils.logger import logger
 
 
+
+def _assert_tenant(obj, tenant_id):
+    """IDOR guard: id-addressed accessors verify ownership before returning."""
+    from app.core.exceptions import NotFoundError
+    if tenant_id is not None and getattr(obj, "tenant_id", None) is not None and obj.tenant_id != tenant_id:
+        raise NotFoundError("Resource not found")
+
 class SecurityExceptionService(BaseService):
 
     async def list_exceptions(
@@ -88,8 +95,9 @@ class SecurityExceptionService(BaseService):
         logger.info(f"[exception:create] id={exc.id[:8]} tenant={tenant_id[:8]} by={requested_by[:8]}")
         return SecurityExceptionResponse.model_validate(exc)
 
-    async def get_exception(self, exception_id: str) -> SecurityExceptionResponse:
+    async def get_exception(self, exception_id: str, tenant_id: str | None = None) -> SecurityExceptionResponse:
         exc = await self._get_by_id(SecurityException, exception_id)
+        _assert_tenant(exc, tenant_id)
         return SecurityExceptionResponse.model_validate(exc)
 
     async def update_exception(

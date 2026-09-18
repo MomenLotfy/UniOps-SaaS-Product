@@ -55,8 +55,9 @@ const SERVICE_TYPES: ServiceType[] = ['Microservice', 'Database', 'Worker', 'Que
 const TECH_STACKS: TechStack[] = [
   'Node.js', 'Python', 'Go', 'Java', 'Rust', 'React', 'Next.js', 'FastAPI', 'Django', 'Spring Boot', 'Other',
 ];
-const CLUSTERS = ['prod-eks', 'staging-eks', 'dev-cluster', 'on-prem-k8s'];
-const NAMESPACES = ['default', 'platform', 'backend', 'data', 'workers', 'messaging', 'analytics', 'monitoring'];
+/* Real clusters are fetched from GET /clusters (tenant-scoped, Control Plane).
+   Namespaces are user-provided free text — a namespace only exists if the
+   target cluster has it; we never invent namespace names. */
 
 // ── Wizard steps ───────────────────────────────────────────────────────────────
 const WIZARD_STEPS = [
@@ -235,7 +236,7 @@ function ServiceDetail({ svc, onClose }: { svc: CatalogService; onClose: () => v
 // ── Create Wizard ─────────────────────────────────────────────────────────────
 const EMPTY_PAYLOAD: CreateServicePayload = {
   name: '', type: 'Microservice', tech_stack: 'Node.js',
-  git_repo: '', cluster: CLUSTERS[0], namespace: NAMESPACES[0],
+  git_repo: '', cluster: '', namespace: '',
   replicas: 1, description: '', tags: [],
 };
 
@@ -252,6 +253,13 @@ function CreateWizard({ onClose, onCreate, initialValues }: {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const uid = useId();
+
+  // Real tenant-connected clusters — deployment targets must actually exist
+  const { data: clustersRaw, loading: clustersLoading } = useApi<any>('/clusters');
+  const realClusters: { id: string; name: string }[] = (Array.isArray(clustersRaw?.data)
+    ? clustersRaw.data
+    : Array.isArray(clustersRaw) ? clustersRaw : [])
+    .map((c: any) => ({ id: c.id ?? c.name, name: c.name ?? c.id }));
 
   const set = useCallback(<K extends keyof CreateServicePayload>(key: K, val: CreateServicePayload[K]) => {
     setForm(f => ({ ...f, [key]: val }));
@@ -494,34 +502,38 @@ function CreateWizard({ onClose, onCreate, initialValues }: {
                     <label className="block text-xs font-medium text-gray-300 mb-1.5">
                       Cluster <span className="text-red-400">*</span>
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {CLUSTERS.map(c => (
-                        <button key={c} onClick={() => set('cluster', c)}
-                          className={clsx('flex items-center gap-2 px-3 py-2.5 rounded-lg border text-xs font-medium transition-all text-left',
-                            form.cluster === c
-                              ? 'border-blue-500 bg-blue-500/10 text-blue-300'
-                              : 'border-white/8 text-gray-400 hover:border-white/15 hover:text-white')}>
-                          <Server className="w-3.5 h-3.5 flex-shrink-0" />
-                          {c}
-                        </button>
-                      ))}
-                    </div>
+                    {clustersLoading ? (
+                      <div className="text-xs text-gray-500 py-2">Loading connected clusters…</div>
+                    ) : realClusters.length === 0 ? (
+                      <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 px-3 py-2.5 text-xs text-yellow-300">
+                        No clusters connected. Register a cluster in the Clusters tab before creating a service.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        {realClusters.map(c => (
+                          <button key={c.id} onClick={() => set('cluster', c.name)}
+                            className={clsx('flex items-center gap-2 px-3 py-2.5 rounded-lg border text-xs font-medium transition-all text-left',
+                              form.cluster === c.name
+                                ? 'border-blue-500 bg-blue-500/10 text-blue-300'
+                                : 'border-white/8 text-gray-400 hover:border-white/15 hover:text-white')}>
+                            <Server className="w-3.5 h-3.5 flex-shrink-0" />
+                            {c.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-300 mb-1.5">
                       Namespace <span className="text-red-400">*</span>
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {NAMESPACES.map(ns => (
-                        <button key={ns} onClick={() => set('namespace', ns)}
-                          className={clsx('px-2 py-2 rounded-lg border text-xs font-medium transition-all',
-                            form.namespace === ns
-                              ? 'border-blue-500 bg-blue-500/10 text-blue-300'
-                              : 'border-white/8 text-gray-400 hover:border-white/15 hover:text-white')}>
-                          {ns}
-                        </button>
-                      ))}
-                    </div>
+                    <input
+                      value={form.namespace}
+                      onChange={e => set('namespace', e.target.value)}
+                      placeholder="default"
+                      className="w-full px-3 py-2.5 rounded-lg border border-white/8 bg-white/[0.03] text-xs text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50"
+                    />
+                    <p className="text-[11px] text-gray-500 mt-1">The namespace must exist on the target cluster — the deployment will fail on the cluster otherwise.</p>
                   </div>
                 </div>
               )}
@@ -750,7 +762,7 @@ export function CatalogTab({ showToast }: Props) {
 
   // Module 2 — RBAC gate
   const { isAdmin, hasRole } = usePermissions();
-  const canAct = isAdmin() || hasRole('devops');
+  const canAct = isAdmin() || hasRole('devops_engineer');
 
   // Module 5 — WS subscription for live catalog events
   const { subscribe } = useWebSocket();

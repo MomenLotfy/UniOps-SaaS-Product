@@ -12,9 +12,14 @@ interface UserRoleBadgeProps {
 const ROLE_CONFIG: Record<UserRole, { color: string; bg: string; icon: React.ElementType }> = {
   super_admin: { color: 'text-red-400', bg: 'bg-red-500/10', icon: Crown },
   admin: { color: 'text-orange-400', bg: 'bg-orange-500/10', icon: Shield },
-  devops: { color: 'text-blue-400', bg: 'bg-blue-500/10', icon: Code2 },
-  security: { color: 'text-yellow-400', bg: 'bg-yellow-500/10', icon: Lock },
-  finops: { color: 'text-green-400', bg: 'bg-green-500/10', icon: DollarSign },
+  security_engineer: { color: 'text-yellow-400', bg: 'bg-yellow-500/10', icon: Lock },
+  security_analyst: { color: 'text-yellow-200', bg: 'bg-yellow-500/10', icon: Lock },
+  devops_engineer: { color: 'text-blue-400', bg: 'bg-blue-500/10', icon: Code2 },
+  compliance_manager: { color: 'text-teal-400', bg: 'bg-teal-500/10', icon: Shield },
+  auditor: { color: 'text-purple-400', bg: 'bg-purple-500/10', icon: Eye },
+  executive: { color: 'text-amber-400', bg: 'bg-amber-500/10', icon: Crown },
+  cost_analyst: { color: 'text-green-400', bg: 'bg-green-500/10', icon: DollarSign },
+  developer: { color: 'text-sky-400', bg: 'bg-sky-500/10', icon: Code2 },
   viewer: { color: 'text-slate-400', bg: 'bg-slate-500/10', icon: Eye },
 };
 

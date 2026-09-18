@@ -264,7 +264,7 @@ export default function SBOM() {
     return parts.join('&');
   }, [repoFilter, formatFilter, page, pageSize, search, sortBy, sortOrder]);
 
-  const { data: rawList, loading: loadingList, refetch: refetchList } = useApi<SBOMListResponse>(`/sbom?${qs}`);
+  const { data: rawList, loading: loadingList, error: listError, refetch: refetchList } = useApi<SBOMListResponse>(`/sbom?${qs}`);
   const { data: summaryStats, loading: loadingSummary, refetch: refetchSummary } = useApi<SBOMSummaryStats>('/sbom/summary');
 
   const sboms: SBOM[] = rawList?.data ?? (Array.isArray(rawList) ? rawList : []);
@@ -399,7 +399,7 @@ export default function SBOM() {
     if (!components.length) return [];
     if (!search) return components;
     const searchLower = search.toLowerCase();
-    return components.filter(c =>
+    return components.filter((c: any) =>
       (c.name || '').toLowerCase().includes(searchLower) ||
       (c.version || '').toLowerCase().includes(searchLower) ||
       (c.purl || '').toLowerCase().includes(searchLower)
@@ -447,8 +447,8 @@ export default function SBOM() {
     return sortedComponents.slice(start, start + pageSize);
   }, [sortedComponents, page, pageSize]);
 
-  // Stats
-  const summary = summaryStats?.data;
+  // Stats — useApi already unwraps the APIResponse envelope
+  const summary = summaryStats;
 
   // Export options
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -514,7 +514,7 @@ export default function SBOM() {
   }
 
   // Error state
-  if (rawList?.message && !loadingList) {
+  if (listError && !loadingList) {
     return (
       <div className="space-y-4">
         <div>
@@ -525,7 +525,7 @@ export default function SBOM() {
             <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-red-400">Error Loading SBOMs</p>
-              <p className="text-xs text-red-300/80 mt-1">{rawList.message}</p>
+              <p className="text-xs text-red-300/80 mt-1">{listError}</p>
             </div>
           </div>
         </div>
@@ -853,7 +853,7 @@ export default function SBOM() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedComponents.map((comp, i) => {
+                  {paginatedComponents.map((comp: any, i: number) => {
                     const purlInfo = parsePurl(comp.purl);
                     const risk = (comp as any).risk_score ?? 0;
                     const vulns = (comp as any).vulnerabilities || [];

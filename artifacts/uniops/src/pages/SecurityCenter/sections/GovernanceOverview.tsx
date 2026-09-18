@@ -379,7 +379,8 @@ export default function GovernanceOverview() {
 
   const { data, loading } = useApi<GovernanceResponse>(`/governance/overview?days=${dateRange}`);
 
-  const governance = data?.data ?? data;
+  // useApi already unwraps the APIResponse envelope — data IS the payload.
+  const governance = data ?? undefined;
   const summary = governance?.summary;
 
   // Derived metrics
@@ -569,7 +570,7 @@ export default function GovernanceOverview() {
         <StatCard
           label="Open Findings"
           value={summary?.open_findings ?? '—'}
-          sub={summary?.critical_findings ?? 0} critical findings
+          sub={`${summary?.critical_findings ?? 0} critical findings`}
           icon={FileText}
           color="bg-orange-500/15 text-orange-400"
           loading={!summary}
@@ -593,7 +594,7 @@ export default function GovernanceOverview() {
         <StatCard
           label="Open Exceptions"
           value={summary?.open_exceptions ?? '—'}
-          sub={policyViolations} policy violations
+          sub={`${policyViolations} policy violations`}
           icon={ClipboardList}
           color="bg-yellow-500/15 text-yellow-400"
           loading={!summary}

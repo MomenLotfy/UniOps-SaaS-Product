@@ -69,6 +69,24 @@ class Settings(BaseSettings):
     # Default uses "redis" service name — works in Docker.
     # Override with REDIS_URL env var for Replit (localhost) or external Redis.
     REDIS_URL: str = "redis://redis:6379/0"
+    # Background-job topology: exactly ONE process should run the in-process
+    # scheduler / deployment worker / K8s watchers / ML listener.  In a
+    # multi-worker deployment set UNIOPS_BACKGROUND_LEADER=false for all
+    # but one worker (the API keeps serving on every worker regardless).
+    BACKGROUND_LEADER: bool = True
+    # ---- P1 deployment guidance (honest, evidence-based) ----
+    # In-process background state (event bus fan-out, WS connection map,
+    # memory rate-limit fallback) exists in EVERY worker, so:
+    #  1) run uvicorn workers N>1 ONLY with BACKGROUND_LEADER=false on N-1
+    #     workers (or via a dedicated background pod),
+    #  2) WS clients receive only events emitted by THEIR worker — front-facing
+    #     sticky/L7 session affinity (or a Redis fan-out relay) is required
+    #     for cross-worker event delivery (documented best-effort semantics),
+    #  3) Redis is REQUIRED in production for globally-correct rate limits and
+    #     shared invite/reset/blacklist state,
+    #  4) budget ~350-400MB RSS per uvicorn worker +1 leader; OOM-killed
+    #     workers are respawned by uvicorn automatically.
+
     CELERY_BROKER_URL: str = "redis://redis:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/2"
 
@@ -88,6 +106,10 @@ class Settings(BaseSettings):
 
     GITLAB_URL: str = "https://gitlab.com"
     GITLAB_TOKEN: str = ""
+    # Shared secret for inbound GitLab webhooks (X-Gitlab-Token). UNSET ⇒ the
+    # /webhooks/gitlab endpoint rejects all requests (fail-closed, same
+    # contract as Stripe). P1.5-WEBHOOK-1.
+    GITLAB_WEBHOOK_SECRET: str = ""
 
     STRIPE_SECRET_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""
@@ -96,12 +118,37 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
 
     SLACK_BOT_TOKEN: str = ""
+    # Slack signing secret for inbound webhook HMAC (Slack → Basic Information).
+    # Distinct secret from the bot token; UNSET ⇒ /webhooks/slack rejects all
+    # requests (fail-closed). P1.5-WEBHOOK-1.
+    SLACK_SIGNING_SECRET: str = ""
     SLACK_WEBHOOK_URL: str = ""
 
     SENDGRID_API_KEY: str = ""
     EMAIL_FROM: str = "noreply@uniops.io"
 
-    CORS_ORIGINS: List[str] = ["*"]
+    # P1.6-CORS-1: default to explicit local dev origins — wildcard combined
+    # with allow_credentials=True makes any website a credentialed caller if
+    # tokens are ever cookie-based.  Deployments must set CORS_ORIGINS env.
+    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"]
+
+    @field_validator("CORS_ORIGINS", mode="after")
+    @classmethod
+    def no_wildcard_with_credentials(cls, v: list[str]) -> list[str]:
+        """Fail-closed CORS: the app always sets allow_credentials=True, and
+        Starlette answers Origin echo + ACA-Credentials for `["*"]`, which
+        hands every website credentialed cross-origin access to the API.
+        Production boots are additionally refused by validate_production
+        below; this clamp covers dev/test environments so a wildcard can
+        never silently degrade into an echo-any-origin setup.  P1.6-CORS-2."""
+        if v and "*" in v:
+            import logging
+            logging.getLogger(__name__).warning(
+                "CORS_ORIGINS contained '*' with cookie-credentialed requests "
+                "enabled — dropping wildcard (fail-closed); set explicit origins"
+            )
+            v = [o for o in v if o != "*"]
+        return v
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

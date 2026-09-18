@@ -46,8 +46,11 @@ def is_startup_complete() -> bool:
 # ── Endpoints ────────────────────────────────────────────────────────────────
 @router.get("")
 async def health_check():
+    # Additive key ("app") so /api/v1/health and root /health are consistent
+    # with the fallback handler in main.py and the documented contract.
     return {
         "status": "ok",
+        "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "env": settings.APP_ENV,
     }
@@ -88,9 +91,10 @@ async def readiness_check(response: Response):
     except Exception:  # pragma: no cover - defensive
         checks["scheduler"] = "unavailable"
 
-    critical_failed = any(
-        v != "ok" for k, v in checks.items() if k in {"database", "redis"}
-    )
+    # Database is the only hard dependency for readiness.  Redis backs
+    # caching/rate-limits/outbox, but every consumer has an in-memory
+    # fallback (documented), so its absence degrades rather than blocks.
+    critical_failed = checks.get("database") != "ok"
     if critical_failed:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {
@@ -98,9 +102,14 @@ async def readiness_check(response: Response):
             "checks": checks,
             "version": settings.APP_VERSION,
         }
+    degraded = [
+        k for k, v in checks.items()
+        if v != "ok" and k not in {"database"}
+    ]
     return {
-        "status": "ready",
+        "status": "ready" if not degraded else "ready_degraded",
         "checks": checks,
+        "degraded": degraded,
         "version": settings.APP_VERSION,
     }
 

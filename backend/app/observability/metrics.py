@@ -221,13 +221,13 @@ def set_http_requests_in_progress(value: float) -> None:
 def render_latest() -> bytes:
     """Render the UniOps registry in the Prometheus text exposition format."""
     try:
-        return generate_latest(REGISTRY)
+        return bytes(generate_latest(REGISTRY))
     except Exception:  # pragma: no cover - defensive
         return b""
 
 
 def content_type() -> str:
-    return CONTENT_TYPE_LATEST
+    return str(CONTENT_TYPE_LATEST)
 
 
 # ── Optional Prometheus client (legacy ``app/utils/metrics.py`` re-exports)

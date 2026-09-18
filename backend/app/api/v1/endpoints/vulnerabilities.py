@@ -49,14 +49,14 @@ async def get_vuln_stats(
 
 
 @router.get("/{vuln_id}", response_model=APIResponse[VulnerabilityResponse])
-async def get_vulnerability(vuln_id: str, current_user: CurrentUser, db: DBSession):
+async def get_vulnerability(vuln_id: str, current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
     svc = SecurityService(db)
-    vuln = await svc.get_vulnerability(vuln_id)
+    vuln = await svc.get_vulnerability(vuln_id, tenant_id)
     return APIResponse(data=vuln)
 
 
 @router.patch("/{vuln_id}", response_model=APIResponse[VulnerabilityResponse])
-async def update_vulnerability(vuln_id: str, data: VulnerabilityUpdate, current_user: CurrentUser, db: DBSession):
+async def update_vulnerability(vuln_id: str, data: VulnerabilityUpdate, current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
     svc = SecurityService(db)
-    vuln = await svc.update_vulnerability(vuln_id, data)
+    vuln = await svc.update_vulnerability(vuln_id, data, tenant_id)
     return APIResponse(data=vuln)

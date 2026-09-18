@@ -1,6 +1,7 @@
 from __future__ import annotations
 """Kubernetes client — connects via kubeconfig file or in-cluster config."""
 import tempfile, os
+import asyncio
 from app.integrations.base import BaseIntegration
 from app.utils.logger import logger
 
@@ -32,38 +33,80 @@ def _parse_memory(mem_str: str | None) -> int | None:
         return None
 
 
+class _K8sApis:
+    """Module-like shim exposing typed API objects bound to ONE ApiClient.
+
+    The kubernetes python client's ``load_kube_config()`` mutates the global
+    default ``Configuration`` — with concurrent requests against different
+    clusters that cross-wires tenants/clusters.  Instead we build a private
+    ``ApiClient`` per integration and construct API classes from it.
+    """
+
+    def __init__(self, api_client):
+        self._api_client = api_client
+
+    def _api(self, cls_name: str):
+        from kubernetes import client as kc
+        return getattr(kc, cls_name)(self._api_client)
+
+    def CoreV1Api(self):
+        return self._api("CoreV1Api")
+
+    def AppsV1Api(self):
+        return self._api("AppsV1Api")
+
+    def BatchV1Api(self):
+        return self._api("BatchV1Api")
+
+    def AutoscalingV2Api(self):
+        return self._api("AutoscalingV2Api")
+
+    def CustomObjectsApi(self):
+        return self._api("CustomObjectsApi")
+
+    def NetworkingV1Api(self):
+        return self._api("NetworkingV1Api")
+
+
+def _build_isolated_api_client(kubeconfig_content: str | None,
+                               kubeconfig_path: str | None):
+    """Create a kubernetes ApiClient WITHOUT touching global config state."""
+    from kubernetes import client as k8s_client, config as k8s_config
+
+    if kubeconfig_content and isinstance(kubeconfig_content, str):
+        import yaml
+        cfg_dict = yaml.safe_load(kubeconfig_content)
+        if not isinstance(cfg_dict, dict) or "clusters" not in cfg_dict:
+            raise ValueError("kubeconfig content is not a valid kubeconfig YAML")
+        # new_client_from_config_dict binds a private ApiClient — global
+        # Configuration is never touched.
+        return k8s_config.new_client_from_config_dict(config_dict=cfg_dict)
+
+    if kubeconfig_path and os.path.exists(kubeconfig_path):
+        return k8s_config.new_client_from_config(config_file=kubeconfig_path)
+
+    # In-cluster config — load into a private Configuration object.
+    configuration = k8s_client.Configuration()
+    k8s_config.load_incluster_config(client_configuration=configuration)
+    return k8s_client.ApiClient(configuration=configuration)
+
+
 class KubernetesClient(BaseIntegration):
     def __init__(self, config: dict):
         super().__init__(config)
-        self._k8s_client = None
+        self._k8s_client = None          # _K8sApis shim
+        self._api_client = None
         self._kubeconfig_file = None
 
     def _get_client(self):
         if self._k8s_client:
             return self._k8s_client
         try:
-            from kubernetes import client as k8s_client, config as k8s_config
-
             kubeconfig_content = self.config.get("kubeconfig_content") or self.config.get("kubeconfig")
             kubeconfig_path    = self.config.get("kubeconfig_path")
 
-            if kubeconfig_content and isinstance(kubeconfig_content, str):
-                # Write temp file from stored content
-                self._kubeconfig_file = tempfile.NamedTemporaryFile(
-                    mode="w", suffix=".yaml", delete=False
-                )
-                self._kubeconfig_file.write(kubeconfig_content)
-                self._kubeconfig_file.flush()
-                k8s_config.load_kube_config(config_file=self._kubeconfig_file.name)
-
-            elif kubeconfig_path and os.path.exists(kubeconfig_path):
-                k8s_config.load_kube_config(config_file=kubeconfig_path)
-
-            else:
-                # Try in-cluster config (running inside a pod)
-                k8s_config.load_incluster_config()
-
-            self._k8s_client = k8s_client
+            self._api_client = _build_isolated_api_client(kubeconfig_content, kubeconfig_path)
+            self._k8s_client = _K8sApis(self._api_client)
             return self._k8s_client
 
         except Exception as e:
@@ -410,21 +453,29 @@ class KubernetesClient(BaseIntegration):
         self,
         name: str,
         namespace: str,
-        command: str,
+        command_list: list[str] | None = None,
         container: str | None = None,
     ) -> str:
-        """Execute a command in a running pod via kubernetes exec API."""
+        """Execute a command in a running pod via kubernetes exec API.
+
+        The command is executed as an argument vector DIRECTLY in the
+        container (no /bin/sh wrapper) — this prevents shell injection and is
+        the hardened high-risk path.
+        """
         try:
             k8s = self._get_client()
             if not k8s:
                 return "Kubernetes client unavailable"
+
+            if not command_list:
+                return "Kubernetes client unavailable: empty command"
 
             from kubernetes.stream import stream as k8s_stream
 
             kwargs: dict = dict(
                 name=name,
                 namespace=namespace,
-                command=["/bin/sh", "-c", command],
+                command=list(command_list),
                 stderr=True,
                 stdin=False,
                 stdout=True,
@@ -454,14 +505,20 @@ class KubernetesClient(BaseIntegration):
             if not k8s:
                 return {"success": False, "error": "Kubernetes client unavailable"}
 
-            apps_v1 = k8s.AppsV1Api()
-            body    = {"spec": {"replicas": replicas}}
-            apps_v1.patch_namespaced_deployment_scale(
-                name=name,
-                namespace=namespace,
-                body=body,
-                _request_timeout=15,
-            )
+            def _patch():
+                apps_v1 = k8s.AppsV1Api()
+                body    = {"spec": {"replicas": replicas}}
+                return apps_v1.patch_namespaced_deployment_scale(
+                    name=name,
+                    namespace=namespace,
+                    body=body,
+                    _request_timeout=15,
+                )
+
+            # The sync kubectl client must never block the event loop during
+            # a high-risk mutation — offload to the default executor.
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, _patch)
             logger.info(f"Deployment scaled: {namespace}/{name} → {replicas} replicas")
             return {
                 "success":    True,

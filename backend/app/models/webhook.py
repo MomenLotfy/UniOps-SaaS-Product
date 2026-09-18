@@ -15,3 +15,11 @@ class Webhook(BaseModel):
     headers: Mapped[dict] = mapped_column(JSON, default=dict)
     last_response_code: Mapped[int | None] = mapped_column()
     failure_count: Mapped[int] = mapped_column(default=0)
+
+    def to_dict(self) -> dict:
+        """Never serialize the HMAC signing secret — presence is exposed as a
+        boolean so the UI can show 'configured' without leaking the value."""
+        data = super().to_dict()
+        data["has_secret"] = bool(data.get("secret"))
+        data.pop("secret", None)
+        return data

@@ -16,7 +16,9 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import (
+    get_db, get_current_user, require_security_read, require_security_write,
+)
 
 from ..constants import ApprovalState, ApprovalType
 from ..services import ApprovalService
@@ -35,6 +37,20 @@ from .schemas import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/security/decision-approvals", tags=["decision-approvals"])
+
+
+def _jwt_tenant(
+    current_user: dict = Depends(get_current_user),
+    tenant_id: Optional[str] = Query(None, description="Deprecated — must match the authenticated tenant"),
+) -> str:
+    """Tenant ALWAYS comes from the JWT; a query value may only CONFIRM it."""
+    jwt_tenant = current_user["tenant_id"]
+    if tenant_id is not None and tenant_id != jwt_tenant:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="tenant_id does not match the authenticated tenant",
+        )
+    return jwt_tenant
 
 
 def _to_request_schema(row) -> ApprovalRequestSchema:
@@ -78,7 +94,8 @@ def _to_detail_schema(row) -> ApprovalRequestDetailSchema:
     summary="List approval requests",
 )
 async def list_approvals(
-    tenant_id: str = Query(..., description="Tenant identifier"),
+    tenant_id: str = Depends(_jwt_tenant),
+    _role=Depends(require_security_read),
     approval_state: Optional[ApprovalState] = Query(None, alias="state"),
     approval_type: Optional[ApprovalType] = Query(None, alias="type"),
     limit: int = Query(100, ge=1, le=1000),
@@ -103,11 +120,13 @@ async def list_approvals(
 )
 async def get_approval(
     approval_id: str,
+    tenant_id: str = Depends(_jwt_tenant),
+    _role=Depends(require_security_read),
     db: AsyncSession = Depends(get_db),
 ):
     svc = ApprovalService(db)
     row = await svc.get_request(approval_id)
-    if row is None:
+    if row is None or row.tenant_id != tenant_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"ApprovalRequest {approval_id} not found",
@@ -122,10 +141,19 @@ async def get_approval(
 )
 async def approval_history(
     approval_id: str,
+    tenant_id: str = Depends(_jwt_tenant),
+    _role=Depends(require_security_read),
     db: AsyncSession = Depends(get_db),
 ):
     from sqlalchemy import select
     from ..models.approval import ApprovalHistory
+
+    # Verify the parent approval belongs to the caller's tenant (IDOR guard)
+    svc = ApprovalService(db)
+    parent = await svc.get_request(approval_id)
+    if parent is None or parent.tenant_id != tenant_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND,
+                            detail=f"ApprovalRequest {approval_id} not found")
 
     stmt = (
         select(ApprovalHistory)
@@ -155,7 +183,8 @@ async def approval_history(
     summary="Tenant-wide approval metrics",
 )
 async def approval_statistics(
-    tenant_id: str = Query(..., description="Tenant identifier"),
+    tenant_id: str = Depends(_jwt_tenant),
+    _role=Depends(require_security_read),
     db: AsyncSession = Depends(get_db),
 ):
     svc = ApprovalService(db)
@@ -169,9 +198,11 @@ async def approval_statistics(
     summary="List registered approval policies",
 )
 async def approval_policies(
-    tenant_id: Optional[str] = Query(None, description="Tenant identifier (optional)"),
+    tenant_id: str = Depends(_jwt_tenant),
+    _role=Depends(require_security_read),
     db: AsyncSession = Depends(get_db),
 ):
+    # Tenant-scoped only — no global listing of other tenants' policies
     svc = ApprovalService(db)
     rows = await svc.list_policies(tenant_id=tenant_id)
     return [
@@ -199,7 +230,8 @@ async def approval_policies(
 async def apply_approval_action(
     approval_id: str,
     payload: ApprovalActionRequest,
-    tenant_id: str = Query(..., description="Tenant identifier"),
+    tenant_id: str = Depends(_jwt_tenant),
+    current_user: dict = Depends(require_security_write),
     idempotency_key: Optional[str] = Header(default=None, alias="Idempotency-Key", max_length=255),
     db: AsyncSession = Depends(get_db),
 ) -> ApprovalActionResponse:
@@ -243,7 +275,10 @@ async def apply_approval_action(
         )
     previous_state = row.approval_state
 
-    actor_id = payload.actor_id or "anonymous"
+    # Actor is ALWAYS the authenticated principal — the client-supplied
+    # payload.actor_id is advisory-only (kept in the reason trail), never
+    # the identity the decision is attributed to.
+    actor_id = current_user["user_id"]
     manager = ApprovalManager(db)
     if chosen[0] == "approve":
         updated = await manager.approve(approval_id, changed_by=actor_id, reason=payload.reason)
@@ -283,10 +318,11 @@ async def apply_approval_action(
 )
 async def expire_approval(
     approval_id: str,
-    tenant_id: str = Query(..., description="Tenant identifier"),
+    tenant_id: str = Depends(_jwt_tenant),
+    _role=Depends(require_security_write),
     db: AsyncSession = Depends(get_db),
 ) -> ApprovalActionResponse:
-    """System-only path used by the scheduler to expire stale approvals."""
+    """Manual expiry of stale approvals — security-write roles only."""
     svc = ApprovalService(db)
     row = await svc.get_request(approval_id)
     if row is None or row.tenant_id != tenant_id:

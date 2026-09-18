@@ -145,11 +145,14 @@ async def trigger_feed_sync(provider_id: str, db: AsyncSession = Depends(get_db)
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
 
-    return {
-        "success": True,
-        "message": f"Sync triggered for {provider.name}",
-        "provider_id": provider_id,
-    }
+    # P1.6-INTEL-1: previously this returned {"success": True, "Sync triggered"}
+    # without dispatching anything — a fabricated success.  No feed-sync
+    # pipeline exists for providers today, so answer honestly (fail-closed,
+    # same contract as unconfigured webhooks).
+    raise HTTPException(
+        status_code=503,
+        detail=f"Feed sync not available — no sync pipeline configured for provider '{provider.name}'",
+    )
 
 
 # ── Records (paginated) ────────────────────────────────────────────────────────

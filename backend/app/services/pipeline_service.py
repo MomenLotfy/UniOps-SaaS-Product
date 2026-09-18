@@ -61,8 +61,11 @@ class PipelineService(BaseService):
             pages=(total + page_size - 1) // page_size,
         )
 
-    async def get_by_id(self, pipeline_id: str) -> PipelineResponse:
-        pipeline = await self._get_by_id(Pipeline, pipeline_id)
+    async def get_by_id(self, pipeline_id: str, tenant_id: str | None = None) -> PipelineResponse:
+        if tenant_id:
+            pipeline = await self._get_by_id_tenant(Pipeline, pipeline_id, tenant_id)
+        else:
+            pipeline = await self._get_by_id(Pipeline, pipeline_id)
         return PipelineResponse.model_validate(pipeline)
 
     async def get_stats(self, tenant_id: str, days: int = 30) -> PipelineStats:
@@ -97,9 +100,9 @@ class PipelineService(BaseService):
         )
         return [r[0] for r in result.fetchall() if r[0]]
 
-    async def get_jobs(self, pipeline_id: str) -> list[PipelineJob]:
+    async def get_jobs(self, pipeline_id: str, tenant_id: str | None = None) -> list[PipelineJob]:
         """Fetch live job/step list for a pipeline from the provider."""
-        pipeline, integration = await self._resolve(pipeline_id)
+        pipeline, integration = await self._resolve(pipeline_id, tenant_id)
         creds  = _decrypt_creds(integration.credentials)
         config = {**creds, **(integration.config or {})}
 
@@ -116,6 +119,7 @@ class PipelineService(BaseService):
         pipeline_id: str,
         triggered_by: str,
         failed_only: bool = False,
+        tenant_id: str | None = None,
     ) -> PipelineRerunResult:
         """
         Re-run a pipeline on its provider (GitHub or GitLab).
@@ -129,7 +133,7 @@ class PipelineService(BaseService):
         - Raises IntegrationError if provider call fails
         - Writes AuditLog on success
         """
-        pipeline, integration = await self._resolve(pipeline_id)
+        pipeline, integration = await self._resolve(pipeline_id, tenant_id)
 
         # ── Guard: don't re-run an already-active pipeline ──────────────────
         if pipeline.status.lower() in _ACTIVE:
@@ -252,12 +256,12 @@ class PipelineService(BaseService):
 
     # ── Cancel operation ──────────────────────────────────────────────────────
 
-    async def cancel(self, pipeline_id: str, triggered_by: str) -> PipelineRerunResult:
+    async def cancel(self, pipeline_id: str, triggered_by: str, tenant_id: str | None = None) -> PipelineRerunResult:
         """
         Cancel a running pipeline on its provider (GitHub or GitLab).
         Guards: raises ValidationError if pipeline is not in a cancellable (active) state.
         """
-        pipeline, integration = await self._resolve(pipeline_id)
+        pipeline, integration = await self._resolve(pipeline_id, tenant_id)
 
         if pipeline.status.lower() not in _ACTIVE:
             raise ValidationError(
@@ -382,13 +386,19 @@ class PipelineService(BaseService):
 
     # ── Internal helpers ──────────────────────────────────────────────────────
 
-    async def _resolve(self, pipeline_id: str) -> tuple[Pipeline, Integration]:
-        pipeline = await self._get_by_id(Pipeline, pipeline_id)
+    async def _resolve(self, pipeline_id: str, tenant_id: str | None = None) -> tuple[Pipeline, Integration]:
+        if tenant_id:
+            pipeline = await self._get_by_id_tenant(Pipeline, pipeline_id, tenant_id)
+        else:
+            pipeline = await self._get_by_id(Pipeline, pipeline_id)
         if not pipeline.integration_id:
             raise IntegrationError("Pipeline", "No integration associated")
         integration = await self._get_or_none(Integration, pipeline.integration_id)
         if not integration:
             raise IntegrationError("Pipeline", "Integration record not found")
+        if integration.tenant_id != pipeline.tenant_id:
+            # Tenant mismatch between pipeline and its integration — hard-fail
+            raise IntegrationError("Pipeline", "Integration ownership mismatch")
         if not integration.is_active or integration.status != "connected":
             raise IntegrationError(
                 integration.type,
@@ -420,125 +430,3 @@ def _parse_dt(value: str | None) -> datetime | None:
         return None
 
 
-
-class PipelineService(BaseService):
-    async def list(
-        self,
-        tenant_id: str,
-        page: int = 1,
-        page_size: int = 20,
-        status: Optional[str] = None,
-        repository: Optional[str] = None,
-        integration_id: Optional[str] = None,
-    ) -> PaginatedResponse:
-        query = select(Pipeline).where(Pipeline.tenant_id == tenant_id)
-        if status:
-            query = query.where(Pipeline.status == status)
-        if repository:
-            query = query.where(Pipeline.repository.ilike(f"%{repository}%"))
-        if integration_id:
-            query = query.where(Pipeline.integration_id == integration_id)
-
-        total = await self._count(query)
-        query = query.order_by(Pipeline.created_at.desc())
-        items = await self._paginate(query, page, page_size)
-
-        return PaginatedResponse(
-            data=[PipelineResponse.model_validate(i) for i in items],
-            total=total, page=page, page_size=page_size,
-            pages=(total + page_size - 1) // page_size,
-        )
-
-    async def get_by_id(self, pipeline_id: str) -> PipelineResponse:
-        pipeline = await self._get_by_id(Pipeline, pipeline_id)
-        return PipelineResponse.model_validate(pipeline)
-
-    async def get_stats(self, tenant_id: str, days: int = 30) -> PipelineStats:
-        since = datetime.now(timezone.utc) - timedelta(days=days)
-        query = select(Pipeline).where(
-            Pipeline.tenant_id == tenant_id,
-            Pipeline.created_at >= since,
-        )
-        result = await self.db.execute(query)
-        pipelines = result.scalars().all()
-
-        total = len(pipelines)
-        running = sum(1 for p in pipelines if p.status == "running")
-        success = sum(1 for p in pipelines if p.status in ("success", "passed"))
-        failed = sum(1 for p in pipelines if p.status in ("failed", "error"))
-
-        success_rate = (success / total * 100) if total > 0 else 0.0
-
-        durations = [p.duration for p in pipelines if p.duration]
-        avg_duration = sum(durations) / len(durations) if durations else 0.0
-
-        return PipelineStats(
-            total=total,
-            running=running,
-            success=success,
-            failed=failed,
-            success_rate=round(success_rate, 1),
-            avg_duration_seconds=round(avg_duration, 1),
-        )
-
-    async def retry(self, pipeline_id: str, triggered_by: str) -> dict:
-        pipeline = await self._get_by_id(Pipeline, pipeline_id)
-        if not pipeline.integration_id:
-            return {"message": "No integration associated with this pipeline", "success": False}
-
-        integration = await self._get_or_none(Integration, pipeline.integration_id)
-        if not integration:
-            return {"message": "Integration not found", "success": False}
-
-        pipeline.status = "pending"
-        pipeline.triggered_by = triggered_by
-        pipeline.started_at = None
-        pipeline.finished_at = None
-        await self.db.flush()
-
-        return {"message": "Pipeline retry initiated", "success": True, "pipeline_id": pipeline_id}
-
-    async def get_recent_by_repo(self, tenant_id: str, repository: str, limit: int = 10) -> list[PipelineResponse]:
-        query = (
-            select(Pipeline)
-            .where(Pipeline.tenant_id == tenant_id, Pipeline.repository == repository)
-            .order_by(Pipeline.created_at.desc())
-            .limit(limit)
-        )
-        result = await self.db.execute(query)
-        return [PipelineResponse.model_validate(p) for p in result.scalars().all()]
-
-    async def list_pipelines(
-        self,
-        tenant_id: str,
-        page: int = 1,
-        page_size: int = 20,
-        repository: Optional[str] = None,
-        branch: Optional[str] = None,
-        status: Optional[str] = None,
-    ) -> PaginatedResponse:
-        query = select(Pipeline).where(Pipeline.tenant_id == tenant_id)
-        if repository:
-            query = query.where(Pipeline.repository.ilike(f"%{repository}%"))
-        if branch:
-            query = query.where(Pipeline.branch == branch)
-        if status:
-            query = query.where(Pipeline.status == status)
-
-        total = await self._count(query)
-        query = query.order_by(Pipeline.created_at.desc())
-        items = await self._paginate(query, page, page_size)
-        return PaginatedResponse(
-            data=[PipelineResponse.model_validate(p) for p in items],
-            total=total, page=page, page_size=page_size,
-            pages=(total + page_size - 1) // page_size,
-        )
-
-    async def list_repositories(self, tenant_id: str) -> list[str]:
-        result = await self.db.execute(
-            select(Pipeline.repository)
-            .where(Pipeline.tenant_id == tenant_id)
-            .distinct()
-            .order_by(Pipeline.repository)
-        )
-        return [r[0] for r in result.fetchall() if r[0]]

@@ -18,22 +18,28 @@ async def slack_webhook(
 ):
     body = await request.body()
 
-    if settings.SLACK_BOT_TOKEN and x_slack_request_timestamp and x_slack_signature:
-        try:
-            ts = int(x_slack_request_timestamp)
-            if abs(time.time() - ts) > 300:
-                raise HTTPException(status_code=401, detail="Request timestamp too old")
+    # Verify signature — FAIL-CLOSED (P1.5-WEBHOOK-1). Previously the check ran
+    # only when token+headers were all present (unset secret or omitted headers
+    # = total bypass), signed with the BOT TOKEN instead of a signing secret,
+    # and `except Exception: pass` let a non-integer timestamp skip everything.
+    if not settings.SLACK_SIGNING_SECRET:
+        logger.warning("SLACK_SIGNING_SECRET not set — rejecting webhook")
+        raise HTTPException(status_code=503, detail="Slack webhook not configured")
+    if not x_slack_request_timestamp or not x_slack_signature:
+        raise HTTPException(status_code=401, detail="Missing signature headers")
+    try:
+        ts = int(x_slack_request_timestamp)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Invalid timestamp")
+    if abs(time.time() - ts) > 300:
+        raise HTTPException(status_code=401, detail="Request timestamp too old")
 
-            sig_basestring = f"v0:{ts}:{body.decode()}"
-            expected = "v0=" + hmac.new(
-                settings.SLACK_BOT_TOKEN.encode(), sig_basestring.encode(), hashlib.sha256
-            ).hexdigest()
-            if not hmac.compare_digest(expected, x_slack_signature):
-                raise HTTPException(status_code=401, detail="Invalid Slack signature")
-        except HTTPException:
-            raise
-        except Exception:
-            pass
+    sig_basestring = f"v0:{ts}:{body.decode()}"
+    expected = "v0=" + hmac.new(
+        settings.SLACK_SIGNING_SECRET.encode(), sig_basestring.encode(), hashlib.sha256
+    ).hexdigest()
+    if not hmac.compare_digest(expected, x_slack_signature):
+        raise HTTPException(status_code=401, detail="Invalid Slack signature")
 
     content_type = request.headers.get("content-type", "")
     if "application/json" in content_type:

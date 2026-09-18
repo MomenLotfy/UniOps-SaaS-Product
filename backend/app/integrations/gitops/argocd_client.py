@@ -10,7 +10,6 @@ Extends the core ArgoCDClient with:
 
 Falls back gracefully when ArgoCD is not configured.
 """
-from __future__ import annotations
 import logging
 from typing import Optional
 

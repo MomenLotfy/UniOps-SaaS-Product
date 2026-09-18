@@ -20,15 +20,12 @@ class RiskIntelligenceEngine:
         self.pipeline = self._build_pipeline()
 
     def _build_pipeline(self) -> RiskEvaluationPipeline:
-        """Defines the sequence of risk evaluation stages."""
-        pipeline = RiskEvaluationPipeline()
+        """Defines the sequence of risk evaluation stages.
 
-        # Technical Risk
-        tech = TechnicalRiskCalculator()
-        pipeline.add_stage(lambda ctx: setattr(ctx, 'technical_score', await tech.calculate(ctx)) if False else tech.calculate(ctx))
-        # Wait, the lambda is tricky with await. Let's use a proper wrapper.
-
-        return pipeline
+        Stages are executed sequentially by ``evaluate_risk`` via
+        ``_run_stage`` which properly awaits each async calculator.
+        """
+        return RiskEvaluationPipeline()
 
     # Fixing the pipeline stages to be async properly
     async def _run_stage(self, calculator: Any, dimension: str, context: RiskContext):

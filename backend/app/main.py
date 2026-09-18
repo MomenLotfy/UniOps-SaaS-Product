@@ -4,11 +4,13 @@ import logging
 import sys
 from contextlib import asynccontextmanager
 
+from fastapi.exceptions import RequestValidationError
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from app.config import settings
+from app.core.exceptions import UniOpsException
 from app.core.database import init_db, engine
 from app.core.security import decode_token
 from app.api.v1.router import api_router
@@ -16,6 +18,7 @@ from app.api.v1.websocket.manager import ws_manager
 from app.api.v1.websocket.handlers import handle_ws_message
 from app.middleware.logging import LoggingMiddleware
 from app.middleware.audit import AuditMiddleware
+from app.middleware.auth import JWTAuthMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.utils.logger import logger
 
@@ -94,30 +97,42 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized")
 
+    # 2.-6. Background loops — only in the designated leader process.
+    # P1-R4a: without this guard every uvicorn worker runs its OWN scheduler,
+    # deployment worker, K8s watchers and ML listener (N× external API calls,
+    # N× recovery scans, possible double-processing).  In horizontal scale-out
+    # set BACKGROUND_LEADER=false on all but one worker; the API serves on all.
+    _is_bg_leader = bool(getattr(settings, "BACKGROUND_LEADER", True))
+    if not _is_bg_leader:
+        logger.info("BACKGROUND_LEADER=false — API only; background loops run in the leader process")
+
     # 2. Start background scheduler
     try:
-        from app.core.scheduler import start_scheduler
-        await start_scheduler()
-        logger.info("Background scheduler started")
+        if _is_bg_leader:
+            from app.core.scheduler import start_scheduler
+            await start_scheduler()
+            logger.info("Background scheduler started")
     except Exception as e:
         logger.warning(f"Scheduler not started: {e}")
 
     # 3. ML reactive event listener
     try:
-        from app.services.ml_service import MLService
-        asyncio.create_task(
-            MLService(None).start_event_listener(),
-            name="ml-event-listener",
-        )
-        logger.info("ML event listener task started")
+        if _is_bg_leader:
+            from app.services.ml_service import MLService
+            asyncio.create_task(
+                MLService(None).start_event_listener(),
+                name="ml-event-listener",
+            )
+            logger.info("ML event listener task started")
     except Exception as e:
         logger.warning(f"ML event listener not started (non-fatal): {e}")
 
     # 4. Deployment Engine worker
     try:
-        from app.core.deployment_engine.worker import run_deployment_worker
-        asyncio.create_task(run_deployment_worker(), name="deployment-worker")
-        logger.info("Deployment Engine worker started")
+        if _is_bg_leader:
+            from app.core.deployment_engine.worker import run_deployment_worker
+            asyncio.create_task(run_deployment_worker(), name="deployment-worker")
+            logger.info("Deployment Engine worker started")
     except Exception as e:
         logger.warning(f"Deployment Engine worker not started (non-fatal): {e}")
 
@@ -129,24 +144,18 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Event Bus not started (non-fatal): {e}")
 
-    # 6. K8s watcher bootstrap
+    # 6. K8s watchers — real Kubernetes Watch API (pod events + DB persistence)
     try:
-        from app.core.events.k8s_watcher import bootstrap_watchers
-        asyncio.create_task(bootstrap_watchers(), name="k8s-watcher-bootstrap")
-        logger.info("Kubernetes cluster watcher bootstrap started")
+        if _is_bg_leader:
+            from app.integrations.kubernetes.watcher import start_all_watchers
+            await start_all_watchers()
+            logger.info("Kubernetes Watch API watchers started")
     except Exception as e:
-        logger.warning(f"K8s watcher bootstrap not started (non-fatal): {e}")
+        logger.warning(f"K8s watchers not started (non-fatal): {e}")
 
-    # 7. Webhook routes
-    try:
-        from app.api.webhooks import github as github_wh, stripe as stripe_wh
-        from app.api.webhooks import gitlab as gitlab_wh, slack as slack_wh
-        app.include_router(github_wh.router, prefix="/webhooks", tags=["Webhooks-Inbound"])
-        app.include_router(stripe_wh.router, prefix="/webhooks", tags=["Webhooks-Inbound"])
-        app.include_router(gitlab_wh.router, prefix="/webhooks", tags=["Webhooks-Inbound"])
-        app.include_router(slack_wh.router,  prefix="/webhooks", tags=["Webhooks-Inbound"])
-    except Exception as e:
-        logger.warning(f"Webhook routes not loaded: {e}")
+    # 7. Webhook routes — registered at import time (see module scope below),
+    #    NOT here: lifespan does not run under test transports, and routers are
+    #    static wiring, not runtime state.
 
     # Sprint 3 R38 — mark startup complete so /startup probe returns 200
     try:
@@ -160,6 +169,11 @@ async def lifespan(app: FastAPI):
 
     # ── Shutdown ──────────────────────────────────────────────────────────────
     logger.info("Shutting down...")
+    try:
+        from app.integrations.kubernetes.watcher import stop_all_watchers
+        await stop_all_watchers()
+    except Exception:
+        pass
     try:
         from app.core.scheduler import stop_scheduler
         await stop_scheduler()
@@ -194,18 +208,43 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(LoggingMiddleware)
+# JWTAuthMiddleware must run before AuditMiddleware so request.state carries
+# the authenticated principal (without it the audit trail silently recorded nothing).
+app.add_middleware(JWTAuthMiddleware)
 app.add_middleware(AuditMiddleware)
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+
+# Root-level health endpoints (`/health`, `/health/ready`, ...) in addition to
+# the versioned `/api/v1/health` — standard k8s probe/UI contract.
+from app.api.v1.endpoints.health import router as _health_router
+app.include_router(_health_router, prefix="/health", tags=["Health"])
+
+# Inbound webhook routes — static wiring registered at import time so the
+# same contract holds under tests (no lifespan) and uvicorn workers alike.
+try:
+    from app.api.webhooks import github as _github_wh, stripe as _stripe_wh
+    from app.api.webhooks import gitlab as _gitlab_wh, slack as _slack_wh
+    for _mod in (_github_wh, _stripe_wh, _gitlab_wh, _slack_wh):
+        app.include_router(_mod.router, prefix="/webhooks", tags=["Webhooks-Inbound"])
+except Exception as _e:  # pragma: no cover - never expected
+    logger.warning(f"Webhook routes not loaded: {_e}")
 
 
 @app.websocket("/ws/{tenant_id}")
 async def websocket_endpoint(websocket: WebSocket, tenant_id: str, token: str = ""):
     try:
-        if token:
-            decode_token(token)
+        if not token:
+            await websocket.close(code=4001)
+            return
+        payload = decode_token(token)
     except Exception:
         await websocket.close(code=4001)
+        return
+    # Enforce tenant isolation: the path tenant_id must match the JWT claim.
+    token_tenant = (payload or {}).get("tenant_id")
+    if not token_tenant or token_tenant != tenant_id:
+        await websocket.close(code=4003)
         return
     await ws_manager.connect(websocket, tenant_id)
     try:
@@ -214,6 +253,12 @@ async def websocket_endpoint(websocket: WebSocket, tenant_id: str, token: str = 
             await handle_ws_message(websocket, tenant_id, data)
     except WebSocketDisconnect:
         await ws_manager.disconnect(websocket, tenant_id)
+    except Exception:
+        # Any unexpected receive error → close cleanly
+        try:
+            await ws_manager.disconnect(websocket, tenant_id)
+        except Exception:
+            pass
 
 
 @app.get("/api/v1/health", tags=["Health"])
@@ -227,14 +272,32 @@ async def root_health_check():
     }
 
 
+@app.exception_handler(RequestValidationError)
+async def request_validation_exception_handler(request, exc: RequestValidationError):
+    """P1.6-SECRET-1 — pydantic v2's default 422 serialization echoes the
+    offending request body via `input` (and sometimes `ctx`), leaking
+    passwords/tokens/credentials into API responses.  Strip them: keep only
+    the safe contract fields (type / loc / msg)."""
+    safe_errors = [
+        {"type": e.get("type"), "loc": e.get("loc"), "msg": e.get("msg")}
+        for e in exc.errors()
+    ]
+    return JSONResponse(status_code=422, content={"detail": safe_errors})
+
+
+@app.exception_handler(UniOpsException)
+async def uniops_exception_handler(request, exc):
+    """Preserve the platform response contract for all domain exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"success": False, "message": exc.message, "code": exc.code},
+    )
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
-    from app.core.exceptions import UniOpsException
     if isinstance(exc, UniOpsException):
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={"success": False, "message": exc.message, "code": exc.code},
-        )
+        return await uniops_exception_handler(request, exc)
     # Sprint 3 R29 — capture unhandled exceptions to Sentry
     try:
         from app.observability.sentry import capture_exception_safe

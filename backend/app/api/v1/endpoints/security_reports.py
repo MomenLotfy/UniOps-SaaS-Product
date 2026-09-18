@@ -50,7 +50,7 @@ async def get_report(
     db: DBSession,
 ):
     svc = SecurityReportService(db)
-    report = await svc.get_report(report_id)
+    report = await svc.get_report(report_id, current_user["tenant_id"])
     return APIResponse(data=report)
 
 
@@ -61,5 +61,5 @@ async def delete_report(
     db: DBSession,
 ):
     svc = SecurityReportService(db)
-    await svc.delete_report(report_id)
+    await svc.delete_report(report_id, current_user["tenant_id"])
     return APIResponse(data=None, message="Report deleted")

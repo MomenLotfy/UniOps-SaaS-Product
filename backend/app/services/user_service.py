@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
 from app.models.tenant import Tenant
+from app.core.exceptions import ForbiddenError
 from app.schemas.user import UserUpdate, UserInvite, UserResponse, ChangePasswordRequest
 from app.schemas.common import PaginatedResponse
 from app.core.exceptions import NotFoundError, ConflictError, UnauthorizedError
@@ -14,6 +15,13 @@ from app.core.security import hash_password, verify_password
 from app.services.base import BaseService
 from app.utils.logger import logger
 
+
+
+def _assert_tenant(obj, tenant_id):
+    """IDOR guard: id-addressed accessors verify ownership before returning."""
+    from app.core.exceptions import NotFoundError
+    if tenant_id is not None and getattr(obj, "tenant_id", None) is not None and obj.tenant_id != tenant_id:
+        raise NotFoundError("Resource not found")
 
 class UserService(BaseService):
 
@@ -50,8 +58,9 @@ class UserService(BaseService):
             pages    = (total + page_size - 1) // page_size,
         )
 
-    async def get_by_id(self, user_id: str) -> UserResponse:
+    async def get_by_id(self, user_id: str, tenant_id: str | None = None) -> UserResponse:
         user = await self._get_by_id(User, user_id)
+        _assert_tenant(user, tenant_id)
         return UserResponse.model_validate(user)
 
     async def get_by_email(self, email: str) -> Optional[User]:
@@ -61,12 +70,29 @@ class UserService(BaseService):
     async def update(self, user_id: str, data: UserUpdate, requesting_user: dict) -> UserResponse:
         user = await self._get_by_id(User, user_id)
 
+        roles = requesting_user.get("roles", []) or []
+        is_self = requesting_user.get("user_id") == user_id
+        is_admin = "admin" in roles or "super_admin" in roles
+
+        # Only self or an admin may modify a user's profile (403, not silent permit)
+        if not (is_self or is_admin):
+            raise ForbiddenError("You can only update your own profile")
+
+        # Tenant isolation: non-super-admin users must stay inside their tenant
+        tenant_id = requesting_user.get("tenant_id")
+        if tenant_id and "super_admin" not in roles and str(user.tenant_id) != str(tenant_id):
+            raise ForbiddenError("Cross-tenant user modification is not allowed")
+
         # Only admin can change role or deactivate others
         if data.role and data.role != user.role:
-            if "admin" not in requesting_user.get("roles", []):
-                raise UnauthorizedError("Only admins can change roles")
+            if not is_admin:
+                raise ForbiddenError("Only admins can change roles")
 
         update_data = data.model_dump(exclude_none=True)
+        # New data ALWAYS canonical — migrate legacy names at write time
+        if update_data.get("role"):
+            from app.constants.roles import normalize_role
+            update_data["role"] = normalize_role(update_data["role"])
         await self._update_fields(user, update_data)
         return UserResponse.model_validate(user)
 
@@ -118,8 +144,9 @@ class UserService(BaseService):
             "message": f"Invitation sent to {data.email}",
         }
 
-    async def deactivate(self, user_id: str) -> UserResponse:
+    async def deactivate(self, user_id: str, tenant_id: str | None = None) -> UserResponse:
         user = await self._get_by_id(User, user_id)
+        _assert_tenant(user, tenant_id)
         user.is_active = False
         await self.db.flush()
         return UserResponse.model_validate(user)
@@ -144,3 +171,88 @@ class UserService(BaseService):
             "inactive": total - active,
             "admins":  admin_count,
         }
+
+    async def list_invitations(self, tenant_id: str) -> list[dict]:
+        """Tenant-scoped view of pending invites in Redis (uniops:invite:*)."""
+        import hashlib, json
+        from datetime import datetime, timezone
+        from app.core.redis_client import get_redis
+        from app.services import auth_service as _asvc
+
+        results: list[dict] = []
+        now = datetime.now(timezone.utc)
+        raw: dict[str, str] = {}
+        try:
+            redis = await get_redis()
+            if redis is not None:
+                async for key in redis.scan_iter("uniops:invite:*"):
+                    val = await redis.get(key)
+                    if val:
+                        raw[key if isinstance(key, str) else key.decode()] = val if isinstance(val, str) else val.decode()
+        except Exception:
+            raw = {}
+        # memory fallback (dev/test without Redis)
+        for k, v in list(_asvc._memory_fallback.items()):
+            if k.startswith("uniops:invite:"):
+                raw.setdefault(k, v)
+
+        for key, val in raw.items():
+            try:
+                payload = json.loads(val)
+            except Exception:
+                continue
+            if payload.get("tenant_id") != tenant_id:
+                continue
+            token = key.split("uniops:invite:", 1)[-1]
+            results.append({
+                "id": hashlib.sha256(token.encode()).hexdigest()[:16],
+                "email": payload.get("email"),
+                "role": payload.get("role"),
+                "invited_by": payload.get("invited_by"),
+                "status": "pending",
+                "created_at": now.isoformat(),
+            })
+        return sorted(results, key=lambda r: r["email"] or "")
+
+    async def revoke_invitation(self, tenant_id: str, token_hash: str) -> bool:
+        """Delete the tenant's pending invite identified by its token hash.
+        Never trusts a raw token from the client — hash-compare only."""
+        import hashlib, json
+        from app.core.redis_client import get_redis
+        from app.services import auth_service as _asvc
+
+        candidates: list[str] = [k for k in _asvc._memory_fallback.keys()
+                                 if k.startswith("uniops:invite:")]
+        try:
+            redis = await get_redis()
+            if redis is not None:
+                async for key in redis.scan_iter("uniops:invite:*"):
+                    candidates.append(key if isinstance(key, str) else key.decode())
+        except Exception:
+            pass
+
+        for key in set(candidates):
+            tok = key.split("uniops:invite:", 1)[-1]
+            if hashlib.sha256(tok.encode()).hexdigest()[:16] != token_hash:
+                continue
+            # hash matches — verify tenant ownership before deleting
+            val = None
+            try:
+                redis = await get_redis()
+                if redis is not None:
+                    val = await redis.get(key)
+            except Exception:
+                pass
+            if val is None:
+                val = _asvc._memory_fallback.get(key)
+            if val is None:
+                return False
+            try:
+                payload = json.loads(val)
+            except Exception:
+                return False
+            if payload.get("tenant_id") != tenant_id:
+                return False
+            await _asvc._redis_del(key)  # graceful Redis-or-memory delete
+            return True
+        return False

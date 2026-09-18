@@ -32,11 +32,16 @@ async def get_current_user(
         user_id: str = payload.get("sub")
         if not user_id:
             raise UnauthorizedError("Invalid token payload")
+        # Canonical RBAC: legacy role names from old JWTs/DB rows are mapped
+        # to their canonical form here — every require_* below sees ONLY the
+        # canonical contract (admin, devops_engineer, security_engineer,
+        # cost_analyst, viewer, ...).
+        from app.constants.roles import normalize_roles
         return {
             "user_id": user_id,
             "email": payload.get("email"),
             "tenant_id": payload.get("tenant_id"),
-            "roles": payload.get("roles", []),
+            "roles": normalize_roles(payload.get("roles", [])),
             "payload": payload,
         }
     except ValueError as e:
@@ -111,6 +116,57 @@ async def get_tenant_id(
     return tenant_id
 
 
+# ── DevOps Center RBAC ────────────────────────────────────────────────────────
+#
+# Canonical role names are defined in app.constants.roles (admin, super_admin,
+# devops_engineer, developer, security_engineer, viewer, ...).
+#
+# Read access (lists, metrics, logs, status): any authenticated tenant member.
+# ── DevOps Center RBAC ────────────────────────────────────────────────────────
+# Canonical role names come from app.constants.roles (e.g. "devops_engineer",
+# NOT "devops").  Read access = any authenticated tenant member (viewers may
+# view status/metrics/logs).  Mutations (restart, delete, exec, scale, sync,
+# rollback, pipeline rerun/cancel, service create/delete, alert lifecycle) are
+# restricted to admin/devops roles; the self-service Catalog additionally
+# allows developers to create services.
+
+# Legacy names are normalized at JWT parse (get_current_user); only the
+# canonical contract appears here.
+DEVOPS_MUTATION_ROLES = {"admin", "super_admin", "devops_engineer"}
+CATALOG_CREATE_ROLES  = DEVOPS_MUTATION_ROLES | {"developer"}
+
+
+async def require_devops(
+    current_user: Annotated[dict, Depends(get_current_active_user)],
+) -> dict:
+    """Admin / super_admin / devops_engineer — DevOps mutation access."""
+    roles = set(current_user.get("roles", []))
+    if not roles.intersection(DEVOPS_MUTATION_ROLES):
+        raise ForbiddenError(
+            "DevOps access required — admin or devops_engineer role needed"
+        )
+    return current_user
+
+
+async def require_developer_or_devops(
+    current_user: Annotated[dict, Depends(get_current_active_user)],
+) -> dict:
+    """Developer / devops_engineer / admin — may run pipelines, redeploy, etc."""
+    return await require_catalog_create(current_user)
+
+
+async def require_catalog_create(
+    current_user: Annotated[dict, Depends(get_current_active_user)],
+) -> dict:
+    """Admin / devops_engineer / developer — may create catalog services."""
+    roles = set(current_user.get("roles", []))
+    if not roles.intersection(CATALOG_CREATE_ROLES):
+        raise ForbiddenError(
+            "Service create access required — developer, devops_engineer or admin role needed"
+        )
+    return current_user
+
+
 def get_pagination(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -121,6 +177,10 @@ def get_pagination(
 CurrentUser = Annotated[dict, Depends(get_current_active_user)]
 AdminUser = Annotated[dict, Depends(require_admin)]
 SuperAdminUser = Annotated[dict, Depends(require_super_admin)]
+DevOpsUser = Annotated[dict, Depends(require_devops)]
+DeveloperUser = Annotated[dict, Depends(require_developer_or_devops)]
+DevOpsUser = Annotated[dict, Depends(require_devops)]
+CatalogCreateUser = Annotated[dict, Depends(require_catalog_create)]
 SecurityReadUser = Annotated[dict, Depends(require_security_read)]
 SecurityWriteUser = Annotated[dict, Depends(require_security_write)]
 ComplianceUser = Annotated[dict, Depends(require_compliance)]

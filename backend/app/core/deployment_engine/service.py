@@ -47,6 +47,9 @@ from app.models.service import CatalogService
 
 logger = logging.getLogger(__name__)
 
+# Strong references to in-flight background tasks (prevents GC cancellation)
+_background_tasks: set[asyncio.Task] = set()
+
 
 # ── Payload schema (dict-based — avoids circular imports with Pydantic) ────────
 
@@ -85,10 +88,13 @@ class DeploymentEngine:
         status=Failed if an early step failed).
         """
         svc = await self._persist_service(payload)
-        asyncio.create_task(
+        task = asyncio.create_task(
             self._run_pipeline(svc, payload),
             name=f"deploy-{svc.id}",
         )
+        # Hold a strong reference so the GC cannot cancel the pipeline mid-flight
+        _background_tasks.add(task)
+        task.add_done_callback(_background_tasks.discard)
         return svc
 
     # ── Pipeline stages ───────────────────────────────────────────────────────
@@ -126,46 +132,49 @@ class DeploymentEngine:
 
         git_integration = await self._get_git_integration(db)
         provider        = get_provider_from_integration(
-            git_integration.to_dict() if git_integration else {}
+            self._integration_dict(git_integration) if git_integration else {}
         ) if git_integration else None
 
-        repo_url = ""
         if provider is None:
-            # No Git integration — generate a placeholder repo URL and continue
-            logger.warning(f"[engine:{svc.name}] No Git integration configured; skipping repo creation")
-            repo_url = f"https://github.com/uniops-org/{svc.name}"
-            await self._log(db, svc, "create_repo", "skipped", "No Git integration — placeholder URL assigned")
-        else:
-            # GitHub path
-            from app.core.deployment_engine.git_provider import GitHubProvider, GitLabProvider
+            # A Git integration (github or gitlab) with a valid token is
+            # REQUIRED to scaffold a service.  Fail clearly — never proceed
+            # with a fake placeholder URL.
+            await self._log(db, svc, "create_repo", "failed",
+                            "No connected Git integration (GitHub/GitLab) — connect one under Integrations first")
+            raise _PipelineAbort(
+                "No connected Git integration (GitHub/GitLab) — service repository cannot be created"
+            )
 
-            if isinstance(provider, GitHubProvider):
-                owner = await provider.get_authenticated_user() or "uniops-org"
-                repo_name = svc.name
-                if not await provider.repo_exists(owner, repo_name):
-                    result = await provider.create_repo(repo_name, description=payload.description or f"UniOps managed: {repo_name}")
-                    if result:
-                        repo_url  = result.get("html_url", f"https://github.com/{owner}/{repo_name}")
-                        svc._gh_owner = owner  # type: ignore[attr-defined]
-                        svc._gh_repo  = repo_name  # type: ignore[attr-defined]
-                    else:
-                        # Non-fatal: continue with placeholder
-                        repo_url = f"https://github.com/{owner}/{repo_name}"
-                        logger.warning(f"[engine:{svc.name}] Repo creation failed; using placeholder URL")
-                else:
-                    repo_url = f"https://github.com/{owner}/{repo_name}"
-                svc._gh_owner = owner    # type: ignore[attr-defined]
-                svc._gh_repo  = repo_name  # type: ignore[attr-defined]
-                await self._log(db, svc, "create_repo", "success", f"GitHub repo: {repo_url}", time.monotonic() - t0)
+        from app.core.deployment_engine.git_provider import GitHubProvider, GitLabProvider
 
-            elif isinstance(provider, GitLabProvider):
-                result = await provider.create_repo(svc.name, description=payload.description or "")
-                if result:
-                    repo_url     = result.get("http_url_to_repo", "")
-                    svc._gl_id   = result.get("id")  # type: ignore[attr-defined]
-                else:
-                    repo_url = f"https://gitlab.com/uniops-org/{svc.name}"
-                await self._log(db, svc, "create_repo", "success", f"GitLab repo: {repo_url}", time.monotonic() - t0)
+        repo_url = ""
+        if isinstance(provider, GitHubProvider):
+            owner = await provider.get_authenticated_user()
+            if not owner:
+                await self._log(db, svc, "create_repo", "failed", "GitHub authentication failed (invalid token?)")
+                raise _PipelineAbort("GitHub authentication failed — check the integration token")
+            repo_name = svc.name
+            if await provider.repo_exists(owner, repo_name):
+                repo_url = f"https://github.com/{owner}/{repo_name}"
+            else:
+                result = await provider.create_repo(
+                    repo_name, description=payload.description or f"UniOps managed: {repo_name}")
+                if not result:
+                    await self._log(db, svc, "create_repo", "failed", f"GitHub create_repo failed for {owner}/{repo_name}")
+                    raise _PipelineAbort(f"GitHub repository creation failed for '{owner}/{repo_name}'")
+                repo_url = result.get("html_url", f"https://github.com/{owner}/{repo_name}")
+            svc._gh_owner = owner    # type: ignore[attr-defined]
+            svc._gh_repo  = repo_name  # type: ignore[attr-defined]
+            await self._log(db, svc, "create_repo", "success", f"GitHub repo: {repo_url}", time.monotonic() - t0)
+
+        elif isinstance(provider, GitLabProvider):
+            result = await provider.create_repo(svc.name, description=payload.description or "")
+            if not result:
+                await self._log(db, svc, "create_repo", "failed", f"GitLab create_repo failed for {svc.name}")
+                raise _PipelineAbort(f"GitLab repository creation failed for '{svc.name}'")
+            repo_url     = result.get("http_url_to_repo", "")
+            svc._gl_id   = result.get("id")  # type: ignore[attr-defined]
+            await self._log(db, svc, "create_repo", "success", f"GitLab repo: {repo_url}", time.monotonic() - t0)
 
         svc.repo_url = repo_url
         await db.execute(
@@ -251,21 +260,30 @@ class DeploymentEngine:
         )
         await self._push_files(db, svc, [(manifest.path, manifest.content)], "feat: add ArgoCD application by UniOps")
 
-        # 2. Register via ArgoCD API if integration is configured
+        # 2. Register via ArgoCD API — ArgoCD integration is REQUIRED for
+        # deployment.  Manifest is already in the repo; if ArgoCD is not
+        # connected the service fails clearly instead of faking the deploy.
         argocd_integration = await self._get_argocd_integration(db)
-        client = get_argocd_client(argocd_integration.to_dict() if argocd_integration else {})
+        client = get_argocd_client(self._integration_dict(argocd_integration) if argocd_integration else {})
 
-        if client:
-            result = await client.create_application(
-                app_name=app_name,
-                repo_url=repo_url,
-                helm_path=helm_path,
-                namespace=payload.namespace,
+        if not client:
+            await self._log(db, svc, "register_gitops", "failed",
+                            "No connected ArgoCD integration — repository was created and manifests pushed, "
+                            "but the application cannot be registered for deployment")
+            raise _PipelineAbort(
+                "No connected ArgoCD integration — connect ArgoCD under Integrations, then re-deploy"
             )
-            status = "success" if result else "skipped (argocd API call failed)"
-        else:
-            status = "skipped (no argocd integration)"
-            logger.info(f"[engine:{svc.name}] No ArgoCD integration configured; manifest pushed to repo only")
+
+        result = await client.create_application(
+            app_name=app_name,
+            repo_url=repo_url,
+            helm_path=helm_path,
+            namespace=payload.namespace,
+        )
+        if not result:
+            await self._log(db, svc, "register_gitops", "failed",
+                            f"ArgoCD create_application call failed for {app_name}")
+            raise _PipelineAbort(f"ArgoCD application registration failed for '{app_name}'")
 
         svc.gitops_app_name = app_name
         await db.execute(
@@ -274,22 +292,30 @@ class DeploymentEngine:
             .values(gitops_app_name=app_name)
         )
         await db.commit()
-        await self._log(db, svc, "register_gitops", status, f"app_name={app_name}", time.monotonic() - t0)
+        await self._log(db, svc, "register_gitops", "success", f"app_name={app_name}", time.monotonic() - t0)
         await self.emit_event("service.deploying", svc, {"step": "register_gitops", "app": app_name})
 
     async def _stage_trigger_sync(self, db: AsyncSession, svc: CatalogService) -> None:
         t0 = time.monotonic()
         argocd_integration = await self._get_argocd_integration(db)
-        client = get_argocd_client(argocd_integration.to_dict() if argocd_integration else {})
+        client = get_argocd_client(self._integration_dict(argocd_integration) if argocd_integration else {})
 
-        if client and svc.gitops_app_name:
-            ok = await client.sync_application(svc.gitops_app_name)
-            msg = "sync triggered" if ok else "sync trigger failed (non-fatal)"
-        else:
-            msg = "skipped (no argocd client)"
+        if not (client and svc.gitops_app_name):
+            # Unreachable in practice (register_gitops already guards), but
+            # kept honest: without ArgoCD there is nothing to sync.
+            await self._log(db, svc, "trigger_sync", "failed", "ArgoCD unavailable — sync not triggered")
+            raise _PipelineAbort("ArgoCD unavailable — sync could not be triggered")
 
-        await self._log(db, svc, "trigger_sync", "success", msg, time.monotonic() - t0)
-        await self.emit_event("service.deploying", svc, {"step": "trigger_sync", "message": msg})
+        ok = await client.sync_application(svc.gitops_app_name)
+        if not ok:
+            # Sync trigger failed — surface honestly; application is registered
+            # but needs an operator/ArgoCD-side retry.
+            await self._log(db, svc, "trigger_sync", "failed",
+                            f"ArgoCD sync trigger failed for {svc.gitops_app_name}")
+            raise _PipelineAbort(f"ArgoCD sync trigger failed for '{svc.gitops_app_name}'")
+
+        await self._log(db, svc, "trigger_sync", "success", "sync triggered", time.monotonic() - t0)
+        await self.emit_event("service.deploying", svc, {"step": "trigger_sync", "message": "sync triggered"})
 
     async def _stage_finalize(self, db: AsyncSession, svc: CatalogService) -> None:
         now = datetime.now(timezone.utc).isoformat()
@@ -330,7 +356,7 @@ class DeploymentEngine:
                         break
 
                     argocd_integration = await self._get_argocd_integration_in_session(db, svc.tenant_id)
-                    client = get_argocd_client(argocd_integration.to_dict() if argocd_integration else {})
+                    client = get_argocd_client(self._integration_dict(argocd_integration) if argocd_integration else {})
 
                     if client and app_name:
                         health = await client.get_health_status(app_name)
@@ -345,7 +371,7 @@ class DeploymentEngine:
                         await db.commit()
 
                         await ws_manager.send_to_tenant(svc.tenant_id, {
-                            "type": "service.synced",
+                            "event": "service.synced",
                             "data": {
                                 "service_id":   service_id,
                                 "service_name": svc.name,
@@ -363,17 +389,13 @@ class DeploymentEngine:
                             await self._fail_service(db, svc, f"ArgoCD health={health}")
                             break
                     else:
-                        # No ArgoCD — just mark Running after a delay
-                        await db.execute(
-                            __import__("sqlalchemy", fromlist=["update"]).update(CatalogService)
-                            .where(CatalogService.id == service_id)
-                            .values(status="Running")
+                        # No ArgoCD client / no registered app — the deployment
+                        # cannot be verified.  Fail honestly rather than showing
+                        # a fake "Running" state.
+                        await self._fail_service(
+                            db, svc,
+                            "ArgoCD integration not connected — deployment status cannot be verified",
                         )
-                        await db.commit()
-                        await ws_manager.send_to_tenant(svc.tenant_id, {
-                            "type": "service.synced",
-                            "data": {"service_id": service_id, "status": "Running"},
-                        })
                         break
 
                 except Exception as exc:
@@ -383,7 +405,7 @@ class DeploymentEngine:
 
     async def emit_event(self, event_type: str, svc: CatalogService, extra: dict | None = None) -> None:
         payload: dict = {
-            "type": event_type,
+            "event": event_type,
             "data": {
                 "service_id":   svc.id,
                 "service_name": svc.name,
@@ -433,7 +455,7 @@ class DeploymentEngine:
         await db.commit()
         svc.status = "Failed"
         await ws_manager.send_to_tenant(svc.tenant_id, {
-            "type": "service.failed",
+            "event": "service.failed",
             "data": {"service_id": svc.id, "service_name": svc.name, "reason": reason},
         })
         logger.error(f"[engine:{svc.name}] FAILED — {reason}")
@@ -468,30 +490,58 @@ class DeploymentEngine:
         files:   list[tuple[str, str]],
         message: str,
     ) -> None:
-        """Push files to the service's git repo (no-op if no git integration)."""
+        """Push files to the service's git repo.
+
+        A Git integration is guaranteed to exist here (stage 1 aborts the
+        pipeline otherwise).  A push failure aborts the pipeline — the service
+        is marked Failed instead of pretending the scaffold exists.
+        """
         git_integration = await self._get_git_integration(db)
         provider        = get_provider_from_integration(
-            git_integration.to_dict() if git_integration else {}
+            self._integration_dict(git_integration) if git_integration else {}
         ) if git_integration else None
 
         if provider is None:
-            logger.info(f"[engine:{svc.name}] No git provider — skipping file push ({len(files)} files)")
-            return
+            raise _PipelineAbort(
+                "Git integration became unavailable during deployment — cannot push files")
 
         from app.core.deployment_engine.git_provider import GitHubProvider, GitLabProvider
 
         if isinstance(provider, GitHubProvider):
-            owner = getattr(svc, "_gh_owner", None) or await provider.get_authenticated_user() or "uniops-org"
+            owner = getattr(svc, "_gh_owner", None) or await provider.get_authenticated_user()
             repo  = getattr(svc, "_gh_repo", None) or svc.name
-            await provider.push_files_batch(owner, repo, files, message=message)
+            ok    = await provider.push_files_batch(owner, repo, files, message=message)
+            if not ok:
+                raise _PipelineAbort(f"Failed to push files to GitHub repo {owner}/{repo}")
 
         elif isinstance(provider, GitLabProvider):
             project_id = getattr(svc, "_gl_id", None)
-            if project_id:
-                for path, content in files:
-                    await provider.push_file(project_id, path, content, message)
+            if not project_id:
+                raise _PipelineAbort("GitLab project id missing — cannot push files")
+            for path, content in files:
+                ok = await provider.push_file(project_id, path, content, message)
+                if not ok:
+                    raise _PipelineAbort(f"Failed to push {path} to GitLab project {project_id}")
 
     # ── Integration lookups ───────────────────────────────────────────────────
+
+    @staticmethod
+    def _decrypt_creds(credentials: dict) -> dict:
+        """Decrypt only known-sensitive values, tolerate plain values."""
+        from app.utils.encryption import decrypt
+        out = {}
+        for k, v in (credentials or {}).items():
+            try:
+                out[k] = decrypt(v)
+            except Exception:
+                out[k] = v
+        return out
+
+    def _integration_dict(self, integration: Integration) -> dict:
+        """to_dict() + decrypted credentials so providers see real tokens."""
+        d = integration.to_dict()
+        d["credentials"] = self._decrypt_creds(integration.credentials or {})
+        return d
 
     async def _get_git_integration(self, db: AsyncSession) -> Optional[Integration]:
         result = await db.execute(

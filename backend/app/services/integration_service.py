@@ -43,6 +43,11 @@ from app.utils.encryption import encrypt, decrypt
 from app.utils.logger import logger
 from app.integrations.github.client import GitHubAPIError
 
+
+def _provider_label(itype: str) -> str:
+    """Human-correct provider name (P1.5-GITLAB-1: .capitalize() mangles GitLab)."""
+    return {"github": "GitHub", "gitlab": "GitLab"}.get(itype, itype.capitalize())
+
 # Fields whose values must be stored encrypted at rest.
 # Only these keys are encrypt/decrypted — everything else passes through.
 SENSITIVE_FIELDS: frozenset[str] = frozenset({
@@ -59,6 +64,11 @@ SENSITIVE_FIELDS: frozenset[str] = frozenset({
     "client_secret",
 })
 
+
+
+def _assert_tenant(obj, tenant_id):
+    if tenant_id is not None and obj.tenant_id != tenant_id:
+        raise NotFoundError("Resource not found")
 
 class IntegrationService(BaseService):
     """Manages the lifecycle of third-party integration records."""
@@ -93,8 +103,9 @@ class IntegrationService(BaseService):
             pages=(total + page_size - 1) // page_size,
         )
 
-    async def get_by_id(self, integration_id: str) -> IntegrationResponse:
+    async def get_by_id(self, integration_id: str, tenant_id: str | None = None) -> IntegrationResponse:
         integration = await self._get_by_id(Integration, integration_id)
+        _assert_tenant(integration, tenant_id)
         return IntegrationResponse.model_validate(integration)
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -188,8 +199,9 @@ class IntegrationService(BaseService):
         await self.db.flush()
         return IntegrationResponse.model_validate(integration)
 
-    async def update(self, integration_id: str, data: IntegrationUpdate) -> IntegrationResponse:
+    async def update(self, integration_id: str, data: IntegrationUpdate, tenant_id: str | None = None) -> IntegrationResponse:
         integration = await self._get_by_id(Integration, integration_id)
+        _assert_tenant(integration, tenant_id)
         update_data = data.model_dump(exclude_none=True)
 
         if update_data.get("status") == "disconnected" or update_data.get("is_active") is False:
@@ -207,7 +219,7 @@ class IntegrationService(BaseService):
         await self._update_fields(integration, update_data)
         return IntegrationResponse.model_validate(integration)
 
-    async def delete(self, integration_id: str) -> None:
+    async def delete(self, integration_id: str, tenant_id: str | None = None) -> None:
         """
         Hard-delete the integration and cascade-clean all related data so a
         reconnect always starts with a clean slate.
@@ -218,6 +230,10 @@ class IntegrationService(BaseService):
         from app.models.vulnerability import Vulnerability
 
         integration = await self._get_by_id(Integration, integration_id)
+        # IDOR guard: the id must belong to the caller's tenant BEFORE any
+        # cascading cleanup runs (the guard exists below for all paths).
+        if tenant_id is not None and integration.tenant_id != tenant_id:
+            raise NotFoundError("Integration not found")
         tenant_id = integration.tenant_id
         intg_type = integration.type
 
@@ -259,19 +275,25 @@ class IntegrationService(BaseService):
         creds = self._decrypt_credentials(integration.credentials or {})
         itype = integration.type
 
-        # ── Demo / seeded integrations with no real credentials ───────────────
-        # For AWS/K8s/GitHub integrations that were seeded without credentials,
-        # mark them as "demo connected" so the UI shows a green state.
-        # Real credentials will override this when provided.
+        # P1.5-DEMO-1: an integration row claiming "connected" without any real
+        # credentials is a LIE — historically this branch even returned success
+        # so the UI would show a green state for a fabricated connection.  It is
+        # unreachable through the API today (proven live: cred-less integrations
+        # stay pending and the connection test fails honestly), and it now stays
+        # unreachable permanently: rows in that impossible state get an honest,
+        # non-green answer; real credentials continue to the provider checks below.
         _no_creds = not any(
             creds.get(k)
             for k in ("token", "access_token", "access_key_id", "secret_access_key", "kubeconfig")
         )
         if _no_creds and integration.status == "connected":
-            # Already marked connected by seed — keep it green
+            logger.warning(
+                f"[integrity] integration {integration_id} ({itype}) is marked "
+                "connected but has NO credentials — refusing to confirm"
+            )
             return IntegrationTestResult(
-                success=True,
-                message="Demo integration — connected (no live credentials configured)",
+                success=False,
+                message="No credentials configured — connectivity cannot be verified",
             )
 
         client = self._build_client(itype, creds, integration.config or {})
@@ -393,22 +415,22 @@ class IntegrationService(BaseService):
                 return IntegrationTestResult(success=True, message="Connection successful")
 
             integration.status = "invalid_token"
-            integration.error_message = "GitHub authentication failed"
+            integration.error_message = f"{_provider_label(itype)} authentication failed"
             await self.db.flush()
             return IntegrationTestResult(success=False, message="Authentication failed")
 
         except GitHubAPIError as exc:
             if exc.status_code == 401:
                 integration.status = "invalid_token"
-                integration.error_message = "Invalid GitHub token"
+                integration.error_message = f"Invalid {_provider_label(itype)} token"
                 await self.db.flush()
-                return IntegrationTestResult(success=False, message="Invalid GitHub token")
+                return IntegrationTestResult(success=False, message=f"Invalid {_provider_label(itype)} token")
 
             if exc.status_code == 403 and "rate limit" in str(exc).lower():
                 integration.status = "error"
-                integration.error_message = "GitHub API rate limit exceeded"
+                integration.error_message = f"{_provider_label(itype)} API rate limit exceeded"
                 await self.db.flush()
-                return IntegrationTestResult(success=False, message="GitHub API rate limit exceeded")
+                return IntegrationTestResult(success=False, message=f"{_provider_label(itype)} API rate limit exceeded")
 
             integration.status = "error"
             integration.error_message = str(exc)[:500]
@@ -416,13 +438,22 @@ class IntegrationService(BaseService):
             return IntegrationTestResult(success=False, message=str(exc))
 
         except Exception as exc:
+            # BUG-P2-03: never echo raw exception text (traceback shapes like
+            # "'X' object has no attribute 'y'") to the client/DB. Log it for
+            # operators; store a sanitized, constant message.
+            logger.error(
+                f"Integration test_connection internal failure for "
+                f"{integration_id} ({itype}): {type(exc).__name__}: {exc}"
+            )
+            safe = f"{_provider_label(itype)} connection check failed internally"
             integration.status = "error"
-            integration.error_message = str(exc)[:500]
+            integration.error_message = safe
             await self.db.flush()
-            return IntegrationTestResult(success=False, message=str(exc))
+            return IntegrationTestResult(success=False, message=safe)
 
-    async def sync(self, integration_id: str) -> dict:
+    async def sync(self, integration_id: str, tenant_id: str | None = None) -> dict:
         integration = await self._get_by_id(Integration, integration_id)
+        _assert_tenant(integration, tenant_id)
         client = self._build_client(
             integration.type,
             self._decrypt_credentials(integration.credentials or {}),
@@ -444,7 +475,7 @@ class IntegrationService(BaseService):
             logger.error(f"Integration sync failed for {integration_id}: {exc}")
             if exc.status_code == 401:
                 integration.status = "invalid_token"
-                integration.error_message = "Invalid GitHub token"
+                integration.error_message = f"Invalid {_provider_label(itype)} token"
             else:
                 integration.status = "error"
                 integration.error_message = str(exc)[:500]
@@ -519,10 +550,10 @@ class IntegrationService(BaseService):
                 message = str(exc) or "GitHub repo sync failed"
                 if exc.status_code == 401:
                     integration.status = "invalid_token"
-                    integration.error_message = "Invalid GitHub token"
+                    integration.error_message = f"Invalid {_provider_label(itype)} token"
                 elif exc.status_code == 403 and "rate limit" in message.lower():
                     integration.status = "error"
-                    integration.error_message = "GitHub API rate limit exceeded"
+                    integration.error_message = f"{_provider_label(itype)} API rate limit exceeded"
                 else:
                     integration.status = "error"
                     integration.error_message = message[:500]
@@ -655,17 +686,12 @@ class IntegrationService(BaseService):
             from app.integrations.stripe.client import StripeClient
             return StripeClient(merged)
 
-        # Unknown type — return a no-op stub so test_connection() always passes
-        from app.integrations.base import BaseIntegration
-
-        class _NoOpIntegration(BaseIntegration):
-            async def test_connection(self) -> bool:
-                return True
-
-            async def sync(self) -> dict:
-                return {}
-
-        return _NoOpIntegration(merged)
+        # BUG-P2-03: previously, ANY unknown type fell through to a private
+        # `_NoOpIntegration` stub whose test_connection() was coded to return
+        # True.  That was a reachable fake-success path (schema accepted an
+        # unvalidated `type: str`): a bogus name produced a fake "provider".
+        # The stub is deleted — unknown types are a hard client error.
+        raise ValueError(f"Unsupported integration type: {integration_type!r}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

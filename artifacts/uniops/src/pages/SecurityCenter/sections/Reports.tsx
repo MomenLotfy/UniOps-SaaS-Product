@@ -562,7 +562,9 @@ export default function Reports() {
   const { data: rawTemplates, loading: loadingTemplates } = useApi<ReportTemplateInfo[]>(`/reports/templates`);
 
   const reports: Report[] = rawList?.data ?? (Array.isArray(rawList) ? rawList : []);
-  const templates: ReportTemplateInfo[] = rawTemplates?.data ?? rawTemplates ?? REPORT_TEMPLATES;
+  // useApi already unwraps the APIResponse envelope; /reports/templates returns a bare list.
+  const templates: ReportTemplateInfo[] = rawTemplates
+    ?? REPORT_TEMPLATES.map(t => ({ key: t.value, name: t.label, description: t.description, category: t.category, icon: t.icon }));
   const total = rawList?.total ?? reports.length;
   const pages = rawList?.pages ?? 1;
 
@@ -696,7 +698,7 @@ export default function Reports() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={refetchList}
+            onClick={() => refetchList()}
             disabled={loadingList}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
             style={{ borderColor: 'hsl(230 15% 20%)' }}

@@ -28,6 +28,16 @@ class UserInvite(BaseModel):
     role: str = "viewer"
     full_name: str
 
+    @field_validator("role")
+    @classmethod
+    def _canonical_role(cls, v: str) -> str:
+        """New data ALWAYS uses canonical (or an existing extended) role."""
+        from app.constants.roles import normalize_role, is_valid_role
+        v = normalize_role(v)
+        if not is_valid_role(v):
+            raise ValueError(f"Unknown role: {v!r}")
+        return v
+
 
 class UserResponse(BaseModel):
     model_config = {"from_attributes": True}

@@ -23,6 +23,41 @@ class BaseService:
             raise NotFoundError(model.__name__, resource_id)
         return obj
 
+    async def _get_by_id_tenant(
+        self, model: Type[ModelT], resource_id: str, tenant_id: str
+    ) -> ModelT:
+        """Tenant-scoped lookup — 404 (not 403) when the resource belongs to
+        another tenant so existence is never leaked across tenants."""
+        result = await self.db.execute(
+            select(model).where(
+                model.id == resource_id,
+                model.tenant_id == tenant_id,
+            )
+        )
+        obj = result.scalar_one_or_none()
+        if obj is None:
+            raise NotFoundError(model.__name__, resource_id)
+        return obj
+
+    async def _get_by_id_tenant(
+        self, model: Type[ModelT], resource_id: str, tenant_id: str
+    ) -> ModelT:
+        """Tenant-scoped lookup — guarantees the caller's tenant owns the row.
+
+        Returns 404 (not 403) when the resource belongs to another tenant so
+        existence of cross-tenant resources is not leaked.
+        """
+        result = await self.db.execute(
+            select(model).where(
+                model.id == resource_id,
+                model.tenant_id == tenant_id,
+            )
+        )
+        obj = result.scalar_one_or_none()
+        if obj is None:
+            raise NotFoundError(model.__name__, resource_id)
+        return obj
+
     async def _get_or_none(self, model: Type[ModelT], resource_id: str) -> Optional[ModelT]:
         result = await self.db.execute(select(model).where(model.id == resource_id))
         return result.scalar_one_or_none()

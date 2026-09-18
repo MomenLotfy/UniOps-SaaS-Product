@@ -51,7 +51,7 @@ class ExecutionController:
         plan_db = result.scalar_one_or_none()
 
         if not plan_db:
-            raise Exception("Plan not found")
+            raise HTTPException(status_code=404, detail="Plan not found")  # P1.6-REM-3
 
         # Convert DB model to Pydantic model
         plan = ExecutionPlan(**plan_db.__dict__)

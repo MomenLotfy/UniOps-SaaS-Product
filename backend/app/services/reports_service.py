@@ -17,6 +17,7 @@ from typing import Optional, List, Dict, Any
 from sqlalchemy import select, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import NotFoundError
 from app.models.report import Report, ReportTemplate
 from app.models.threat import Threat
 from app.models.vulnerability import Vulnerability
@@ -39,6 +40,13 @@ from app.schemas.reports import (
 from app.services.base import BaseService
 from app.utils.logger import logger
 
+
+
+def _assert_tenant(obj, tenant_id):
+    """IDOR guard: id-addressed accessors verify ownership before returning."""
+    from app.core.exceptions import NotFoundError
+    if tenant_id is not None and getattr(obj, "tenant_id", None) is not None and obj.tenant_id != tenant_id:
+        raise NotFoundError("Resource not found")
 
 class ReportsService(BaseService):
 
@@ -82,10 +90,13 @@ class ReportsService(BaseService):
             "pages": (total + page_size - 1) // page_size,
         }
 
-    async def get_report(self, report_id: str) -> Optional[Dict[str, Any]]:
-        """Get report by ID."""
+    async def get_report(self, report_id: str, tenant_id: str | None = None) -> Optional[Dict[str, Any]]:
+        """Get report by ID (tenant-scoped when tenant_id is given)."""
+        query = select(Report).where(Report.id == report_id)
+        if tenant_id is not None:
+            query = query.where(Report.tenant_id == tenant_id)
         result = await self.db.execute(
-            select(Report).where(Report.id == report_id)
+            query
         )
         report = result.scalar_one_or_none()
         if not report:
@@ -246,10 +257,13 @@ class ReportsService(BaseService):
         logger.info(f"[report:regenerate] id={report_id[:8]} status={report.status}")
         return self._report_to_dict(report)
 
-    async def delete_report(self, report_id: str) -> None:
-        """Delete a report."""
+    async def delete_report(self, report_id: str, tenant_id: str | None = None) -> None:
+        """Delete a report (tenant-scoped when tenant_id is given)."""
+        query = select(Report).where(Report.id == report_id)
+        if tenant_id is not None:
+            query = query.where(Report.tenant_id == tenant_id)
         result = await self.db.execute(
-            select(Report).where(Report.id == report_id)
+            query
         )
         report = result.scalar_one_or_none()
         if not report:

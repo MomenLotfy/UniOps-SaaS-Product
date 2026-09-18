@@ -13,9 +13,19 @@ async def gitlab_webhook(
     x_gitlab_token: str = Header(None),
     x_gitlab_event: str = Header(None),
 ):
-    if settings.GITHUB_WEBHOOK_SECRET and x_gitlab_token:
-        if x_gitlab_token != settings.GITHUB_WEBHOOK_SECRET:
-            raise HTTPException(status_code=401, detail="Invalid token")
+    # Verify shared secret — FAIL-CLOSED (P1.5-WEBHOOK-1). Previously this
+    # compared X-Gitlab-Token against GITHUB_WEBHOOK_SECRET (wrong provider,
+    # copy-paste) and skipped verification whenever the secret/token was
+    # unset — forged events reached the handlers and mutated tenant state.
+    # GitLab authenticates webhooks via a shared secret in X-Gitlab-Token.
+    if not settings.GITLAB_WEBHOOK_SECRET:
+        logger.warning("GITLAB_WEBHOOK_SECRET not set — rejecting webhook")
+        raise HTTPException(status_code=503, detail="GitLab webhook not configured")
+    if not x_gitlab_token:
+        raise HTTPException(status_code=401, detail="Missing token")
+    import hmac as _hmac
+    if not _hmac.compare_digest(x_gitlab_token, settings.GITLAB_WEBHOOK_SECRET):
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     body = await request.body()
     try:

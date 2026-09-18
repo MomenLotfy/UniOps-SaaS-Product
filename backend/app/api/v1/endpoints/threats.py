@@ -50,16 +50,16 @@ async def get_threat_stats(
 
 
 @router.get("/{threat_id}", response_model=APIResponse[ThreatResponse])
-async def get_threat(threat_id: str, current_user: CurrentUser, db: DBSession):
+async def get_threat(threat_id: str, current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
     svc = SecurityService(db)
-    threat = await svc.get_threat(threat_id)
+    threat = await svc.get_threat(threat_id, tenant_id)
     return APIResponse(data=threat)
 
 
 @router.patch("/{threat_id}", response_model=APIResponse[ThreatResponse])
-async def update_threat(threat_id: str, data: ThreatUpdate, current_user: CurrentUser, db: DBSession):
+async def update_threat(threat_id: str, data: ThreatUpdate, current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
     svc = SecurityService(db)
-    threat = await svc.update_threat(threat_id, data)
+    threat = await svc.update_threat(threat_id, data, tenant_id)
     return APIResponse(data=threat)
 
 
@@ -77,7 +77,8 @@ async def resolve_threat(
     """
     logger.info(f"[threats:resolve] threat_id={threat_id} by user={current_user['user_id'][:8]}")
     svc = SecurityService(db)
-    result = await svc.resolve_threat(threat_id, current_user["user_id"], note=note)
+    result = await svc.resolve_threat(threat_id, current_user["user_id"], note=note,
+                                     tenant_id=current_user["tenant_id"])
     return APIResponse(data=result, message=result.message)
 
 
@@ -96,5 +97,6 @@ async def suppress_threat(
     """
     logger.info(f"[threats:suppress] threat_id={threat_id} reason={reason} by user={current_user['user_id'][:8]}")
     svc = SecurityService(db)
-    result = await svc.suppress_threat(threat_id, current_user["user_id"], reason=reason)
+    result = await svc.suppress_threat(threat_id, current_user["user_id"], reason=reason,
+                                      tenant_id=current_user["tenant_id"])
     return APIResponse(data=result, message=result.message)

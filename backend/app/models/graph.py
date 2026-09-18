@@ -64,8 +64,14 @@ class GraphRelationship(BaseModel):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
-    source: Mapped["GraphEntity"] = relationship(back_populates="outgoing")
-    target: Mapped["GraphEntity"] = relationship(back_populates="incoming")
+    source: Mapped["GraphEntity"] = relationship(
+        back_populates="outgoing",
+        foreign_keys="GraphRelationship.source_id",
+    )
+    target: Mapped["GraphEntity"] = relationship(
+        back_populates="incoming",
+        foreign_keys="GraphRelationship.target_id",
+    )
 
 class EntityResolutionLog(BaseModel):
     """

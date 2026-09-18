@@ -1,12 +1,29 @@
 from fastapi import HTTPException, status
 
 
-class UniOpsException(Exception):
-    def __init__(self, message: str, code: str = "INTERNAL_ERROR", status_code: int = 500):
+class UniOpsException(HTTPException):
+    """
+    Domain exception base — subclasses Starlette's HTTPException so that
+    auth/RBAC/not-found failures (401/403/404) always produce a proper JSON
+    error response in ANY FastAPI app that mounts our routers (including the
+    bare per-module test apps), not an HTTP-500 unwind.
+
+    The main app additionally registers a dedicated ``UniOpsException``
+    handler (see main.py) preserving the historical
+    ``{"success": False, "message", "code"}`` response contract.
+    """
+
+    def __init__(self, message: str, code: str = "INTERNAL_ERROR", status_code: int = 500,
+                 headers: dict | None = None):
+        super().__init__(
+            status_code=status_code,
+            detail={"message": message, "code": code, "status_code": status_code},
+            headers=headers,
+        )
+        # Backward-compatible attribute surface used across the codebase
         self.message = message
         self.code = code
         self.status_code = status_code
-        super().__init__(message)
 
 
 class NotFoundError(UniOpsException):
@@ -45,6 +62,17 @@ class IntegrationError(UniOpsException):
             message=f"{integration} integration error: {message}",
             code="INTEGRATION_ERROR",
             status_code=502,
+        )
+
+
+class IntegrationUnavailableError(UniOpsException):
+    """Required integration is not connected/configured for this tenant."""
+
+    def __init__(self, integration: str, message: str = "not connected"):
+        super().__init__(
+            message=f"{integration} integration unavailable: {message}",
+            code="INTEGRATION_UNAVAILABLE",
+            status_code=503,
         )
 
 

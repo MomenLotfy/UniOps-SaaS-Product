@@ -55,77 +55,9 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-async def start_k8s_watch(
-    websocket,
-    tenant_id: str,
-    namespace: str | None = None,
-    db=None,
-):
-    """
-    Real-time Kubernetes cluster events via WebSocket.
-    Watches cluster events and pushes them to the connected client.
-
-    Flow:
-      Client sends: {"event": "k8s.watch.start", "data": {"namespace": "default"}}
-      Server pushes: {"event": "k8s.events", "data": [...events]}  every ~5s
-      Client sends: {"event": "k8s.watch.stop"} to stop
-    """
-    import asyncio
-    from app.services.kubernetes_service import KubernetesService
-
-    svc    = KubernetesService(db)
-    client = await svc._get_k8s_client(tenant_id)
-    if not client:
-        await websocket.send_json({
-            "event": "k8s.error",
-            "data": {"message": "No Kubernetes integration connected"},
-        })
-        return
-
-    await websocket.send_json({
-        "event": "k8s.watch.started",
-        "data": {"namespace": namespace or "all", "message": "Watching cluster events..."},
-    })
-
-    # Poll every 5 seconds — collect events in short windows
-    while True:
-        try:
-            events = await asyncio.wait_for(
-                client.watch_cluster_events(namespace=namespace, timeout=5),
-                timeout=8,
-            )
-            if events:
-                await websocket.send_json({"event": "k8s.events", "data": events})
-
-            # Also push live resource counts every poll
-            counts = await _get_live_counts(client, namespace)
-            if counts:
-                await websocket.send_json({"event": "k8s.counts", "data": counts})
-
-            await asyncio.sleep(5)
-
-        except Exception as e:
-            await websocket.send_json({
-                "event": "k8s.error",
-                "data": {"message": str(e)},
-            })
-            break
-
-
-async def _get_live_counts(client, namespace: str | None) -> dict:
-    """Fast cluster resource counts for live dashboard badges."""
-    import asyncio
-    try:
-        pods, deps, svcs = await asyncio.gather(
-            client.list_all_pods() if not namespace else client.list_pods(namespace),
-            client.list_deployments(namespace),
-            client.list_services(namespace),
-            return_exceptions=True,
-        )
-        return {
-            "pods":        len(pods) if isinstance(pods, list) else 0,
-            "deployments": len(deps) if isinstance(deps, list) else 0,
-            "services":    len(svcs) if isinstance(svcs, list) else 0,
-        }
-    except Exception:
-        return {}
+# NOTE: Live Kubernetes events (pod.created/updated/failed/deleted and
+# k8s.events) are produced by the background cluster watchers
+# (app/core/events/k8s_watcher.py) which run the real Kubernetes Watch API
+# via app/integrations/kubernetes/watcher.py and publish into the event bus.
+# The event bus WS bridge (event_bus._ws_bridge) forwards those to subscribed
+# tenants — there is intentionally no per-connection polling loop here.

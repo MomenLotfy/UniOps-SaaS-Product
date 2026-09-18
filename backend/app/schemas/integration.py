@@ -3,6 +3,14 @@ from typing import Optional, Any
 from pydantic import BaseModel, model_validator, computed_field
 
 
+# Types with a REAL provider client (IntegrationService._build_client).
+# Any other name used to silently fall through to a fake "always succeeds"
+# stub (BUG-P2-03) — unknown types are now rejected at the boundary with 422.
+SUPPORTED_INTEGRATION_TYPES = frozenset({
+    "github", "gitlab", "aws", "kubernetes", "stripe",
+})
+
+
 class IntegrationCreate(BaseModel):
     name: str
     type: str
@@ -15,6 +23,14 @@ class IntegrationCreate(BaseModel):
         if self.token:
             self.credentials = {**self.credentials, "token": self.token}
             self.token = None
+        # BUG-P2-03: unknown types must never reach the service layer pretending
+        # to be a real provider — reject them here so the API answers 422.
+        if self.type.lower() not in SUPPORTED_INTEGRATION_TYPES:
+            raise ValueError(
+                f"unsupported integration type '{self.type}' — supported: "
+                + ", ".join(sorted(SUPPORTED_INTEGRATION_TYPES))
+            )
+        self.type = self.type.lower()
         return self
 
 

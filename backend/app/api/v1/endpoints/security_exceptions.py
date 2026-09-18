@@ -80,7 +80,7 @@ async def get_exception(
     db: DBSession,
 ):
     svc = SecurityExceptionService(db)
-    exc = await svc.get_exception(exception_id)
+    exc = await svc.get_exception(exception_id, current_user["tenant_id"])
     return APIResponse(data=exc)
 
 

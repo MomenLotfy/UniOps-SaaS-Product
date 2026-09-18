@@ -1,8 +1,40 @@
 import type { UserRole, Permission } from '@/types/user';
 
+/**
+ * Legacy role aliases — TEMPORARY migration/normalization layer.
+ * Older users/JWTs carry pre-hardening names; map them to canonical ONLY
+ * here so the entire frontend works on the canonical contract.
+ */
+export const LEGACY_ROLE_ALIASES: Record<string, UserRole> = {
+  devops: 'devops_engineer',
+  security: 'security_engineer',
+  finops: 'cost_analyst',
+};
+
+const CANONICAL_ROLES = new Set<string>([
+  'super_admin', 'admin', 'security_engineer', 'security_analyst',
+  'devops_engineer', 'compliance_manager', 'auditor', 'executive',
+  'cost_analyst', 'developer', 'viewer',
+]);
+
+export function normalizeRole(role: string | null | undefined): UserRole {
+  const r = (role ?? 'viewer').trim();
+  const mapped = LEGACY_ROLE_ALIASES[r] ?? r;
+  return (CANONICAL_ROLES.has(mapped) ? mapped : 'viewer') as UserRole;
+}
+
+export function normalizeRoles(roles: (string | null | undefined)[] | null | undefined): UserRole[] {
+  const out: UserRole[] = [];
+  for (const r of roles ?? []) {
+    const n = normalizeRole(r);
+    if (!out.includes(n)) out.push(n);
+  }
+  return out;
+}
+
 type Action = 'read' | 'write' | 'delete' | 'admin';
 
-const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   super_admin: [{ resource: '*', actions: ['read', 'write', 'delete', 'admin'] }],
   admin: [
     { resource: '*', actions: ['read', 'write', 'delete', 'admin'] },

@@ -151,7 +151,7 @@ function App() {
             </RoleBasedRoute>
           } />
           <Route path="/admin/audit" element={
-            <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'security']}>
+            <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'security_engineer']}>
               <AuditLogs />
             </RoleBasedRoute>
           } />
@@ -166,7 +166,7 @@ function App() {
             </RoleBasedRoute>
           } />
           <Route path="/admin/policies" element={
-            <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'security']}>
+            <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'security_engineer']}>
               <SecurityPolicies />
             </RoleBasedRoute>
           } />

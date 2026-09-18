@@ -3,7 +3,7 @@ import { Users, Mail, Shield, Link2, Bell, Plus, Trash2 } from 'lucide-react';
 import { clsx } from 'clsx';
 
 const DOMAIN_ALLOWLIST = ['uniops.dev', 'company.com'];
-const DEFAULT_ROLES = ['viewer', 'devops', 'security', 'finops', 'admin'];
+const DEFAULT_ROLES = ['viewer', 'devops_engineer', 'security_engineer', 'cost_analyst', 'admin'];
 
 export default function TeamSettings() {
   const [joinByLink, setJoinByLink] = useState(true);

@@ -190,20 +190,26 @@ def get_provider_from_integration(integration: dict) -> Optional[GitHubProvider 
     """
     Factory: given an integration dict (from DB), return the appropriate provider.
     Returns None when the integration is missing or has no token.
+
+    Accepts BOTH "type" (canonical model column, used by to_dict()) and
+    legacy "provider" keys so older callers keep working.
     """
     if not integration:
         return None
-    provider = integration.get("provider", "")
+    provider = integration.get("type") or integration.get("provider") or ""
     creds    = integration.get("credentials") or {}
-    token    = creds.get("token") or creds.get("access_token") or ""
+    config   = integration.get("config") or {}
+    # Merge config into creds — tokens live in either place in practice
+    merged   = {**creds, **config}
+    token    = merged.get("token") or merged.get("access_token") or ""
     if not token:
         return None
 
     if provider == "github":
-        org = (integration.get("config") or {}).get("org")
+        org = merged.get("org")
         return GitHubProvider(token, org=org)
     if provider == "gitlab":
-        base_url = (integration.get("config") or {}).get("base_url", "https://gitlab.com")
+        base_url = merged.get("base_url") or merged.get("url", "https://gitlab.com")
         return GitLabProvider(token, base_url=base_url)
 
     return None

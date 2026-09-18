@@ -2,10 +2,10 @@ from __future__ import annotations
 """DevOps Alerts API — Alert center for DevOps Center (Epic 4)."""
 from datetime import datetime, timezone, timedelta
 from typing import Optional
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select, update
-from app.api.deps import CurrentUser, TenantID, DBSession
+from app.api.deps import CurrentUser, DevOpsUser, TenantID, DBSession
 from app.schemas.common import APIResponse
 from app.models.devops_alert import DevOpsAlert
 
@@ -77,7 +77,7 @@ async def list_alerts(
 @router.post("", status_code=201)
 async def create_alert(
     body: AlertCreate,
-    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    current_user: DevOpsUser, tenant_id: TenantID, db: DBSession,
 ):
     alert = DevOpsAlert(
         tenant_id=tenant_id,
@@ -103,14 +103,14 @@ async def create_alert(
 @router.post("/{alert_id}/acknowledge")
 async def acknowledge_alert(
     alert_id: str, body: AlertAction,
-    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    current_user: DevOpsUser, tenant_id: TenantID, db: DBSession,
 ):
     result = await db.execute(
         select(DevOpsAlert).where(DevOpsAlert.id == alert_id, DevOpsAlert.tenant_id == tenant_id)
     )
     alert = result.scalar_one_or_none()
     if not alert:
-        return APIResponse(success=False, message="Alert not found")
+        raise HTTPException(status_code=404, detail="Alert not found")
     alert.status = "acknowledged"
     if body.reason:
         alert.annotations = {**alert.annotations, "ack_reason": body.reason}
@@ -121,14 +121,14 @@ async def acknowledge_alert(
 @router.post("/{alert_id}/mute")
 async def mute_alert(
     alert_id: str, body: AlertAction,
-    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    current_user: DevOpsUser, tenant_id: TenantID, db: DBSession,
 ):
     result = await db.execute(
         select(DevOpsAlert).where(DevOpsAlert.id == alert_id, DevOpsAlert.tenant_id == tenant_id)
     )
     alert = result.scalar_one_or_none()
     if not alert:
-        return APIResponse(success=False, message="Alert not found")
+        raise HTTPException(status_code=404, detail="Alert not found")
     hours = body.mute_hours or 4
     alert.status = "muted"
     alert.muted_until = datetime.now(timezone.utc) + timedelta(hours=hours)
@@ -139,14 +139,14 @@ async def mute_alert(
 @router.post("/{alert_id}/resolve")
 async def resolve_alert(
     alert_id: str, body: AlertAction,
-    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    current_user: DevOpsUser, tenant_id: TenantID, db: DBSession,
 ):
     result = await db.execute(
         select(DevOpsAlert).where(DevOpsAlert.id == alert_id, DevOpsAlert.tenant_id == tenant_id)
     )
     alert = result.scalar_one_or_none()
     if not alert:
-        return APIResponse(success=False, message="Alert not found")
+        raise HTTPException(status_code=404, detail="Alert not found")
     alert.status = "resolved"
     alert.resolved_at = datetime.now(timezone.utc)
     await db.commit()
@@ -156,14 +156,14 @@ async def resolve_alert(
 @router.post("/{alert_id}/escalate")
 async def escalate_alert(
     alert_id: str, body: AlertAction,
-    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    current_user: DevOpsUser, tenant_id: TenantID, db: DBSession,
 ):
     result = await db.execute(
         select(DevOpsAlert).where(DevOpsAlert.id == alert_id, DevOpsAlert.tenant_id == tenant_id)
     )
     alert = result.scalar_one_or_none()
     if not alert:
-        return APIResponse(success=False, message="Alert not found")
+        raise HTTPException(status_code=404, detail="Alert not found")
     alert.severity = "critical"
     alert.annotations = {**alert.annotations, "escalated": True, "escalated_reason": body.reason or "Manual escalation"}
     await db.commit()
@@ -173,7 +173,7 @@ async def escalate_alert(
 @router.delete("/{alert_id}", status_code=204)
 async def delete_alert(
     alert_id: str,
-    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    current_user: DevOpsUser, tenant_id: TenantID, db: DBSession,
 ):
     result = await db.execute(
         select(DevOpsAlert).where(DevOpsAlert.id == alert_id, DevOpsAlert.tenant_id == tenant_id)

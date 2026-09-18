@@ -19,13 +19,19 @@ async def github_webhook(
 ):
     body = await request.body()
 
-    # Verify signature
-    if settings.GITHUB_WEBHOOK_SECRET and x_hub_signature_256:
-        expected = "sha256=" + hmac.new(
-            settings.GITHUB_WEBHOOK_SECRET.encode(), body, hashlib.sha256
-        ).hexdigest()
-        if not hmac.compare_digest(expected, x_hub_signature_256):
-            raise HTTPException(status_code=401, detail="Invalid signature")
+    # Verify signature — FAIL-CLOSED (P1.5-WEBHOOK-1). Handlers below mutate
+    # tenant-owned DB rows, so an unverifiable request must never be processed:
+    # secret unset ⇒ reject; signature header missing ⇒ reject; mismatch ⇒ 401.
+    if not settings.GITHUB_WEBHOOK_SECRET:
+        logger.warning("GITHUB_WEBHOOK_SECRET not set — rejecting webhook")
+        raise HTTPException(status_code=503, detail="GitHub webhook not configured")
+    if not x_hub_signature_256:
+        raise HTTPException(status_code=401, detail="Missing signature")
+    expected = "sha256=" + hmac.new(
+        settings.GITHUB_WEBHOOK_SECRET.encode(), body, hashlib.sha256
+    ).hexdigest()
+    if not hmac.compare_digest(expected, x_hub_signature_256):
+        raise HTTPException(status_code=401, detail="Invalid signature")
 
     try:
         payload = json.loads(body)

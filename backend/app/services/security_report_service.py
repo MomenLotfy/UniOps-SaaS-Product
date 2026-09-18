@@ -27,6 +27,13 @@ REPORT_TYPES = {
 }
 
 
+
+def _assert_tenant(obj, tenant_id):
+    """IDOR guard: id-addressed accessors verify ownership before returning."""
+    from app.core.exceptions import NotFoundError
+    if tenant_id is not None and getattr(obj, "tenant_id", None) is not None and obj.tenant_id != tenant_id:
+        raise NotFoundError("Resource not found")
+
 class SecurityReportService(BaseService):
 
     async def list_reports(
@@ -134,10 +141,12 @@ class SecurityReportService(BaseService):
         }
         return findings, summary
 
-    async def get_report(self, report_id: str) -> SecurityReportResponse:
+    async def get_report(self, report_id: str, tenant_id: str | None = None) -> SecurityReportResponse:
         report = await self._get_by_id(SecurityReport, report_id)
+        _assert_tenant(report, tenant_id)
         return SecurityReportResponse.model_validate(report)
 
-    async def delete_report(self, report_id: str) -> None:
+    async def delete_report(self, report_id: str, tenant_id: str | None = None) -> None:
         report = await self._get_by_id(SecurityReport, report_id)
+        _assert_tenant(report, tenant_id)
         await self.db.delete(report)

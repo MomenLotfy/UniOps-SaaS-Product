@@ -252,7 +252,7 @@ function StepGitHub({ isCompleted, onComplete }: { isCompleted: boolean; onCompl
 
 function StepTeam({ isCompleted, onComplete }: { isCompleted: boolean; onComplete: () => void }) {
   const [email, setEmail]     = useState('');
-  const [role, setRole]       = useState('devops');
+  const [role, setRole]       = useState('devops_engineer');
   const [invited, setInvited] = useState<string[]>([]);
   const [loading, setL]       = useState(false);
 
@@ -278,9 +278,9 @@ function StepTeam({ isCompleted, onComplete }: { isCompleted: boolean; onComplet
           <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="colleague@company.com" required className={clsx(inputCls, 'flex-1')} style={inputStyle} />
           <select value={role} onChange={e => setRole(e.target.value)} className={clsx(inputCls, 'w-28')} style={inputStyle}>
             <option value="admin">Admin</option>
-            <option value="devops">DevOps</option>
-            <option value="security">Security</option>
-            <option value="finops">Finance</option>
+            <option value="devops_engineer">DevOps Engineer</option>
+            <option value="security_engineer">Security Engineer</option>
+            <option value="cost_analyst">Cost Analyst</option>
             <option value="viewer">Viewer</option>
           </select>
         </div>

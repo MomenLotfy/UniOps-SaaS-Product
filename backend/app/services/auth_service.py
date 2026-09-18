@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 import uuid, secrets, json
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
@@ -75,11 +76,23 @@ class AuthService(BaseService):
             if raw:
                 invite_data = json.loads(raw)
                 await _redis_del(_invite_key(data.invite_token))
+            else:
+                # P1.6-INVITE-2: an explicitly supplied invite token that no
+                # longer resolves (consumed, expired, or forged) must FAIL —
+                # silently degrading to a fresh-tenant admin registration is
+                # a fake success: the invitee believes they joined the org
+                # that issued the invite but lands in a new empty tenant.
+                logger.warning(f"Register attempted with unresolved invite token (email={data.email})")
+                raise ConflictError("Invite token is invalid, expired, or already used")
 
         # Create tenant (or use from invite)
         if invite_data:
             tenant_id = invite_data["tenant_id"]
-            role = invite_data["role"]
+            from app.constants.roles import normalize_role, is_valid_role
+            role = normalize_role(invite_data["role"])
+            if not is_valid_role(role):
+                logger.warning(f"Invite consumed with unknown role {invite_data.get('role')!r} — defaulting to viewer")
+                role = "viewer"
             tenant = await self._get_by_id(Tenant, tenant_id)
         else:
             slug = data.username.lower().replace(" ", "-")[:50]
@@ -95,7 +108,24 @@ class AuthService(BaseService):
                 is_active=True,
             )
             self.db.add(tenant)
-            await self.db.flush()
+            try:
+                await self.db.flush()
+            except IntegrityError:
+                # P1.6-RACE-1: concurrent registrations with the same username
+                # compute the same slug — check-then-insert races under
+                # parallelism and used to surface as an unhandled 500.
+                # Re-try once with a uuid-suffixed slug (same fallback the
+                # code already used for the non-race collision case).
+                await self.db.rollback()
+                tenant = Tenant(
+                    name=company_name,
+                    slug=f"{slug}-{uuid.uuid4().hex[:6]}",
+                    plan="free",
+                    is_active=True,
+                )
+                self.db.add(tenant)
+                await self.db.flush()
+                slug = tenant.slug
             tenant_id = tenant.id
             role = "admin"
 
@@ -110,7 +140,13 @@ class AuthService(BaseService):
             is_verified     = False,
         )
         self.db.add(user)
-        await self.db.flush()
+        try:
+            await self.db.flush()
+        except IntegrityError as exc:
+            # P1-R6: check-then-insert race — a concurrent request created the
+            # same email between our SELECT and this flush.  Surface the same
+            # 409 contract as the fast path instead of an unhandled 500.
+            raise ConflictError("Email already registered") from exc
 
         logger.info(f"New user registered: {data.email} (tenant: {tenant.name})")
 

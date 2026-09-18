@@ -12,6 +12,13 @@ from app.services.base import BaseService
 from app.utils.logger import logger
 
 
+
+def _assert_tenant(obj, tenant_id):
+    """IDOR guard: id-addressed accessors verify ownership before returning."""
+    from app.core.exceptions import NotFoundError
+    if tenant_id is not None and getattr(obj, "tenant_id", None) is not None and obj.tenant_id != tenant_id:
+        raise NotFoundError("Resource not found")
+
 class SecurityPolicyService(BaseService):
 
     async def list_policies(
@@ -48,22 +55,26 @@ class SecurityPolicyService(BaseService):
         logger.info(f"[policy:create] id={policy.id[:8]} tenant={tenant_id[:8]}")
         return SecurityPolicyResponse.model_validate(policy)
 
-    async def get_policy(self, policy_id: str) -> SecurityPolicyResponse:
+    async def get_policy(self, policy_id: str, tenant_id: str | None = None) -> SecurityPolicyResponse:
         policy = await self._get_by_id(SecurityPolicy, policy_id)
+        _assert_tenant(policy, tenant_id)
         return SecurityPolicyResponse.model_validate(policy)
 
     async def update_policy(
         self, policy_id: str, data: SecurityPolicyUpdate, updated_by: str,
+        tenant_id: str | None = None,
     ) -> SecurityPolicyResponse:
         policy = await self._get_by_id(SecurityPolicy, policy_id)
+        _assert_tenant(policy, tenant_id)
         for field, value in data.model_dump(exclude_unset=True).items():
             setattr(policy, field, value)
         policy.updated_by = updated_by
         await self.db.flush()
         return SecurityPolicyResponse.model_validate(policy)
 
-    async def delete_policy(self, policy_id: str) -> None:
+    async def delete_policy(self, policy_id: str, tenant_id: str | None = None) -> None:
         policy = await self._get_by_id(SecurityPolicy, policy_id)
+        _assert_tenant(policy, tenant_id)
         await self.db.delete(policy)
 
     async def get_stats(self, tenant_id: str) -> dict:

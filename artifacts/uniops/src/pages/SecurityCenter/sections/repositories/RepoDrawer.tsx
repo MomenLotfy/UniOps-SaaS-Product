@@ -531,13 +531,11 @@ export default function RepoDrawer({ repo, onClose }: RepoDrawerProps) {
                       <div>
                         <SectionLabel>Last Scan</SectionLabel>
                         <StatRow label="Scanned at"
-                          value={new Date(repo.last_scan_at ?? risk?.last_scan_at ?? '').toLocaleString()} />
+                          value={new Date(scoreData?.scanned_at ?? '').toLocaleString()} />
                         {scoreData?.scan_id && (
                           <StatRow label="Scan ID" value={scoreData.scan_id.slice(0, 8) + '…'} />
                         )}
-                        {scoreData?.last_scan_at && (
-                          <StatRow label="Result time" value={new Date(scoreData.last_scan_at).toLocaleString()} />
-                        )}
+                        
                       </div>
                     )}
                   </div>
@@ -569,7 +567,7 @@ export default function RepoDrawer({ repo, onClose }: RepoDrawerProps) {
                               </div>
                               {/* Source pill */}
                               <div className="mt-3 flex items-center gap-2">
-                                <SourcePill source={scoreData.ai_source ?? inferSummarySource(scoreData)} />
+                                <SourcePill source={inferSummarySource(scoreData)} />
                                 {scoreData?.ai_suggestions && scoreData.ai_suggestions.length > 0 && (
                                   <span className="text-[10px] text-muted-foreground/60">
                                     {scoreData.ai_suggestions.length} suggestion{scoreData.ai_suggestions.length === 1 ? '' : 's'}

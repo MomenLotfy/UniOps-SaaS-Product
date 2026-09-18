@@ -481,7 +481,7 @@ export default function MLInsights() {
             <div className="flex items-center justify-between mb-1">
               <div>
                 <h2 className="text-sm font-semibold text-foreground">48-Hour Workload Prediction</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">LSTM Model · {models.workload_predictor?.accuracy ?? 92}% accuracy · Confidence: High</p>
+                <p className="text-xs text-muted-foreground mt-0.5">LSTM Model · {models.workload_predictor?.accuracy != null ? `{models.workload_predictor.accuracy}% accuracy` : 'not trained'}</p>
               </div>
               <div className="flex items-center gap-4 text-xs">
                 {[{ label: 'Actual', color: '#3b82f6' }, { label: 'Predicted', color: '#8b5cf6' }].map(l => (
@@ -590,9 +590,9 @@ export default function MLInsights() {
                   icon: '🔒', label: 'Vulnerabilities',
                   current: String(predSum.vulns?.current ?? 0),
                   predicted: String(predSum.vulns?.predicted ?? 0),
-                  change: predSum.vulns?.change_pct ?? 7,
+                  change: predSum.vulns?.change_pct ?? 0,
                   model: predSum.vulns?.model ?? '—',
-                  accuracy: predSum.vulns?.accuracy ?? 5,
+                  accuracy: predSum.vulns?.accuracy ?? 0,
                   confidence: predSum.vulns?.confidence ?? '—',
                   isFallback: predSum.vulns?.is_fallback ?? true,
                 },

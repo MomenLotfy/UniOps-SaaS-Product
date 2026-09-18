@@ -14,7 +14,15 @@ import type { PodStats, PipelineStats, LogLine } from './types';
 const FALLBACK_INTERVAL_MS = 60_000;
 
 // Pod WS events that should trigger a data refresh
-const POD_WS_EVENTS = ['pod.update', 'pod.failed', 'pod.restarted', 'integration.sync_done'];
+// (canonical names emitted by the Kubernetes watcher via the event bus,
+//  plus legacy aliases kept for compatibility)
+const POD_WS_EVENTS = [
+  'pod.created', 'pod.updated', 'pod.deleted', 'pod.failed',
+  'k8s.events',
+  // legacy aliases
+  'pod.update', 'pod.restarted',
+  'integration.sync_done',
+];
 // Pipeline WS events that should trigger a data refresh
 const PIPE_WS_EVENTS = ['pipeline.update', 'pipeline.started', 'pipeline.completed', 'pipeline.failed'];
 
@@ -217,8 +225,8 @@ export function usePodActions(refetchPods: () => void) {
 export function useDevOpsRBAC() {
   const { isAdmin, hasRole, role } = usePermissions();
 
-  const canAct        = isAdmin() || hasRole('devops');
-  const canViewLogs   = canAct || hasRole('security') || hasRole('finops');
+  const canAct        = isAdmin() || hasRole('devops_engineer');
+  const canViewLogs   = canAct || hasRole('security_engineer') || hasRole('cost_analyst');
   const canCreateSvc  = canAct;
   const canRestartPod = canAct;
   const canScale      = canAct;

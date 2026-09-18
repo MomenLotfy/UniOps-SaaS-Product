@@ -1,9 +1,10 @@
 from __future__ import annotations
 """Pods API — Kubernetes pod management, restart, delete, exec, scale and event inspection."""
 from typing import Optional
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from pydantic import BaseModel
-from app.api.deps import CurrentUser, AdminUser, TenantID, DBSession
+from app.api.deps import CurrentUser, DevOpsUser, TenantID, DBSession
+from app.core.rate_limit import rate_limit
 from app.schemas.pod import PodResponse, PodStats, PodActionResult
 from app.schemas.common import APIResponse, PaginatedResponse
 from app.services.kubernetes_service import KubernetesService
@@ -46,20 +47,20 @@ async def get_clusters(current_user: CurrentUser, tenant_id: TenantID, db: DBSes
 
 
 @router.get("/{pod_id}", response_model=APIResponse[PodResponse])
-async def get_pod(pod_id: str, current_user: CurrentUser, db: DBSession):
+async def get_pod(pod_id: str, current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
     svc = KubernetesService(db)
-    pod = await svc.get_pod(pod_id)
+    pod = await svc.get_pod(pod_id, tenant_id)
     return APIResponse(data=pod)
 
 
 @router.get("/{pod_id}/events")
-async def get_pod_events(pod_id: str, current_user: CurrentUser, db: DBSession):
+async def get_pod_events(pod_id: str, current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
     """
     Fetch live Kubernetes events for a pod.
     Essential for debugging CrashLoopBackOff and OOMKilled pods.
     """
     svc = KubernetesService(db)
-    events = await svc.get_pod_events(pod_id)
+    events = await svc.get_pod_events(pod_id, tenant_id)
     return APIResponse(data=events)
 
 
@@ -67,18 +68,23 @@ async def get_pod_events(pod_id: str, current_user: CurrentUser, db: DBSession):
 async def get_pod_logs(
     pod_id: str,
     current_user: CurrentUser,
+    tenant_id: TenantID,
     db: DBSession,
     tail: int = Query(default=200, le=1000),
     container: str | None = Query(default=None),
 ):
     """Stream last N log lines from a pod container via Kubernetes API."""
     svc = KubernetesService(db)
-    content = await svc.get_pod_logs(pod_id, tail=tail, container=container)
+    content = await svc.get_pod_logs(pod_id, tenant_id, tail=tail, container=container)
     return APIResponse(data={"content": content, "pod_id": pod_id})
 
 
-@router.post("/{pod_id}/restart", response_model=APIResponse[PodActionResult])
-async def restart_pod(pod_id: str, current_user: AdminUser, db: DBSession):
+@router.post(
+    "/{pod_id}/restart",
+    response_model=APIResponse[PodActionResult],
+    dependencies=[Depends(rate_limit("pod.restart", 30, 60))],
+)
+async def restart_pod(pod_id: str, current_user: DevOpsUser, tenant_id: TenantID, db: DBSession):
     """
     Gracefully restart a pod (grace_period=30s).
     If the pod is owned by a Deployment/StatefulSet/DaemonSet, the controller
@@ -86,19 +92,23 @@ async def restart_pod(pod_id: str, current_user: AdminUser, db: DBSession):
     Requires: admin or devops role.
     """
     svc = KubernetesService(db)
-    result = await svc.restart_pod(pod_id, current_user["user_id"])
+    result = await svc.restart_pod(pod_id, tenant_id, current_user["user_id"])
     return APIResponse(data=result, message=result.message)
 
 
-@router.delete("/{pod_id}", response_model=APIResponse[PodActionResult])
-async def delete_pod(pod_id: str, current_user: AdminUser, db: DBSession):
+@router.delete(
+    "/{pod_id}",
+    response_model=APIResponse[PodActionResult],
+    dependencies=[Depends(rate_limit("pod.delete", 20, 60))],
+)
+async def delete_pod(pod_id: str, current_user: DevOpsUser, tenant_id: TenantID, db: DBSession):
     """
     Force-delete a pod immediately (grace_period=0).
     Use restart for graceful termination; use delete for stuck/evicted pods.
-    Requires: admin role.
+    Requires: admin or devops role.
     """
     svc = KubernetesService(db)
-    result = await svc.delete_pod(pod_id, current_user["user_id"])
+    result = await svc.delete_pod(pod_id, tenant_id, current_user["user_id"])
     return APIResponse(data=result, message=result.message)
 
 
@@ -109,23 +119,29 @@ class ExecRequest(BaseModel):
     container: str | None = None
 
 
-@router.post("/{pod_id}/exec")
+@router.post(
+    "/{pod_id}/exec",
+    dependencies=[Depends(rate_limit("pod.exec", 10, 60))],
+)
 async def exec_pod(
     pod_id: str,
     body: ExecRequest,
-    current_user: AdminUser,
+    current_user: DevOpsUser,
+    tenant_id: TenantID,
     db: DBSession,
 ):
     """
-    Execute a command in a running pod container.
-    Returns stdout/stderr combined.
+    Execute a command in a running pod container (NO shell — safe arg vector).
+    Returns stdout/stderr combined.  High-risk: rate-limited + fully audited.
     Requires: admin or devops role.
     """
     svc = KubernetesService(db)
     output = await svc.exec_pod(
         pod_id=pod_id,
+        tenant_id=tenant_id,
         command=body.command,
         container=body.container,
+        executed_by=current_user["user_id"],
     )
     return APIResponse(data={"output": output})
 
@@ -134,13 +150,18 @@ async def exec_pod(
 class ScaleRequest(BaseModel):
     replicas: int
     namespace: str = "default"
+    cluster: str | None = None
 
 
-@router.post("/deployments/{deployment_name}/scale")
+@router.post(
+    "/deployments/{deployment_name}/scale",
+    dependencies=[Depends(rate_limit("deployment.scale", 20, 60))],
+)
 async def scale_deployment(
     deployment_name: str,
     body: ScaleRequest,
-    current_user: AdminUser,
+    current_user: DevOpsUser,
+    tenant_id: TenantID,
     db: DBSession,
 ):
     """
@@ -149,14 +170,20 @@ async def scale_deployment(
     """
     svc = KubernetesService(db)
     result = await svc.scale_deployment(
+        tenant_id=tenant_id,
         deployment_name=deployment_name,
         namespace=body.namespace,
         replicas=body.replicas,
         triggered_by=current_user["user_id"],
+        cluster=body.cluster,
     )
     return APIResponse(
         data=result,
-        message=f"Scaled {deployment_name} to {body.replicas} replica(s)",
+        message=(
+            f"Scaled {deployment_name} to {body.replicas} replica(s)"
+            if result.get("success")
+            else result.get("error", "Scale failed")
+        ),
     )
 
 
@@ -171,7 +198,7 @@ async def list_deployments(
 ):
     """List Deployments — with replica status and rollout health."""
     svc    = KubernetesService(db)
-    client = await svc._get_k8s_client(tenant_id)
+    client = await svc.get_k8s_client_for_tenant(tenant_id)
     if not client:
         return APIResponse(data=[])
     data = await client.list_deployments(namespace)
@@ -185,7 +212,7 @@ async def list_statefulsets(
 ):
     """List StatefulSets."""
     svc    = KubernetesService(db)
-    client = await svc._get_k8s_client(tenant_id)
+    client = await svc.get_k8s_client_for_tenant(tenant_id)
     if not client:
         return APIResponse(data=[])
     return APIResponse(data=await client.list_statefulsets(namespace))
@@ -198,7 +225,7 @@ async def list_daemonsets(
 ):
     """List DaemonSets."""
     svc    = KubernetesService(db)
-    client = await svc._get_k8s_client(tenant_id)
+    client = await svc.get_k8s_client_for_tenant(tenant_id)
     if not client:
         return APIResponse(data=[])
     return APIResponse(data=await client.list_daemonsets(namespace))
@@ -211,7 +238,7 @@ async def list_services(
 ):
     """List Services — ClusterIP, NodePort, LoadBalancer with external IPs."""
     svc    = KubernetesService(db)
-    client = await svc._get_k8s_client(tenant_id)
+    client = await svc.get_k8s_client_for_tenant(tenant_id)
     if not client:
         return APIResponse(data=[])
     return APIResponse(data=await client.list_services(namespace))
@@ -224,7 +251,7 @@ async def list_ingresses(
 ):
     """List Ingresses — with routing rules and TLS config."""
     svc    = KubernetesService(db)
-    client = await svc._get_k8s_client(tenant_id)
+    client = await svc.get_k8s_client_for_tenant(tenant_id)
     if not client:
         return APIResponse(data=[])
     return APIResponse(data=await client.list_ingresses(namespace))
@@ -237,7 +264,7 @@ async def list_jobs(
 ):
     """List Jobs and CronJobs."""
     svc    = KubernetesService(db)
-    client = await svc._get_k8s_client(tenant_id)
+    client = await svc.get_k8s_client_for_tenant(tenant_id)
     if not client:
         return APIResponse(data=[])
     return APIResponse(data=await client.list_jobs(namespace))
@@ -250,7 +277,7 @@ async def list_configmaps(
 ):
     """List ConfigMaps — keys only, never values."""
     svc    = KubernetesService(db)
-    client = await svc._get_k8s_client(tenant_id)
+    client = await svc.get_k8s_client_for_tenant(tenant_id)
     if not client:
         return APIResponse(data=[])
     return APIResponse(data=await client.list_configmaps(namespace))
@@ -263,7 +290,7 @@ async def list_secrets_metadata(
 ):
     """List Secrets — metadata + key names ONLY. Values are never returned."""
     svc    = KubernetesService(db)
-    client = await svc._get_k8s_client(tenant_id)
+    client = await svc.get_k8s_client_for_tenant(tenant_id)
     if not client:
         return APIResponse(data=[])
     return APIResponse(data=await client.list_secrets_metadata(namespace))
@@ -276,7 +303,7 @@ async def list_hpa(
 ):
     """List Horizontal Pod Autoscalers — current vs desired replicas + CPU%."""
     svc    = KubernetesService(db)
-    client = await svc._get_k8s_client(tenant_id)
+    client = await svc.get_k8s_client_for_tenant(tenant_id)
     if not client:
         return APIResponse(data=[])
     return APIResponse(data=await client.list_hpa(namespace))
@@ -294,7 +321,7 @@ async def cluster_summary(
     """
     import asyncio
     svc    = KubernetesService(db)
-    client = await svc._get_k8s_client(tenant_id)
+    client = await svc.get_k8s_client_for_tenant(tenant_id)
     if not client:
         return APIResponse(data={"connected": False})
 

@@ -34,13 +34,13 @@ from __future__ import annotations
 
 import threading
 from collections.abc import Iterator
-from typing import TypeVar, Generic
+from typing import Generic, TypeVar
 
 K = TypeVar("K")
 V = TypeVar("V")
 
 
-class ThreadSafeRegistry(Generic[K, V]):
+class ThreadSafeRegistry(Generic[K, V]):  # noqa: UP046 — PEP 695 class type params require the runtime to be Python ≥3.12; this repo still runs 3.11 in some environments, so the Generic[...] form stays until the toolchain floor is raised
     """
     Concurrent-safe key/value registry.
 

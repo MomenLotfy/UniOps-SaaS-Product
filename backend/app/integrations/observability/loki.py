@@ -180,54 +180,6 @@ def _detect_level(line: str) -> str:
     return "info"
 
 
-def _synthetic_logs(
-    pod_id: str,
-    tail: int = 50,
-) -> list[dict]:
-    """
-    Generate realistic synthetic log lines when Loki is unavailable.
-    Seeded by pod_id for consistency.
-    """
-    import random
-    seed = sum(ord(c) for c in pod_id)
-    rng  = random.Random(seed)
-    now  = datetime.now(timezone.utc)
-
-    templates = [
-        ("info",    "Server listening on port {port}"),
-        ("info",    "Health check passed"),
-        ("info",    "Request processed in {ms}ms"),
-        ("info",    "Cache hit ratio: {pct}%"),
-        ("info",    "Database connection pool: {n}/{max} active"),
-        ("warning", "Slow query detected: {ms}ms"),
-        ("warning", "Memory usage above 75%"),
-        ("warning", "Retry attempt {n} for service call"),
-        ("error",   "Connection refused to {svc}"),
-        ("debug",   "Processing message from queue"),
-    ]
-    services = ["auth-service", "db-proxy", "cache", "api-gateway"]
-
-    lines = []
-    for i in range(tail):
-        ts    = now - timedelta(seconds=(tail - i) * rng.randint(3, 30))
-        tmpl  = rng.choice(templates)
-        level = tmpl[0]
-        msg   = tmpl[1].format(
-            port=rng.choice([8080, 3000, 5000]),
-            ms=rng.randint(5, 800),
-            pct=rng.randint(40, 95),
-            n=rng.randint(1, 10),
-            max=rng.randint(10, 20),
-            svc=rng.choice(services),
-        )
-        lines.append({
-            "timestamp": ts.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "level":     level,
-            "message":   msg,
-        })
-    return lines
-
-
 def get_loki_client(integration: dict | None) -> Optional[LokiClient]:
     """
     Build a LokiClient from an integration record (from DB).

@@ -49,7 +49,7 @@ async def get_report(
 ):
     """Get report details including findings and metrics."""
     svc = ReportsService(db)
-    report = await svc.get_report(report_id)
+    report = await svc.get_report(report_id, current_user["tenant_id"])
     if not report:
         raise NotFoundError("Report", report_id)
     return APIResponse(data=report)
@@ -64,7 +64,7 @@ async def download_report(
 ):
     """Download report in specified format."""
     svc = ReportsService(db)
-    report = await svc.get_report(report_id)
+    report = await svc.get_report(report_id, current_user["tenant_id"])
     if not report:
         raise NotFoundError("Report", report_id)
 
@@ -127,7 +127,7 @@ async def delete_report(
 ):
     """Delete a report."""
     svc = ReportsService(db)
-    await svc.delete_report(report_id)
+    await svc.delete_report(report_id, current_user["tenant_id"])
     return APIResponse(data=None, message="Report deleted")
 
 

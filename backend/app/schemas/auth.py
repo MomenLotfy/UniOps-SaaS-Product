@@ -13,6 +13,10 @@ class RegisterRequest(BaseModel):
     full_name: str
     password: str
     company_name: Optional[str] = None
+    # P1.6-INVITE-1: invitation redemption token issued by POST /users/invite.
+    # Without this field the service's invite-consume path was unreachable and
+    # every invitee silently registered as admin of a brand-new tenant.
+    invite_token: Optional[str] = None
 
 
 # ── User info embedded in auth responses ──────────────────────────────────────

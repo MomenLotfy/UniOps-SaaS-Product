@@ -1,20 +1,21 @@
 """Integration tests for the FastAPI HTTP layer."""
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from app.main import app
+from app.config import settings
 
 
 @pytest.mark.asyncio
 class TestHealthEndpoints:
     async def test_health_returns_ok(self):
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test") as client:
             response = await client.get("/health")
         assert response.status_code == 200
         data = response.json()
         assert data.get("status") == "ok"
 
     async def test_health_ready_returns_200(self):
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test") as client:
             response = await client.get("/health/ready")
         assert response.status_code == 200
 
@@ -22,17 +23,17 @@ class TestHealthEndpoints:
 @pytest.mark.asyncio
 class TestAuthRequired:
     async def test_users_endpoint_requires_auth(self):
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test") as client:
             response = await client.get("/api/v1/users")
         assert response.status_code in (401, 403)
 
     async def test_integrations_requires_auth(self):
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test") as client:
             response = await client.get("/api/v1/integrations")
         assert response.status_code in (401, 403)
 
     async def test_invalid_token_returns_401(self):
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test") as client:
             response = await client.get(
                 "/api/v1/users",
                 headers={"Authorization": "Bearer invalid_token_here"},
@@ -43,16 +44,20 @@ class TestAuthRequired:
 @pytest.mark.asyncio
 class TestWebhookEndpoints:
     async def test_github_webhook_without_secret(self):
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        # P1.5-WEBHOOK-1: fail-closed — unconfigured secret ⇒ 503, never 200.
+        # (Previously this test tolerated the fail-open 200.)
+        async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test") as client:
             response = await client.post(
                 "/webhooks/github",
                 json={"action": "workflow_run"},
                 headers={"X-GitHub-Event": "workflow_run"},
             )
-        assert response.status_code in (200, 401)
+        assert response.status_code == 503 or (
+            response.status_code == 200 and settings.GITHUB_WEBHOOK_SECRET
+        )
 
     async def test_stripe_webhook_requires_signature(self):
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test") as client:
             response = await client.post(
                 "/webhooks/stripe",
                 content=b'{"type": "invoice.payment_succeeded"}',
@@ -64,7 +69,7 @@ class TestWebhookEndpoints:
 @pytest.mark.asyncio
 class TestOpenAPISchema:
     async def test_openapi_json_available(self):
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test") as client:
             response = await client.get("/openapi.json")
         assert response.status_code == 200
         schema = response.json()

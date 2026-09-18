@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any
+from collections.abc import MutableMapping
+from typing import Any, Literal, cast
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +94,8 @@ def init_sentry(
                 LoggingIntegration(level=logging.INFO, event_level=logging.ERROR),
                 CeleryIntegration(),
             ],
-            before_send=_before_send,  # type: ignore[arg-type]
-            before_send_transaction=_before_send_transaction,  # type: ignore[arg-type]
+            before_send=cast(Any, _before_send),
+            before_send_transaction=cast(Any, _before_send_transaction),
         )
         _INITIALISED = True
         logger.info("Sentry initialised (env=%s release=%s)", env, release)
@@ -104,7 +105,9 @@ def init_sentry(
         return False
 
 
-def _before_send(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any] | None:
+def _before_send(
+    event: MutableMapping[str, Any], hint: MutableMapping[str, Any]
+) -> MutableMapping[str, Any] | None:
     """Strip PII / sensitive fields before transmission."""
     try:
         request = event.get("request") or {}
@@ -121,7 +124,9 @@ def _before_send(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any] 
     return event
 
 
-def _before_send_transaction(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any] | None:
+def _before_send_transaction(
+    event: MutableMapping[str, Any], hint: MutableMapping[str, Any]
+) -> MutableMapping[str, Any] | None:
     """Attach correlation_id / tenant_id tags to every transaction."""
     try:
         from . import context as _ctx
@@ -164,16 +169,17 @@ def capture_exception_safe(exc: BaseException) -> None:
         logger.exception("sentry capture_exception failed")
 
 
-def capture_message_safe(message: str, *, level: str = "info") -> None:
+_LogLevel = Literal["fatal", "critical", "error", "warning", "info", "debug"]
+
+
+def capture_message_safe(message: str, *, level: _LogLevel = "info") -> None:
     """Capture ``message`` without ever raising."""
     if not _INITIALISED:
         return
     try:
         import sentry_sdk
 
-        # sentry_sdk.capture_message is overloaded; level must be one of
-        # the literal "fatal|critical|error|warning|info|debug".
-        sentry_sdk.capture_message(message, level=level)  # type: ignore[arg-type]
+        sentry_sdk.capture_message(message, level=level)
     except Exception:  # pragma: no cover - non-fatal
         logger.exception("sentry capture_message failed")
 

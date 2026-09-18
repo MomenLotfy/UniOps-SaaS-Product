@@ -29,6 +29,7 @@ const ROLE_COLORS: Record<string, string> = {
   super_admin: 'text-red-400 bg-red-500/10 border-red-500/20',
   admin:       'text-orange-400 bg-orange-500/10 border-orange-500/20',
   devops:      'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  devops_engineer: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
   security:    'text-purple-400 bg-purple-500/10 border-purple-500/20',
   finops:      'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
   viewer:      'text-gray-400 bg-gray-500/10 border-gray-500/20',
@@ -98,7 +99,7 @@ export default function DevOpsCenter() {
   const wsLive = wsStatus === 'connected';
 
   const { isAdmin, hasRole } = usePermissions();
-  const canAct = isAdmin() || hasRole('devops');
+  const canAct = isAdmin() || hasRole('devops_engineer');
 
   const { githubConnected } = useDevOpsIntegrations();
   const { podStats, refetch: refetchPods } = usePods();

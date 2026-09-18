@@ -28,9 +28,17 @@ class WebhookService(BaseService):
             pages=(total + page_size - 1) // page_size,
         )
 
-    async def get_by_id(self, webhook_id: str) -> dict:
-        webhook = await self._get_by_id(Webhook, webhook_id)
+    async def get_by_id(self, webhook_id: str, tenant_id: str | None = None) -> dict:
+        """Tenant-scoped lookup: callers MUST pass tenant_id so a webhook id
+        can never escape its owning tenant (IDOR prevention).  The optional
+        default only exists for internal same-service reuse via _load()."""
+        webhook = await self._load(webhook_id)
+        if tenant_id is not None and webhook.tenant_id != tenant_id:
+            raise NotFoundError("Webhook not found")
         return webhook.to_dict()
+
+    async def _load(self, webhook_id: str) -> Webhook:
+        return await self._get_by_id(Webhook, webhook_id)
 
     async def create(self, tenant_id: str, name: str, url: str, events: list, secret: Optional[str] = None, headers: Optional[dict] = None) -> dict:
         webhook = Webhook(
@@ -46,13 +54,17 @@ class WebhookService(BaseService):
         await self.db.flush()
         return webhook.to_dict()
 
-    async def update(self, webhook_id: str, data: dict) -> dict:
-        webhook = await self._get_by_id(Webhook, webhook_id)
+    async def update(self, webhook_id: str, data: dict, tenant_id: str | None = None) -> dict:
+        webhook = await self._load(webhook_id)
+        if tenant_id is not None and webhook.tenant_id != tenant_id:
+            raise NotFoundError("Webhook not found")
         await self._update_fields(webhook, data)
         return webhook.to_dict()
 
-    async def delete(self, webhook_id: str) -> None:
-        webhook = await self._get_by_id(Webhook, webhook_id)
+    async def delete(self, webhook_id: str, tenant_id: str | None = None) -> None:
+        webhook = await self._load(webhook_id)
+        if tenant_id is not None and webhook.tenant_id != tenant_id:
+            raise NotFoundError("Webhook not found")
         await self.db.delete(webhook)
         await self.db.flush()
 

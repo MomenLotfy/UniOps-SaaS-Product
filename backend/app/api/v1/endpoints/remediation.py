@@ -3,11 +3,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Any, Optional
 import uuid
 
-from app.api.deps import get_db, get_current_user, get_tenant_id
+from app.api.deps import get_db, get_current_user, get_tenant_id, DevOpsUser
 from app.remediation.manager import RemediationManager
 from app.remediation.registry.provider import get_remediation_registry
 from app.remediation.interfaces.base import RemediationContext, ExecutionPlan
-from app.remediation.models.models import RemediationPlan, RemediationExecutionHistory, RemediationStateHistory, RemediationExecutionMetrics, PluginMetadata
+from app.remediation.models.models import RemediationPlan, RemediationExecutionHistory, RemediationStateHistory, RemediationExecutionMetrics, PluginMetadata, RemediationState
 from sqlalchemy import select, func, or_
 
 from app.services.copilot_service import CopilotService
@@ -154,8 +154,10 @@ async def list_plans(
 @router.post("/propose", status_code=status.HTTP_200_OK)
 async def propose_remediation(
     payload: dict,
+    current_user: DevOpsUser,  # P1.6-REM-1: remediation mutates production — devops family only
     tenant_id: str = Depends(get_tenant_id),
-    manager: RemediationManager = Depends(get_remediation_manager)
+    manager: RemediationManager = Depends(get_remediation_manager),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Proposes a remediation plan based on the provided finding context.
@@ -176,13 +178,41 @@ async def propose_remediation(
                 detail="No suitable remediation plan could be generated for this finding."
             )
 
+        # P1.6-REM-4: PERSIST the proposal.  Previously the computed plan was
+        # returned but never written, so /execute/{plan_id} could never resolve
+        # it — the propose→execute chain was dead by construction.
+        row = RemediationPlan(
+            id=plan.plan_id,
+            tenant_id=tenant_id,
+            finding_id=plan.finding_id,
+            created_by=current_user.get("user_id"),
+            finding_type=plan.finding_type,
+            target_technology=str(plan.target_technology),
+            capability_id=plan.capability_id,
+            strategy_id=plan.strategy_id,
+            priority=plan.priority,
+            status=RemediationState.CREATED,
+            required_inputs=plan.required_inputs,
+            expected_outputs={"items": plan.expected_outputs},
+            execution_context={"confidence_score": plan.confidence_score,
+                               "risk_level": plan.risk_level},
+        )
+        db.add(row)
+        await db.commit()
+
         return plan
+    except HTTPException:
+        # P1.6-REM-5: do NOT mask the endpoint's own truthful status codes —
+        # `except Exception` would otherwise swallow the 404 above (and any
+        # 403 from downstream guards) and re-code it as a misleading 400.
+        raise
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.post("/execute/{plan_id}/start", status_code=status.HTTP_200_OK)
 async def start_execution(
     plan_id: str,
+    current_user: DevOpsUser,  # P1.6-REM-1
     tenant_id: str = Depends(get_tenant_id),
     controller: ExecutionController = Depends(get_controller),
     db: AsyncSession = Depends(get_db)
@@ -212,18 +242,42 @@ async def start_execution(
 @router.post("/execute/{plan_id}/cancel", status_code=status.HTTP_200_OK)
 async def cancel_execution(
     plan_id: str,
+    current_user: DevOpsUser,  # P1.6-REM-1
     tenant_id: str = Depends(get_tenant_id),
-    controller: ExecutionController = Depends(get_controller)
+    controller: ExecutionController = Depends(get_controller),
+    db: AsyncSession = Depends(get_db),
 ):
     """
-    Cancels a running execution.
+    Cancels an execution — P1.6-REM-2: REPORTS ONLY THE TRUTH.
+    Previously returned {"status": "cancelled"} unconditionally, even for
+    nonexistent plans, with zero DB state change.  Now: 404 when the plan is
+    not this tenant's, 409 when it is already terminal, otherwise the state
+    transition is persisted and reported.
     """
-    success = await controller.cancel_execution(plan_id, tenant_id)
-    return {"status": "cancelled" if success else "failed"}
+    result = await db.execute(
+        select(RemediationPlan).where(
+            RemediationPlan.id == plan_id,
+            RemediationPlan.tenant_id == tenant_id,
+        )
+    )
+    plan_db = result.scalar_one_or_none()
+    if plan_db is None:
+        raise HTTPException(status_code=404, detail="Plan not found")
+
+    terminal = {RemediationState.COMPLETED, RemediationState.FAILED,
+                RemediationState.CANCELLED, RemediationState.ROLLED_BACK}
+    if plan_db.status in terminal:
+        raise HTTPException(status_code=409, detail=f"Plan already {plan_db.status.value.lower()}")
+
+    await controller.cancel_execution(plan_id, tenant_id)  # worker-signal hook (no-op today)
+    plan_db.status = RemediationState.CANCELLED
+    await db.commit()
+    return {"status": "cancelled"}
 
 @router.post("/execute/{plan_id}/rollback", status_code=status.HTTP_200_OK)
 async def rollback_execution(
     plan_id: str,
+    current_user: DevOpsUser,  # P1.6-REM-1
     tenant_id: str = Depends(get_tenant_id),
     controller: ExecutionController = Depends(get_controller),
     db: AsyncSession = Depends(get_db)
@@ -242,6 +296,7 @@ async def rollback_execution(
 @router.post("/execute/{plan_id}", status_code=status.HTTP_200_OK)
 async def execute_remediation(
     plan_id: str,
+    current_user: DevOpsUser,  # P1.6-REM-1
     tenant_id: str = Depends(get_tenant_id),
     manager: RemediationManager = Depends(get_remediation_manager),
     db: AsyncSession = Depends(get_db)

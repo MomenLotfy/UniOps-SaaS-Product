@@ -191,6 +191,44 @@ export const integrationsApi = {
   connectLinear: (token: string, name: string = 'Linear') =>
     integrationsApi.connectByToken('linear', token, name, {}),
 
+  // ── Cloud providers (ARM / project creds — generic create; backend upserts
+  // singleton types so re-connecting replaces the existing account) ────────
+  connectAzure: async (
+    data: { tenantId: string; clientId: string; clientSecret: string; subscriptionId: string },
+    name: string = 'Azure',
+  ): Promise<Integration | undefined> => {
+    const res = await apiClient.post<any>('/integrations', {
+      name,
+      type: 'azure',
+      credentials: {
+        tenant_id:       data.tenantId,
+        client_id:       data.clientId,
+        client_secret:   data.clientSecret,
+        subscription_id: data.subscriptionId,
+      },
+      is_active: true,
+    });
+    const integrationId = res.data?.data?.id ?? res.data?.id;
+    return integrationId ? integrationsApi.get(integrationId) : undefined;
+  },
+
+  connectGCP: async (
+    data: { projectId: string; serviceAccountKey: string },
+    name: string = 'GCP',
+  ): Promise<Integration | undefined> => {
+    const res = await apiClient.post<any>('/integrations', {
+      name,
+      type: 'gcp',
+      credentials: {
+        project_id:          data.projectId,
+        service_account_key: data.serviceAccountKey,
+      },
+      is_active: true,
+    });
+    const integrationId = res.data?.data?.id ?? res.data?.id;
+    return integrationId ? integrationsApi.get(integrationId) : undefined;
+  },
+
   connectPagerDuty: (token: string, name: string = 'PagerDuty') =>
     integrationsApi.connectByToken('pagerduty', token, name, {}),
 
