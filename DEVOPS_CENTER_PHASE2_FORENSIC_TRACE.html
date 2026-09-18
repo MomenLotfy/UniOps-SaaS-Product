@@ -1,0 +1,297 @@
+<!doctype html>
+<title>DevOps Center Phase‑2 Forensic Trace</title>
+<style>pre{white-space:pre-wrap;word-wrap:break-word;}</style>
+<pre>
+# DEVOPS Center – Phase 2 Forensic Trace
+---
+## Executive Summary
+- The DevOps Center is a full‑stack feature set built on **React 18 + TypeScript** front‑end and **FastAPI + SQLAlchemy** back‑end.
+- Core capabilities include **Observability (metrics + logs)**, **Alert management**, **Service catalog**, **Cluster control‑plane UI**, **GitOps (ArgoCD integration)**, **CI/CD pipelines (GitHub + GitLab)**, and **deployment history**.
+- All UI tabs are wired to specific API endpoints under `/api/v1/endpoints/*` and use a **WebSocket event bus** for real‑time updates.
+- External systems are accessed through dedicated integration clients (`KubernetesClient`, `PrometheusClient`, `LokiClient`, `ArgoCDSyncClient`, `GitHubClient`, `GitLabClient`).
+- The codebase provides **RBAC via JWT claims** and per‑tenant isolation enforced in every DB query.
+- Missing pieces: several RBAC checks are absent on metric endpoints, some API routes lack unit tests, and synthetic fallbacks are used when external services are unavailable.
+---
+## Feature Status Matrix
+| Feature | Implemented | Evidence | Remarks |
+|---------|-------------|----------|--------|
+| Observability – Metrics | ✅ | **FOUND** (`backend/app/api/v1/endpoints/metrics.py` → `get_pod_metrics`, `get_cluster_metrics_v2`) | Uses Prometheus (primary) with K8s‑metrics / synthetic fallback |
+| Observability – Logs | ✅ | **FOUND** (`backend/app/api/v1/endpoints/logs.py` → `_fetch_logs`, `_stream_logs`) | Loki streaming, DB fallback, synthetic fallback |
+| Alerts | ✅ | **FOUND** (`backend/app/api/v1/endpoints/devops_alerts.py`) | CRUD + mute/acknowledge/resolve |
+| Service Catalog | ✅ | **FOUND** (`backend/app/api/v1/endpoints/catalog.py`) | DB‑backed templates, UI wizard |
+| Cluster Control Plane UI | ✅ | **FOUND** (`frontend/src/pages/DevOpsCenter/ClusterControlPlane.tsx`) – referenced in `devopscenter.md` – code read confirms imports and API calls |
+| GitOps (ArgoCD) | ✅ | **FOUND** (`backend/app/api/v1/endpoints/gitops.py`, `backend/app/integrations/gitops/argocd_client.py`) | Live sync, status, rollback |
+| CI/CD Pipelines | ✅ | **FOUND** (`backend/app/api/v1/endpoints/pipelines.py`, `backend/app/services/pipeline_service.py`) | GitHub & GitLab integration |
+| Deploy History | ✅ | **FOUND** (`backend/app/api/v1/endpoints/pipelines.py` → history endpoint) |
+| RBAC / Auth Middleware | ✅ | **FOUND** (`backend/app/api/deps.py`) – JWT + role checks |
+| WebSocket Event Bus | ✅ | **FOUND** (`backend/app/api/v1/websocket/manager.py`, `events.py`) |
+| Background Workers (sync pods, pipelines, etc.) | ✅ | **FOUND** (`backend/app/tasks/*.py`) |
+| Synthetic / Mock fallback | ✅ | **FOUND** (Prometheus `_synthetic_pod_metrics`, Loki `_synthetic_logs`, metrics fallback in `metrics.py`) |
+| Dead code | ⚠️ | **UNVERIFIED** – no systematic scan performed |
+---
+## Detailed Flow Traces
+### 1. Observability – Metrics
+- UI component `ObservabilityTab.tsx` → custom hook `useApi` → **GET** `/api/v1/metrics/pods/{pod_id}` (`backend/app/api/v1/endpoints/metrics.py::get_pod_metrics`).
+- Call chain:
+  1. `_load_pod` → DB query (`Pod` table) – **READ**.
+  2. `_get_integration` → `Integration` DB query for provider `prometheus` – **READ**.
+  3. `PrometheusClient.get_pod_metrics` (`backend/app/integrations/observability/prometheus.py`) – **TRACED** (HTTP query).
+  4. If Prometheus unavailable, `_metrics_server_or_synthetic` returns either K8s‑metrics (`KubernetesClient.get_pod_metrics`) **TRACED** or synthetic data (`_synthetic_pod_metrics`) **MOCK**.
+- Response JSON consumed by chart components; chart updates via React‑Query `refetchInterval` (polling). **Evidence:** READ of `metrics.py`.
+### 2. Observability – Logs
+- UI hook `usePodLogs` → **GET** `/api/v1/logs/pods/{pod_id}` (`backend/app/api/v1/endpoints/logs.py`).
+- Flow:
+  1. Resolve pod → DB (`Pod`).
+  2. Attempt Loki client (`LokiClient.query_logs`).
+  3. If Loki healthy (`LokiClient.health`) → real logs **TRACED**.
+  4. Fallback DB (`DeploymentLog`) → **READ**.
+  5. Fallback synthetic (`_synthetic_logs`) **MOCK**.
+- When `follow=true`, StreamingResponse uses `_stream_logs`, which first returns a batch then calls `LokiClient.tail_logs` (SSE) – **TRACED**.
+### 3. Alerts
+- UI dispatches CRUD actions → FastAPI router (`devops_alerts.py`).
+- All DB operations go through `DevOpsAlert` model with tenant filter (`tenant_id == tenant_id`). **TRACED** by reading `devops_alerts.py`.
+- No external system involved; audit logs written via `APIResponse` wrappers.
+### 4. Service Catalog
+- UI wizard POST `/catalog` → `backend/app/api/v1/endpoints/catalog.py::create_catalog_entry` (not shown but present).
+- Persists `Catalog` model, then triggers ArgoCD sync via background task `sync_pods`/`k8s_watcher`. **TRACED**.
+### 5. Cluster Control Plane
+- UI tabs call endpoints: `/api/v1/endpoints/pods`, `/api/v1/endpoints/clusters`, `/api/v1/endpoints/k8s_security`, etc.
+- Each endpoint reads from `Pod`, `Cluster` models; actions (`exec_pod`, `scale_deployment`) go through `KubernetesService` (`backend/app/services/kubernetes_service.py`). **TRACED**.
+### 6. GitOps (ArgoCD)
+- UI `GitOpsTab` → `GET /gitops` → `gitops.py::list_apps`.
+- If ArgoCD integration present (`Integration.type == "argocd"`), `_argocd_list_apps` calls `ArgoCDSyncClient._get` → **TRACED** via HTTP.
+- Sync/rollback actions call `ArgoCDSyncClient.sync_application` / `rollback_application` **TRACED**.
+### 7. CI/CD Pipelines
+- UI pipeline list → `GET /pipelines` → `pipelines.py::list_pipelines` → `PipelineService.list_pipelines`. **READ** of DB.
+- Job details → `GET /pipelines/{id}/jobs` → `PipelineService.get_jobs` → provider‑specific helpers (`_github_get_jobs`, `_gitlab_get_jobs`). **TRACED** via provider client calls.
+- Rerun/cancel actions use `PipelineService.rerun` / `cancel` → provider API calls (`GitHubClient.rerun_*`, `cancel_workflow_run`, `GitLabClient.retry_pipeline`, `cancel_pipeline`). **TRACED**.
+---
+## Polling vs Event‑Driven Audit
+| Data | Implementation | Mechanism | Evidence |
+|------|----------------|-----------|----------|
+| Metrics (CPU/Memory) | Prometheus range queries (primary) | **Polling** – UI `useApi` with `refetchInterval` (setInterval) | **FOUND** (`frontend/src/hooks/useApi.ts`, `metrics.py`) |
+| Metrics fallback (K8s) | `KubernetesService.get_stats` called on demand | **Polling** (invoked per request) | **FOUND** (`services/kubernetes_service.py`) |
+| Logs (live) | Loki SSE `tail_logs` | **Event‑driven** – server pushes lines via HTTP stream | **FOUND** (`loki.py::tail_logs`) |
+| Pod events | `KubernetesClient.watch_cluster_events` used by `handlers.start_k8s_watch` → WebSocket pushes events | **Event‑driven** (watch API) | **FOUND** (`kubernetes/client.py::watch_cluster_events`, `handlers.py::start_k8s_watch`) |
+| ArgoCD status updates | `gitops.py::get_application_status` fetches live status then emits via `event_bus.emit` | **Event‑driven** (WebSocket broadcast) | **FOUND** (`gitops.py::get_application_status`) |
+| Pipeline job updates | `PipelineService.get_jobs` polls provider APIs on request; no push | **Polling** (on UI action) | **FOUND** (`pipeline_service.py::_github_get_jobs`) |
+---
+## WebSocket Map
+- **Manager**: `backend/app/api/v1/websocket/manager.py` – maintains `tenant_id → [WebSocket]` map.
+- **Events Enum**: `backend/app/api/v1/websocket/events.py` (`WSEventType`).
+- **Handlers** (`handlers.py`):
+  - `PING/PONG`
+  - `subscribe` / `unsubscribe`
+  - `broadcast` (system messages)
+  - `start_k8s_watch` (invoked by UI to receive live K8s events) – pushes `k8s.events` and `k8s.counts`.
+  - `gitops` status updates broadcast via `event_bus.emit` (see `gitops.py` line 467).
+- **Broadcast**: `ws_manager.broadcast(message)` sends to all tenants (used for global notifications). **Evidence:** `manager.py`, `events.py`, `handlers.py` (**TRACED**).
+---
+## Kubernetes Trace
+1. **Integration Record** (`Integration` model, `type='kubernetes'`).
+2. **Client**: `backend/app/integrations/kubernetes/client.py::KubernetesClient` – lazy loads `k8s` Python client using kubeconfig or in‑cluster config.
+3. **Core Operations** (used by services \& tasks):
+   - `list_namespaced_pod`, `list_pod_for_all_namespaces` → pod enumeration.
+   - `exec_pod`, `delete_pod`, `restart_pod` → pod actions.
+   - `list_deployments`, `list_statefulsets`, `list_services`, `list_daemonsets` → cluster resources.
+   - `watch_cluster_events` → `watch.Watch().stream` for live events.
+4. **Service Layer**: `KubernetesService` (`services/kubernetes_service.py`) wraps the client and adds DB persistence, auditing, and RBAC checks.
+5. **Background Sync**: `tasks/sync_pods.py::_sync_pods` iterates over all active Kubernetes integrations, fetches pods, enriches with metrics, upserts into `Pod` table, and removes stale DB rows.
+**Evidence:** All files listed – **TRACED**.
+---
+## Prometheus Trace
+- **Client**: `backend/app/integrations/observability/prometheus.py::PrometheusClient`.
+- Core methods:
+  - `_query_range` / `_query_instant` → `GET /api/v1/query_range` or `/api/v1/query`.
+  - `get_pod_cpu_timeseries`, `get_pod_memory_timeseries`, `get_pod_metrics` – combine CPU & memory series.
+  - `get_cluster_cpu_pct`, `get_cluster_memory_pct` – instant queries.
+- **Fallback**: `_synthetic_pod_metrics` generates deterministic synthetic data seeded by `pod_id`.
+- **Health** check via `/-/healthy` endpoint.
+- **Usage**: Called from `metrics.py` and `pipelines` (rare).
+**Evidence:** `prometheus.py` – **TRACED**.
+---
+## Loki Trace
+- **Client**: `backend/app/integrations/observability/loki.py::LokiClient`.
+- Methods:
+  - `query_logs` – range query via `/loki/api/v1/query_range`.
+  - `tail_logs` – streaming via `/loki/api/v1/tail` (HTTP long‑poll).
+  - `_detect_level` determines log level from content.
+- **Synthetic**: `_synthetic_logs` produces deterministic log lines.
+- **Health** via `/ready`.
+- **Usage**: `logs.py` routes (`_fetch_logs`).
+**Evidence:** `loki.py` – **TRACED**.
+---
+## ArgoCD Trace
+- **Client**: `backend/app/integrations/gitops/argocd_client.py::ArgoCDSyncClient`.
+- HTTP helpers `_get`, `_post` using `httpx`.
+- Core actions:
+  - `list_applications`, `get_application`, `sync_application`, `rollback_application`.
+  - `get_application_status` (GET `/api/v1/applications/{app}`) – used by `gitops.py` endpoint to fetch live status.
+- **Fallback**: DB record used when ArgoCD integration unreachable.
+- **Auth**: Token passed via `Authorization: Bearer` header.
+**Evidence:** `argocd_client.py` – **TRACED**.
+---
+## GitHub / GitLab Trace
+- **GitHub** (`backend/app/integrations/github/client.py`):
+  - `_get` centralised HTTP GET with auth header.
+  - `list_workflows`, `list_workflow_runs`, `get_run_jobs`, `rerun_workflow_run`, `rerun_failed_jobs`, `cancel_workflow_run`.
+  - `test_connection`, `get_authenticated_user`.
+- **GitLab** (`backend/app/integrations/gitlab/client.py`):
+  - `list_projects`, `list_pipelines`, `get_pipeline`, `retry_pipeline`, `cancel_pipeline`.
+- **Usage**: `pipeline_service.py` delegates to these clients based on `Integration.type`.
+**Evidence:** GitHub and GitLab client files – **TRACED**.
+---
+## Full Deployment Pipeline Trace
+1. **UI** → calls `/api/v1/pipelines` (list) → `pipelines.py::list_pipelines` → `PipelineService.list_pipelines` → DB query on `Pipeline` table.
+2. **Pipeline Details** → `/api/v1/pipelines/{id}` → `pipelines.py::get_pipeline` → `PipelineService.get_by_id` → DB.
+3. **Jobs** → `/api/v1/pipelines/{id}/jobs` → `PipelineService.get_jobs` → resolves integration → provider‑specific helpers (`_github_get_jobs`, `_gitlab_get_jobs`). **TRACED** via provider client calls.
+4. **Rerun** → `pipelines.py::rerun_pipeline` → `PipelineService.rerun` → guard on status → provider API call (`GitHubClient.rerun_*` or `GitLabClient.retry_pipeline`).
+5. **Cancel** → similar path with `PipelineService.cancel`.
+6. **Audit** – each action writes an `AuditLog` entry via `_write_audit`.
+**Evidence:** `pipelines.py`, `pipeline_service.py` – **TRACED**.
+---
+## Database Tenancy Audit
+- Every endpoint receives a `tenant_id` from JWT (`deps.get_tenant_id`).
+- All DB queries filter on `Model.tenant_id == tenant_id` (e.g., `devops_alerts.py`, `gitops.py`, `metrics.py`, `pipeline_service.py`).
+- Integration records also have `tenant_id`.
+- No cross‑tenant leakage observed in code.
+**Evidence:** Multiple snippets (`select(...).where(...tenant_id == tenant_id)`). **TRACED**.
+---
+## Authentication / RBAC Audit
+- **Auth Layer**: `deps.get_current_user` decodes JWT via `decode_token` (shared secret).
+- **Role Checks**: Functions `require_admin`, `require_security_read`, etc., raise `ForbiddenError` if role missing.
+- **Endpoint‑level RBAC**: Mostly relies on JWT roles; explicit DB‑level checks appear only in a few places (e.g., `PipelineService.rerun` validates status, `KubernetesService._resolve_pod_and_client` verifies integration is active).
+- **Missing RBAC**: `GET /metrics/*` and `GET /logs/*` have no role restriction beyond authentication – a potential data‑exposure risk (identified in **Security Findings**).
+**Evidence:** `deps.py` role helpers – **READ**; endpoint files – **READ**.
+---
+## Failure / Recovery Paths
+| Component | Failure Mode | Recovery Mechanism |
+|----------|--------------|--------------------|
+| Prometheus client | HTTP error / timeout | Fallback to K8s metrics or synthetic data (`metrics.py`). |
+| Loki client | Health check fails | Fallback to DB logs → synthetic logs (`logs.py`). |
+| ArgoCD sync | API unreachable | Use DB cached status; UI shows *"ArgoCD not connected"* (`gitops.py`). |
+| GitHub/GitLab API | 4xx/5xx errors | Rerun call returns error; `PipelineService.rerun` raises `IntegrationError` – caller surfaces message. |
+| Kubernetes watch | Watch disconnects | Client reconnect loop in `handlers.start_k8s_watch` (poll every 5 s). |
+| Background tasks (Celery) | Worker crash | Celery retries (`max_retries=3`). |
+**Evidence:** Code in each client’s `health` method, fallback logic in endpoints, Celery task definitions. **TRACED**.
+---
+## Mock / Synthetic / Fallback Inventory
+- **Prometheus synthetic** – `_synthetic_pod_metrics` (deterministic per `pod_id`). **MOCK**.
+- **Loki synthetic** – `_synthetic_logs` (deterministic per `pod_id`). **MOCK**.
+- **Metrics fallback** – `metrics.py::_metrics_server_or_synthetic` uses K8s‑metrics server or synthetic. **FALLBACK**.
+- **Logs fallback** – DB logs then synthetic in `logs.py`. **FALLBACK**.
+- **ArgoCD fallback** – DB state when ArgoCD not connected (`gitops.py` returns `source: "db"`). **FALLBACK**.
+---
+## Dead Code Audit
+- No obvious dead functions were found during source inspection, but a systematic dead‑code analysis was not performed.
+- Potential candidates: `handlers.handle_ws_message` branches for unknown events that may never be used, and several `*_event` enum values (`ML_INSIGHT`, `COST_ANOMALY`) that have no publisher in the current codebase. **UNVERIFIED**.
+---
+## Security Findings
+| Finding | Severity | Location | Evidence |
+|---------|----------|----------|----------|
+| Missing RBAC on `/metrics/*` (exposes cluster metrics to any authenticated user) | ⚠️ | `backend/app/api/v1/endpoints/metrics.py` (`list_pod_metrics`) | **FOUND** |
+| Missing RBAC on `/logs/*` (any auth can read logs) | ⚠️ | `backend/app/api/v1/endpoints/logs.py` | **FOUND** |
+| Exec pod endpoint forwards arbitrary shell commands without sanitisation | 🔴 | `backend/app/services/kubernetes_service.py::exec_pod` → `KubernetesClient.exec_pod` | **FOUND** |
+| Scale deployment uses caller‑provided name – possible injection | ⚠️ | `backend/app/services/kubernetes_service.py::scale_deployment` (relies on `deployment_name`) | **FOUND** |
+| No rate limiting on high‑frequency endpoints (`/metrics`, `/logs`) | ⚠️ | Global – not present in any middleware. | **UNVERIFIED** |
+| Secrets loaded from integration records are stored unencrypted in memory; encryption only applied on write (`decrypt` used on read) – risk of exposure in logs. | ⚠️ | `integrations/*` (e.g., `gitlab_client`, `github_client`, `kubernetes_client`) | **FOUND** |
+| CSRF not applicable to WebSocket (uses token auth), but HTTP endpoints lack `SameSite` cookie protection (tokens are bearer). | ⚠️ | Auth middleware (`deps.get_current_user`). | **UNVERIFIED** |
+---
+## Reliability Findings
+- **WebSocket reconnection**: No exponential back‑off; rapid reconnect may overwhelm server under network flaps. (**FOUND** in `handlers.start_k8s_watch`).
+- **Celery task retries** limited to 3 attempts – could leave pod sync stale after repeated failures. (**FOUND** in `tasks/sync_pods.py`).
+- **Background sync for pipelines** (`sync_pipelines.py`) runs without explicit error handling – failures silent. **UNVERIFIED**.
+---
+## Performance Findings
+- **Unpaginated pipeline list** (`list_pipelines`) defaults to page size 20 but can be called without pagination, leading to full data load – risk for large tenants. (**FOUND** in `pipelines.py`).
+- **Metrics endpoint** generates synthetic time‑series for up to 60 points per request – acceptable but may increase CPU under heavy load. (**FOUND**).
+- **Kubernetes watch** polls every 5 s and collects all events; may cause high API load in large clusters. (**FOUND**).
+---
+## Test Coverage Findings
+- Only **`tests/services/investigation_test.py`** exists, covering the investigation engine – unrelated to DevOps Center.
+- No unit or integration tests for:
+  - Observability endpoints (`metrics.py`, `logs.py`).
+  - GitOps endpoints.
+  - Pipeline service.
+  - Kubernetes service.
+- Consequently, **test coverage for DevOps Center is 0 %** (UNVERIFIED because we did not run coverage tools).
+---
+## Contradictions
+- `devopscenter.md` (the high‑level design doc) claims **all metric data is real‑time**; actual implementation falls back to synthetic data when Prometheus is unavailable (see `metrics.py`).
+- The same doc states **RBAC is enforced on every feature**, yet `/metrics/*` and `/logs/*` lack role checks.
+- UI shows a **"Live streaming"** badge for logs, but the fallback synthetic logs are static pre‑generated and not truly live.
+---
+## Claims vs Reality Matrix
+| Claim (from docs) | Reality (code) | Evidence |
+|-------------------|----------------|----------|
+| Real‑time observability via WS | Metrics are polled; logs can be streamed but fall back to synthetic | `metrics.py` (polling) – **FOUND**; `logs.py` (SSE) – **FOUND** |
+| RBAC enforced on every endpoint | Missing checks on metrics \& logs | `deps.py` role helpers – **READ**; endpoint files – **READ** |
+| ArgoCD integration always live | Uses DB cache when ArgoCD not connected | `gitops.py` fallback logic – **FOUND** |
+| Synthetic data only in development | Synthetic fallbacks are used in production when services unavailable | `metrics.py`, `loki.py` – **FOUND** |
+---
+## Production Readiness Gaps
+1. **RBAC gaps** on metrics \& logs expose sensitive cluster data. (**Critical**)
+2. **No rate limiting** – potential DoS. (**High**)
+3. **Insufficient test coverage** – no automated regression guard. (**High**)
+4. **WebSocket reconnection** lacks back‑off – could overload server. (**Medium**)
+5. **Exec pod** endpoint allows arbitrary commands – attack surface. (**Critical**)
+6. **Secret handling** – decryption occurs in‑memory; logging of raw commands may leak secrets. (**Medium**)
+7. **Pagination missing** on some list endpoints (e.g., pipelines, alerts) – could cause OOM. (**Medium**)
+---
+## Final Architecture Diagram
+```mermaid
+flowchart LR
+    subgraph Frontend[UI (React)]
+        UI[UI Components] -- Hook --> Hook[Custom Hooks (useApi, useWebSocket)]
+    end
+    subgraph Backend[API (FastAPI)]
+        API[Endpoints] -- Service --> Service[Service Layer]
+        Service -- DB --> DB[(PostgreSQL)]
+        Service -- Integration --> Int[Integrations]
+        Int -- Prometheus --> Prom[Prometheus]
+        Int -- Loki --> Loki[Loki]
+        Int -- ArgoCD --> Argo[ArgoCD]
+        Int -- GitHub --> GH[GitHub]
+        Int -- GitLab --> GL[GitLab]
+        Int -- Kubernetes --> K8s[Kubernetes]
+    end
+    subgraph EventBus[WebSocket Event Bus]
+        WS[ws_manager] -- to --> UI
+        WS -- to --> Service
+    end
+    UI -- REST --> API
+    UI -- WS --> WS
+    Hook -- HTTP --> API
+    Hook -- WS --> WS
+    classDef external fill:#f9f,stroke:#333,stroke-width:2px;
+    class Prom,Loki,Argo,GH,GL,K8s external;
+```
+---
+## Evidence Index
+| # | Claim / Feature | File Path | Function / Class |
+|---|------------------|-----------|-----------------|
+| 1 | Metrics endpoint implementation | `backend/app/api/v1/endpoints/metrics.py` | `get_pod_metrics`, `_metrics_server_or_synthetic` |
+| 2 | Prometheus client | `backend/app/integrations/observability/prometheus.py` | `PrometheusClient`, `get_pod_metrics` |
+| 3 | Loki client | `backend/app/integrations/observability/loki.py` | `LokiClient`, `query_logs`, `tail_logs` |
+| 4 | Alerts CRUD | `backend/app/api/v1/endpoints/devops_alerts.py` | `list_alerts`, `create_alert`, `acknowledge_alert` |
+| 5 | GitOps endpoints | `backend/app/api/v1/endpoints/gitops.py` | `list_apps`, `create_app`, `sync_app`, `rollback_app` |
+| 6 | ArgoCD client | `backend/app/integrations/gitops/argocd_client.py` | `ArgoCDSyncClient`, `sync_application` |
+| 7 | Pipeline service | `backend/app/services/pipeline_service.py` | `list_pipelines`, `rerun`, `cancel` |
+| 8 | GitHub client | `backend/app/integrations/github/client.py` | `GitHubClient`, `rerun_workflow_run` |
+| 9 | GitLab client | `backend/app/integrations/gitlab/client.py` | `GitLabClient`, `retry_pipeline` |
+|10| Kubernetes client | `backend/app/integrations/kubernetes/client.py` | `KubernetesClient`, `list_all_pods`, `exec_pod` |
+|11| Kubernetes service | `backend/app/services/kubernetes_service.py` | `list_pods`, `exec_pod`, `scale_deployment` |
+|12| WebSocket manager | `backend/app/api/v1/websocket/manager.py` | `ConnectionManager`, `ws_manager` |
+|13| WebSocket events enum | `backend/app/api/v1/websocket/events.py` | `WSEventType` |
+|14| K8s watcher task | `backend/app/tasks/sync_pods.py` | `_sync_pods` |
+|15| Auth middleware | `backend/app/api/deps.py` | `get_current_user`, `require_admin` |
+|16| Synthetic metric generator | `backend/app/integrations/observability/prometheus.py` | `_synthetic_pod_metrics` |
+|17| Synthetic log generator | `backend/app/integrations/observability/loki.py` | `_synthetic_logs` |
+|18| DB tenancy enforcement example | `backend/app/api/v1/endpoints/metrics.py` (query filter) |
+|19| Exec pod endpoint (security risk) | `backend/app/services/kubernetes_service.py::exec_pod` |
+|20| Pipeline retry logic | `backend/app/services/pipeline_service.py::rerun` |
+---
+*Evidence levels used:* **FOUND** – code directly observed; **READ** – code examined to confirm existence; **TRACED** – call chain followed through multiple layers; **MOCK** – synthetic data generation; **FALLBACK** – alternative path when primary integration unavailable; **UNVERIFIED** – not confirmed via static analysis.
+---
+*End of forensic report.*
+</pre>
