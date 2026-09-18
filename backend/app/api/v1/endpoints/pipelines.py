@@ -12,17 +12,20 @@ from app.services.pipeline_service import PipelineService
 router = APIRouter()
 
 
-@router.get("", response_model=APIResponse[PaginatedResponse])
+# BUG-P2-02: was `APIResponse[PaginatedResponse]` — that double-wraps the
+# envelope (outer success/data + inner success/data from PaginatedResponse).
+# Contract everywhere else is ONE envelope. `PaginatedResponse` already IS an
+# envelope (success+data+total), so it becomes the declared contract directly.
+@router.get("", response_model=PaginatedResponse[PipelineResponse])
 async def list_pipelines(
     current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
     page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100),
     repository: Optional[str] = Query(None),
     branch: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
-):
+) -> PaginatedResponse[PipelineResponse]:
     svc = PipelineService(db)
-    result = await svc.list_pipelines(tenant_id, page, page_size, repository, branch, status)
-    return APIResponse(data=result)
+    return await svc.list_pipelines(tenant_id, page, page_size, repository, branch, status)
 
 
 @router.get("/stats", response_model=APIResponse[PipelineStats])
