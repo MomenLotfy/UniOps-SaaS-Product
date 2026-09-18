@@ -438,10 +438,18 @@ class IntegrationService(BaseService):
             return IntegrationTestResult(success=False, message=str(exc))
 
         except Exception as exc:
+            # BUG-P2-03: never echo raw exception text (traceback shapes like
+            # "'X' object has no attribute 'y'") to the client/DB. Log it for
+            # operators; store a sanitized, constant message.
+            logger.error(
+                f"Integration test_connection internal failure for "
+                f"{integration_id} ({itype}): {type(exc).__name__}: {exc}"
+            )
+            safe = f"{_provider_label(itype)} connection check failed internally"
             integration.status = "error"
-            integration.error_message = str(exc)[:500]
+            integration.error_message = safe
             await self.db.flush()
-            return IntegrationTestResult(success=False, message=str(exc))
+            return IntegrationTestResult(success=False, message=safe)
 
     async def sync(self, integration_id: str, tenant_id: str | None = None) -> dict:
         integration = await self._get_by_id(Integration, integration_id)
@@ -678,17 +686,12 @@ class IntegrationService(BaseService):
             from app.integrations.stripe.client import StripeClient
             return StripeClient(merged)
 
-        # Unknown type — return a no-op stub so test_connection() always passes
-        from app.integrations.base import BaseIntegration
-
-        class _NoOpIntegration(BaseIntegration):
-            async def test_connection(self) -> bool:
-                return True
-
-            async def sync(self) -> dict:
-                return {}
-
-        return _NoOpIntegration(merged)
+        # BUG-P2-03: previously, ANY unknown type fell through to a private
+        # `_NoOpIntegration` stub whose test_connection() was coded to return
+        # True.  That was a reachable fake-success path (schema accepted an
+        # unvalidated `type: str`): a bogus name produced a fake "provider".
+        # The stub is deleted — unknown types are a hard client error.
+        raise ValueError(f"Unsupported integration type: {integration_type!r}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

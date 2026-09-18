@@ -148,6 +148,9 @@ class TestIntegrationGetClient:
         assert isinstance(client, GitLabClient)
 
     def test_unknown_type_returns_dummy(self):
+        # BUG-P2-03: the silent "dummy/NoOp" client (fake-success stub) was
+        # deleted.  Unknown types now raise — see SUPPORTED_INTEGRATION_TYPES.
+        import pytest
         svc = IntegrationService(MagicMock())
-        client = svc._build_client("unknown_type", {}, {})
-        assert client is not None
+        with pytest.raises(ValueError, match="Unsupported integration type"):
+            svc._build_client("unknown_type", {}, {})
