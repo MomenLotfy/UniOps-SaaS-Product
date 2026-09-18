@@ -127,7 +127,10 @@ class Settings(BaseSettings):
     SENDGRID_API_KEY: str = ""
     EMAIL_FROM: str = "noreply@uniops.io"
 
-    CORS_ORIGINS: List[str] = ["*"]
+    # P1.6-CORS-1: default to explicit local dev origins — wildcard combined
+    # with allow_credentials=True makes any website a credentialed caller if
+    # tokens are ever cookie-based.  Deployments must set CORS_ORIGINS env.
+    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"]
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
