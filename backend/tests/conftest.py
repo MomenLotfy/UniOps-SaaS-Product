@@ -20,7 +20,6 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from app.core.database import Base, get_db
 import app.models as _app_models  # noqa  (module import only — must NOT shadow the FastAPI `app` name)
@@ -42,17 +41,30 @@ from app.modules.security.decision_strategy.models import strategy as _ds_strate
 from app.modules.security.decision_approval.models import approval as _da_approval  # noqa: F401
 from app.modules.security.execution_orchestration.models import execution as _eo_execution  # noqa: F401
 
-# R27: in-memory SQLite + StaticPool.  StaticPool reuses a single
-# connection across every test, so the in-memory schema created by the
-# first ``create_all`` is visible to every subsequent session.  The
-# ``reset_database`` autouse fixture wipes + recreates the schema
-# before each test, so isolation is preserved.
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# R27 (P1.6 harness hardening): file-backed SQLite with the default async
+# QueuePool so every session gets its OWN connection and transaction.
+# In-memory + StaticPool shared ONE connection — and therefore ONE
+# physical SQLite transaction — across concurrently executing requests:
+# the rollback in one request's error teardown silently discarded a
+# sibling request's already-responded writes (P1.6 gate probe: concurrent
+# duplicate-register returned [200, 409, 200, 409] with ZERO rows
+# persisted, reproduced under CPU load).  Production runs per-request
+# connections with real transaction isolation; the rig must mirror that
+# or concurrent-request tests exercise impossible physics.  The
+# ``reset_database`` autouse fixture still wipes + recreates the schema
+# before each test, so isolation is preserved; sqlite's default 5s busy
+# timeout serializes concurrent writers so the losing duplicate INSERT
+# surfaces the real UNIQUE violation (409 path) instead of colliding
+# inside the shared transaction.  The DB file lives in the system temp
+# dir, not the repo.
+import tempfile as _tempfile
+
+_TEST_DB_PATH = _tempfile.mktemp(prefix="uniops_pytest_", suffix=".db")
+TEST_DATABASE_URL = f"sqlite+aiosqlite:///{_TEST_DB_PATH}"
 
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
 )
 
 TestSessionLocal = async_sessionmaker(
@@ -69,10 +81,10 @@ async def reset_database():
     strictest isolation possible — no row from a previous test can leak
     into the next.
 
-    In-memory SQLite + StaticPool shares one connection across all
-    tests; the schema is wiped and recreated before each test begins.
-    The fix for the legacy "database schema has changed" error was to
-    recreate the schema in a single PRAGMA-compatible transaction.
+    Temp-file SQLite + pooled per-session connections; the schema is
+    wiped and recreated before each test begins.  The fix for the legacy
+    "database schema has changed" error was to recreate the schema in a
+    single PRAGMA-compatible transaction.
     """
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
