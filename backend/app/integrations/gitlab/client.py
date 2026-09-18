@@ -2,6 +2,10 @@
 from typing import Optional
 import httpx
 from app.integrations.base import BaseIntegration
+# The integration service's shared VCS branch contracts on GitHubAPIError as
+# the provider-neutral transport error (status_code + provider message) — see
+# IntegrationService.test_connection().  P1.5-GITLAB-1.
+from app.integrations.github.client import GitHubAPIError
 from app.utils.logger import logger
 
 
@@ -11,6 +15,31 @@ class GitLabClient(BaseIntegration):
         self.base_url = config.get("url", "https://gitlab.com")
         self.token = config.get("token", "")
         self._headers = {"PRIVATE-TOKEN": self.token, "Content-Type": "application/json"}
+
+    async def get_authenticated_user(self) -> Optional[dict]:
+        """P1.5-GITLAB-1: the service's shared GitHub/GitLab branch needs an
+        authenticated-identity probe.  GitLab's /user payload uses `username`,
+        which we surface under the shared `login` key the service inspects.
+        Non-200 is raised with the real provider status/message so the service
+        can map 401 → invalid_token, 429 → rate-limited, etc."""
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(f"{self.base_url}/api/v4/user", headers=self._headers)
+        except httpx.RequestError as e:
+            raise GitHubAPIError(0, str(e))
+
+        try:
+            body = resp.json()
+        except ValueError:
+            body = {}
+        if resp.status_code == 200 and isinstance(body, dict):
+            return {
+                "login": body.get("username"),
+                "name": body.get("name"),
+                "id": body.get("id"),
+            }
+        message = body.get("message") if isinstance(body, dict) else None
+        raise GitHubAPIError(resp.status_code, str(message or resp.text[:200]))
 
     async def test_connection(self) -> bool:
         try:
