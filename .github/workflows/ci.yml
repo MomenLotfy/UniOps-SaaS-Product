@@ -76,7 +76,11 @@ jobs:
           python -m venv --clear venv
           venv/bin/pip install --upgrade pip
           venv/bin/pip install -r requirements.txt
-          venv/bin/pip install pytest==8.0.0 pytest-asyncio==0.23.5 pytest-cov==5.0.0 mypy ruff httpx
+          # Only add what requirements.txt does NOT already pin.  The old
+          # step re-pinned pytest==8.0.0/pytest-asyncio==0.23.5 *below* the
+          # repo's own pins (8.2.0 / 0.23.6), silently downgrading the test
+          # runner under the suite that was written for newer pytest.
+          venv/bin/pip install mypy ruff
 
       - name: Ruff lint
         working-directory: backend
@@ -147,8 +151,10 @@ jobs:
         run: |
           # The workspace uses pnpm-12 features (catalogs, minimumReleaseAge,
           # allowBuilds in pnpm-workspace.yaml) and a ROOT lockfile —
-          # pnpm@9 cannot parse this config.
-          npm install -g pnpm@12
+          # pnpm@9 cannot parse this config.  Pin 12.4.2: floating @12 broke
+          # the frozen install in CI (12.4.2 is the version this repo's
+          # clean-clone install was verified with).
+          npm install -g pnpm@12.4.2
 
       - name: Install dependencies (workspace root)
         run: pnpm install --frozen-lockfile
