@@ -64,7 +64,8 @@ async def get_integration(
     db: DBSession,
 ):
     svc = IntegrationService(db)
-    item = await svc.get_by_id(integration_id)
+    tenant_id = current_user["tenant_id"]
+    item = await svc.get_by_id(integration_id, tenant_id)
     return APIResponse(data=item)
 
 
@@ -200,7 +201,7 @@ async def update_integration(
     background_tasks: BackgroundTasks,
 ):
     svc = IntegrationService(db)
-    item = await svc.update(integration_id, data)
+    item = await svc.update(integration_id, data, tenant_id)
     await db.commit()
 
     # ── FIX #2b ───────────────────────────────────────────────────────────────
@@ -252,7 +253,7 @@ async def delete_integration(
     db: DBSession,
 ):
     svc = IntegrationService(db)
-    await svc.delete(integration_id)
+    await svc.delete(integration_id, current_user["tenant_id"])
     await db.commit()
     return APIResponse(message="Integration disconnected")
 
@@ -282,7 +283,7 @@ async def sync_integration(
 ):
     """Trigger a manual sync — runs in background, returns immediately."""
     svc = IntegrationService(db)
-    integration = await svc.get_by_id(integration_id)
+    integration = await svc.get_by_id(integration_id, current_user["tenant_id"])
 
     if integration.status != "connected":
         raise HTTPException(

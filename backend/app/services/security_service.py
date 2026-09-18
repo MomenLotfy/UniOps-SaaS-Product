@@ -20,6 +20,13 @@ from app.utils.logger import logger
 _CLOSED = {"resolved", "suppressed", "closed"}
 
 
+
+def _assert_tenant(obj, tenant_id):
+    """IDOR guard: id-addressed accessors verify ownership before returning."""
+    from app.core.exceptions import NotFoundError
+    if tenant_id is not None and getattr(obj, "tenant_id", None) is not None and obj.tenant_id != tenant_id:
+        raise NotFoundError("Resource not found")
+
 class SecurityService(BaseService):
 
     # ── Threats ───────────────────────────────────────────────────────────────
@@ -75,12 +82,14 @@ class SecurityService(BaseService):
             "pages": (total + page_size - 1) // page_size,
         }
 
-    async def get_threat(self, threat_id: str) -> ThreatResponse:
+    async def get_threat(self, threat_id: str, tenant_id: str | None = None) -> ThreatResponse:
         threat = await self._get_by_id(Threat, threat_id)
+        _assert_tenant(threat, tenant_id)
         return ThreatResponse.model_validate(threat)
 
-    async def update_threat(self, threat_id: str, data: ThreatUpdate) -> ThreatResponse:
+    async def update_threat(self, threat_id: str, data: ThreatUpdate, tenant_id: str | None = None) -> ThreatResponse:
         threat = await self._get_by_id(Threat, threat_id)
+        _assert_tenant(threat, tenant_id)
         if data.status:
             threat.status = data.status
             if data.status == "resolved":
@@ -322,12 +331,14 @@ class SecurityService(BaseService):
             "pages": (total + page_size - 1) // page_size,
         }
 
-    async def get_vulnerability(self, vuln_id: str) -> VulnerabilityResponse:
+    async def get_vulnerability(self, vuln_id: str, tenant_id: str | None = None) -> VulnerabilityResponse:
         vuln = await self._get_by_id(Vulnerability, vuln_id)
+        _assert_tenant(vuln, tenant_id)
         return VulnerabilityResponse.model_validate(vuln)
 
-    async def update_vulnerability(self, vuln_id: str, data: VulnerabilityUpdate) -> VulnerabilityResponse:
+    async def update_vulnerability(self, vuln_id: str, data: VulnerabilityUpdate, tenant_id: str | None = None) -> VulnerabilityResponse:
         vuln = await self._get_by_id(Vulnerability, vuln_id)
+        _assert_tenant(vuln, tenant_id)
         if data.status:
             vuln.status = data.status
         await self.db.flush()

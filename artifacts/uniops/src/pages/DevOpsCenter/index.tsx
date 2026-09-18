@@ -99,7 +99,7 @@ export default function DevOpsCenter() {
   const wsLive = wsStatus === 'connected';
 
   const { isAdmin, hasRole } = usePermissions();
-  const canAct = isAdmin() || hasRole('devops', 'devops_engineer');
+  const canAct = isAdmin() || hasRole('devops_engineer');
 
   const { githubConnected } = useDevOpsIntegrations();
   const { podStats, refetch: refetchPods } = usePods();

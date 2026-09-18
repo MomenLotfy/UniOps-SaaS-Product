@@ -60,6 +60,11 @@ SENSITIVE_FIELDS: frozenset[str] = frozenset({
 })
 
 
+
+def _assert_tenant(obj, tenant_id):
+    if tenant_id is not None and obj.tenant_id != tenant_id:
+        raise NotFoundError("Resource not found")
+
 class IntegrationService(BaseService):
     """Manages the lifecycle of third-party integration records."""
 
@@ -93,8 +98,9 @@ class IntegrationService(BaseService):
             pages=(total + page_size - 1) // page_size,
         )
 
-    async def get_by_id(self, integration_id: str) -> IntegrationResponse:
+    async def get_by_id(self, integration_id: str, tenant_id: str | None = None) -> IntegrationResponse:
         integration = await self._get_by_id(Integration, integration_id)
+        _assert_tenant(integration, tenant_id)
         return IntegrationResponse.model_validate(integration)
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -188,8 +194,9 @@ class IntegrationService(BaseService):
         await self.db.flush()
         return IntegrationResponse.model_validate(integration)
 
-    async def update(self, integration_id: str, data: IntegrationUpdate) -> IntegrationResponse:
+    async def update(self, integration_id: str, data: IntegrationUpdate, tenant_id: str | None = None) -> IntegrationResponse:
         integration = await self._get_by_id(Integration, integration_id)
+        _assert_tenant(integration, tenant_id)
         update_data = data.model_dump(exclude_none=True)
 
         if update_data.get("status") == "disconnected" or update_data.get("is_active") is False:
@@ -207,7 +214,7 @@ class IntegrationService(BaseService):
         await self._update_fields(integration, update_data)
         return IntegrationResponse.model_validate(integration)
 
-    async def delete(self, integration_id: str) -> None:
+    async def delete(self, integration_id: str, tenant_id: str | None = None) -> None:
         """
         Hard-delete the integration and cascade-clean all related data so a
         reconnect always starts with a clean slate.
@@ -218,6 +225,10 @@ class IntegrationService(BaseService):
         from app.models.vulnerability import Vulnerability
 
         integration = await self._get_by_id(Integration, integration_id)
+        # IDOR guard: the id must belong to the caller's tenant BEFORE any
+        # cascading cleanup runs (the guard exists below for all paths).
+        if tenant_id is not None and integration.tenant_id != tenant_id:
+            raise NotFoundError("Integration not found")
         tenant_id = integration.tenant_id
         intg_type = integration.type
 
@@ -421,8 +432,9 @@ class IntegrationService(BaseService):
             await self.db.flush()
             return IntegrationTestResult(success=False, message=str(exc))
 
-    async def sync(self, integration_id: str) -> dict:
+    async def sync(self, integration_id: str, tenant_id: str | None = None) -> dict:
         integration = await self._get_by_id(Integration, integration_id)
+        _assert_tenant(integration, tenant_id)
         client = self._build_client(
             integration.type,
             self._decrypt_credentials(integration.credentials or {}),

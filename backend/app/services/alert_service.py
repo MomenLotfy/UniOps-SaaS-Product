@@ -12,6 +12,13 @@ from app.core.exceptions import NotFoundError
 from app.services.base import BaseService
 
 
+
+def _assert_tenant(obj, tenant_id):
+    """IDOR guard: id-addressed accessors verify ownership before returning."""
+    from app.core.exceptions import NotFoundError
+    if tenant_id is not None and getattr(obj, "tenant_id", None) is not None and obj.tenant_id != tenant_id:
+        raise NotFoundError("Resource not found")
+
 class AlertService(BaseService):
     async def list(
         self,
@@ -43,12 +50,14 @@ class AlertService(BaseService):
             pages=(total + page_size - 1) // page_size,
         )
 
-    async def get_by_id(self, alert_id: str) -> AlertResponse:
+    async def get_by_id(self, alert_id: str, tenant_id: str | None = None) -> AlertResponse:
         alert = await self._get_by_id(Alert, alert_id)
+        _assert_tenant(alert, tenant_id)
         return AlertResponse.model_validate(alert)
 
-    async def update(self, alert_id: str, data: AlertUpdate) -> AlertResponse:
+    async def update(self, alert_id: str, data: AlertUpdate, tenant_id: str | None = None) -> AlertResponse:
         alert = await self._get_by_id(Alert, alert_id)
+        _assert_tenant(alert, tenant_id)
         if data.status is not None:
             alert.status = data.status
             if data.status == "resolved" and not alert.resolved_at:

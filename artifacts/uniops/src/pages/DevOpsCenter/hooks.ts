@@ -225,8 +225,8 @@ export function usePodActions(refetchPods: () => void) {
 export function useDevOpsRBAC() {
   const { isAdmin, hasRole, role } = usePermissions();
 
-  const canAct        = isAdmin() || hasRole('devops', 'devops_engineer');
-  const canViewLogs   = canAct || hasRole('security', 'security_engineer') || hasRole('finops', 'cost_analyst');
+  const canAct        = isAdmin() || hasRole('devops_engineer');
+  const canViewLogs   = canAct || hasRole('security_engineer') || hasRole('cost_analyst');
   const canCreateSvc  = canAct;
   const canRestartPod = canAct;
   const canScale      = canAct;

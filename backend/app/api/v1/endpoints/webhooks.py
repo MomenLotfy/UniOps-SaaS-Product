@@ -37,9 +37,9 @@ async def list_webhooks(
 
 
 @router.get("/{webhook_id}")
-async def get_webhook(webhook_id: str, current_user: CurrentUser, db: DBSession):
+async def get_webhook(webhook_id: str, current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
     svc = WebhookService(db)
-    webhook = await svc.get_by_id(webhook_id)
+    webhook = await svc.get_by_id(webhook_id, tenant_id)
     return APIResponse(data=webhook)
 
 
@@ -51,16 +51,16 @@ async def create_webhook(data: WebhookCreate, current_user: AdminUser, tenant_id
 
 
 @router.put("/{webhook_id}")
-async def update_webhook(webhook_id: str, data: WebhookUpdate, current_user: AdminUser, db: DBSession):
+async def update_webhook(webhook_id: str, data: WebhookUpdate, current_user: AdminUser, tenant_id: TenantID, db: DBSession):
     svc = WebhookService(db)
-    webhook = await svc.update(webhook_id, data.model_dump(exclude_none=True))
+    webhook = await svc.update(webhook_id, data.model_dump(exclude_none=True), tenant_id)
     return APIResponse(data=webhook)
 
 
 @router.delete("/{webhook_id}")
-async def delete_webhook(webhook_id: str, current_user: AdminUser, db: DBSession):
+async def delete_webhook(webhook_id: str, current_user: AdminUser, tenant_id: TenantID, db: DBSession):
     svc = WebhookService(db)
-    await svc.delete(webhook_id)
+    await svc.delete(webhook_id, tenant_id)
     return APIResponse(message="Webhook deleted")
 
 

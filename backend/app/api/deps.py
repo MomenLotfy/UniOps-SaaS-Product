@@ -32,11 +32,16 @@ async def get_current_user(
         user_id: str = payload.get("sub")
         if not user_id:
             raise UnauthorizedError("Invalid token payload")
+        # Canonical RBAC: legacy role names from old JWTs/DB rows are mapped
+        # to their canonical form here — every require_* below sees ONLY the
+        # canonical contract (admin, devops_engineer, security_engineer,
+        # cost_analyst, viewer, ...).
+        from app.constants.roles import normalize_roles
         return {
             "user_id": user_id,
             "email": payload.get("email"),
             "tenant_id": payload.get("tenant_id"),
-            "roles": payload.get("roles", []),
+            "roles": normalize_roles(payload.get("roles", [])),
             "payload": payload,
         }
     except ValueError as e:
@@ -125,10 +130,9 @@ async def get_tenant_id(
 # restricted to admin/devops roles; the self-service Catalog additionally
 # allows developers to create services.
 
-# "devops" is a legacy pre-hardening role name still present in older
-# tenant DBs/JWTs — accepted as an alias of devops_engineer so those
-# accounts keep working after the RBAC hardening (see ROLES constants).
-DEVOPS_MUTATION_ROLES = {"admin", "super_admin", "devops_engineer", "devops"}
+# Legacy names are normalized at JWT parse (get_current_user); only the
+# canonical contract appears here.
+DEVOPS_MUTATION_ROLES = {"admin", "super_admin", "devops_engineer"}
 CATALOG_CREATE_ROLES  = DEVOPS_MUTATION_ROLES | {"developer"}
 
 

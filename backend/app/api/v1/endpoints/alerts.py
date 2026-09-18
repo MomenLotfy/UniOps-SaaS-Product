@@ -32,16 +32,16 @@ async def get_alert_stats(current_user: CurrentUser, tenant_id: TenantID, db: DB
 
 
 @router.get("/{alert_id}", response_model=APIResponse[AlertResponse])
-async def get_alert(alert_id: str, current_user: CurrentUser, db: DBSession):
+async def get_alert(alert_id: str, current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
     svc = AlertService(db)
-    alert = await svc.get_by_id(alert_id)
+    alert = await svc.get_by_id(alert_id, tenant_id)
     return APIResponse(data=alert)
 
 
 @router.patch("/{alert_id}", response_model=APIResponse[AlertResponse])
-async def update_alert(alert_id: str, data: AlertUpdate, current_user: CurrentUser, db: DBSession):
+async def update_alert(alert_id: str, data: AlertUpdate, current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
     svc = AlertService(db)
-    alert = await svc.update(alert_id, data)
+    alert = await svc.update(alert_id, data, tenant_id)
     return APIResponse(data=alert)
 
 

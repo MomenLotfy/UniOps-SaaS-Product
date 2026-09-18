@@ -113,7 +113,10 @@ async def cancel_pipeline(
     return APIResponse(data=result, message=result.message)
 
 
-@router.post("/sync")
+@router.post(
+    "/sync",
+    dependencies=[Depends(rate_limit("pipeline.sync", 20, 60))],
+)
 async def trigger_sync(
     current_user: DevOpsUser, tenant_id: TenantID,
     background_tasks: BackgroundTasks,

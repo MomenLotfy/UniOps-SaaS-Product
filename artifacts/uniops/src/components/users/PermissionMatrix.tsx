@@ -29,7 +29,7 @@ const MATRIX: Record<UserRole, Record<string, AccessLevel>> = {
   viewer: { command_center: 'read', devops: 'read', security: 'read', cost: 'read', ml_insights: 'read', users: 'none', roles: 'none', audit_logs: 'none', integrations: 'none', billing: 'none', api_keys: 'none', security_policies: 'none' },
 };
 
-const ROLES_TO_SHOW: UserRole[] = ['super_admin', 'admin', 'devops', 'security', 'finops', 'viewer'];
+const ROLES_TO_SHOW: UserRole[] = ['super_admin', 'admin', 'devops_engineer', 'security_engineer', 'cost_analyst', 'viewer'];
 
 function AccessIcon({ level }: { level: AccessLevel }) {
   if (level === 'full') return <Check className="w-3.5 h-3.5 text-green-400" />;

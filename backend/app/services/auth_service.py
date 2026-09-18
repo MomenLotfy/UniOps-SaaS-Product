@@ -79,7 +79,11 @@ class AuthService(BaseService):
         # Create tenant (or use from invite)
         if invite_data:
             tenant_id = invite_data["tenant_id"]
-            role = invite_data["role"]
+            from app.constants.roles import normalize_role, is_valid_role
+            role = normalize_role(invite_data["role"])
+            if not is_valid_role(role):
+                logger.warning(f"Invite consumed with unknown role {invite_data.get('role')!r} — defaulting to viewer")
+                role = "viewer"
             tenant = await self._get_by_id(Tenant, tenant_id)
         else:
             slug = data.username.lower().replace(" ", "-")[:50]

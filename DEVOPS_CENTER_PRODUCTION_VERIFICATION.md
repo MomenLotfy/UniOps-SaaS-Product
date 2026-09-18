@@ -119,7 +119,7 @@ Without these, every surface renders a real empty state or an explicit unavailab
 1. **Live-cluster happy paths unproven here** — no reachable K8s cluster / Prometheus / Loki / ArgoCD / GitHub / GitLab credentials exist in this environment, so integration-level success paths are code-verified + unit-tested but marked PARTIALLY VERIFIED/BLOCKED rather than claimed.
 2. **ML listener degrades gracefully without Redis** (reconnect loop with backoff; log spam possible).
 3. **Deployment engine concurrency** is task-based without a semaphore (R3).
-4. **`/health/ready` scheduler flag** mislabels state (R1) — readiness itself is correct.
+4. ~~**`/health/ready` scheduler flag**~~ **FIXED (89b09fa)** — readiness now reports the real scheduler state via `BackgroundScheduler.running`.
 5. **K8s client sync calls in some mutation paths** run on the event loop (R5).
 6. **Multi-process deployments**: in-memory rate limiter budgets are per-process (documented in `app/core/rate_limit.py`); use Redis-backed limiter when horizontally scaling.
 7. The legacy `backend/venv/` is a dead nix symlink — use `backend/.venv_new/`.

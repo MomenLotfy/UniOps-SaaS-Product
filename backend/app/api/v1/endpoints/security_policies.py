@@ -123,7 +123,7 @@ async def get_policy(
     db: DBSession,
 ):
     svc = SecurityPolicyService(db)
-    policy = await svc.get_policy(policy_id)
+    policy = await svc.get_policy(policy_id, current_user["tenant_id"])
     return APIResponse(data=policy)
 
 
@@ -135,7 +135,7 @@ async def update_policy(
     db: DBSession,
 ):
     svc = SecurityPolicyService(db)
-    policy = await svc.update_policy(policy_id, data, current_user["user_id"])
+    policy = await svc.update_policy(policy_id, data, current_user["user_id"], current_user["tenant_id"])
     return APIResponse(data=policy, message="Policy updated")
 
 
@@ -152,7 +152,8 @@ async def set_enforcement_mode(
     from app.schemas.security_policy import SecurityPolicyUpdate
     svc = SecurityPolicyService(db)
     policy = await svc.update_policy(
-        policy_id, SecurityPolicyUpdate(enforcement=body.enforcement), current_user["user_id"]
+        policy_id, SecurityPolicyUpdate(enforcement=body.enforcement), current_user["user_id"],
+        current_user["tenant_id"],
     )
     return APIResponse(data=policy, message=f"Policy set to {body.enforcement} mode")
 
@@ -164,5 +165,5 @@ async def delete_policy(
     db: DBSession,
 ):
     svc = SecurityPolicyService(db)
-    await svc.delete_policy(policy_id)
+    await svc.delete_policy(policy_id, current_user["tenant_id"])
     return APIResponse(data=None, message="Policy deleted")

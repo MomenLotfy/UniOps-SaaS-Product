@@ -40,7 +40,7 @@ function mapBackendUser(u: BackendUserInfo): User {
     firstName:        parts[0] ?? '',
     lastName:         parts.slice(1).join(' ') ?? '',
     displayName:      fullName || u.email,
-    role:             (u.role ?? 'viewer') as User['role'],
+    role:             normalizeRole(u.role),
     status:           u.is_active ? 'active' : 'inactive',
     companyId:        u.tenant_id ?? '',
     teamIds:          [],
