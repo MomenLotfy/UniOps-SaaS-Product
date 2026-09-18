@@ -102,6 +102,21 @@ class TestRollbackContract:
         assert r.status_code == 404, r.text
 
 
+class TestProposeTruthfulStatus:
+    @pytest.mark.asyncio
+    async def test_propose_no_plan_available_returns_404_not_masked_400(self, client, db_session):
+        """REM-5: the endpoint's own 'no plan could be generated' raises a
+        truthful 404, but a catch-all `except Exception` re-coded it as a
+        misleading 400 (masking real status semantics from callers/UI)."""
+        hA, _, _ = await _register_with_roles(client, "rem-np@test.dev", "OrgRemNP")
+        r = await client.post("/api/v1/remediation/propose", headers=hA,
+                              json={"finding_id": "unmatchable-finding", "repo_id": "r1",
+                                    "metadata": {}})
+        assert r.status_code == 404, (
+            f"propose with no candidate plan must be an honest 404, got "
+            f"{r.status_code}: {r.text[:200]}")
+
+
 class TestProposePersistence:
     def test_propose_endpoint_persists_plan(self):
         """REM-4 regression pin — the endpoint must write a remediation_plans row

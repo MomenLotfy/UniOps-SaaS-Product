@@ -201,6 +201,11 @@ async def propose_remediation(
         await db.commit()
 
         return plan
+    except HTTPException:
+        # P1.6-REM-5: do NOT mask the endpoint's own truthful status codes —
+        # `except Exception` would otherwise swallow the 404 above (and any
+        # 403 from downstream guards) and re-code it as a misleading 400.
+        raise
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
