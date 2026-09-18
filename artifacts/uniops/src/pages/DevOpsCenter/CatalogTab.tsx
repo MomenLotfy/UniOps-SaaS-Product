@@ -750,7 +750,7 @@ export function CatalogTab({ showToast }: Props) {
 
   // Module 2 — RBAC gate
   const { isAdmin, hasRole } = usePermissions();
-  const canAct = isAdmin() || hasRole('devops');
+  const canAct = isAdmin() || hasRole('devops', 'devops_engineer');
 
   // Module 5 — WS subscription for live catalog events
   const { subscribe } = useWebSocket();

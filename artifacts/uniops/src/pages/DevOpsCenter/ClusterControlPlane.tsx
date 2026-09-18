@@ -47,7 +47,7 @@ export function ClusterControlPlane({ showToast }: Props) {
   const [tab, setTab] = useState<CPTab>('clusters');
 
   const { isAdmin, hasRole } = usePermissions();
-  const canAct = isAdmin() || hasRole('devops');
+  const canAct = isAdmin() || hasRole('devops', 'devops_engineer');
 
   const { k8sConnected, isLoading: intLoading } = useDevOpsIntegrations();
   const { pods, loading: podsLoading, error: podsError, refetch: refetchPods } = usePods();

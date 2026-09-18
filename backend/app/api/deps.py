@@ -125,7 +125,10 @@ async def get_tenant_id(
 # restricted to admin/devops roles; the self-service Catalog additionally
 # allows developers to create services.
 
-DEVOPS_MUTATION_ROLES = {"admin", "super_admin", "devops_engineer"}
+# "devops" is a legacy pre-hardening role name still present in older
+# tenant DBs/JWTs — accepted as an alias of devops_engineer so those
+# accounts keep working after the RBAC hardening (see ROLES constants).
+DEVOPS_MUTATION_ROLES = {"admin", "super_admin", "devops_engineer", "devops"}
 CATALOG_CREATE_ROLES  = DEVOPS_MUTATION_ROLES | {"developer"}
 
 
