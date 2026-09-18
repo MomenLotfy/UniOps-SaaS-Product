@@ -93,8 +93,8 @@ def init_sentry(
                 LoggingIntegration(level=logging.INFO, event_level=logging.ERROR),
                 CeleryIntegration(),
             ],
-            before_send=_before_send,  # type: ignore[arg-type]
-            before_send_transaction=_before_send_transaction,  # type: ignore[arg-type]
+            before_send=_before_send,
+            before_send_transaction=_before_send_transaction,
         )
         _INITIALISED = True
         logger.info("Sentry initialised (env=%s release=%s)", env, release)
@@ -173,7 +173,7 @@ def capture_message_safe(message: str, *, level: str = "info") -> None:
 
         # sentry_sdk.capture_message is overloaded; level must be one of
         # the literal "fatal|critical|error|warning|info|debug".
-        sentry_sdk.capture_message(message, level=level)  # type: ignore[arg-type]
+        sentry_sdk.capture_message(message, level=level)
     except Exception:  # pragma: no cover - non-fatal
         logger.exception("sentry capture_message failed")
 

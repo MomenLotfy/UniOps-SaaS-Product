@@ -134,7 +134,7 @@ class Settings(BaseSettings):
 
     @field_validator("CORS_ORIGINS", mode="after")
     @classmethod
-    def no_wildcard_with_credentials(cls, v):
+    def no_wildcard_with_credentials(cls, v: list[str]) -> list[str]:
         """Fail-closed CORS: the app always sets allow_credentials=True, and
         Starlette answers Origin echo + ACA-Credentials for `["*"]`, which
         hands every website credentialed cross-origin access to the API.
