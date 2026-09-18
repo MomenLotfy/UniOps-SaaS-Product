@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.rate_limit import ip_rate_limit
 from app.schemas.auth import (
     LoginRequest, RegisterRequest, TokenResponse,
     RefreshTokenRequest, ForgotPasswordRequest, ResetPasswordRequest,
@@ -15,14 +16,16 @@ from app.services.auth_service import AuthService
 router = APIRouter()
 
 
-@router.post("/login", response_model=APIResponse[TokenResponse])
+@router.post("/login", response_model=APIResponse[TokenResponse],
+             dependencies=[Depends(ip_rate_limit("auth.login", 10, 60))])
 async def login(data: LoginRequest, db: Annotated[AsyncSession, Depends(get_db)]):
     service = AuthService(db)
     tokens = await service.login(data.email, data.password)
     return APIResponse(data=tokens)
 
 
-@router.post("/register", response_model=APIResponse[TokenResponse])
+@router.post("/register", response_model=APIResponse[TokenResponse],
+             dependencies=[Depends(ip_rate_limit("auth.register", 5, 60))])
 async def register(data: RegisterRequest, db: Annotated[AsyncSession, Depends(get_db)]):
     service = AuthService(db)
     tokens = await service.register(data)
@@ -36,14 +39,14 @@ async def refresh_token(data: RefreshTokenRequest, db: Annotated[AsyncSession, D
     return APIResponse(data=tokens)
 
 
-@router.post("/forgot-password")
+@router.post("/forgot-password", dependencies=[Depends(ip_rate_limit("auth.forgot", 5, 60))])
 async def forgot_password(data: ForgotPasswordRequest, db: Annotated[AsyncSession, Depends(get_db)]):
     service = AuthService(db)
     await service.forgot_password(data.email)
     return APIResponse(message="Password reset email sent")
 
 
-@router.post("/reset-password")
+@router.post("/reset-password", dependencies=[Depends(ip_rate_limit("auth.reset", 5, 60))])
 async def reset_password(data: ResetPasswordRequest, db: Annotated[AsyncSession, Depends(get_db)]):
     service = AuthService(db)
     await service.reset_password(data.token, data.new_password)
@@ -70,7 +73,7 @@ async def setup_2fa(db: Annotated[AsyncSession, Depends(get_db)]):
     return APIResponse(data=result)
 
 
-@router.post("/2fa/verify")
+@router.post("/2fa/verify", dependencies=[Depends(ip_rate_limit("auth.2fa", 10, 60))])
 async def verify_2fa(data: TwoFactorVerifyRequest, db: Annotated[AsyncSession, Depends(get_db)]):
     service = AuthService(db)
     await service.verify_2fa(data.code)

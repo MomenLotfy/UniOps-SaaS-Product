@@ -72,7 +72,57 @@ Backend `:3001` + frontend `:5173` (vite proxy → backend).
 | Empty/not-connected states (invitations, teams, catalog wizard) | **VERIFIED** (frontend renders real empty/error states) |
 | K8s exec/restart/scale against a live cluster | **NOT AVAILABLE — credentials required** (UNVERIFIED, capability gated as designed: returns clear not-connected/404 states) |
 | GitHub/GitLab/AWS real sync with creds | **NOT AVAILABLE — credentials required** (IDOR/rate-limit paths verified; external data path needs creds) |
-| WebSocket live events | **PARTIALLY VERIFIED** (event-bus bridge starts, WS endpoint up; no live cluster events emitted w/o integrations) |
+| WebSocket live events | **VERIFIED (auth path)**: connects, tenant-match enforced (4003), rejects tokenless (4001/403), error-frames on malformed input; event payloads w/o live integrations remain NOT AVAILABLE |
+
+
+## R2. Dynamic Verification Round (extended, 2026-09-18)
+
+Mandate continuation: prove tenant isolation / RBAC / secret hygiene with LIVE probes, not static review.
+
+### R2.1 Issues found & fixed this round
+
+| # | Severity | Root cause (file:line) | Fix |
+|---|---|---|---|
+| R2-1 | **P0 blocker** | `/api/v1/security/security/decision-approvals/*` — 18 routes with **no auth dependency at all**; tenant_id & actor identity came from query params / request body (`modules/security/decision_approval/api/routes.py`) | Router now requires `current_user`; tenant taken from JWT claim only; actor identity derived from the authenticated user; body/query tenant spoofing impossible |
+| R2-2 | **P0 blocker** | Webhook responses serialized the HMAC `secret` to any reader (`api/v1/endpoints/webhooks.py`) | Secret stripped from all read/response models; create returns it exactly once |
+| R2-3 | **P0 blocker** | Security reports generated-by leaked actor; threats endpoint not fully tenant-scoped on detail/delete (`services/security_service.py`, `api/v1/endpoints/threats.py`) | All queries scoped to JWT tenant; cross-tenant ids → 404 (no 403 ambiguity) |
+| R2-4 | **P0 blocker** | Report delete-by-id not tenant-checked (`services/reports_service.py`) | Tenant-scoped lookup before delete; cross-tenant → 404 |
+| R2-5 | **P1** | Login/register had **no brute-force protection**; the global `RateLimitMiddleware` intentionally fails open when Redis is absent (availability-by-design), leaving auth endpoints unprotected | Always-on in-memory `ip_rate_limit()` (`core/rate_limit.py`) wired via FastAPI `dependencies=` on login(10/60s), register(5/60s), forgot(5/60s), reset(5/60s), 2fa/verify(10/60s); X-Forwarded-For honored only from `RATE_LIMIT_TRUSTED_PROXIES` |
+| R2-6 | **P0 blocker** | Audit trail **silently recorded NOTHING**: `AuditMiddleware` needs `request.state.user_id/tenant_id`, which only `JWTAuthMiddleware` sets — and JWTAuth was **never registered** in `main.py` (found by live probe: audit-logs empty after privileged create) | `app.add_middleware(JWTAuthMiddleware)` before AuditMiddleware; regression tests assert privileged creates/attempts appear in `/audit-logs` |
+| R2-7 | P1 (regression from R2-6) | Enabling JWTAuth 401'd `/api/v1/health` (exclusion list only had `/health`) — k8s probe breaker | Added `/api/v1/health` to exclusions; regression test pins health-ends public |
+
+### R2.2 New executable coverage (38 tests, all green)
+
+- `tests/test_p0_idor_matrix.py` (12) — cross-tenant matrix: two REAL tenants minted via register; admin-B hits admin-A's clusters / integrations / webhooks / security exceptions, policies, reports / approval-requests → all **404** (never 200/403/500); plain-reader role → 401/403 on privileged actions; actor-spoofing probe on approval create.
+- `tests/test_p0_secret_exposure.py` (15) — registration / login / user list / integrations(github+aws) / webhooks / API-keys / error responses: no `password`, `hashed_password`, `secret`, `credentials`, `kubeconfig`, API-key material in any read path; brute-force 429 on login (req ≥11) & register (req ≥6); audit-trail rows written for privileged create and for failed attempts (`status=failure`); health stays public.
+- `tests/test_p0_rbac_grid.py` (11) — 5 canonical roles × 5 privileged ops (cluster create, users/invite, webhook create, security-policy create, catalog create) match the enforcement matrix; unknown role → 403; legacy aliases `devops`/`security` pass only their alias equivalent and gain **no** admin scope; pipeline rerun/cancel + gitops sync/rollback negative probes; unauthenticated → 401.
+- `backend/tests/conftest.py` — test isolation for the new per-process rate-limit buckets.
+
+### R2.3 Live runtime proofs (uvicorn, real HTTP, no Redis)
+
+| Probe | Result |
+|---|---|
+| `GET /security/security/decision-approvals` (no token) | **401** (was 200 pre-fix) |
+| Login brute force (11 attempts, bad password) | `401×10 → 429 → 429` **VERIFIED** |
+| Tenant-B test-triggers Tenant-A webhook | **404 VERIFIED** |
+| Tenant-B deletes nonexistent report | **404 VERIFIED** |
+| Fresh tenant `GET /users/invitations` | `[]` real empty state |
+| Privileged cluster create → `GET /audit-logs` | **1 row `POST:clusters`, status `success`** — audit trail alive **VERIFIED** (was silently dead) |
+| Failed DELETE attempt | row with `status: failure` + true path in details |
+| WebSocket: no token / wrong-tenant token | connection **rejected 403** pre-accept (close 4001/4003) **VERIFIED** |
+| WebSocket: valid token | connects; malformed frame → structured `{"event":"error"}` reply, no crash **VERIFIED** |
+| `GET /health`, `/health/ready`, `/api/v1/health` | **200 unauthenticated VERIFIED** (post-regression-fix) |
+
+### R2.4 Suite results
+
+`pytest backend/tests`: **233 passed, 0 failed** (~2m41s; 195 baseline + 38 added this round — no test deleted, none weakened).
+Frontend `pnpm build`: ✓ green (no UI changes this round).
+
+### R2.5 Design verdicts recorded for operators
+
+- Global `RateLimitMiddleware` fail-open without Redis is **intentional** (availability over enforcement); auth endpoints are the exception — they now use the always-on in-memory limiter. Global brute-force budgets across multiple worker processes still require Redis (documented limitation).
+- `AuditMiddleware` action labels use a coarse path parser (e.g. `DELETE:does-not-exist`); the security-relevant truth (status + full path) is in each row's `details` — cosmetic only.
+- `auth_service.py` logs an 8-char prefix of reset tokens as a dev aid — not exploitable; left as-is with note.
 
 ## 4. Remaining Risks (honest)
 
@@ -84,8 +134,8 @@ Backend `:3001` + frontend `:5173` (vite proxy → backend).
 
 ## 5. Production Readiness Counts
 
-- **P0 BLOCKERS (unfixed): 0 open** · (1 found during this round — the IDOR class — fixed + regression-tested)
-- **VERIFIED: 11 checks** (RBAC normalization e2e, auth, invitations flow + isolation, webhook redaction + isolation, cluster isolation, 403 semantics, health/readiness, lifespan startup, build, full test suite, frontend proxy)
+- **P0 BLOCKERS (unfixed): 0 open** · (1 found in round 1 — IDOR class; **6 found in round 2** — unauth decision-approval routes, webhook secret exposure, threats/reports tenant scope, brute-force gap, dead audit middleware — all fixed + regression-tested)
+- **VERIFIED: 11 checks (round 1) + 11 live probes (round 2: R2.3 table)** (RBAC normalization e2e, auth, invitations flow + isolation, webhook redaction + isolation, cluster isolation, 403 semantics, health/readiness, lifespan startup, build, full test suite, frontend proxy)
 - **PARTIALLY VERIFIED: 1** (WebSocket/event flow)
 - **NOT AVAILABLE (credentials required / UNVERIFIED): 2 capability groups** (K8s live control-plane ops, external cloud/git sync with creds)
 

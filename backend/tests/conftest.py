@@ -77,6 +77,13 @@ async def reset_database():
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
+    # Rate-limit buckets persist per-process by design (production behavior
+    # must keep limits across requests); tests need per-test isolation.
+    try:
+        from app.core.rate_limit import _buckets
+        _buckets.clear()
+    except Exception:
+        pass
     yield
     # Do NOT drop on teardown — the next test's drop_all will clean up.
 

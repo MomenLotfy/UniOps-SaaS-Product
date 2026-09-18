@@ -17,6 +17,7 @@ from app.api.v1.websocket.manager import ws_manager
 from app.api.v1.websocket.handlers import handle_ws_message
 from app.middleware.logging import LoggingMiddleware
 from app.middleware.audit import AuditMiddleware
+from app.middleware.auth import JWTAuthMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.utils.logger import logger
 
@@ -193,6 +194,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(LoggingMiddleware)
+# JWTAuthMiddleware must run before AuditMiddleware so request.state carries
+# the authenticated principal (without it the audit trail silently recorded nothing).
+app.add_middleware(JWTAuthMiddleware)
 app.add_middleware(AuditMiddleware)
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)

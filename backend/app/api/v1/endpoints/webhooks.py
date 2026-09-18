@@ -67,5 +67,8 @@ async def delete_webhook(webhook_id: str, current_user: AdminUser, tenant_id: Te
 @router.post("/{webhook_id}/test")
 async def test_webhook(webhook_id: str, current_user: AdminUser, db: DBSession):
     svc = WebhookService(db)
+    # Ownership gate BEFORE any external delivery — never let an id from
+    # another tenant trigger an outbound call to that tenant's endpoint.
+    await svc.get_by_id(webhook_id, current_user["tenant_id"])
     success = await svc.deliver(webhook_id, "test.ping", {"message": "UniOps webhook test"})
     return APIResponse(data={"delivered": success})

@@ -17,6 +17,7 @@ from typing import Optional, List, Dict, Any
 from sqlalchemy import select, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import NotFoundError
 from app.models.report import Report, ReportTemplate
 from app.models.threat import Threat
 from app.models.vulnerability import Vulnerability

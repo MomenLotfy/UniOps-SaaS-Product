@@ -104,11 +104,13 @@ class SecurityService(BaseService):
         threat_id: str,
         resolved_by: str,
         note: str = "Resolved via UniOps Security Center",
+        tenant_id: str | None = None,
     ) -> ThreatActionResult:
         """
         Resolve a threat both in UniOps DB and back in AWS Security Hub.
         """
         threat = await self._get_by_id(Threat, threat_id)
+        _assert_tenant(threat, tenant_id)
 
         if threat.status in _CLOSED:
             raise ValidationError(
@@ -183,9 +185,11 @@ class SecurityService(BaseService):
         threat_id: str,
         suppressed_by: str,
         reason: str = "TOLERATED",
+        tenant_id: str | None = None,
     ) -> ThreatActionResult:
         """Suppress a threat — marks as false positive or accepted risk."""
         threat = await self._get_by_id(Threat, threat_id)
+        _assert_tenant(threat, tenant_id)
 
         if threat.status in _CLOSED:
             raise ValidationError(f"Threat is already '{threat.status}'", field="status")

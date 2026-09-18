@@ -22,7 +22,7 @@ import asyncio
 from collections import defaultdict, deque
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 
 from app.api.deps import get_current_active_user
 
@@ -90,3 +90,61 @@ def rate_limit(scope: str, max_requests: int, window_seconds: int):
             bucket.hits.append(now)
 
     return _check
+
+
+def ip_rate_limit(scope: str, max_requests: int, window_seconds: int):
+    """Always-on IP-keyed sliding-window limiter for UNAUTHENTICATED
+    endpoints (login / register / password reset / 2FA).
+
+    The global per-IP middleware intentionally fails OPEN when Redis is
+    unavailable (availability over enforcement).  Credential attacks are
+    too security-critical to share that trade-off, so these limits work
+    without Redis — per-process budget, same documented limitation as the
+    user-keyed limiter above.
+    """
+
+    async def _check(request: Request) -> None:
+        # Honor X-Forwarded-For only behind the configured trusted proxies;
+        # otherwise fall back to the direct peer.
+        ip = request.client.host if request.client else "unknown"
+        fwd = request.headers.get("x-forwarded-for")
+        if fwd and ip in _trusted_proxy_pool():
+            ip = fwd.split(",")[0].strip()
+
+        key = (scope, ip)
+        now = time.monotonic()
+        cutoff = now - window_seconds
+
+        async with _lock:
+            if now - _LAST_PRUNE[0] > _PRUNE_INTERVAL_S:
+                for k in list(_buckets.keys()):
+                    b = _buckets[k]
+                    while b.hits and b.hits[0] < now - 3600:
+                        b.hits.popleft()
+                    if not b.hits:
+                        _buckets.pop(k, None)
+                _LAST_PRUNE[0] = now
+
+            bucket = _buckets[key]
+            while bucket.hits and bucket.hits[0] < cutoff:
+                bucket.hits.popleft()
+
+            if len(bucket.hits) >= max_requests:
+                retry_after = max(1, int(window_seconds - (now - bucket.hits[0]))) if bucket.hits else 0
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail=(f"Too many attempts: max {max_requests} per "
+                            f"{window_seconds}s. Retry in {retry_after}s."),
+                    headers={"Retry-After": str(retry_after)},
+                )
+            bucket.hits.append(now)
+
+    return _check
+
+
+def _trusted_proxy_pool() -> set[str]:
+    from app.config import get_settings
+    try:
+        return set(get_settings().RATE_LIMIT_TRUSTED_PROXIES or [])
+    except Exception:
+        return set()
