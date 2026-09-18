@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Annotated, Optional
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Body, Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -56,13 +56,35 @@ async def reset_password(data: ResetPasswordRequest, db: Annotated[AsyncSession,
 @router.post("/logout")
 async def logout(
     db: Annotated[AsyncSession, Depends(get_db)],
+    data: Optional[RefreshTokenRequest] = Body(default=None),
     authorization: Optional[str] = Header(default=None),
 ):
-    refresh_token = ""
-    if authorization and authorization.startswith("Bearer "):
-        refresh_token = authorization.removeprefix("Bearer ").strip()
+    """Revoke the *refresh* token supplied in the request body.
+
+    R1 fix: previously this handler blacklisted whatever was in the
+    Authorization header (the access token) while ``/auth/refresh`` checks
+    the blacklist against the refresh token — a logout therefore never
+    actually invalidated the refresh token.  We blacklist the body-supplied
+    refresh token; if the header ALSO happens to carry a refresh token we
+    blacklist it too (some clients only send the header).  Access-token
+    validity remains short by design (JWT exp) — we only ever blacklist
+    refresh tokens here.
+    """
     service = AuthService(db)
-    await service.logout(user_id="", refresh_token=refresh_token)
+    tokens: list[str] = []
+    if data is not None and data.refresh_token:
+        tokens.append(data.refresh_token)
+    if authorization and authorization.startswith("Bearer "):
+        header_token = authorization.removeprefix("Bearer ").strip()
+        if header_token and header_token not in tokens:
+            try:
+                from app.core.security import decode_token as _dec
+                if _dec(header_token).get("type") == "refresh":
+                    tokens.append(header_token)
+            except ValueError:
+                pass  # malformed header token — nothing to blacklist
+    for tok in tokens:
+        await service.logout(user_id="", refresh_token=tok)
     return APIResponse(message="Logged out successfully")
 
 

@@ -14,8 +14,11 @@ Design:
     repeated restarts/execs.
   - Returns 429 with a real error — never silently allows over-budget calls.
 
-Limitation: in multi-process deployments the budget applies per-process.
-Documented in DEVOPS_CENTER_PRODUCTION_VERIFICATION.md.
+Limitation: budgets are enforced through Redis when reachable (shared
+across ALL workers — the production topology).  The per-process memory path
+is only a fallback for short Redis outages and is NOT enforced globally
+across workers; production deployments MUST run Redis for globally-correct
+budgets (P1_PRODUCTION_RELIABILITY_REPORT.md).
 """
 import time
 import asyncio
@@ -42,6 +45,26 @@ _LAST_PRUNE: list[float] = [time.monotonic()]
 _PRUNE_INTERVAL_S = 600.0
 
 
+
+async def _redis_count(scope: str, identity: str, max_requests: int,
+                       window_seconds: int, prefix: str) -> bool:
+    """Fixed-window counter in Redis, shared across ALL workers.
+
+    Returns True when the request is WITHIN budget (and increments),
+    False when the budget is exceeded (and increments).  Raises on ANY
+    Redis failure so callers can fail over to the per-process memory path.
+    """
+    from app.core.redis_client import get_redis
+
+    bucket_id = int(time.monotonic() // window_seconds)
+    key = f"rl:{prefix}:{scope}:{identity}:{bucket_id}"
+    redis = await get_redis()
+    pipe = redis.pipeline()
+    pipe.incr(key)
+    pipe.expire(key, window_seconds)
+    results = await pipe.execute()
+    return int(results[0]) <= max_requests
+
 def rate_limit(scope: str, max_requests: int, window_seconds: int):
     """
     FastAPI dependency factory enforcing a sliding-window rate limit.
@@ -55,8 +78,22 @@ def rate_limit(scope: str, max_requests: int, window_seconds: int):
         current_user: Annotated[dict, Depends(get_current_active_user)],
     ) -> None:
         user_id = str(current_user.get("user_id") or "anonymous")
-        key = (scope, user_id)
         now = time.monotonic()
+        try:
+            within = await _redis_count(scope, user_id, max_requests,
+                                        window_seconds, prefix="user")
+        except Exception:
+            within = None  # Redis down → per-process memory path below
+        if within is False:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=(f"Rate limit exceeded for scope '{scope}': max "
+                        f"{max_requests} per {window_seconds}s."),
+                headers={"Retry-After": str(window_seconds)},
+            )
+        if within is True:
+            return
+        key = (scope, user_id)
         cutoff = now - window_seconds
 
         async with _lock:
@@ -111,8 +148,22 @@ def ip_rate_limit(scope: str, max_requests: int, window_seconds: int):
         if fwd and ip in _trusted_proxy_pool():
             ip = fwd.split(",")[0].strip()
 
-        key = (scope, ip)
         now = time.monotonic()
+        try:
+            within = await _redis_count(scope, ip, max_requests,
+                                        window_seconds, prefix="auth")
+        except Exception:
+            within = None  # Redis unavailable → per-process fallback
+        if within is False:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=(f"Too many attempts: max {max_requests} per "
+                        f"{window_seconds}s."),
+                headers={"Retry-After": str(window_seconds)},
+            )
+        if within is True:
+            return
+        key = (scope, ip)
         cutoff = now - window_seconds
 
         async with _lock:

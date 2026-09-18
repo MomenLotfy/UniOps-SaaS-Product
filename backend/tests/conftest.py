@@ -84,6 +84,33 @@ async def reset_database():
         _buckets.clear()
     except Exception:
         pass
+    # Redis client singleton must not leak across tests (fakeredis instances
+    # injected by one test would otherwise contaminate the next).
+    try:
+        import app.core.redis_client as _rc
+        _rc._redis = None
+    except Exception:
+        pass
+    # If a real Redis is reachable in the dev environment it must ALSO be
+    # flushed between tests — shared counters (rate limits, invites,
+    # blacklists) otherwise accumulate across the suite just like the DB.
+    try:
+        import redis as _sync_redis
+        from app.config import get_settings
+        _u = get_settings().REDIS_URL.replace("rediss://", "redis://")
+        _port = 6379
+        try:
+            _port = int(_u.rsplit(":", 2)[1].split("/")[0])
+        except Exception:
+            pass
+        _host = _u.split("//", 1)[1].split(":")[0]
+        if _host in ("localhost", "127.0.0.1"):
+            _r = _sync_redis.Redis(host=_host, port=_port, socket_timeout=1,
+                                   socket_connect_timeout=1)
+            _r.ping()
+            _r.flushdb()
+    except Exception:
+        pass  # no reachable Redis — fine, memory fallbacks are per-process
     yield
     # Do NOT drop on teardown — the next test's drop_all will clean up.
 

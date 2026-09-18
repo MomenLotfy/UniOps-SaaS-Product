@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 import uuid, secrets, json
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
@@ -114,7 +115,13 @@ class AuthService(BaseService):
             is_verified     = False,
         )
         self.db.add(user)
-        await self.db.flush()
+        try:
+            await self.db.flush()
+        except IntegrityError as exc:
+            # P1-R6: check-then-insert race — a concurrent request created the
+            # same email between our SELECT and this flush.  Surface the same
+            # 409 contract as the fast path instead of an unhandled 500.
+            raise ConflictError("Email already registered") from exc
 
         logger.info(f"New user registered: {data.email} (tenant: {tenant.name})")
 
