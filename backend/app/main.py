@@ -4,6 +4,7 @@ import logging
 import sys
 from contextlib import asynccontextmanager
 
+from fastapi.exceptions import RequestValidationError
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
@@ -269,6 +270,19 @@ async def root_health_check():
         "env": settings.APP_ENV,
         "websocket_connections": ws_manager.total_connections,
     }
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_exception_handler(request, exc: RequestValidationError):
+    """P1.6-SECRET-1 — pydantic v2's default 422 serialization echoes the
+    offending request body via `input` (and sometimes `ctx`), leaking
+    passwords/tokens/credentials into API responses.  Strip them: keep only
+    the safe contract fields (type / loc / msg)."""
+    safe_errors = [
+        {"type": e.get("type"), "loc": e.get("loc"), "msg": e.get("msg")}
+        for e in exc.errors()
+    ]
+    return JSONResponse(status_code=422, content={"detail": safe_errors})
 
 
 @app.exception_handler(UniOpsException)
