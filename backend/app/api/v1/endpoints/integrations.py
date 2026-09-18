@@ -269,6 +269,10 @@ async def test_integration(
     db: DBSession,
 ):
     svc = IntegrationService(db)
+    # P1.5-IDOR-1: scope to the caller's tenant FIRST — testing an integration
+    # mutates its state (status/error_message) and returns provider error
+    # detail, so an unscoped id is a cross-tenant read+write primitive.
+    await svc.get_by_id(integration_id, current_user["tenant_id"])
     result = await svc.test_connection(integration_id)
     await db.commit()
     return APIResponse(data=result)

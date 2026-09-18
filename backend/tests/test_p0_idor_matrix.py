@@ -189,6 +189,10 @@ class TestCrossTenantIsolationMatrix:
         s = await c.post(f"/api/v1/integrations/{i}/sync", headers=B)
         assert s.status_code == 404, f"cross-tenant integration sync: {s.status_code}"
         assert not (s.status_code == 200 and s.json().get("success")), "false success!"
+        # P1.5-IDOR-1: the connection test mutates integration state, so an
+        # unscoped /test was a cross-tenant read+write primitive (proven live).
+        t = await c.post(f"/api/v1/integrations/{i}/test", headers=B)
+        assert t.status_code == 404, f"cross-tenant integration test: {t.status_code}"
 
 
 class TestDecisionApprovalHardering:
