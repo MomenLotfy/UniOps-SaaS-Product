@@ -2,6 +2,7 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import app
+from app.config import settings
 
 
 @pytest.mark.asyncio
@@ -43,13 +44,17 @@ class TestAuthRequired:
 @pytest.mark.asyncio
 class TestWebhookEndpoints:
     async def test_github_webhook_without_secret(self):
+        # P1.5-WEBHOOK-1: fail-closed — unconfigured secret ⇒ 503, never 200.
+        # (Previously this test tolerated the fail-open 200.)
         async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test") as client:
             response = await client.post(
                 "/webhooks/github",
                 json={"action": "workflow_run"},
                 headers={"X-GitHub-Event": "workflow_run"},
             )
-        assert response.status_code in (200, 401)
+        assert response.status_code == 503 or (
+            response.status_code == 200 and settings.GITHUB_WEBHOOK_SECRET
+        )
 
     async def test_stripe_webhook_requires_signature(self):
         async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test") as client:

@@ -106,6 +106,10 @@ class Settings(BaseSettings):
 
     GITLAB_URL: str = "https://gitlab.com"
     GITLAB_TOKEN: str = ""
+    # Shared secret for inbound GitLab webhooks (X-Gitlab-Token). UNSET ⇒ the
+    # /webhooks/gitlab endpoint rejects all requests (fail-closed, same
+    # contract as Stripe). P1.5-WEBHOOK-1.
+    GITLAB_WEBHOOK_SECRET: str = ""
 
     STRIPE_SECRET_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""
@@ -114,6 +118,10 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
 
     SLACK_BOT_TOKEN: str = ""
+    # Slack signing secret for inbound webhook HMAC (Slack → Basic Information).
+    # Distinct secret from the bot token; UNSET ⇒ /webhooks/slack rejects all
+    # requests (fail-closed). P1.5-WEBHOOK-1.
+    SLACK_SIGNING_SECRET: str = ""
     SLACK_WEBHOOK_URL: str = ""
 
     SENDGRID_API_KEY: str = ""
