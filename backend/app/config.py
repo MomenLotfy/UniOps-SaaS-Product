@@ -69,6 +69,24 @@ class Settings(BaseSettings):
     # Default uses "redis" service name — works in Docker.
     # Override with REDIS_URL env var for Replit (localhost) or external Redis.
     REDIS_URL: str = "redis://redis:6379/0"
+    # Background-job topology: exactly ONE process should run the in-process
+    # scheduler / deployment worker / K8s watchers / ML listener.  In a
+    # multi-worker deployment set UNIOPS_BACKGROUND_LEADER=false for all
+    # but one worker (the API keeps serving on every worker regardless).
+    BACKGROUND_LEADER: bool = True
+    # ---- P1 deployment guidance (honest, evidence-based) ----
+    # In-process background state (event bus fan-out, WS connection map,
+    # memory rate-limit fallback) exists in EVERY worker, so:
+    #  1) run uvicorn workers N>1 ONLY with BACKGROUND_LEADER=false on N-1
+    #     workers (or via a dedicated background pod),
+    #  2) WS clients receive only events emitted by THEIR worker — front-facing
+    #     sticky/L7 session affinity (or a Redis fan-out relay) is required
+    #     for cross-worker event delivery (documented best-effort semantics),
+    #  3) Redis is REQUIRED in production for globally-correct rate limits and
+    #     shared invite/reset/blacklist state,
+    #  4) budget ~350-400MB RSS per uvicorn worker +1 leader; OOM-killed
+    #     workers are respawned by uvicorn automatically.
+
     CELERY_BROKER_URL: str = "redis://redis:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/2"
 

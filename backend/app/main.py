@@ -96,30 +96,42 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized")
 
+    # 2.-6. Background loops — only in the designated leader process.
+    # P1-R4a: without this guard every uvicorn worker runs its OWN scheduler,
+    # deployment worker, K8s watchers and ML listener (N× external API calls,
+    # N× recovery scans, possible double-processing).  In horizontal scale-out
+    # set BACKGROUND_LEADER=false on all but one worker; the API serves on all.
+    _is_bg_leader = bool(getattr(settings, "BACKGROUND_LEADER", True))
+    if not _is_bg_leader:
+        logger.info("BACKGROUND_LEADER=false — API only; background loops run in the leader process")
+
     # 2. Start background scheduler
     try:
-        from app.core.scheduler import start_scheduler
-        await start_scheduler()
-        logger.info("Background scheduler started")
+        if _is_bg_leader:
+            from app.core.scheduler import start_scheduler
+            await start_scheduler()
+            logger.info("Background scheduler started")
     except Exception as e:
         logger.warning(f"Scheduler not started: {e}")
 
     # 3. ML reactive event listener
     try:
-        from app.services.ml_service import MLService
-        asyncio.create_task(
-            MLService(None).start_event_listener(),
-            name="ml-event-listener",
-        )
-        logger.info("ML event listener task started")
+        if _is_bg_leader:
+            from app.services.ml_service import MLService
+            asyncio.create_task(
+                MLService(None).start_event_listener(),
+                name="ml-event-listener",
+            )
+            logger.info("ML event listener task started")
     except Exception as e:
         logger.warning(f"ML event listener not started (non-fatal): {e}")
 
     # 4. Deployment Engine worker
     try:
-        from app.core.deployment_engine.worker import run_deployment_worker
-        asyncio.create_task(run_deployment_worker(), name="deployment-worker")
-        logger.info("Deployment Engine worker started")
+        if _is_bg_leader:
+            from app.core.deployment_engine.worker import run_deployment_worker
+            asyncio.create_task(run_deployment_worker(), name="deployment-worker")
+            logger.info("Deployment Engine worker started")
     except Exception as e:
         logger.warning(f"Deployment Engine worker not started (non-fatal): {e}")
 
@@ -133,9 +145,10 @@ async def lifespan(app: FastAPI):
 
     # 6. K8s watchers — real Kubernetes Watch API (pod events + DB persistence)
     try:
-        from app.integrations.kubernetes.watcher import start_all_watchers
-        await start_all_watchers()
-        logger.info("Kubernetes Watch API watchers started")
+        if _is_bg_leader:
+            from app.integrations.kubernetes.watcher import start_all_watchers
+            await start_all_watchers()
+            logger.info("Kubernetes Watch API watchers started")
     except Exception as e:
         logger.warning(f"K8s watchers not started (non-fatal): {e}")
 
