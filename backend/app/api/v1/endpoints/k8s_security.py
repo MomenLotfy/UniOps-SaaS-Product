@@ -18,7 +18,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Query, HTTPException, WebSocket, WebSocketDisconnect, status as http_status
 
-from app.api.deps import CurrentUser, TenantID, DBSession
+from app.api.deps import CurrentUser, SecurityWriteUser, TenantID, DBSession
 from app.core.security import decode_token
 from app.core.database import AsyncSessionLocal
 from app.schemas.common import APIResponse, PaginatedResponse
@@ -275,7 +275,7 @@ async def list_findings(
 @router.patch("/findings/{finding_id}/suppress")
 async def suppress_finding(
     finding_id: str,
-    current_user: CurrentUser,
+    current_user: SecurityWriteUser,  # P1.6-K8S-1: suppressing a security finding is a governance write
     tenant_id: TenantID,
     db: DBSession,
 ):
@@ -290,7 +290,7 @@ async def suppress_finding(
 @router.patch("/findings/{finding_id}/resolve")
 async def resolve_finding(
     finding_id: str,
-    current_user: CurrentUser,
+    current_user: SecurityWriteUser,  # P1.6-K8S-1
     tenant_id: TenantID,
     db: DBSession,
 ):
