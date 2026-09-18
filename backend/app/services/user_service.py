@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
 from app.models.tenant import Tenant
+from app.core.exceptions import ForbiddenError
 from app.schemas.user import UserUpdate, UserInvite, UserResponse, ChangePasswordRequest
 from app.schemas.common import PaginatedResponse
 from app.core.exceptions import NotFoundError, ConflictError, UnauthorizedError
@@ -61,10 +62,23 @@ class UserService(BaseService):
     async def update(self, user_id: str, data: UserUpdate, requesting_user: dict) -> UserResponse:
         user = await self._get_by_id(User, user_id)
 
+        roles = requesting_user.get("roles", []) or []
+        is_self = requesting_user.get("user_id") == user_id
+        is_admin = "admin" in roles or "super_admin" in roles
+
+        # Only self or an admin may modify a user's profile (403, not silent permit)
+        if not (is_self or is_admin):
+            raise ForbiddenError("You can only update your own profile")
+
+        # Tenant isolation: non-super-admin users must stay inside their tenant
+        tenant_id = requesting_user.get("tenant_id")
+        if tenant_id and "super_admin" not in roles and str(user.tenant_id) != str(tenant_id):
+            raise ForbiddenError("Cross-tenant user modification is not allowed")
+
         # Only admin can change role or deactivate others
         if data.role and data.role != user.role:
-            if "admin" not in requesting_user.get("roles", []):
-                raise UnauthorizedError("Only admins can change roles")
+            if not is_admin:
+                raise ForbiddenError("Only admins can change roles")
 
         update_data = data.model_dump(exclude_none=True)
         await self._update_fields(user, update_data)

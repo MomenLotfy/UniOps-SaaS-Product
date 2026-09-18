@@ -1,7 +1,17 @@
 from __future__ import annotations
 """
-Kubernetes pod watcher — streams real-time pod events via the K8s watch API.
-Runs as a persistent async background task inside FastAPI (no Celery needed).
+Kubernetes pod watcher — streams real-time pod events via the K8s Watch API.
+
+Design:
+  - One asyncio task per connected K8s integration.
+  - The (blocking) kubernetes Watch stream runs in a thread; events are
+    handed to the main event loop with `loop.call_soon_threadsafe` so DB
+    writes (asyncpg/aiosqlite) and WebSocket emits always happen on the
+    correct loop — never inside the executor thread (the old code created a
+    second event loop in the thread and crashed against asyncpg).
+  - On stream end (server closes the connection) we reconnect with backoff.
+
+Registration is idempotent per integration and supports stop/start.
 """
 import asyncio
 from datetime import datetime, timezone
@@ -15,13 +25,13 @@ _watcher_tasks: dict[str, asyncio.Task] = {}
 class KubernetesWatcher(KubernetesClient):
 
     async def watch_pods(self, tenant_id: str, integration_id: str, cluster_name: str) -> None:
-        """
-        Stream pod events from ALL namespaces.
-        Automatically reconnects on disconnect. Runs forever until cancelled.
-        """
+        """Stream pod events from ALL namespaces. Reconnects on failure; task-cancel stops."""
         from kubernetes import watch as k8s_watch
 
         logger.info(f"K8s watcher starting: {cluster_name} (tenant={tenant_id})")
+        backoff = 5
+
+        loop = asyncio.get_running_loop()
 
         while True:
             try:
@@ -32,49 +42,81 @@ class KubernetesWatcher(KubernetesClient):
                     continue
 
                 v1 = k8s.CoreV1Api()
-                w = k8s_watch.Watch()
+                w  = k8s_watch.Watch()
 
-                # Run blocking watch in a thread so we don't block the event loop
-                loop = asyncio.get_event_loop()
-                await loop.run_in_executor(
-                    None,
-                    lambda: self._watch_blocking(w, v1, tenant_id, integration_id, cluster_name)
-                )
+                def _blocking_watch():
+                    """Runs on the executor thread — pushes events into the queue."""
+                    try:
+                        for event in w.stream(
+                            v1.list_pod_for_all_namespaces,
+                            timeout_seconds=60,
+                            _request_timeout=65,
+                        ):
+                            evt  = event["type"]
+                            data = _extract_pod_data(event["object"], cluster_name)
+                            loop.call_soon_threadsafe(
+                                _pending.put_nowait, (evt, data)
+                            )
+                    except Exception as e:
+                        logger.warning(f"K8s watch stream ended ({cluster_name}): {e}")
+
+                _pending: asyncio.Queue = asyncio.Queue(maxsize=2000)
+                fut = loop.run_in_executor(None, _blocking_watch)
+
+                try:
+                    # Consume events on the main loop; periodically verify stream liveness
+                    while True:
+                        try:
+                            evt, data = await asyncio.wait_for(_pending.get(), timeout=75)
+                            await _save_pod_event(tenant_id, integration_id, evt, data)
+                            await _emit_ws(tenant_id, cluster_name, evt, data)
+                        except asyncio.TimeoutError:
+                            if fut.done():
+                                break          # stream ended → outer loop reconnects
+                finally:
+                    try:
+                        w.stop()
+                    except Exception:
+                        pass
+                    if not fut.done():
+                        fut.cancel()
+
+                backoff = 5  # reconnect fast after graceful stream end
 
             except asyncio.CancelledError:
                 logger.info(f"K8s watcher cancelled: {cluster_name}")
                 return
             except Exception as e:
-                logger.error(f"K8s watcher error ({cluster_name}): {e} — reconnecting in 15s")
-                await asyncio.sleep(15)
+                logger.error(f"K8s watcher error ({cluster_name}): {e} — reconnecting in {backoff}s")
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, 120)
 
-    def _watch_blocking(self, w, v1, tenant_id: str, integration_id: str, cluster_name: str):
-        """Blocking watch loop — runs in thread pool."""
-        import asyncio, threading
 
-        loop = asyncio.new_event_loop()
-
-        try:
-            # Watch all namespaces, timeout=60s then re-connect (keeps connection fresh)
-            for event in w.stream(
-                v1.list_pod_for_all_namespaces,
-                timeout_seconds=60,
-                _request_timeout=65,
-            ):
-                event_type = event["type"]          # ADDED, MODIFIED, DELETED
-                pod_obj = event["object"]
-
-                pod_data = _extract_pod_data(pod_obj, cluster_name)
-
-                # Save to DB (sync-safe wrapper)
-                loop.run_until_complete(
-                    _save_pod_event(tenant_id, integration_id, event_type, pod_data)
-                )
-
-        except Exception as e:
-            logger.warning(f"K8s watch stream ended ({cluster_name}): {e}")
-        finally:
-            loop.close()
+async def _emit_ws(tenant_id: str, cluster_name: str, event_type: str, pod_data: dict) -> None:
+    """Forward watch events to the WebSocket + event bus (UI live refresh)."""
+    try:
+        from app.core.events.event_bus import event_bus
+        name_map = {"ADDED": "pod.created", "MODIFIED": "pod.updated", "DELETED": "pod.deleted"}
+        evt = name_map.get(event_type)
+        if evt is None:
+            return
+        status = pod_data.get("status") or ""
+        if status in ("Failed", "Error", "CrashLoopBackOff", "OOMKilled"):
+            evt = "pod.failed"
+        await event_bus.emit(
+            evt,
+            {
+                "pod":       pod_data.get("name"),
+                "name":      pod_data.get("name"),
+                "namespace": pod_data.get("namespace"),
+                "status":    status,
+                "cluster":   cluster_name,
+                "restart_count": pod_data.get("restart_count", 0),
+            },
+            tenant_id=tenant_id,
+        )
+    except Exception as exc:
+        logger.debug(f"[watcher] event emit failed: {exc}")
 
 
 # ── Pod event persistence ─────────────────────────────────────────────────────
@@ -103,13 +145,11 @@ async def _save_pod_event(tenant_id: str, integration_id: str, event_type: str, 
                 return
 
             if pod:
-                # Update existing pod
                 for field, value in pod_data.items():
                     if hasattr(pod, field) and value is not None:
                         setattr(pod, field, value)
                 pod.updated_at = datetime.now(timezone.utc)
             else:
-                # Insert new pod
                 pod = Pod(
                     tenant_id=tenant_id,
                     integration_id=integration_id,

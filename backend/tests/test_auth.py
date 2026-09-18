@@ -43,4 +43,5 @@ async def test_login_wrong_password(client):
 @pytest.mark.asyncio
 async def test_protected_route_without_token(client):
     response = await client.get("/api/v1/users/me")
-    assert response.status_code == 403
+    # 401 for missing credentials (403 is for authenticated-but-forbidden)
+    assert response.status_code == 401

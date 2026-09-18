@@ -633,7 +633,7 @@ export function ScaleDialog({ pod, onClose, onScaled }: ScaleDialogProps) {
     setLoading(true); setError(null);
     try {
       const { apiPost: post } = await import('@/hooks/use-api');
-      const json: any = await post(`/kubernetes/deployments/${deploymentName}/scale`, { replicas, namespace: pod.namespace });
+      const json: any = await post(`/kubernetes/pods/deployments/${deploymentName}/scale`, { replicas, namespace: pod.namespace });
       onScaled((json as any)?.message ?? `Scaled ${deploymentName} to ${replicas} replicas`);
       onClose();
     } catch (e: any) {

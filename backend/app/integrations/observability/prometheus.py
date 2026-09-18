@@ -7,8 +7,6 @@ Configured via integration record:
   config.server_url  — Prometheus base URL (e.g. http://prometheus:9090)
   credentials.token  — optional Bearer token
 """
-import math
-import random
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional
@@ -240,43 +238,56 @@ class PrometheusClient:
             pass
         return 0.0
 
+    async def get_cluster_cpu_series(
+        self, hours: int = 1, step: str = "60s", namespace: str | None = None
+    ) -> list[dict]:
+        """Cluster-wide CPU % timeseries (query_range). [] when no data."""
+        ns_filter = f',namespace="{namespace}"' if namespace else ""
+        promql = (
+            f'avg(rate(container_cpu_usage_seconds_total'
+            f'{{container!="POD",container!=""{ns_filter}}}[5m])) * 100'
+        )
+        return await self._range_series(promql, hours, step)
+
+    async def get_cluster_memory_series(
+        self, hours: int = 1, step: str = "60s", namespace: str | None = None
+    ) -> list[dict]:
+        """Cluster-wide Memory % timeseries (query_range). [] when no data."""
+        ns_filter = f',namespace="{namespace}"' if namespace else ""
+        promql = (
+            f'sum(container_memory_working_set_bytes'
+            f'{{container!="POD",container!=""{ns_filter}}})'
+            f' / on() sum(machine_memory_bytes) * 100'
+        )
+        return await self._range_series(promql, hours, step)
+
+    async def _range_series(
+        self, promql: str, hours: int, step: str
+    ) -> list[dict]:
+        end   = datetime.now(timezone.utc)
+        start = end - timedelta(hours=hours)
+        results = await self._query_range(promql, start, end, step)
+        if not results:
+            return []
+        values = results[0].get("values", [])
+        out = []
+        for ts, val in values:
+            try:
+                out.append({
+                    "timestamp": datetime.fromtimestamp(float(ts), tz=timezone.utc)
+                        .strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "value": round(float(val), 2),
+                })
+            except (TypeError, ValueError):
+                continue
+        return out
+
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 async def _gather(*coros):
     import asyncio
     return await asyncio.gather(*coros, return_exceptions=False)
-
-
-def _synthetic_pod_metrics(
-    pod_id: str,
-    points: int = 30,
-    interval_minutes: int = 2,
-) -> list[dict]:
-    """
-    Generate plausible synthetic metrics for a pod when Prometheus is unavailable.
-    Seeded by pod_id so results are stable across calls.
-    """
-    seed = sum(ord(c) for c in pod_id)
-    rng = random.Random(seed)
-    now = datetime.now(timezone.utc)
-    base_cpu = rng.uniform(5, 70)
-    base_mem = rng.uniform(20, 80)
-
-    result = []
-    for i in range(points):
-        ts = now - timedelta(minutes=interval_minutes * (points - i - 1))
-        phase = (i / points) * 2 * math.pi
-        cpu = max(0.0, min(100.0, base_cpu + math.sin(phase) * base_cpu * 0.2
-                           + rng.uniform(-3, 3)))
-        mem = max(0.0, min(100.0, base_mem + math.sin(phase + 1) * base_mem * 0.1
-                           + rng.uniform(-2, 2)))
-        result.append({
-            "timestamp": ts.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "cpu":       round(cpu, 1),
-            "memory":    round(mem, 1),
-        })
-    return result
 
 
 def get_prometheus_client(integration: dict | None) -> Optional[PrometheusClient]:

@@ -54,7 +54,7 @@ def test_r8_list_packages_requires_authentication():
     app.include_router(router)
     # Intentionally do NOT override get_current_active_user.
 
-    with TestClient(app) as client:
+    with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.get("/security/execution-packages/?tenant_id=tenant-1")
         assert resp.status_code == 401, (
             "endpoint must reject unauthenticated callers"
@@ -76,7 +76,7 @@ def test_r8_list_packages_uses_jwt_tenant_not_query_string():
         captured["tenant_id"] = tenant_id
         return []
 
-    with TestClient(app) as client:
+    with TestClient(app, raise_server_exceptions=False) as client:
         # Stub the service method to capture the tenant it actually sees.
         original = ExecutionService.list_packages
         ExecutionService.list_packages = _fake_list_packages
@@ -111,7 +111,7 @@ def test_r8_get_package_requires_tenant_in_token():
     app.dependency_overrides[get_current_active_user] = _user
     app.dependency_overrides[get_tenant_id] = _tenant
 
-    with TestClient(app) as client:
+    with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.get("/security/execution-packages/?tenant_id=t1")
         assert resp.status_code == 401, (
             "missing tenant in token must be rejected at auth boundary"

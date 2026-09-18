@@ -1,21 +1,14 @@
 from __future__ import annotations
 """
-Metrics API — Module 1 of Epic 9.
+Metrics API — per-pod and cluster CPU/Memory.
 
-GET /api/v1/metrics/pods/{pod_id}
-  → Real metrics via Prometheus when configured
-  → Fallback to K8s Metrics Server snapshot + synthetic time-series
+Data sources (in priority order):
+  1. Prometheus (when a 'prometheus' integration exists for the tenant)
+  2. Kubernetes Metrics Server snapshot via the tenant's K8s integration
 
-Response shape (matches frontend contract):
-  {
-    "pod_id": "abc",
-    "pod_name": "my-pod",
-    "namespace": "default",
-    "source": "prometheus | k8s_metrics | synthetic",
-    "points": [
-      {"timestamp": "...", "cpu": 32.5, "memory": 48.1}
-    ]
-  }
+NO synthetic data.  When no backend can serve real data the response carries
+``source: "unavailable"`` with null/empty values so the UI can render an
+explicit "Not Connected / Unavailable" state instead of fake charts.
 """
 import logging
 from typing import Optional
@@ -42,20 +35,14 @@ async def get_pod_metrics(
     step: str = Query("60s", pattern=r"^\d+[smh]$", description="Resolution step"),
     cluster_id: Optional[str] = Query(None),
 ):
-    """
-    Per-pod CPU + Memory timeseries.
-
-    Data source priority:
-      1. Prometheus (when prometheus integration exists + server_url set)
-      2. K8s Metrics Server snapshot (instantaneous → synthetic series)
-      3. Synthetic data seeded by pod_id
-    """
+    """Per-pod CPU + Memory timeseries — Prometheus-backed or unavailable."""
     pod = await _load_pod(pod_id, tenant_id, db)
+    if pod is None:
+        raise HTTPException(status_code=404, detail="Pod not found")
 
-    pod_name  = pod.name      if pod else pod_id
-    namespace = pod.namespace if pod else "default"
+    pod_name  = pod.name
+    namespace = pod.namespace or "default"
 
-    # ── Try Prometheus ────────────────────────────────────────────────────────
     prometheus_integration = await _get_integration(db, tenant_id, "prometheus")
     if prometheus_integration:
         from app.integrations.observability.prometheus import get_prometheus_client
@@ -76,15 +63,25 @@ async def get_pod_metrics(
             except Exception as exc:
                 logger.warning(f"[metrics] Prometheus query failed: {exc}")
 
-    # ── Fallback: K8s Metrics Server snapshot → synthetic series ─────────────
-    points = await _metrics_server_or_synthetic(pod, pod_id, pod_name, namespace, tenant_id, db, hours)
+    # K8s Metrics Server current snapshot — real but instantaneous (no history)
+    snapshot = await _metrics_server_snapshot(pod_name, namespace, tenant_id, db)
+    if snapshot is not None:
+        return APIResponse(data={
+            "pod_id":    pod_id,
+            "pod_name":  pod_name,
+            "namespace": namespace,
+            "source":    "k8s_metrics",
+            "points":    [snapshot],   # single real current reading
+        })
 
+    # No metrics backend at all — explicit unavailable state
     return APIResponse(data={
         "pod_id":    pod_id,
         "pod_name":  pod_name,
         "namespace": namespace,
-        "source":    points["source"],
-        "points":    points["data"],
+        "source":    "unavailable",
+        "points":    [],
+        "message":   "No metrics backend connected (prometheus or metrics-server)",
     })
 
 
@@ -97,69 +94,52 @@ async def get_cluster_metrics_v2(
     cluster_id: Optional[str] = Query(None),
 ):
     """
-    Cluster-wide CPU + Memory — Prometheus-backed with K8s fallback.
-    Compatible with existing /observability/metrics/cluster shape.
+    Cluster-wide CPU + Memory averages over `hours`.
+    Prometheus-backed; metrics-server snapshot otherwise; 'unavailable' state
+    with nulls when neither exists.  Compatible with the
+    /observability/metrics/cluster response shape (cpu/memory blocks).
     """
-    prometheus_integration = await _get_integration(db, tenant_id, "prometheus")
-    cpu_pct = mem_pct = 0.0
-    source  = "synthetic"
+    from app.integrations.observability.prometheus import get_prometheus_client
 
+    prometheus_integration = await _get_integration(db, tenant_id, "prometheus")
     if prometheus_integration:
-        from app.integrations.observability.prometheus import get_prometheus_client
         client = get_prometheus_client(prometheus_integration)
         if client and await client.health():
             try:
-                cpu_pct = await client.get_cluster_cpu_pct()
-                mem_pct = await client.get_cluster_memory_pct()
-                source  = "prometheus"
+                cpu_series = await client.get_cluster_cpu_series(hours=hours)
+                mem_series = await client.get_cluster_memory_series(hours=hours)
+                if cpu_series or mem_series:
+                    cpu_cur = cpu_series[-1]["value"] if cpu_series else None
+                    mem_cur = mem_series[-1]["value"] if mem_series else None
+                    return APIResponse(data={
+                        "source": "prometheus",
+                        "cpu":    {"current_pct": cpu_cur, "timeseries": cpu_series},
+                        "memory": {"current_pct": mem_cur, "timeseries": mem_series},
+                    })
             except Exception as exc:
                 logger.warning(f"[metrics] cluster Prometheus query failed: {exc}")
 
-    if source == "synthetic":
-        from app.services.kubernetes_service import KubernetesService
-        try:
-            svc   = KubernetesService(db)
-            stats = await svc.get_stats(tenant_id)
-            if stats:
-                cpu_pct = stats.cpu_usage_pct or 0.0
-                mem_pct = stats.memory_usage_pct or 0.0
-                source  = "k8s_metrics"
-        except Exception:
-            pass
-
-    from app.integrations.observability.prometheus import _synthetic_pod_metrics
-    import math, random
-    seed = sum(ord(c) for c in tenant_id)
-
-    def _ts(base: float, s: int) -> list[dict]:
-        rng  = random.Random(s)
-        from datetime import datetime, timezone, timedelta
-        now  = datetime.now(timezone.utc)
-        pts  = 30
-        res  = []
-        for i in range(pts):
-            ts   = now - timedelta(minutes=2 * (pts - i - 1))
-            phase = (i / pts) * 2 * math.pi
-            val  = max(0.0, min(100.0, base + math.sin(phase) * base * 0.15
-                                + rng.uniform(-3, 3)))
-            res.append({
-                "timestamp": ts.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "value":     round(val, 1),
-            })
-        return res
+    # Metrics-server snapshot via the tenant K8s integration — real current values
+    snapshot = await _cluster_metrics_server_snapshot(tenant_id, db)
+    if snapshot is not None:
+        return APIResponse(data={
+            "source": "k8s_metrics",
+            "cpu":    {"current_pct": snapshot.get("cpu_pct"),    "timeseries": []},
+            "memory": {"current_pct": snapshot.get("memory_pct"), "timeseries": []},
+        })
 
     return APIResponse(data={
-        "source": source,
-        "cpu":    {"current_pct": round(cpu_pct, 1), "timeseries": _ts(cpu_pct, seed + 1)},
-        "memory": {"current_pct": round(mem_pct, 1), "timeseries": _ts(mem_pct, seed + 2)},
+        "source": "unavailable",
+        "cpu":    {"current_pct": None, "timeseries": []},
+        "memory": {"current_pct": None, "timeseries": []},
+        "message": "No metrics backend connected (prometheus or metrics-server)",
     })
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-async def _load_pod(pod_id: str, tenant_id: str, db) -> Optional[object]:
+async def _load_pod(pod_id: str, tenant_id: str, db) -> Optional[Pod]:
     try:
-        from app.models.pod import Pod
         result = await db.execute(
             select(Pod).where(Pod.id == pod_id, Pod.tenant_id == tenant_id)
         )
@@ -168,13 +148,15 @@ async def _load_pod(pod_id: str, tenant_id: str, db) -> Optional[object]:
         return None
 
 
-async def _get_integration(db, tenant_id: str, provider: str) -> Optional[dict]:
+async def _get_integration(db, tenant_id: str, itype: str) -> Optional[dict]:
+    """Return {config, credentials} for a tenant integration of the given type."""
     try:
         result = await db.execute(
             select(Integration).where(
                 Integration.tenant_id == tenant_id,
-                Integration.provider == provider,
+                Integration.type      == itype,
                 Integration.is_active == True,
+                Integration.status    == "connected",
             )
         )
         rec = result.scalar_one_or_none()
@@ -182,54 +164,70 @@ async def _get_integration(db, tenant_id: str, provider: str) -> Optional[dict]:
             return None
         return {
             "config":      rec.config or {},
-            "credentials": rec.credentials or {},
+            "credentials": _decrypt_creds(rec.credentials or {}),
         }
     except Exception:
         return None
 
 
-async def _metrics_server_or_synthetic(
-    pod, pod_id: str, pod_name: str, namespace: str,
-    tenant_id: str, db, hours: int
-) -> dict:
-    """Try K8s Metrics Server snapshot, fall back to synthetic."""
-    cpu_pct = mem_pct = 0.0
-    source  = "synthetic"
-
-    if pod:
+def _decrypt_creds(creds: dict) -> dict:
+    from app.utils.encryption import decrypt
+    out = {}
+    for k, v in creds.items():
         try:
-            cpu_pct = float(getattr(pod, "cpu_usage_pct",  0) or 0)
-            mem_pct = float(getattr(pod, "memory_usage_pct", 0) or 0)
-            if cpu_pct or mem_pct:
-                source = "k8s_metrics"
+            out[k] = decrypt(v)
         except Exception:
-            pass
+            out[k] = v
+    return out
 
-    from app.integrations.observability.prometheus import _synthetic_pod_metrics
-    import math, random
-    from datetime import datetime, timezone, timedelta
 
-    seed   = sum(ord(c) for c in pod_id)
-    rng    = random.Random(seed)
-    points = min(hours * 30, 60)
-    now    = datetime.now(timezone.utc)
-    step_m = max(1, (hours * 60) // points)
+async def _metrics_server_snapshot(
+    pod_name: str, namespace: str, tenant_id: str, db
+) -> Optional[dict]:
+    """Instantaneous metrics-server reading for a pod, if reachable."""
+    try:
+        from app.services.kubernetes_service import KubernetesService
+        svc    = KubernetesService(db)
+        client = await svc.get_k8s_client_for_tenant(tenant_id)
+        if not client:
+            return None
+        metrics = await client.get_pod_metrics(namespace)
+        m = metrics.get(pod_name) if metrics else None
+        if not m:
+            return None
+        from datetime import datetime, timezone
+        cpu    = m.get("cpu_usage")        # cores
+        memory = m.get("memory_usage")     # bytes
+        if cpu is None and memory is None:
+            return None
+        return {
+            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "cpu":       round(cpu or 0.0, 4),
+            "memory":    memory or 0,
+        }
+    except Exception as exc:
+        logger.debug(f"[metrics] metrics-server snapshot failed: {exc}")
+        return None
 
-    base_cpu = cpu_pct or rng.uniform(5, 70)
-    base_mem = mem_pct or rng.uniform(20, 80)
 
-    data = []
-    for i in range(points):
-        ts    = now - timedelta(minutes=step_m * (points - i - 1))
-        phase = (i / points) * 2 * math.pi
-        c     = max(0.0, min(100.0, base_cpu + math.sin(phase) * base_cpu * 0.2
-                              + rng.uniform(-3, 3)))
-        m     = max(0.0, min(100.0, base_mem + math.sin(phase + 1) * base_mem * 0.1
-                              + rng.uniform(-2, 2)))
-        data.append({
-            "timestamp": ts.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "cpu":       round(c, 1),
-            "memory":    round(m, 1),
-        })
-
-    return {"source": source, "data": data}
+async def _cluster_metrics_server_snapshot(tenant_id: str, db) -> Optional[dict]:
+    """Cluster-average cpu/memory % from live node metrics, if reachable."""
+    try:
+        from app.services.kubernetes_service import KubernetesService
+        svc    = KubernetesService(db)
+        client = await svc.get_k8s_client_for_tenant(tenant_id)
+        if not client:
+            return None
+        nodes = await client.get_node_metrics()
+        if not nodes:
+            return None
+        # average across nodes that reported values
+        cpus = [n["cpu_usage"]    for n in nodes if n.get("cpu_usage")    is not None]
+        mems = [n["memory_usage"] for n in nodes if n.get("memory_usage") is not None]
+        return {
+            "cpu_pct":    round(sum(cpus) / len(cpus), 1) if cpus else None,
+            "memory_pct": round(sum(mems) / len(mems), 1) if mems else None,
+        }
+    except Exception as exc:
+        logger.debug(f"[metrics] cluster metrics-server snapshot failed: {exc}")
+        return None

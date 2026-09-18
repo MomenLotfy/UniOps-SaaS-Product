@@ -22,9 +22,9 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.main import app
 from app.core.database import Base, get_db
-import app.models  # noqa
+import app.models as _app_models  # noqa  (module import only — must NOT shadow the FastAPI `app` name)
+from app.main import app
 
 # Register all security submodule models so SQLAlchemy can resolve FKs
 # and so `Base.metadata.create_all` produces the full schema.
@@ -89,12 +89,26 @@ async def db_session():
 
 @pytest_asyncio.fixture
 async def client():
+    # Mirror production get_db (commit-on-success / rollback-on-error) —
+    # without the commit, persistence-dependent flows (register → login)
+    # silently lose rows between requests.
     async def override_get_db():
         async with TestSessionLocal() as session:
-            yield session
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+            finally:
+                await session.close()
 
     app.dependency_overrides[get_db] = override_get_db
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+    # raise_app_exceptions=False: endpoints that intentionally translate our
+    # UniOpsException subclasses (401/403/…)-into-JSON via the global handler
+    # must return that response to the test client instead of re-raising, so
+    # negative-path assertions (wrong password, missing token) can run.
+    async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
 

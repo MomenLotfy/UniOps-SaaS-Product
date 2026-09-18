@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from app.config import settings
+from app.core.exceptions import UniOpsException
 from app.core.database import init_db, engine
 from app.core.security import decode_token
 from app.api.v1.router import api_router
@@ -129,24 +130,17 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Event Bus not started (non-fatal): {e}")
 
-    # 6. K8s watcher bootstrap
+    # 6. K8s watchers — real Kubernetes Watch API (pod events + DB persistence)
     try:
-        from app.core.events.k8s_watcher import bootstrap_watchers
-        asyncio.create_task(bootstrap_watchers(), name="k8s-watcher-bootstrap")
-        logger.info("Kubernetes cluster watcher bootstrap started")
+        from app.integrations.kubernetes.watcher import start_all_watchers
+        await start_all_watchers()
+        logger.info("Kubernetes Watch API watchers started")
     except Exception as e:
-        logger.warning(f"K8s watcher bootstrap not started (non-fatal): {e}")
+        logger.warning(f"K8s watchers not started (non-fatal): {e}")
 
-    # 7. Webhook routes
-    try:
-        from app.api.webhooks import github as github_wh, stripe as stripe_wh
-        from app.api.webhooks import gitlab as gitlab_wh, slack as slack_wh
-        app.include_router(github_wh.router, prefix="/webhooks", tags=["Webhooks-Inbound"])
-        app.include_router(stripe_wh.router, prefix="/webhooks", tags=["Webhooks-Inbound"])
-        app.include_router(gitlab_wh.router, prefix="/webhooks", tags=["Webhooks-Inbound"])
-        app.include_router(slack_wh.router,  prefix="/webhooks", tags=["Webhooks-Inbound"])
-    except Exception as e:
-        logger.warning(f"Webhook routes not loaded: {e}")
+    # 7. Webhook routes — registered at import time (see module scope below),
+    #    NOT here: lifespan does not run under test transports, and routers are
+    #    static wiring, not runtime state.
 
     # Sprint 3 R38 — mark startup complete so /startup probe returns 200
     try:
@@ -160,6 +154,11 @@ async def lifespan(app: FastAPI):
 
     # ── Shutdown ──────────────────────────────────────────────────────────────
     logger.info("Shutting down...")
+    try:
+        from app.integrations.kubernetes.watcher import stop_all_watchers
+        await stop_all_watchers()
+    except Exception:
+        pass
     try:
         from app.core.scheduler import stop_scheduler
         await stop_scheduler()
@@ -198,14 +197,36 @@ app.add_middleware(AuditMiddleware)
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
+# Root-level health endpoints (`/health`, `/health/ready`, ...) in addition to
+# the versioned `/api/v1/health` — standard k8s probe/UI contract.
+from app.api.v1.endpoints.health import router as _health_router
+app.include_router(_health_router, prefix="/health", tags=["Health"])
+
+# Inbound webhook routes — static wiring registered at import time so the
+# same contract holds under tests (no lifespan) and uvicorn workers alike.
+try:
+    from app.api.webhooks import github as _github_wh, stripe as _stripe_wh
+    from app.api.webhooks import gitlab as _gitlab_wh, slack as _slack_wh
+    for _mod in (_github_wh, _stripe_wh, _gitlab_wh, _slack_wh):
+        app.include_router(_mod.router, prefix="/webhooks", tags=["Webhooks-Inbound"])
+except Exception as _e:  # pragma: no cover - never expected
+    logger.warning(f"Webhook routes not loaded: {_e}")
+
 
 @app.websocket("/ws/{tenant_id}")
 async def websocket_endpoint(websocket: WebSocket, tenant_id: str, token: str = ""):
     try:
-        if token:
-            decode_token(token)
+        if not token:
+            await websocket.close(code=4001)
+            return
+        payload = decode_token(token)
     except Exception:
         await websocket.close(code=4001)
+        return
+    # Enforce tenant isolation: the path tenant_id must match the JWT claim.
+    token_tenant = (payload or {}).get("tenant_id")
+    if not token_tenant or token_tenant != tenant_id:
+        await websocket.close(code=4003)
         return
     await ws_manager.connect(websocket, tenant_id)
     try:
@@ -214,6 +235,12 @@ async def websocket_endpoint(websocket: WebSocket, tenant_id: str, token: str = 
             await handle_ws_message(websocket, tenant_id, data)
     except WebSocketDisconnect:
         await ws_manager.disconnect(websocket, tenant_id)
+    except Exception:
+        # Any unexpected receive error → close cleanly
+        try:
+            await ws_manager.disconnect(websocket, tenant_id)
+        except Exception:
+            pass
 
 
 @app.get("/api/v1/health", tags=["Health"])
@@ -227,14 +254,19 @@ async def root_health_check():
     }
 
 
+@app.exception_handler(UniOpsException)
+async def uniops_exception_handler(request, exc):
+    """Preserve the platform response contract for all domain exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"success": False, "message": exc.message, "code": exc.code},
+    )
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
-    from app.core.exceptions import UniOpsException
     if isinstance(exc, UniOpsException):
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={"success": False, "message": exc.message, "code": exc.code},
-        )
+        return await uniops_exception_handler(request, exc)
     # Sprint 3 R29 — capture unhandled exceptions to Sentry
     try:
         from app.observability.sentry import capture_exception_safe

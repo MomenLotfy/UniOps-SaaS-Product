@@ -73,7 +73,7 @@ async def _tick() -> None:
                 .values(status="Failed")
             )
             await ws_manager.send_to_tenant(svc.tenant_id, {
-                "type": "service.failed",
+                "event": "service.failed",
                 "data": {"service_id": svc.id, "service_name": svc.name, "reason": "Deployment timed out"},
             })
 
@@ -116,7 +116,7 @@ async def _tick() -> None:
                     )
                     await db.commit()
                     await ws_manager.send_to_tenant(svc.tenant_id, {
-                        "type": "service.synced",
+                        "event": "service.synced",
                         "data": {
                             "service_id":  svc.id,
                             "service_name": svc.name,

@@ -1,8 +1,9 @@
 from __future__ import annotations
 """Clusters API — Multi-Cluster Kubernetes Management."""
 from typing import Optional
-from fastapi import APIRouter, Query
-from app.api.deps import CurrentUser, TenantID, DBSession
+from fastapi import APIRouter, Query, Depends
+from app.api.deps import CurrentUser, DevOpsUser, TenantID, DBSession
+from app.core.rate_limit import rate_limit
 from app.schemas.cluster import ClusterCreate, ClusterUpdate, ClusterResponse
 from app.schemas.common import APIResponse
 from app.services.cluster_service import ClusterService as ClusterSvc
@@ -17,10 +18,13 @@ async def list_clusters(current_user: CurrentUser, tenant_id: TenantID, db: DBSe
     return APIResponse(data=clusters)
 
 
-@router.post("", response_model=APIResponse[ClusterResponse], status_code=201)
+@router.post(
+    "", response_model=APIResponse[ClusterResponse], status_code=201,
+    dependencies=[Depends(rate_limit("clusters.create", 10, 60))],
+)
 async def add_cluster(
     body: ClusterCreate,
-    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    current_user: DevOpsUser, tenant_id: TenantID, db: DBSession,
 ):
     svc = ClusterSvc(db)
     cluster = await svc.add_cluster(tenant_id, body)
@@ -40,26 +44,32 @@ async def get_cluster(
 @router.patch("/{cluster_id}", response_model=APIResponse[ClusterResponse])
 async def update_cluster(
     cluster_id: str, body: ClusterUpdate,
-    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    current_user: DevOpsUser, tenant_id: TenantID, db: DBSession,
 ):
     svc = ClusterSvc(db)
     cluster = await svc.update_cluster(tenant_id, cluster_id, body)
     return APIResponse(data=cluster, message="Cluster updated")
 
 
-@router.delete("/{cluster_id}", status_code=204)
+@router.delete(
+    "/{cluster_id}", status_code=204,
+    dependencies=[Depends(rate_limit("clusters.delete", 10, 60))],
+)
 async def delete_cluster(
     cluster_id: str,
-    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    current_user: DevOpsUser, tenant_id: TenantID, db: DBSession,
 ):
     svc = ClusterSvc(db)
     await svc.delete_cluster(tenant_id, cluster_id)
 
 
-@router.post("/{cluster_id}/test")
+@router.post(
+    "/{cluster_id}/test",
+    dependencies=[Depends(rate_limit("clusters.test", 10, 60))],
+)
 async def test_connection(
     cluster_id: str,
-    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    current_user: DevOpsUser, tenant_id: TenantID, db: DBSession,
 ):
     svc = ClusterSvc(db)
     result = await svc.test_connection(tenant_id, cluster_id)

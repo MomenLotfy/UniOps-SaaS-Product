@@ -19,7 +19,10 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel as PydanticModel, Field, field_validator
 from sqlalchemy import select, func
 
-from app.api.deps import CurrentUser, TenantID, DBSession
+from fastapi import Depends
+
+from app.api.deps import CurrentUser, DevOpsUser, DeveloperUser, TenantID, DBSession
+from app.core.rate_limit import rate_limit
 from app.core.deployment_engine.service import DeploymentEngine, ServiceCreatePayload
 from app.models.deployment_log import DeploymentLog
 from app.models.service import CatalogService
@@ -136,13 +139,22 @@ async def list_services(
     }
 
 
-@router.post("/services", status_code=202)
+@router.post(
+    "/services", status_code=202,
+    dependencies=[Depends(rate_limit("catalog.create", 10, 60))],
+)
 async def create_service(
     body:         ServiceCreateRequest,
-    current_user: CurrentUser,
+    current_user: DeveloperUser,
     tenant_id:    TenantID,
     db:           DBSession,
 ):
+    """Create a service and start the real deployment pipeline.
+
+    Requires developer / devops_engineer / admin.  When required integrations
+    (Git, ArgoCD) are not connected the pipeline fails clearly and the
+    service record shows Failed with the real reason — never a fake success.
+    """
     # Check for name collision
     existing = await db.execute(
         select(CatalogService).where(
@@ -189,13 +201,10 @@ async def get_service(
 async def update_service_status(
     service_id:   str,
     body:         ServiceStatusUpdate,
-    current_user: CurrentUser,
+    current_user: DevOpsUser,
     tenant_id:    TenantID,
     db:           DBSession,
 ):
-    roles = current_user.get("roles", [])
-    if not any(r in roles for r in ("admin", "super_admin", "devops")):
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     result = await db.execute(
         select(CatalogService).where(
@@ -217,10 +226,13 @@ async def update_service_status(
     return {"success": True, "message": f"Status updated to {body.status}"}
 
 
-@router.delete("/services/{service_id}", status_code=204)
+@router.delete(
+    "/services/{service_id}", status_code=204,
+    dependencies=[Depends(rate_limit("catalog.delete", 20, 60))],
+)
 async def delete_service(
     service_id:   str,
-    current_user: CurrentUser,
+    current_user: DevOpsUser,
     tenant_id:    TenantID,
     db:           DBSession,
 ):

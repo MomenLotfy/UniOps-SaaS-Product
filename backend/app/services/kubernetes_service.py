@@ -1,5 +1,15 @@
 from __future__ import annotations
-"""Kubernetes service — pod management, cluster health, and real cluster actions."""
+"""Kubernetes service — pod management, cluster health, and real cluster actions.
+
+Security model:
+  - EVERY operation that targets a single pod resolves it tenant-scoped
+    (404 on cross-tenant access — never 403 leakage).
+  - Cluster clients are built ONLY from the tenant's own integrations
+    (with an explicit optional cluster filter) — never "first K8s
+    integration in the whole table".
+  - Pod exec runs the command argument list directly without a shell
+    (no command injection), is audit-logged, and never logs secrets.
+"""
 from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy import select, func
@@ -10,7 +20,9 @@ from app.models.integration import Integration
 from app.models.audit_log import AuditLog
 from app.schemas.pod import PodResponse, PodStats, PodActionResult
 from app.schemas.common import PaginatedResponse
-from app.core.exceptions import NotFoundError, ForbiddenError, IntegrationError
+from app.core.exceptions import (
+    NotFoundError, ForbiddenError, IntegrationError, IntegrationUnavailableError,
+)
 from app.services.base import BaseService
 from app.utils.logger import logger
 
@@ -58,8 +70,8 @@ class KubernetesService(BaseService):
             pages=(total + page_size - 1) // page_size,
         )
 
-    async def get_pod(self, pod_id: str) -> PodResponse:
-        pod = await self._get_by_id(Pod, pod_id)
+    async def get_pod(self, pod_id: str, tenant_id: str) -> PodResponse:
+        pod = await self._get_by_id_tenant(Pod, pod_id, tenant_id)
         return PodResponse.model_validate(pod)
 
     async def get_stats(self, tenant_id: str) -> PodStats:
@@ -95,34 +107,54 @@ class KubernetesService(BaseService):
         result = await self.db.execute(
             select(Pod.namespace).where(Pod.tenant_id == tenant_id).distinct()
         )
-        return [row[0] for row in result.fetchall() if row[0]]
+        return sorted(row[0] for row in result.fetchall() if row[0])
 
     async def get_clusters(self, tenant_id: str) -> list[str]:
         result = await self.db.execute(
             select(Pod.cluster).where(Pod.tenant_id == tenant_id).distinct()
         )
-        return [row[0] for row in result.fetchall() if row[0]]
+        return sorted(row[0] for row in result.fetchall() if row[0])
 
-    async def get_pod_events(self, pod_id: str) -> list[dict]:
+    async def get_pod_events(self, pod_id: str, tenant_id: str) -> list[dict]:
         """Fetch live K8s events for a pod (useful for debugging CrashLoops)."""
-        pod = await self._get_by_id(Pod, pod_id)
-        client = await self._get_k8s_client(pod)
+        pod = await self._get_by_id_tenant(Pod, pod_id, tenant_id)
+        client = await self._get_k8s_client_for_pod(pod)
         return await client.get_pod_events(pod.name, pod.namespace)
 
     async def get_pod_logs(
-        self, pod_id: str, tail: int = 200, container: str | None = None
+        self, pod_id: str, tenant_id: str,
+        tail: int = 200, container: str | None = None,
     ) -> str:
-        """Fetch last N log lines from a pod via Kubernetes API."""
-        pod = await self._get_by_id(Pod, pod_id)
-        client = await self._get_k8s_client(pod)
+        """Fetch last N log lines from a pod via the Kubernetes API.
+
+        Raises IntegrationUnavailableError when the K8s API is unreachable —
+        callers must surface the honest error rather than show fake content.
+        """
+        pod = await self._get_by_id_tenant(Pod, pod_id, tenant_id)
+        return await self.get_pod_logs_by_name(
+            tenant_id, pod.name, pod.namespace, tail, container)
+
+    async def get_pod_logs_by_name(
+        self,
+        tenant_id: str,
+        pod_name: str,
+        namespace: str,
+        tail: int = 200,
+        container: str | None = None,
+    ) -> str:
+        client = await self.get_k8s_client_for_tenant(tenant_id)
+        if not client:
+            raise IntegrationUnavailableError(
+                "Kubernetes", "no Kubernetes integration connected for this tenant")
         try:
             k8s = client._get_client()
             if not k8s:
-                return "Kubernetes client unavailable"
+                raise IntegrationUnavailableError(
+                    "Kubernetes", "could not build Kubernetes client from stored kubeconfig")
             v1 = k8s.CoreV1Api()
             kwargs: dict = {
-                "name":       pod.name,
-                "namespace":  pod.namespace,
+                "name":       pod_name,
+                "namespace":  namespace,
                 "tail_lines": tail,
                 "_request_timeout": 15,
             }
@@ -130,31 +162,30 @@ class KubernetesService(BaseService):
                 kwargs["container"] = container
             logs: str = v1.read_namespaced_pod_log(**kwargs)
             return logs or "(no output)"
+        except (IntegrationUnavailableError,):
+            raise
         except Exception as e:
-            logger.warning(f"get_pod_logs failed ({pod.namespace}/{pod.name}): {e}")
-            return f"Could not fetch logs: {e}"
+            logger.warning(f"get_pod_logs failed ({namespace}/{pod_name}): {e}")
+            raise IntegrationError("Kubernetes", f"could not fetch pod logs: {e}")
 
     # ── Write / Action operations ─────────────────────────────────────────────
 
-    async def delete_pod(self, pod_id: str, deleted_by: str) -> PodActionResult:
+    async def delete_pod(self, pod_id: str, tenant_id: str, deleted_by: str) -> PodActionResult:
         """
         Delete pod from Kubernetes cluster immediately (grace_period=0).
         After success, removes the pod record from our DB too.
         K8s controllers (Deployments etc.) will recreate the pod automatically.
         """
-        pod, client = await self._resolve_pod_and_client(pod_id)
+        pod, client = await self._resolve_pod_and_client(pod_id, tenant_id)
 
-        # Execute on cluster
         result = await client.delete_pod(pod.name, pod.namespace)
         if not result["success"]:
             raise IntegrationError("Kubernetes", result.get("error", "Delete failed"))
 
-        # Remove stale DB record — watcher will re-insert when K8s recreates it
         pod_name = pod.name
         pod_namespace = pod.namespace
         await self.db.delete(pod)
 
-        # Audit log
         await self._write_audit(
             tenant_id=pod.tenant_id,
             user_id=deleted_by,
@@ -173,20 +204,18 @@ class KubernetesService(BaseService):
             message=f"Pod '{pod_name}' deleted from cluster",
         )
 
-    async def restart_pod(self, pod_id: str, restarted_by: str) -> PodActionResult:
+    async def restart_pod(self, pod_id: str, tenant_id: str, restarted_by: str) -> PodActionResult:
         """
         Graceful restart: deletes pod with grace_period=30s.
         The owning controller (Deployment/StatefulSet/DaemonSet) schedules
-        a replacement immediately. For standalone pods, behaviour is the same
-        as delete.
+        a replacement immediately.
         """
-        pod, client = await self._resolve_pod_and_client(pod_id)
+        pod, client = await self._resolve_pod_and_client(pod_id, tenant_id)
 
         result = await client.restart_pod(pod.name, pod.namespace)
         if not result["success"]:
             raise IntegrationError("Kubernetes", result.get("error", "Restart failed"))
 
-        # Mark pod as restarting in our DB — watcher will update when new pod appears
         pod.status = "Terminating"
         pod.updated_at = datetime.now(timezone.utc)
 
@@ -215,48 +244,74 @@ class KubernetesService(BaseService):
 
     # ── Internal helpers ──────────────────────────────────────────────────────
 
-    async def _resolve_pod_and_client(self, pod_id: str):
-        """Load pod + its integration + build a live K8s client. Raises on any failure."""
-        pod = await self._get_by_id(Pod, pod_id)
-        client = await self._get_k8s_client(pod)
+    async def _resolve_pod_and_client(self, pod_id: str, tenant_id: str):
+        """Load pod tenant-scoped + its integration + build a live K8s client."""
+        pod = await self._get_by_id_tenant(Pod, pod_id, tenant_id)
+        client = await self._get_k8s_client_for_pod(pod)
         return pod, client
 
-    async def _get_k8s_client(self, pod_or_tenant):
-        """
-        Build KubernetesClient.
-        Accepts either a Pod object (old callers) or a tenant_id string (new cluster-level endpoints).
-        """
+    async def _get_k8s_client_for_pod(self, pod: Pod):
+        """Client built from the integration that owns this pod."""
         from app.integrations.kubernetes.client import KubernetesClient
 
-        if isinstance(pod_or_tenant, str):
-            # Called with tenant_id directly — find the first active K8s integration
-            result = await self.db.execute(
-                select(Integration).where(
-                    Integration.tenant_id == pod_or_tenant,
-                    Integration.type == "kubernetes",
-                    Integration.is_active == True,
-                    Integration.status == "connected",
-                ).limit(1)
+        if not pod.integration_id:
+            raise IntegrationUnavailableError(
+                "Kubernetes", "pod is not linked to a Kubernetes integration")
+
+        result = await self.db.execute(
+            select(Integration).where(
+                Integration.id == pod.integration_id,
+                Integration.tenant_id == pod.tenant_id,
             )
-            integration = result.scalar_one_or_none()
-            if not integration:
-                return None
-        else:
-            # Called with a Pod object
-            pod = pod_or_tenant
-            if not pod.integration_id:
-                raise IntegrationError("Kubernetes", "Pod has no integration associated")
-            integration = await self._get_or_none(Integration, pod.integration_id)
-            if not integration:
-                raise IntegrationError("Kubernetes", "Integration record not found")
-            if not integration.is_active or integration.status != "connected":
-                raise IntegrationError(
-                    "Kubernetes",
-                    f"Integration '{integration.name}' is not connected (status={integration.status})",
-                )
+        )
+        integration = result.scalar_one_or_none()
+        if not integration:
+            raise IntegrationUnavailableError("Kubernetes", "integration record not found")
+        if not integration.is_active or integration.status != "connected":
+            raise IntegrationUnavailableError(
+                "Kubernetes",
+                f"integration '{integration.name}' is not connected (status={integration.status})",
+            )
 
         creds  = _decrypt_integration_creds(integration)
         config = {**creds, **(integration.config or {})}
+        return KubernetesClient(config)
+
+    async def get_k8s_client_for_tenant(
+        self, tenant_id: str, cluster: str | None = None
+    ):
+        """
+        Public tenant-level client lookup.
+
+        Prefers the integration whose config.name matches the cluster filter;
+        otherwise returns the tenant's first connected Kubernetes integration.
+        NEVER crosses tenants — returns None when the tenant has none.
+        """
+        query = select(Integration).where(
+            Integration.tenant_id == tenant_id,
+            Integration.type == "kubernetes",
+            Integration.is_active == True,
+            Integration.status == "connected",
+        )
+        result = await self.db.execute(query)
+        integrations = result.scalars().all()
+        if not integrations:
+            return None
+
+        integration = None
+        if cluster:
+            for i in integrations:
+                cfg = i.config or {}
+                if cluster in (i.name, cfg.get("name"), cfg.get("cluster_name")):
+                    integration = i
+                    break
+        if integration is None:
+            integration = integrations[0]
+
+        creds  = _decrypt_integration_creds(integration)
+        config = {**creds, **(integration.config or {})}
+
+        from app.integrations.kubernetes.client import KubernetesClient
         return KubernetesClient(config)
 
     async def _write_audit(
@@ -285,73 +340,98 @@ class KubernetesService(BaseService):
             # Audit failures must never block the main action
             logger.warning(f"Audit log write failed (non-fatal): {e}")
 
+    # ── High-risk operations ──────────────────────────────────────────────────
 
     async def exec_pod(
         self,
         pod_id: str,
+        tenant_id: str,
         command: str,
         container: str | None = None,
+        executed_by: str = "",
     ) -> str:
-        """Execute a shell command in a pod and return combined stdout/stderr."""
-        from sqlalchemy import select
-        from app.models.pod import Pod
+        """
+        Execute a command in a running pod and return combined stdout/stderr.
 
-        result = await self.db.execute(select(Pod).where(Pod.id == pod_id))
-        pod    = result.scalar_one_or_none()
-        if not pod:
-            return f"Pod {pod_id} not found"
+        Security: the command string is split with shlex and the argument
+        vector is executed DIRECTLY in the container — there is NO shell
+        involvement, so `;`, `|`, `>`, backticks etc. cannot be injected.
+        Secrets-looking environment values are never logged. Every exec is
+        audit-logged (with the command audited for accountability).
+        """
+        import shlex as _shlex
 
-        client = await self._get_k8s_client(pod.tenant_id)
-        if not client:
-            return "Kubernetes client unavailable"
+        pod, client = await self._resolve_pod_and_client(pod_id, tenant_id)
+
+        try:
+            argv = _shlex.split(command)
+        except ValueError as e:
+            raise IntegrationError("Kubernetes", f"invalid command syntax: {e}")
+        if not argv or not argv[0]:
+            raise IntegrationError("Kubernetes", "empty command")
+        # Guard against pathological argument vectors
+        if len(argv) > 64 or any(len(a) > 512 for a in argv):
+            raise IntegrationError("Kubernetes", "command too long / too many arguments")
 
         output = await client.exec_pod(
             name=pod.name,
             namespace=pod.namespace,
-            command=command,
+            command_list=argv,
             container=container,
+        )
+
+        # Audit (command recorded for accountability; output is NOT logged
+        # to avoid persisting potential secrets from the container)
+        await self._write_audit(
+            tenant_id=pod.tenant_id,
+            user_id=executed_by or "unknown",
+            action="pod.exec",
+            resource="pod",
+            resource_id=pod_id,
+            details={
+                "name":      pod.name,
+                "namespace": pod.namespace,
+                "command":   " ".join(argv)[:300],
+                "container": container,
+                # output deliberately omitted
+            },
         )
         return output
 
     async def scale_deployment(
         self,
+        tenant_id: str,
         deployment_name: str,
         namespace: str,
         replicas: int,
         triggered_by: str,
+        cluster: str | None = None,
     ) -> dict:
-        """Scale a Kubernetes Deployment to the specified replica count."""
-        from sqlalchemy import select
-        from app.models.integration import Integration
-
-        # Get first kubernetes integration for this request (tenant resolved by dep)
-        result = await self.db.execute(
-            select(Integration).where(
-                Integration.type == "kubernetes",
-                Integration.is_active == True,
-                Integration.status == "connected",
-            ).limit(1)
-        )
-        integration = result.scalar_one_or_none()
-        if not integration:
-            return {"success": False, "error": "No Kubernetes integration connected"}
-
-        client = await self._get_k8s_client(integration.tenant_id)
+        """Scale a Kubernetes Deployment — strictly within the caller's tenant."""
+        client = await self.get_k8s_client_for_tenant(tenant_id, cluster=cluster)
         if not client:
-            return {"success": False, "error": "Kubernetes client unavailable"}
+            return {
+                "success": False,
+                "error": "No Kubernetes integration connected for this tenant",
+                "connected": False,
+            }
 
         result = await client.scale_deployment(
             name=deployment_name,
             namespace=namespace,
             replicas=replicas,
         )
-        if result.get("success"):
-            await self._write_audit(
-                tenant_id=integration.tenant_id,
-                user_id=triggered_by,
-                action="scale_deployment",
-                resource="deployment",
-                resource_id=f"{namespace}/{deployment_name}",
-                details={"replicas": replicas, "namespace": namespace},
-            )
+        await self._write_audit(
+            tenant_id=tenant_id,
+            user_id=triggered_by,
+            action="deployment.scale",
+            resource="deployment",
+            resource_id=f"{namespace}/{deployment_name}",
+            details={
+                "replicas": replicas,
+                "namespace": namespace,
+                "success": result.get("success", False),
+            },
+            status="success" if result.get("success") else "failed",
+        )
         return result

@@ -2,7 +2,9 @@ from __future__ import annotations
 """Pipelines API — CI/CD pipeline management, re-run, and job inspection."""
 from typing import Optional
 from fastapi import APIRouter, Query, BackgroundTasks
-from app.api.deps import CurrentUser, AdminUser, TenantID, DBSession
+from fastapi import Depends
+from app.api.deps import CurrentUser, DevOpsUser, TenantID, DBSession
+from app.core.rate_limit import rate_limit
 from app.schemas.pipeline import PipelineResponse, PipelineStats, PipelineRerunResult, PipelineJob
 from app.schemas.common import APIResponse, PaginatedResponse
 from app.services.pipeline_service import PipelineService
@@ -38,27 +40,32 @@ async def list_repositories(current_user: CurrentUser, tenant_id: TenantID, db: 
 
 
 @router.get("/{pipeline_id}", response_model=APIResponse[PipelineResponse])
-async def get_pipeline(pipeline_id: str, current_user: CurrentUser, db: DBSession):
+async def get_pipeline(pipeline_id: str, current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
     svc = PipelineService(db)
-    pipeline = await svc.get_by_id(pipeline_id)
+    pipeline = await svc.get_by_id(pipeline_id, tenant_id)
     return APIResponse(data=pipeline)
 
 
 @router.get("/{pipeline_id}/jobs", response_model=APIResponse[list[PipelineJob]])
-async def get_pipeline_jobs(pipeline_id: str, current_user: CurrentUser, db: DBSession):
+async def get_pipeline_jobs(pipeline_id: str, current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
     """
     Fetch live job/step breakdown for a pipeline run.
     Calls the provider API in real-time (GitHub Actions jobs / GitLab pipeline jobs).
     """
     svc = PipelineService(db)
-    jobs = await svc.get_jobs(pipeline_id)
+    jobs = await svc.get_jobs(pipeline_id, tenant_id)
     return APIResponse(data=jobs)
 
 
-@router.post("/{pipeline_id}/rerun", response_model=APIResponse[PipelineRerunResult])
+@router.post(
+    "/{pipeline_id}/rerun",
+    response_model=APIResponse[PipelineRerunResult],
+    dependencies=[Depends(rate_limit("pipeline.rerun", 15, 60))],
+)
 async def rerun_pipeline(
     pipeline_id: str,
-    current_user: AdminUser,
+    current_user: DevOpsUser,
+    tenant_id: TenantID,
     db: DBSession,
     failed_only: bool = Query(
         default=True,
@@ -77,14 +84,19 @@ async def rerun_pipeline(
     Requires: admin or devops role.
     """
     svc = PipelineService(db)
-    result = await svc.rerun(pipeline_id, current_user["user_id"], failed_only=failed_only)
+    result = await svc.rerun(pipeline_id, current_user["user_id"], failed_only=failed_only, tenant_id=tenant_id)
     return APIResponse(data=result, message=result.message)
 
 
-@router.post("/{pipeline_id}/cancel", response_model=APIResponse[PipelineRerunResult])
+@router.post(
+    "/{pipeline_id}/cancel",
+    response_model=APIResponse[PipelineRerunResult],
+    dependencies=[Depends(rate_limit("pipeline.cancel", 15, 60))],
+)
 async def cancel_pipeline(
     pipeline_id: str,
-    current_user: AdminUser,
+    current_user: DevOpsUser,
+    tenant_id: TenantID,
     db: DBSession,
 ):
     """
@@ -97,13 +109,13 @@ async def cancel_pipeline(
     Requires: admin or devops role.
     """
     svc = PipelineService(db)
-    result = await svc.cancel(pipeline_id, current_user["user_id"])
+    result = await svc.cancel(pipeline_id, current_user["user_id"], tenant_id)
     return APIResponse(data=result, message=result.message)
 
 
 @router.post("/sync")
 async def trigger_sync(
-    current_user: AdminUser, tenant_id: TenantID,
+    current_user: DevOpsUser, tenant_id: TenantID,
     background_tasks: BackgroundTasks,
 ):
     """Manually trigger pipeline sync from GitHub/GitLab."""
