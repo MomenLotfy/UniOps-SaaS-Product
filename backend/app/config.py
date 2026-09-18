@@ -132,6 +132,24 @@ class Settings(BaseSettings):
     # tokens are ever cookie-based.  Deployments must set CORS_ORIGINS env.
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"]
 
+    @field_validator("CORS_ORIGINS", mode="after")
+    @classmethod
+    def no_wildcard_with_credentials(cls, v):
+        """Fail-closed CORS: the app always sets allow_credentials=True, and
+        Starlette answers Origin echo + ACA-Credentials for `["*"]`, which
+        hands every website credentialed cross-origin access to the API.
+        Production boots are additionally refused by validate_production
+        below; this clamp covers dev/test environments so a wildcard can
+        never silently degrade into an echo-any-origin setup.  P1.6-CORS-2."""
+        if v and "*" in v:
+            import logging
+            logging.getLogger(__name__).warning(
+                "CORS_ORIGINS contained '*' with cookie-credentialed requests "
+                "enabled — dropping wildcard (fail-closed); set explicit origins"
+            )
+            v = [o for o in v if o != "*"]
+        return v
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors(cls, v: object) -> object:
