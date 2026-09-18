@@ -15,6 +15,11 @@ class BackgroundScheduler:
         self._tasks: list[asyncio.Task] = []
         self._running = False
 
+    @property
+    def running(self) -> bool:
+        """Public liveness flag — used by /health/ready."""
+        return self._running and any(not t.done() for t in self._tasks)
+
     async def start(self):
         if self._running:
             return

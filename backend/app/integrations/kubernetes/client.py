@@ -1,6 +1,7 @@
 from __future__ import annotations
 """Kubernetes client — connects via kubeconfig file or in-cluster config."""
 import tempfile, os
+import asyncio
 from app.integrations.base import BaseIntegration
 from app.utils.logger import logger
 
@@ -504,14 +505,20 @@ class KubernetesClient(BaseIntegration):
             if not k8s:
                 return {"success": False, "error": "Kubernetes client unavailable"}
 
-            apps_v1 = k8s.AppsV1Api()
-            body    = {"spec": {"replicas": replicas}}
-            apps_v1.patch_namespaced_deployment_scale(
-                name=name,
-                namespace=namespace,
-                body=body,
-                _request_timeout=15,
-            )
+            def _patch():
+                apps_v1 = k8s.AppsV1Api()
+                body    = {"spec": {"replicas": replicas}}
+                return apps_v1.patch_namespaced_deployment_scale(
+                    name=name,
+                    namespace=namespace,
+                    body=body,
+                    _request_timeout=15,
+                )
+
+            # The sync kubectl client must never block the event loop during
+            # a high-risk mutation — offload to the default executor.
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, _patch)
             logger.info(f"Deployment scaled: {namespace}/{name} → {replicas} replicas")
             return {
                 "success":    True,
