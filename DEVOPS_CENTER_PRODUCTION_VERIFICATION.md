@@ -71,11 +71,11 @@ Status legend: `VERIFIED` (runtime-tested or covered by passing automated tests)
 
 | ID | Class | Description | Severity |
 |----|-------|-------------|----------|
-| R1 | Infra | `/health/ready` reports `scheduler: not_running` at runtime though lifespan logs "Background scheduler started" — the readiness check reads a different global than the scheduler module sets. Health-check label bug only; scheduler task-count log (8) is accurate. | Low |
+| R1 | ~~Infra~~ **FIXED (89b09fa)** | `/health/ready` reported `scheduler: not_running` despite a running scheduler (wrong attribute read). Fixed via a public `BackgroundScheduler.running` property; runtime now shows `scheduler: "ok"`. | ~~Low~~ |
 | R2 | Test env | `tests/integration/*` create bare `FastAPI()` apps (by design); after the `UniOpsException→HTTPException` change this works, but these apps bypass middleware (audit/correlation). Coverage gap noted, not a prod bug. | Low |
 | R3 | Perf | Deployment-engine fire-and-forget tasks now hold strong references (GC-safe), but pipeline concurrency is unbounded (no queue semaphore). Heavy multi-tenant load should add a worker pool. | Medium |
 | R4 | RBAC breadth | DevOps-role gating was applied to the enumerated high-risk endpoints. Broader platform-wide role-matrix coverage (every endpoint of every module) is only partially audited here. | Medium |
-| R5 | Kubernetes client sync-in-executor | `scale_deployment` uses the sync client without `run_in_executor` in one path — a brief event-loop block under a heavy mutation. Refactor to async/executor recommended. | Medium |
+| R5 | ~~K8s sync client~~ **FIXED (89b09fa)** | `scale_deployment`'s sync kubectl call now runs on the default executor — a high-risk mutation can no longer block the event loop. | ~~Medium~~ |
 | R6 | Security headers/CORS | Outside the DevOps Center verification scope of this round (unchanged from baseline). | Low |
 
 ---
