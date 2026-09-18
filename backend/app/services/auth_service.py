@@ -100,7 +100,24 @@ class AuthService(BaseService):
                 is_active=True,
             )
             self.db.add(tenant)
-            await self.db.flush()
+            try:
+                await self.db.flush()
+            except IntegrityError:
+                # P1.6-RACE-1: concurrent registrations with the same username
+                # compute the same slug — check-then-insert races under
+                # parallelism and used to surface as an unhandled 500.
+                # Re-try once with a uuid-suffixed slug (same fallback the
+                # code already used for the non-race collision case).
+                await self.db.rollback()
+                tenant = Tenant(
+                    name=company_name,
+                    slug=f"{slug}-{uuid.uuid4().hex[:6]}",
+                    plan="free",
+                    is_active=True,
+                )
+                self.db.add(tenant)
+                await self.db.flush()
+                slug = tenant.slug
             tenant_id = tenant.id
             role = "admin"
 
