@@ -685,7 +685,7 @@ export default function Threats() {
   const [page, setPage]           = useState(1);
   const [selectedThreat, setSelectedThreat] = useState<Threat | null>(null);
   const [acting, setActing]       = useState<string | null>(null);
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Debounced search
   useEffect(() => {

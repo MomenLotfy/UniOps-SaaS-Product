@@ -1,5 +1,5 @@
-import {
-  useState, useCallback, useEffect, useMemo, memo, React,
+import React, {
+  useState, useCallback, useEffect, useMemo, memo,
 } from 'react';
 import {
   Users, Search, Filter, Edit3, Check, X, ChevronDown, Building2, User, GitBranch,
@@ -481,7 +481,7 @@ export default function Ownership() {
             <h3 className="text-xs font-semibold text-foreground">Coverage by Environment</h3>
           </div>
           <div className="space-y-2">
-            {coverage.by_environment.slice(0, 5).map(env => (
+            {coverage.by_environment.slice(0, 5).map((env: { environment: string; count: number; owned: number }) => (
               <div key={env.environment} className="space-y-1">
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="text-muted-foreground capitalize">{env.environment}</span>
@@ -512,7 +512,7 @@ export default function Ownership() {
             <h3 className="text-xs font-semibold text-foreground">Coverage by Provider</h3>
           </div>
           <div className="space-y-2">
-            {coverage.by_cloud_provider.slice(0, 5).map(provider => (
+            {coverage.by_cloud_provider.slice(0, 5).map((provider: { provider: string; count: number; owned: number }) => (
               <div key={provider.provider} className="space-y-1">
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="text-muted-foreground">{provider.provider || 'Unknown'}</span>
@@ -539,7 +539,7 @@ export default function Ownership() {
             <h3 className="text-xs font-semibold text-foreground">Coverage by Type</h3>
           </div>
           <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
-            {coverage.by_resource_type.slice(0, 8).map(rtype => (
+            {coverage.by_resource_type.slice(0, 8).map((rtype: { resource_type: string; count: number; owned: number }) => (
               <div key={rtype.resource_type} className="flex items-center justify-between text-[10px] p-1.5 rounded hover:bg-white/5">
                 <div className="flex items-center gap-2 min-w-0">
                   {Object.entries(RESOURCE_ICONS).find(([k]) => k === rtype.resource_type)?.[1] ? (
@@ -655,7 +655,7 @@ export default function Ownership() {
               className="w-full text-xs px-2 py-1.5 bg-white/5 border border-border rounded-md text-foreground focus:outline-none"
             >
               <option value="">All Teams</option>
-              {[...new Set(rows.filter(r => r.team).map(r => r.team))].map(team => (
+              {[...new Set(rows.filter(r => r.team).map(r => r.team as string))].map(team => (
                 <option key={team} value={team}>{team}</option>
               ))}
             </select>
@@ -764,7 +764,7 @@ export default function Ownership() {
                       <td className="px-4 py-3">
                         {row.owner ? (
                           <button
-                            onClick={() => setOwnerPanel({ owner: row.owner, show: true })}
+                            onClick={() => setOwnerPanel({ owner: row.owner as string, show: true })}
                             className="flex items-center gap-1.5 text-xs hover:text-blue-400 transition-colors"
                           >
                             <User className="w-3 h-3 text-muted-foreground" />
@@ -811,7 +811,7 @@ export default function Ownership() {
                       </td>
                       {/* Last Updated */}
                       <td className="px-4 py-3">
-                        <span className="text-[10px] text-muted-foreground">{timeAgo(row.last_updated)}</span>
+                        <span className="text-[10px] text-muted-foreground">{timeAgo(row.last_updated ?? undefined)}</span>
                       </td>
                       {/* Actions */}
                       <td className="px-4 py-3 whitespace-nowrap">
@@ -1000,7 +1000,7 @@ export default function Ownership() {
                   </div>
                   <div>
                     <label className="text-[9px] text-muted-foreground block mb-1">Last Updated</label>
-                    <span className="text-sm text-muted-foreground">{timeAgo(detailsPanel.last_updated)}</span>
+                    <span className="text-sm text-muted-foreground">{timeAgo(detailsPanel.last_updated ?? undefined)}</span>
                   </div>
                 </div>
               </div>

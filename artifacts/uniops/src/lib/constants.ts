@@ -59,19 +59,37 @@ export const ROUTES = {
 export const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super Admin',
   admin: 'Admin',
+  security_engineer: 'Security Engineer',
+  security_analyst: 'Security Analyst',
+  devops_engineer: 'DevOps Engineer',
+  compliance_manager: 'Compliance Manager',
+  auditor: 'Auditor',
+  executive: 'Executive',
+  cost_analyst: 'FinOps Analyst',
+  developer: 'Developer',
+  viewer: 'Viewer',
+  // legacy aliases (normalizeRole maps these to canonical before use)
   devops: 'DevOps Engineer',
   security: 'Security Engineer',
   finops: 'FinOps Analyst',
-  viewer: 'Viewer',
 };
 
 export const ROLE_COLORS: Record<string, string> = {
   super_admin: 'text-red-400',
   admin: 'text-orange-400',
+  security_engineer: 'text-yellow-400',
+  security_analyst: 'text-yellow-200',
+  devops_engineer: 'text-blue-400',
+  compliance_manager: 'text-teal-400',
+  auditor: 'text-purple-400',
+  executive: 'text-amber-400',
+  cost_analyst: 'text-green-400',
+  developer: 'text-sky-400',
+  viewer: 'text-muted-foreground',
+  // legacy aliases
   devops: 'text-blue-400',
   security: 'text-yellow-400',
   finops: 'text-green-400',
-  viewer: 'text-muted-foreground',
 };
 
 export const PLAN_LABELS: Record<string, string> = {

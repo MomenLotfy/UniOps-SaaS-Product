@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useReducer, useCallback } from 'react';
 import type { User, LoginCredentials, RegisterData, AuthTokens } from '@/types/user';
 import { TOKEN_KEY, REFRESH_TOKEN_KEY, USER_KEY } from '@/lib/constants';
+import { normalizeRole } from '@/lib/permissions';
 import apiClient from '@/services/api/client';
 
 // ── Shape of what the backend actually sends ──────────────────────────────────

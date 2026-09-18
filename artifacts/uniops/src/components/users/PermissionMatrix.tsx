@@ -23,9 +23,14 @@ type AccessLevel = 'full' | 'read' | 'none';
 const MATRIX: Record<UserRole, Record<string, AccessLevel>> = {
   super_admin: { command_center: 'full', devops: 'full', security: 'full', cost: 'full', ml_insights: 'full', users: 'full', roles: 'full', audit_logs: 'full', integrations: 'full', billing: 'full', api_keys: 'full', security_policies: 'full' },
   admin: { command_center: 'full', devops: 'full', security: 'full', cost: 'full', ml_insights: 'full', users: 'full', roles: 'read', audit_logs: 'full', integrations: 'full', billing: 'read', api_keys: 'full', security_policies: 'read' },
-  devops: { command_center: 'read', devops: 'full', security: 'read', cost: 'read', ml_insights: 'read', users: 'none', roles: 'none', audit_logs: 'read', integrations: 'read', billing: 'none', api_keys: 'read', security_policies: 'none' },
-  security: { command_center: 'read', devops: 'read', security: 'full', cost: 'none', ml_insights: 'read', users: 'read', roles: 'none', audit_logs: 'full', integrations: 'read', billing: 'none', api_keys: 'none', security_policies: 'full' },
-  finops: { command_center: 'read', devops: 'none', security: 'none', cost: 'full', ml_insights: 'read', users: 'none', roles: 'none', audit_logs: 'read', integrations: 'read', billing: 'full', api_keys: 'none', security_policies: 'none' },
+  security_engineer: { command_center: 'read', devops: 'read', security: 'full', cost: 'none', ml_insights: 'read', users: 'read', roles: 'none', audit_logs: 'full', integrations: 'read', billing: 'none', api_keys: 'none', security_policies: 'full' },
+  security_analyst: { command_center: 'read', devops: 'none', security: 'read', cost: 'none', ml_insights: 'read', users: 'none', roles: 'none', audit_logs: 'read', integrations: 'none', billing: 'none', api_keys: 'none', security_policies: 'read' },
+  devops_engineer: { command_center: 'read', devops: 'full', security: 'read', cost: 'read', ml_insights: 'read', users: 'none', roles: 'none', audit_logs: 'read', integrations: 'read', billing: 'none', api_keys: 'read', security_policies: 'none' },
+  compliance_manager: { command_center: 'read', devops: 'none', security: 'read', cost: 'none', ml_insights: 'read', users: 'none', roles: 'none', audit_logs: 'full', integrations: 'none', billing: 'none', api_keys: 'none', security_policies: 'read' },
+  auditor: { command_center: 'read', devops: 'read', security: 'read', cost: 'read', ml_insights: 'read', users: 'none', roles: 'none', audit_logs: 'full', integrations: 'none', billing: 'none', api_keys: 'none', security_policies: 'none' },
+  executive: { command_center: 'read', devops: 'read', security: 'read', cost: 'read', ml_insights: 'read', users: 'none', roles: 'none', audit_logs: 'read', integrations: 'none', billing: 'read', api_keys: 'none', security_policies: 'none' },
+  cost_analyst: { command_center: 'read', devops: 'none', security: 'none', cost: 'full', ml_insights: 'read', users: 'none', roles: 'none', audit_logs: 'read', integrations: 'read', billing: 'full', api_keys: 'none', security_policies: 'none' },
+  developer: { command_center: 'read', devops: 'read', security: 'none', cost: 'none', ml_insights: 'none', users: 'none', roles: 'none', audit_logs: 'none', integrations: 'read', billing: 'none', api_keys: 'read', security_policies: 'none' },
   viewer: { command_center: 'read', devops: 'read', security: 'read', cost: 'read', ml_insights: 'read', users: 'none', roles: 'none', audit_logs: 'none', integrations: 'none', billing: 'none', api_keys: 'none', security_policies: 'none' },
 };
 
