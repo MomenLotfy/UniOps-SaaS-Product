@@ -1149,14 +1149,131 @@ Only P3 remains. P4 is complete (see §4b).
 
 | ID | Finding | Phase |
 |---|---|---|
-| BUG-010 | `selectedClusterId` (`index.tsx:88,215,216,236` — line numbers re-verified against current source) is never sent to the API, so the cluster selector does not route requests. The nine endpoints now *accept* `cluster_id`; the frontend does not yet send it. Separately, `src/pages/SecurityCenter/sections/KubernetesSecurity.tsx:886` builds `?cluster=${selectedCluster}` for `/kubernetes/pods/cluster/summary`, but that endpoint declares only `cluster_id` (`pods.py:388`), so the parameter is silently ignored — the same file uses the correct `cluster_id` at line 890 for its findings call. | P3 |
-| — | WebSocket fan-out is single-instance only; no Redis pub/sub, no tenant isolation across instances | P3 |
-| — | Rate limiting runs **before** authentication, so identity is unauthenticated at throttle time; not Redis-backed when Redis is configured | P3 |
+| BUG-010 | `selectedClusterId` (`index.tsx:88,215,216,236` — line numbers re-verified against current source) is never sent to the API, so the cluster selector does not route requests. The nine endpoints now *accept* `cluster_id`; the frontend does not yet send it. Separately, `src/pages/SecurityCenter/sections/KubernetesSecurity.tsx:886` builds `?cluster=${selectedCluster}` for `/kubernetes/pods/cluster/summary`, but that endpoint declares only `cluster_id` (`pods.py:388`), so the parameter is silently ignored — the same file uses the correct `cluster_id` at line 892 for its findings call (`findQs.set('cluster_id', selectedCluster)` — line 890 is the `// Findings` comment, 891 builds `findQs`). | P3 |
+| — | WebSocket fan-out is **in-process only** (no Redis pub/sub), so events are lost when the API runs as more than one worker/replica. Half of the original wording was wrong — tenant isolation **is** enforced and is not instance-dependent; see below. | P3 |
+| — | ~~Rate limiting runs **before** authentication; not Redis-backed~~ **WITHDRAWN — this finding was wrong**, see below | — |
 | — | ArgoCD TLS verification disabled — see note below | P3 |
 
 Fixed in this pass (P4): BUG-014, BUG-015, BUG-016, BUG-017, BUG-018 — see §4b.
 
-Also documented, unfixed: `DevOpsUser` is declared twice in `deps.py`.
+Also documented, unfixed: `DevOpsUser` is declared twice in
+`backend/app/api/deps.py` — lines **180** and **182**, both the identical
+`DevOpsUser = Annotated[dict, Depends(require_devops)]`. It is a type alias, not a
+class (so `grep "class DevOpsUser"` finds nothing); the second binding simply
+shadows the first, so behaviour is unaffected and the **30** endpoints across **7**
+modules that annotate `current_user: DevOpsUser` (`catalog.py`, `clusters.py`,
+`devops_alerts.py`, `gitops.py`, `pipelines.py`, `pods.py`, `remediation.py`) all
+resolve to the same dependency. Cosmetic, but it is a copy-paste artefact worth deleting.
+
+### WebSocket fan-out — confirmed, but narrower than stated
+
+The audit's wording was "single-instance only; no Redis pub/sub, no tenant
+isolation across instances." I re-read the whole WebSocket layer. The first half
+holds; the second half is wrong and has been corrected in the table above.
+
+**Confirmed: fan-out is in-process.** `ConnectionManager` keeps its sockets in a
+plain dict (`manager.py:10`, `self._connections: dict[str, list[WebSocket]]`)
+behind an `asyncio.Lock`, and exposes one module-level singleton
+(`manager.py:68`, `ws_manager = ConnectionManager()`). A grep for
+`redis|publish|pubsub|subscribe|channel` across `app/api/v1/websocket/` returns
+no broker client — only the client-side `subscribe` event name and a comment.
+Every publisher reaches that same in-process singleton:
+
+| Publisher | Sites |
+|---|---|
+| `event_bus._ws_bridge` | `app/core/events/event_bus.py:122,124` |
+| `BackgroundScheduler` (APScheduler) | `app/core/scheduler.py:88,106,181` |
+| `deployment_engine.service` | `service.py:373,419,457` |
+| `deployment_engine.worker` | `worker.py:75,118` |
+
+One nuance I checked rather than assumed: the scheduler and the deployment
+worker are **not** separate Celery processes — `worker.py:10` states it is
+"Started as an asyncio task during FastAPI lifespan startup" and awaited via
+`asyncio.create_task()`. So in a single-worker deployment every publisher and
+every socket share one dict, and fan-out works. The defect is strictly a
+**scale-out** defect: with `uvicorn --workers N`, gunicorn, or more than one
+replica behind a load balancer, an event raised in worker A never reaches a
+socket accepted by worker B, because each process has its own empty-or-not dict
+and nothing bridges them. The observable symptom is silently missing real-time
+updates (a client falls back to polling or shows stale state), never a wrong or
+cross-tenant payload. Fixing it is the P3 item: Redis pub/sub, or an equivalent
+broker, keyed by `tenant_id`.
+
+**Wrong: "no tenant isolation across instances."** Tenant isolation is enforced
+at accept time, not at fan-out time, and does not depend on instance count.
+`websocket_endpoint` (`main.py:235-247`) rejects a missing/undecodable token
+with close code `4001`, then compares the path tenant against the JWT claim and
+closes with `4003` on mismatch, *before* `ws_manager.connect()`. Thereafter
+`send_to_tenant(tenant_id, …)` (`manager.py:32-44`) iterates only that tenant's
+list. A client parked on instance B therefore misses instance A's events — a
+delivery gap — it does not receive another tenant's events. I have not found a
+path where a socket is registered under a tenant other than its own token's.
+
+**Two smaller defects found while reading, both unfixed (P3 scope):**
+
+1. **Client subscriptions are decorative.** `handlers.py:19-33` accepts
+   `subscribe`/`unsubscribe` with a `channels` list, logs it, echoes back
+   `{"event": "subscribed", "status": "ok"}` — and stores nothing.
+   `send_to_tenant` takes no channel argument and applies no filter, so every
+   connection for a tenant receives every event for that tenant regardless of
+   what it subscribed to. The confirmation is truthful about what was received
+   and misleading about what it changed.
+2. **`send_to_user` is dead code** (`manager.py:46-48`). A repo-wide grep over
+   `*.py`, `*.ts` and `*.tsx` returns only its definition — no caller. It would
+   also not be a per-user send if it were called: it tags the message with
+   `_target_user` and calls `send_to_tenant`, i.e. it delivers the payload to
+   every socket in the tenant and relies on the browser to discard it.
+
+### Rate limiting — a finding I had wrong, withdrawn
+
+The audit and this report both carried the claim that "rate limiting runs
+**before** authentication, so identity is unauthenticated at throttle time; not
+Redis-backed when Redis is configured." **Measured, that is false on all three
+counts.** It is withdrawn rather than softened.
+
+**1. Ordering.** Instrumented every middleware's `dispatch` and issued a real
+request through the ASGI app. Starlette's `add_middleware` *prepends*, so
+registration order is the reverse of execution order — the audit read the
+registration block top-down and drew the opposite conclusion. Measured execution
+order, outermost first:
+
+```
+1. Audit
+2. JWTAuth
+3. Logging
+4. RateLimit
+```
+
+`JWTAuth` runs at position 2 and `RateLimit` at position 4, so authentication
+completes **before** the rate limiter sees the request.
+
+**2. Identity.** Independent of middleware order, the per-route limiter is a
+FastAPI dependency, not a middleware: `rate_limit(scope, max_requests,
+window_seconds)` declares
+`current_user: Annotated[dict, Depends(get_current_active_user)]` and keys its
+bucket on `str(current_user.get("user_id") or "anonymous")`. The limit is
+therefore per-authenticated-user by construction — it *cannot* be unauthenticated
+at throttle time, since the dependency would not resolve.
+
+**3. Redis.** `_redis_count()` (app/core/rate_limit.py:49) is a fixed-window
+counter in Redis — `INCR` + `EXPIRE` in a pipeline on
+`rl:{prefix}:{scope}:{identity}:{bucket_id}` — described in its own docstring as
+"shared across ALL workers". It is tried first on every request, and the
+per-process in-memory bucket is reached only when Redis raises, which is the
+correct fail-over direction.
+
+So none of the three concerns holds. What genuinely remains true is narrower:
+the in-memory fallback is per-process, so *if* Redis is unavailable the limits
+become per-worker rather than global. That is a deliberate, documented
+degradation, not a defect, and it is not what the withdrawn claim described.
+
+**Lesson:** middleware ordering is not readable from registration order, and a
+claim of this kind should be measured, not inferred. This is the fifth false or
+partly-false finding corrected in this pass (after the ArgoCD `verify=False`
+path, the BUG-016 concurrency count, the `_argocd_sync` 500, and the
+"no tenant isolation across instances" half of the WebSocket row above). Every
+remaining claim in §10 has now been re-checked against current source rather
+than carried over from the audit.
 
 ### ArgoCD TLS — corrected finding
 
