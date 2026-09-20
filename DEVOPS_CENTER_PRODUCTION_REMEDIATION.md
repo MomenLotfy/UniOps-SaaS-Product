@@ -764,8 +764,24 @@ classified rather than blanket-edited:
 - `integrations[0]` — exactly one occurrence in code, in the legitimate
   `else` default branch, guarded by
   `test_default_selection_only_happens_when_no_cluster_was_requested`.
-- `success=True` on failure paths — remediated for exec, scale, cluster test,
-  GitOps delete, catalog, pipeline jobs.
+### `success=True` — every site enumerated and read
+
+16 sites across the DevOps Center code paths (comments stripped via `tokenize`
+first, so explanatory prose containing the phrase doesn't inflate the count).
+Each was read rather than assumed, and each is legitimately guarded:
+
+| Site(s) | Guard |
+|---|---|
+| `kubernetes/client.py` 468 (delete), 517 (restart), 658 (scale) | inside `try`; provider unavailable → `success: False`; restart reads the pod first and returns `success: False` if absent; any exception → `except` returns failure |
+| `github/client.py` 308, 333, 364 | explicit status checks — `in (200, 201)`, `in (200, 201)`, `in (202, 200)`; anything else → `success: False` with `_error_message(r)` |
+| `kubernetes_service.py` 222 (delete), 273 (restart) | each sits **after** `raise IntegrationError(...)` on the failure path, so it is unreachable when the provider failed |
+| `pipeline_service.py` 242 (rerun), 356 (cancel) | both preceded by `if not result["success"]: raise IntegrationError(...)` |
+| `catalog.py` 138, 179, 201, 230, 272, 295 | database reads/writes only — no external provider in the path; guarded by 404/409 `HTTPException`s |
+
+**No site reports success for a failed provider.** The three classes that touch a
+real provider (Kubernetes, GitHub, and the service layer that wraps them) all
+fail closed, and the two service-layer sites are structurally unreachable on
+failure because the failure path raises first.
 - `window.confirm` — all three call sites replaced (BUG-018); the only remaining
   textual matches are explanatory comments.
 - `verify=False` — five sites in `gitops.py`, documented and left for P3 (see §10).
