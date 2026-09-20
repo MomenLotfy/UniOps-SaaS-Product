@@ -73,6 +73,13 @@ interface MetricAreaProps {
 function MetricArea({ data, color, label, range, unit = '%' }: MetricAreaProps) {
   const chartData = data.map(d => ({ ...d, ts: formatTs(d.timestamp, range) }));
   const current = data[data.length - 1]?.value ?? 0;
+  // BUG-014: SVG `stop-color` needs a literal colour. Tailwind classes only
+  // resolve through generated CSS, which never applies to SVG presentation
+  // attributes — the old inline `color.replace('text-','#').replace('-400','')`
+  // produced "#blue"/"#purple", which the browser ignored, leaving the gradient
+  // to fall back to black. resolveColor() already maps these classes and is
+  // used for the matching <Area stroke> below, so stroke and fill now agree.
+  const svgColor = resolveColor(color);
   return (
     <div className="rounded-xl border p-4" style={{ background: 'hsl(230 18% 9%)', borderColor: 'hsl(230 15% 15%)' }}>
       <div className="flex items-center justify-between mb-3">
@@ -83,8 +90,8 @@ function MetricArea({ data, color, label, range, unit = '%' }: MetricAreaProps) 
         <AreaChart data={chartData} margin={{ top: 2, right: 2, bottom: 0, left: -20 }}>
           <defs>
             <linearGradient id={`grad-${label}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%"  stopColor={color.replace('text-', '#').replace('-400', '')} stopOpacity={0.25} />
-              <stop offset="95%" stopColor={color.replace('text-', '#').replace('-400', '')} stopOpacity={0.02} />
+              <stop offset="5%"  stopColor={svgColor} stopOpacity={0.25} />
+              <stop offset="95%" stopColor={svgColor} stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(230 15% 13%)" vertical={false} />

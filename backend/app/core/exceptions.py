@@ -35,6 +35,28 @@ class NotFoundError(UniOpsException):
         )
 
 
+class ProviderResourceNotFoundError(NotFoundError):
+    """
+    A 404 reported by the provider itself, carrying the provider's verbatim
+    message.
+
+    ``NotFoundError.__init__(resource, resource_id="")`` is designed for a
+    *resource name* and formats ``f"{resource} not found"``. Passing an
+    arbitrary provider message through it mangles the text — e.g. the provider
+    error ``"deployment not found"`` became ``"deployment not found not found"``.
+
+    This subclass keeps the 404 status and the ``NOT_FOUND`` code, and remains
+    catchable as ``NotFoundError`` so existing ``except NotFoundError`` handlers
+    (e.g. the re-raise in ``pods.cluster_summary``) keep working, while
+    preserving the provider's wording.
+    """
+
+    def __init__(self, message: str):
+        UniOpsException.__init__(
+            self, message=message, code="NOT_FOUND", status_code=404
+        )
+
+
 class UnauthorizedError(UniOpsException):
     def __init__(self, message: str = "Authentication required"):
         super().__init__(message=message, code="UNAUTHORIZED", status_code=401)

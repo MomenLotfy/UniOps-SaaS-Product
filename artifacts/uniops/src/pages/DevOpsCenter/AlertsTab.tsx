@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useApi, apiPost, apiDelete } from '@/hooks/use-api';
+// BUG-018: replace the native window.confirm with the existing in-app dialog.
+import { ConfirmDialog } from './components';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -323,6 +325,9 @@ export function AlertsTab({ showToast }: AlertsTabProps) {
   const [severityFilter, setSeverityFilter] = useState<'all' | AlertSeverity>('all');
   const [showCreate,     setShowCreate]     = useState(false);
   const [busy,           setBusy]           = useState<Record<string, boolean>>({});
+  // BUG-018: pending delete id — the native window.confirm blocked the main
+  // thread and ignored the app's theming.
+  const [pendingDelete,  setPendingDelete]  = useState<string | null>(null);
 
   const qs = new URLSearchParams();
   if (statusFilter   !== 'all') qs.set('status',   statusFilter);
@@ -348,8 +353,13 @@ export function AlertsTab({ showToast }: AlertsTabProps) {
     }
   }, [showToast, refetch]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!window.confirm('Delete this alert?')) return;
+  // BUG-018: the row button now only stages the deletion; the dialog confirms it.
+  const handleDelete = useCallback((id: string) => setPendingDelete(id), []);
+
+  const confirmDelete = useCallback(async () => {
+    const id = pendingDelete;
+    setPendingDelete(null);
+    if (!id) return;
     setBusy(p => ({ ...p, [id]: true }));
     try {
       await apiDelete(`/devops-alerts/${id}`);
@@ -360,7 +370,7 @@ export function AlertsTab({ showToast }: AlertsTabProps) {
     } finally {
       setBusy(p => ({ ...p, [id]: false }));
     }
-  }, [showToast, refetch]);
+  }, [pendingDelete, showToast, refetch]);
 
   return (
     <div>
@@ -455,6 +465,18 @@ export function AlertsTab({ showToast }: AlertsTabProps) {
           <CreateAlertDialog onClose={() => setShowCreate(false)} onCreated={() => refetch(true)} />
         )}
       </AnimatePresence>
+
+      {/* BUG-018: in-app confirmation, replacing window.confirm */}
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Delete alert"
+        description="This alert will be permanently removed. This action cannot be undone."
+        confirmLabel="Delete"
+        danger
+        loading={pendingDelete !== null && (busy[pendingDelete] ?? false)}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

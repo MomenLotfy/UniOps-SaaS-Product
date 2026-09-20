@@ -111,23 +111,27 @@ async def list_services(
     page:         int           = Query(1, ge=1),
     page_size:    int           = Query(50, ge=1, le=200),
 ):
-    q = select(CatalogService).where(CatalogService.tenant_id == tenant_id)
-
+    # BUG-013: the filter conditions must apply to BOTH the page query and the
+    # count. Previously `total` counted every service for the tenant while
+    # `data` was filtered, so pagination reported more pages than exist and the
+    # UI could page past the end of the filtered set.
+    conditions = [CatalogService.tenant_id == tenant_id]
     if status:
-        q = q.where(CatalogService.status == status)
+        conditions.append(CatalogService.status == status)
     if type:
-        q = q.where(CatalogService.type == type)
+        conditions.append(CatalogService.type == type)
     if search:
-        q = q.where(CatalogService.name.ilike(f"%{search}%"))
+        conditions.append(CatalogService.name.ilike(f"%{search}%"))
 
+    q = select(CatalogService).where(*conditions)
     q = q.order_by(CatalogService.created_at.desc())
     q = q.offset((page - 1) * page_size).limit(page_size)
 
     result = await db.execute(q)
     services = result.scalars().all()
 
-    # Total count
-    count_q = select(func.count(CatalogService.id)).where(CatalogService.tenant_id == tenant_id)
+    # Total count — same filters, so `total` describes the filtered set.
+    count_q = select(func.count(CatalogService.id)).where(*conditions)
     total   = (await db.execute(count_q)).scalar_one()
 
     return {

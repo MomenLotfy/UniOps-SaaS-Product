@@ -10,19 +10,25 @@ Security model:
   - Pod exec runs the command argument list directly without a shell
     (no command injection), is audit-logged, and never logs secrets.
 """
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+if TYPE_CHECKING:
+    from app.integrations.kubernetes.client import KubernetesClient
+
 from app.models.pod import Pod
 from app.models.integration import Integration
+from app.models.cluster import Cluster
 from app.models.audit_log import AuditLog
 from app.schemas.pod import PodResponse, PodStats, PodActionResult
 from app.schemas.common import PaginatedResponse
 from app.core.exceptions import (
     NotFoundError, ForbiddenError, IntegrationError, IntegrationUnavailableError,
 )
+from app.integrations.base import raise_for_provider_failure
 from app.services.base import BaseService
 from app.utils.logger import logger
 
@@ -180,6 +186,22 @@ class KubernetesService(BaseService):
 
         result = await client.delete_pod(pod.name, pod.namespace)
         if not result["success"]:
+            # A failed delete must still be audited. The audit row used to be
+            # written only after a successful call, so every failure — the case
+            # an operator most needs a record of — was missing from the trail.
+            await self._write_audit(
+                tenant_id=pod.tenant_id,
+                user_id=deleted_by,
+                action="pod.delete",
+                resource="pod",
+                resource_id=pod_id,
+                details={
+                    "name": pod.name,
+                    "namespace": pod.namespace,
+                    "error": str(result.get("error", ""))[:300],
+                },
+                status="failed",
+            )
             raise IntegrationError("Kubernetes", result.get("error", "Delete failed"))
 
         pod_name = pod.name
@@ -214,6 +236,20 @@ class KubernetesService(BaseService):
 
         result = await client.restart_pod(pod.name, pod.namespace)
         if not result["success"]:
+            # See delete_pod: a failed restart must still leave an audit record.
+            await self._write_audit(
+                tenant_id=pod.tenant_id,
+                user_id=restarted_by,
+                action="pod.restart",
+                resource="pod",
+                resource_id=pod_id,
+                details={
+                    "name": pod.name,
+                    "namespace": pod.namespace,
+                    "error": str(result.get("error", ""))[:300],
+                },
+                status="failed",
+            )
             raise IntegrationError("Kubernetes", result.get("error", "Restart failed"))
 
         pod.status = "Terminating"
@@ -283,10 +319,39 @@ class KubernetesService(BaseService):
         """
         Public tenant-level client lookup.
 
-        Prefers the integration whose config.name matches the cluster filter;
-        otherwise returns the tenant's first connected Kubernetes integration.
+        Resolution rules:
+
+        * ``cluster`` omitted -> the tenant's default connected Kubernetes
+          integration. This is the only implicit selection permitted.
+        * ``cluster`` given -> the integration that matches that cluster, or
+          ``None`` when the tenant has no such integration.
+
+        It NEVER falls back to a different cluster: a caller that asked for a
+        specific cluster must not silently receive another cluster's client.
         NEVER crosses tenants — returns None when the tenant has none.
         """
+        integrations = await self._list_tenant_k8s_integrations(tenant_id)
+        if not integrations:
+            return None
+
+        if cluster:
+            integration = self._match_integration(integrations, cluster)
+            if integration is None:
+                # Explicitly requested cluster is not present for this tenant.
+                # Returning integrations[0] here would route the operation —
+                # including destructive ones — to an unrelated cluster.
+                logger.warning(
+                    f"cluster '{cluster}' not found among tenant {tenant_id}'s "
+                    f"{len(integrations)} kubernetes integration(s) — refusing to "
+                    f"fall back to a different cluster"
+                )
+                return None
+        else:
+            integration = integrations[0]
+
+        return self._client_from_integration(integration)
+
+    async def _list_tenant_k8s_integrations(self, tenant_id: str) -> list[Integration]:
         query = select(Integration).where(
             Integration.tenant_id == tenant_id,
             Integration.type == "kubernetes",
@@ -294,25 +359,149 @@ class KubernetesService(BaseService):
             Integration.status == "connected",
         )
         result = await self.db.execute(query)
-        integrations = result.scalars().all()
-        if not integrations:
-            return None
+        return list(result.scalars().all())
 
-        integration = None
-        if cluster:
-            for i in integrations:
-                cfg = i.config or {}
-                if cluster in (i.name, cfg.get("name"), cfg.get("cluster_name")):
-                    integration = i
-                    break
-        if integration is None:
-            integration = integrations[0]
+    @staticmethod
+    def _match_integration(
+        integrations: list[Integration], cluster: str
+    ) -> Integration | None:
+        """Match a cluster identifier against the tenant's integrations."""
+        for i in integrations:
+            cfg = i.config or {}
+            if cluster in (
+                i.name, i.id, cfg.get("name"), cfg.get("cluster_name"),
+                cfg.get("cluster_id"),
+            ):
+                return i
+        return None
 
+    @staticmethod
+    def _client_from_integration(integration: Integration) -> KubernetesClient:
         creds  = _decrypt_integration_creds(integration)
         config = {**creds, **(integration.config or {})}
 
         from app.integrations.kubernetes.client import KubernetesClient
         return KubernetesClient(config)
+
+    async def list_cluster_resource(
+        self,
+        tenant_id: str,
+        fetch: Callable[[KubernetesClient, str | None], Awaitable[list]],
+        namespace: str | None = None,
+        cluster_id: str | None = None,
+        resource: str = "resources",
+    ) -> dict:
+        """
+        BUG-009: cluster-scoped listing that never presents a provider outage
+        as an empty cluster.
+
+        Returns the project's degraded payload shape::
+
+            {"items": [...], "source": "kubernetes", "degraded": False}
+            {"items": [],    "source": "unavailable", "degraded": True,
+             "error_code": "KUBERNETES_UNAVAILABLE", "message": "..."}
+
+        ``source: "unavailable"`` mirrors the convention already used by the
+        observability endpoints, so this is not a second envelope convention.
+        """
+        try:
+            client = await self.get_client_for_cluster(tenant_id, cluster_id)
+        except NotFoundError:
+            raise
+        except IntegrationUnavailableError as e:
+            return self._degraded_resource(str(e.message))
+
+        if client is None:
+            return self._degraded_resource(
+                "No Kubernetes integration connected for this tenant"
+            )
+
+        reachable, reason = await client.check_reachable()
+        if not reachable:
+            logger.warning(
+                f"kubernetes unreachable while listing {resource} for tenant "
+                f"{tenant_id}: {reason}"
+            )
+            return self._degraded_resource(reason or "Kubernetes API server unreachable")
+
+        items = await fetch(client, namespace)
+        return {
+            "items":    items or [],
+            "source":   "kubernetes",
+            "degraded": False,
+        }
+
+    @staticmethod
+    def _degraded_resource(reason: str) -> dict:
+        return {
+            "items":      [],
+            "source":     "unavailable",
+            "degraded":   True,
+            "error_code": "KUBERNETES_UNAVAILABLE",
+            "message":    f"Kubernetes unavailable: {reason}",
+        }
+
+    async def resolve_cluster(self, tenant_id: str, cluster_id: str) -> Cluster:
+        """
+        Resolve a cluster by id, strictly within the tenant.
+
+        Raises NotFoundError when the cluster does not exist or belongs to
+        another tenant — the two cases are deliberately indistinguishable to
+        the caller so cluster existence is not leaked across tenants.
+        """
+        result = await self.db.execute(
+            select(Cluster).where(
+                Cluster.id == cluster_id,
+                Cluster.tenant_id == tenant_id,
+            )
+        )
+        cluster = result.scalar_one_or_none()
+        if cluster is None:
+            raise NotFoundError(f"Cluster {cluster_id} not found")
+        return cluster
+
+    async def get_client_for_cluster(
+        self, tenant_id: str, cluster_id: str | None
+    ) -> KubernetesClient | None:
+        """
+        Cluster-scoped client resolution used by the DevOps Center selector.
+
+        * ``cluster_id`` given -> resolve that exact cluster (404 if absent or
+          owned by another tenant), then build a client from that cluster's own
+          credentials. No fallback to any other cluster or integration.
+        * ``cluster_id`` omitted -> the tenant's default connected integration.
+        """
+        if not cluster_id:
+            return await self.get_k8s_client_for_tenant(tenant_id)
+
+        cluster = await self.resolve_cluster(tenant_id, cluster_id)
+
+        from app.integrations.kubernetes.client import KubernetesClient
+
+        kubeconfig = None
+        if cluster.kubeconfig_encrypted:
+            try:
+                import base64
+                kubeconfig = base64.b64decode(cluster.kubeconfig_encrypted).decode()
+            except Exception as e:  # pragma: no cover - defensive
+                logger.warning(f"could not decode kubeconfig for cluster {cluster_id}: {e}")
+
+        if kubeconfig:
+            return KubernetesClient({"kubeconfig": kubeconfig, "name": cluster.name})
+
+        # No cluster-specific kubeconfig: use the integration that explicitly
+        # names this cluster. Still no silent fallback to an unrelated one.
+        integrations = await self._list_tenant_k8s_integrations(tenant_id)
+        integration = self._match_integration(
+            integrations, cluster_id) or self._match_integration(
+            integrations, cluster.name)
+        if integration is None:
+            raise IntegrationUnavailableError(
+                "Kubernetes",
+                f"cluster '{cluster.name}' has no kubeconfig and no matching "
+                f"Kubernetes integration",
+            )
+        return self._client_from_integration(integration)
 
     async def _write_audit(
         self,
@@ -373,29 +562,65 @@ class KubernetesService(BaseService):
         if len(argv) > 64 or any(len(a) > 512 for a in argv):
             raise IntegrationError("Kubernetes", "command too long / too many arguments")
 
-        output = await client.exec_pod(
-            name=pod.name,
-            namespace=pod.namespace,
-            command_list=argv,
-            container=container,
+        # BUG-004: map provider failures onto the project's integration-error
+        # contract (502 / success=false) instead of letting an error string be
+        # returned as if it were command output.
+        from app.integrations.kubernetes.client import (
+            KubernetesClientUnavailable, KubernetesProviderError,
         )
 
-        # Audit (command recorded for accountability; output is NOT logged
-        # to avoid persisting potential secrets from the container)
-        await self._write_audit(
-            tenant_id=pod.tenant_id,
-            user_id=executed_by or "unknown",
-            action="pod.exec",
-            resource="pod",
-            resource_id=pod_id,
-            details={
-                "name":      pod.name,
-                "namespace": pod.namespace,
-                "command":   " ".join(argv)[:300],
-                "container": container,
-                # output deliberately omitted
-            },
-        )
+        base_details = {
+            "name":      pod.name,
+            "namespace": pod.namespace,
+            "command":   " ".join(argv)[:300],
+            "container": container,
+            # output deliberately omitted — it may contain container secrets
+        }
+
+        async def _audit(status: str, error: str | None = None) -> None:
+            """
+            Record this exec. Written on BOTH outcomes: a failed exec is the
+            one an operator most needs a record of, and the audit row used to
+            be written only after a successful call, so every failure was
+            invisible in the audit trail.
+            """
+            details = dict(base_details)
+            if error:
+                details["error"] = error[:300]
+            await self._write_audit(
+                tenant_id=pod.tenant_id,
+                user_id=executed_by or "unknown",
+                action="pod.exec",
+                resource="pod",
+                resource_id=pod_id,
+                details=details,
+                status=status,
+            )
+
+        try:
+            output = await client.exec_pod(
+                name=pod.name,
+                namespace=pod.namespace,
+                command_list=argv,
+                container=container,
+            )
+        except KubernetesClientUnavailable as e:
+            await _audit("failed", str(e))
+            raise IntegrationUnavailableError("Kubernetes", str(e))
+        except KubernetesProviderError as e:
+            await _audit("failed", str(e))
+            raise IntegrationError("Kubernetes", str(e))
+        except ValueError as e:
+            await _audit("failed", str(e))
+            raise IntegrationError("Kubernetes", f"invalid command: {e}")
+        except Exception as e:
+            # Any other provider failure (e.g. a raw error raised from the
+            # kubernetes stream layer) must be classified, not leaked as an
+            # opaque HTTP 500.
+            await _audit("failed", str(e))
+            raise IntegrationError("Kubernetes", f"exec failed: {e}")
+
+        await _audit("success")
         return output
 
     async def scale_deployment(
@@ -410,11 +635,10 @@ class KubernetesService(BaseService):
         """Scale a Kubernetes Deployment — strictly within the caller's tenant."""
         client = await self.get_k8s_client_for_tenant(tenant_id, cluster=cluster)
         if not client:
-            return {
-                "success": False,
-                "error": "No Kubernetes integration connected for this tenant",
-                "connected": False,
-            }
+            # Never a silent 200: an unavailable provider is a 503-class error.
+            raise IntegrationUnavailableError(
+                "Kubernetes", "No Kubernetes integration connected for this tenant"
+            )
 
         result = await client.scale_deployment(
             name=deployment_name,
@@ -434,4 +658,7 @@ class KubernetesService(BaseService):
             },
             status="success" if result.get("success") else "failed",
         )
-        return result
+        # BUG-006: a failed provider mutation must never be returned as a
+        # 200/success envelope. Translate it into the project's established
+        # exception contract instead.
+        return raise_for_provider_failure(result, "Kubernetes")

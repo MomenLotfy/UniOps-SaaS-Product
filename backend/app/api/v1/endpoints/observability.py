@@ -131,7 +131,17 @@ async def get_pod_metrics(
 
     pod_list = []
     for p in pods_raw[:top]:
-        pod_dict = p if isinstance(p, dict) else (p.to_dict() if hasattr(p, "to_dict") else {})
+        # BUG-P1-OBS-01: PodResponse is a pydantic BaseModel, which has no
+        # to_dict() — the old fallback silently produced {} for every pod, so
+        # the whole panel rendered as name="unknown"/status="Unknown".
+        if isinstance(p, dict):
+            pod_dict = p
+        elif hasattr(p, "model_dump"):
+            pod_dict = p.model_dump()
+        elif hasattr(p, "to_dict"):
+            pod_dict = p.to_dict()
+        else:
+            pod_dict = {}
         name = pod_dict.get("name", "unknown")
         ns   = pod_dict.get("namespace", "default")
 
@@ -178,6 +188,9 @@ async def get_pod_metrics(
             "status":            pod_dict.get("status", "Unknown"),
             "cpu_pct":           cpu_cur,
             "memory_pct":        mem_cur,
+            # BUG-011: the Restart Spikes panel filters pods by restart_count,
+            # but this payload omitted it, so the panel always read empty.
+            "restart_count":     pod_dict.get("restart_count", 0) or 0,
             "cpu_timeseries":    cpu_ts,
             "memory_timeseries": mem_ts,
         })
@@ -206,7 +219,16 @@ async def get_namespace_metrics(
 
     ns_map: dict[str, dict] = {}
     for p in pods_raw:
-        pod_dict = p if isinstance(p, dict) else (p.to_dict() if hasattr(p, "to_dict") else {})
+        # Same BUG-P1-OBS-01 as /metrics/pods: PodResponse has no to_dict(), so
+        # every pod collapsed into a single "default" namespace with null metrics.
+        if isinstance(p, dict):
+            pod_dict = p
+        elif hasattr(p, "model_dump"):
+            pod_dict = p.model_dump()
+        elif hasattr(p, "to_dict"):
+            pod_dict = p.to_dict()
+        else:
+            pod_dict = {}
         ns = pod_dict.get("namespace", "default")
         cpu_u = pod_dict.get("cpu_usage")
         mem_u = pod_dict.get("memory_usage")
@@ -356,7 +378,15 @@ async def _get_typed_integration(db, tenant_id: str, itype: str):
 
 
 async def _live_cluster_snapshot(tenant_id: str, db, namespace=None):
-    """Current cluster utilisation via the tenant K8s integration's metrics-server."""
+    """
+    Current cluster utilisation via the tenant K8s integration's metrics-server.
+
+    BUG-012: the previous implementation returned ``cpu_pct = cores * 100`` and
+    ``memory_pct = bytes / 1024**2`` (i.e. MiB) under keys the frontend renders
+    as percentages. Both were absolute quantities mislabelled as percentages.
+    Usage is now divided by real per-node allocatable capacity; when capacity
+    is unknown the percentage is reported as null rather than guessed.
+    """
     try:
         svc    = KubernetesService(db)
         client = await svc.get_k8s_client_for_tenant(tenant_id)
@@ -365,15 +395,32 @@ async def _live_cluster_snapshot(tenant_id: str, db, namespace=None):
         nodes = await client.get_node_metrics()
         if not nodes:
             return None
-        # Node usage is absolute (cores/bytes) — compare with DB-stored
-        # allocatable where available; otherwise report raw usage.
-        cpus = [n["cpu_usage"]    for n in nodes if n.get("cpu_usage")    is not None]
-        mems = [n["memory_usage"] for n in nodes if n.get("memory_usage") is not None]
-        if not cpus and not mems:
+
+        capacity = {c["name"]: c for c in await client.get_node_capacity()}
+
+        cpu_used  = cpu_cap = 0.0
+        mem_used  = mem_cap = 0.0
+        for n in nodes:
+            cap = capacity.get(n["name"], {})
+            cu, cc = n.get("cpu_usage"),    cap.get("cpu_allocatable")
+            mu, mc = n.get("memory_usage"), cap.get("memory_allocatable")
+            # Only pair a node's usage with its own capacity, and only when the
+            # capacity is a real positive number (guards missing/zero limits).
+            if cu is not None and cc and cc > 0:
+                cpu_used += cu
+                cpu_cap += cc
+            if mu is not None and mc and mc > 0:
+                mem_used += mu
+                mem_cap += mc
+
+        if cpu_cap <= 0 and mem_cap <= 0:
+            # metrics-server answered but capacity is unknown — refuse to
+            # present absolute cores/MiB as a percentage.
             return None
+
         return {
-            "cpu_pct":    round(sum(cpus) / len(cpus) * 100, 1) if cpus else None,
-            "memory_pct": round(sum(mems) / len(mems) / (1024**2), 1) if mems else None,
+            "cpu_pct":    round(cpu_used / cpu_cap * 100, 1) if cpu_cap > 0 else None,
+            "memory_pct": round(mem_used / mem_cap * 100, 1) if mem_cap > 0 else None,
         }
     except Exception as exc:
         logger.debug(f"[obs:metrics] live snapshot failed: {exc}")

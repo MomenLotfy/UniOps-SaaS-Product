@@ -101,15 +101,46 @@ class PipelineService(BaseService):
         return [r[0] for r in result.fetchall() if r[0]]
 
     async def get_jobs(self, pipeline_id: str, tenant_id: str | None = None) -> list[PipelineJob]:
-        """Fetch live job/step list for a pipeline from the provider."""
+        """
+        Fetch live job/step list for a pipeline from the provider.
+
+        BUG-019: provider failures are translated into the project's
+        integration-error contract here. Previously ``GitHubAPIError`` escaped
+        the endpoint and surfaced as an opaque HTTP 500.
+        """
+        from app.integrations.github.client import GitHubAPIError
+
         pipeline, integration = await self._resolve(pipeline_id, tenant_id)
         creds  = _decrypt_creds(integration.credentials)
         config = {**creds, **(integration.config or {})}
 
-        if integration.type == "github":
-            return await self._github_get_jobs(pipeline, config)
-        elif integration.type == "gitlab":
-            return await self._gitlab_get_jobs(pipeline, config)
+        try:
+            if integration.type == "github":
+                return await self._github_get_jobs(pipeline, config)
+            elif integration.type == "gitlab":
+                return await self._gitlab_get_jobs(pipeline, config)
+        except GitHubAPIError as e:
+            # NOTE: the GitLab client re-raises GitHubAPIError by design so the
+            # shared VCS branch contracts stay on one exception type.
+            status = getattr(e, "status_code", None)
+            message = getattr(e, "message", None) or str(e)
+            logger.warning(
+                f"get_jobs provider failure ({integration.type}, "
+                f"pipeline={pipeline_id}): {status} {message}"
+            )
+            # A 401/403 from the provider is a credential/configuration problem,
+            # not a transport outage — surface it as such.
+            if status in (401, 403):
+                raise IntegrationError(
+                    integration.type,
+                    f"{integration.type} rejected the request ({status}): "
+                    "check the integration credentials",
+                )
+            raise IntegrationError(integration.type, message)
+        except Exception as e:
+            logger.error(f"get_jobs unexpected failure (pipeline={pipeline_id}): {e}")
+            raise IntegrationError(integration.type, f"could not fetch jobs: {e}")
+
         return []
 
     # ── Re-run operation ──────────────────────────────────────────────────────

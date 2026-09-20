@@ -102,7 +102,8 @@ export default function DevOpsCenter() {
   const canAct = isAdmin() || hasRole('devops_engineer');
 
   const { githubConnected } = useDevOpsIntegrations();
-  const { podStats, refetch: refetchPods } = usePods();
+  // BUG-016: this component renders only the summary tiles, so skip the pod-list fetch.
+  const { podStats, refetch: refetchPods } = usePods(undefined, { includeList: false });
   const { pipelineStats, refetch: refetchPipes } = usePipelines();
 
   const showToast = useCallback((ok: boolean, msg: string) => {

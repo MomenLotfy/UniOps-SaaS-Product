@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useApi, apiPost, apiDelete } from '@/hooks/use-api';
+// BUG-018: replace the native window.confirm with the existing in-app dialog.
+import { ConfirmDialog } from './components';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,6 +42,11 @@ interface HistoryEntry {
 interface GitOpsStats {
   total: number; healthy: number; degraded: number; progressing: number;
   synced: number; out_of_sync: number; argocd_connected: boolean;
+  /**
+   * Configured-but-unreachable must not read as "not configured". Optional so
+   * an older backend response still type-checks and degrades to the old pill.
+   */
+  argocd_configured?: boolean;
 }
 
 // ── Style maps ────────────────────────────────────────────────────────────────
@@ -442,7 +449,8 @@ function AppCard({ app, onSync, onDelete, onHistory, onRollback, busy }: AppCard
             <ExternalLink className="w-3 h-3" />ArgoCD
           </a>
         )}
-        <button onClick={() => { if (window.confirm('Remove this app?')) onDelete(app.id); }}
+        {/* BUG-018: confirmation moved to the parent's in-app ConfirmDialog */}
+        <button onClick={() => onDelete(app.id)}
           className="text-gray-700 hover:text-red-400 transition-colors">
           <XCircle className="w-3.5 h-3.5" />
         </button>
@@ -462,6 +470,9 @@ export function GitOpsTab({ showToast }: GitOpsTabProps) {
   const [detailApp,    setDetailApp]    = useState<GitOpsApp | null>(null);    // history panel
   const [rollbackApp,  setRollbackApp]  = useState<GitOpsApp | null>(null);
   const [busy,         setBusy]         = useState<Record<string, boolean>>({});
+  // BUG-018: pending delete id — the native window.confirm blocked the main
+  // thread and ignored the app's theming.
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [healthFilter, setHealthFilter] = useState<string>('all');
   const [syncFilter,   setSyncFilter]   = useState<string>('all');
 
@@ -475,6 +486,9 @@ export function GitOpsTab({ showToast }: GitOpsTabProps) {
   const apps:  GitOpsApp[]  = appsRaw?.data  ?? appsRaw  ?? [];
   const stats: GitOpsStats | null = statsRaw?.data ?? null;
   const argocdConnected = stats?.argocd_connected ?? false;
+  // Falls back to argocdConnected when an older backend omits the field, so the
+  // pill degrades to its previous two-state behaviour rather than going blank.
+  const argocdConfigured = stats?.argocd_configured ?? argocdConnected;
 
   // History for rollback dialog
   const { data: rollbackHistRaw } = useApi<any>(rollbackApp ? `/gitops/${rollbackApp.id}/history?limit=10` : null);
@@ -490,7 +504,13 @@ export function GitOpsTab({ showToast }: GitOpsTabProps) {
     finally { setBusy(p => ({ ...p, [id]: false })); }
   }, [showToast, refetch]);
 
-  const handleDelete = useCallback(async (id: string) => {
+  // BUG-018: the card button now only stages the deletion; the dialog confirms it.
+  const handleDelete = useCallback((id: string) => setPendingDelete(id), []);
+
+  const confirmDelete = useCallback(async () => {
+    const id = pendingDelete;
+    setPendingDelete(null);
+    if (!id) return;
     setBusy(p => ({ ...p, [id]: true }));
     try {
       await apiDelete(`/gitops/${id}`);
@@ -498,7 +518,7 @@ export function GitOpsTab({ showToast }: GitOpsTabProps) {
       refetch(true);
     } catch (e: any) { showToast(false, e.message ?? 'Delete failed'); }
     finally { setBusy(p => ({ ...p, [id]: false })); }
-  }, [showToast, refetch]);
+  }, [pendingDelete, showToast, refetch]);
 
   const handleRollback = useCallback(async (rev: string, msg: string) => {
     if (!rollbackApp) return;
@@ -529,14 +549,23 @@ export function GitOpsTab({ showToast }: GitOpsTabProps) {
           <div className="flex-1" />
           <StatPill label="Synced"      value={stats.synced}      color="text-green-400" />
           <StatPill label="Out of Sync" value={stats.out_of_sync} color="text-yellow-400" />
-          {/* ArgoCD status pill */}
+          {/* ArgoCD status pill — three honest states.
+              "Live" now requires a real reachability probe, so an unreachable
+              ArgoCD reads as unreachable (amber) rather than as live or as
+              never-configured. */}
           <div className={clsx('flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium',
             argocdConnected
               ? 'text-green-400 border-green-500/20 bg-green-500/5'
-              : 'text-gray-500 border-white/10')}
-            style={{ background: argocdConnected ? undefined : 'hsl(230 18% 9%)' }}>
+              : argocdConfigured
+                ? 'text-amber-400 border-amber-500/20 bg-amber-500/5'
+                : 'text-gray-500 border-white/10')}
+            style={{ background: (argocdConnected || argocdConfigured) ? undefined : 'hsl(230 18% 9%)' }}>
             <Activity className={clsx('w-3 h-3', argocdConnected && 'animate-pulse')} />
-            {argocdConnected ? 'ArgoCD Live' : 'ArgoCD: Not configured'}
+            {argocdConnected
+              ? 'ArgoCD Live'
+              : argocdConfigured
+                ? 'ArgoCD: Unreachable'
+                : 'ArgoCD: Not configured'}
           </div>
         </div>
       )}
@@ -624,6 +653,18 @@ export function GitOpsTab({ showToast }: GitOpsTabProps) {
           />
         )}
       </AnimatePresence>
+
+      {/* BUG-018: in-app confirmation, replacing window.confirm */}
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Remove application"
+        description="This GitOps application will be removed from UniOps. This action cannot be undone."
+        confirmLabel="Remove"
+        danger
+        loading={pendingDelete !== null && (busy[pendingDelete] ?? false)}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ from app.api.deps import CurrentUser, DevOpsUser, TenantID, DBSession
 from app.core.rate_limit import rate_limit
 from app.schemas.pod import PodResponse, PodStats, PodActionResult
 from app.schemas.common import APIResponse, PaginatedResponse
+from app.core.exceptions import NotFoundError, IntegrationUnavailableError
 from app.services.kubernetes_service import KubernetesService
 
 router = APIRouter()
@@ -195,124 +196,198 @@ async def scale_deployment(
 async def list_deployments(
     current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
     namespace: Optional[str] = Query(None),
+    cluster_id: Optional[str] = Query(
+        None, description="Scope to a specific cluster owned by this tenant"
+    ),
 ):
     """List Deployments — with replica status and rollout health."""
-    svc    = KubernetesService(db)
-    client = await svc.get_k8s_client_for_tenant(tenant_id)
-    if not client:
-        return APIResponse(data=[])
-    data = await client.list_deployments(namespace)
-    return APIResponse(data=data)
+    svc = KubernetesService(db)
+    # BUG-009: distinguish "cluster has none" from "cluster unreachable"
+    result = await svc.list_cluster_resource(
+        tenant_id,
+        lambda c, ns: c.list_deployments(ns),
+        namespace=namespace,
+        cluster_id=cluster_id,
+        resource="deployments",
+    )
+    return APIResponse(data=result)
 
 
 @router.get("/workloads/statefulsets")
 async def list_statefulsets(
     current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
     namespace: Optional[str] = Query(None),
+    cluster_id: Optional[str] = Query(
+        None, description="Scope to a specific cluster owned by this tenant"
+    ),
 ):
     """List StatefulSets."""
-    svc    = KubernetesService(db)
-    client = await svc.get_k8s_client_for_tenant(tenant_id)
-    if not client:
-        return APIResponse(data=[])
-    return APIResponse(data=await client.list_statefulsets(namespace))
+    svc = KubernetesService(db)
+    # BUG-009: distinguish "cluster has none" from "cluster unreachable"
+    result = await svc.list_cluster_resource(
+        tenant_id,
+        lambda c, ns: c.list_statefulsets(ns),
+        namespace=namespace,
+        cluster_id=cluster_id,
+        resource="statefulsets",
+    )
+    return APIResponse(data=result)
 
 
 @router.get("/workloads/daemonsets")
 async def list_daemonsets(
     current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
     namespace: Optional[str] = Query(None),
+    cluster_id: Optional[str] = Query(
+        None, description="Scope to a specific cluster owned by this tenant"
+    ),
 ):
     """List DaemonSets."""
-    svc    = KubernetesService(db)
-    client = await svc.get_k8s_client_for_tenant(tenant_id)
-    if not client:
-        return APIResponse(data=[])
-    return APIResponse(data=await client.list_daemonsets(namespace))
+    svc = KubernetesService(db)
+    # BUG-009: distinguish "cluster has none" from "cluster unreachable"
+    result = await svc.list_cluster_resource(
+        tenant_id,
+        lambda c, ns: c.list_daemonsets(ns),
+        namespace=namespace,
+        cluster_id=cluster_id,
+        resource="daemonsets",
+    )
+    return APIResponse(data=result)
 
 
 @router.get("/network/services")
 async def list_services(
     current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
     namespace: Optional[str] = Query(None),
+    cluster_id: Optional[str] = Query(
+        None, description="Scope to a specific cluster owned by this tenant"
+    ),
 ):
     """List Services — ClusterIP, NodePort, LoadBalancer with external IPs."""
-    svc    = KubernetesService(db)
-    client = await svc.get_k8s_client_for_tenant(tenant_id)
-    if not client:
-        return APIResponse(data=[])
-    return APIResponse(data=await client.list_services(namespace))
+    svc = KubernetesService(db)
+    # BUG-009: distinguish "cluster has none" from "cluster unreachable"
+    result = await svc.list_cluster_resource(
+        tenant_id,
+        lambda c, ns: c.list_services(ns),
+        namespace=namespace,
+        cluster_id=cluster_id,
+        resource="services",
+    )
+    return APIResponse(data=result)
 
 
 @router.get("/network/ingresses")
 async def list_ingresses(
     current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
     namespace: Optional[str] = Query(None),
+    cluster_id: Optional[str] = Query(
+        None, description="Scope to a specific cluster owned by this tenant"
+    ),
 ):
     """List Ingresses — with routing rules and TLS config."""
-    svc    = KubernetesService(db)
-    client = await svc.get_k8s_client_for_tenant(tenant_id)
-    if not client:
-        return APIResponse(data=[])
-    return APIResponse(data=await client.list_ingresses(namespace))
+    svc = KubernetesService(db)
+    # BUG-009: distinguish "cluster has none" from "cluster unreachable"
+    result = await svc.list_cluster_resource(
+        tenant_id,
+        lambda c, ns: c.list_ingresses(ns),
+        namespace=namespace,
+        cluster_id=cluster_id,
+        resource="ingresses",
+    )
+    return APIResponse(data=result)
 
 
 @router.get("/batch/jobs")
 async def list_jobs(
     current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
     namespace: Optional[str] = Query(None),
+    cluster_id: Optional[str] = Query(
+        None, description="Scope to a specific cluster owned by this tenant"
+    ),
 ):
     """List Jobs and CronJobs."""
-    svc    = KubernetesService(db)
-    client = await svc.get_k8s_client_for_tenant(tenant_id)
-    if not client:
-        return APIResponse(data=[])
-    return APIResponse(data=await client.list_jobs(namespace))
+    svc = KubernetesService(db)
+    # BUG-009: distinguish "cluster has none" from "cluster unreachable"
+    result = await svc.list_cluster_resource(
+        tenant_id,
+        lambda c, ns: c.list_jobs(ns),
+        namespace=namespace,
+        cluster_id=cluster_id,
+        resource="jobs",
+    )
+    return APIResponse(data=result)
 
 
 @router.get("/config/configmaps")
 async def list_configmaps(
     current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
     namespace: Optional[str] = Query(None),
+    cluster_id: Optional[str] = Query(
+        None, description="Scope to a specific cluster owned by this tenant"
+    ),
 ):
     """List ConfigMaps — keys only, never values."""
-    svc    = KubernetesService(db)
-    client = await svc.get_k8s_client_for_tenant(tenant_id)
-    if not client:
-        return APIResponse(data=[])
-    return APIResponse(data=await client.list_configmaps(namespace))
+    svc = KubernetesService(db)
+    # BUG-009: distinguish "cluster has none" from "cluster unreachable"
+    result = await svc.list_cluster_resource(
+        tenant_id,
+        lambda c, ns: c.list_configmaps(ns),
+        namespace=namespace,
+        cluster_id=cluster_id,
+        resource="configmaps",
+    )
+    return APIResponse(data=result)
 
 
 @router.get("/config/secrets")
 async def list_secrets_metadata(
     current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
     namespace: Optional[str] = Query(None),
+    cluster_id: Optional[str] = Query(
+        None, description="Scope to a specific cluster owned by this tenant"
+    ),
 ):
     """List Secrets — metadata + key names ONLY. Values are never returned."""
-    svc    = KubernetesService(db)
-    client = await svc.get_k8s_client_for_tenant(tenant_id)
-    if not client:
-        return APIResponse(data=[])
-    return APIResponse(data=await client.list_secrets_metadata(namespace))
+    svc = KubernetesService(db)
+    # BUG-009: distinguish "cluster has none" from "cluster unreachable"
+    result = await svc.list_cluster_resource(
+        tenant_id,
+        lambda c, ns: c.list_secrets_metadata(ns),
+        namespace=namespace,
+        cluster_id=cluster_id,
+        resource="secrets",
+    )
+    return APIResponse(data=result)
 
 
 @router.get("/autoscaling/hpa")
 async def list_hpa(
     current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
     namespace: Optional[str] = Query(None),
+    cluster_id: Optional[str] = Query(
+        None, description="Scope to a specific cluster owned by this tenant"
+    ),
 ):
     """List Horizontal Pod Autoscalers — current vs desired replicas + CPU%."""
-    svc    = KubernetesService(db)
-    client = await svc.get_k8s_client_for_tenant(tenant_id)
-    if not client:
-        return APIResponse(data=[])
-    return APIResponse(data=await client.list_hpa(namespace))
+    svc = KubernetesService(db)
+    # BUG-009: distinguish "cluster has none" from "cluster unreachable"
+    result = await svc.list_cluster_resource(
+        tenant_id,
+        lambda c, ns: c.list_hpa(ns),
+        namespace=namespace,
+        cluster_id=cluster_id,
+        resource="hpa",
+    )
+    return APIResponse(data=result)
 
 
 @router.get("/cluster/summary")
 async def cluster_summary(
     current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
     namespace: Optional[str] = Query(None),
+    cluster_id: Optional[str] = Query(
+        None, description="Scope to a specific cluster owned by this tenant"
+    ),
 ):
     """
     One-shot cluster overview:
@@ -320,10 +395,35 @@ async def cluster_summary(
     Used by the Cluster Overview tab.
     """
     import asyncio
-    svc    = KubernetesService(db)
-    client = await svc.get_k8s_client_for_tenant(tenant_id)
+    svc = KubernetesService(db)
+    try:
+        client = await svc.get_client_for_cluster(tenant_id, cluster_id)
+    except NotFoundError:
+        raise
+    except IntegrationUnavailableError:
+        client = None
     if not client:
-        return APIResponse(data={"connected": False})
+        return APIResponse(data={
+            "connected": False,
+            "source":    "unavailable",
+            "degraded":  True,
+            "message":   "No Kubernetes integration connected for this tenant",
+        })
+
+    # BUG-009: `connected: True` used to be asserted merely because a client
+    # object could be built. When the API server was down every list_* below
+    # returned [] and the summary reported a healthy cluster with 0 of
+    # everything. Reachability is now verified before any count is trusted.
+    reachable, reason = await client.check_reachable()
+    if not reachable:
+        return APIResponse(data={
+            "connected":  False,
+            "source":     "unavailable",
+            "degraded":   True,
+            "error_code": "KUBERNETES_UNAVAILABLE",
+            "message":    f"Kubernetes unavailable: {reason}",
+            "counts":     {},
+        })
 
     # Fetch all in parallel
     (deps, sts, ds, svcs, ings, jobs, cms, hpas) = await asyncio.gather(
@@ -343,6 +443,8 @@ async def cluster_summary(
 
     return APIResponse(data={
         "connected":   True,
+        "source":      "kubernetes",
+        "degraded":    False,
         "deployments": _safe(deps),
         "statefulsets":_safe(sts),
         "daemonsets":  _safe(ds),

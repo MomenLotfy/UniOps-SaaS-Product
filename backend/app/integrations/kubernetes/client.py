@@ -5,6 +5,43 @@ import asyncio
 from app.integrations.base import BaseIntegration
 from app.utils.logger import logger
 
+# BUG-002: ``V1DeleteOptions`` is a Kubernetes *model* class, not an API class,
+# so the per-integration ``_K8sApis`` shim deliberately does not expose it.
+# It must be imported from ``kubernetes.client`` and used directly.
+from kubernetes.client import V1DeleteOptions
+# Imported at module scope (rather than inside exec_pod) so the exec transport
+# is a single, patchable seam and failures surface consistently.
+from kubernetes.stream import stream as k8s_stream
+
+from dataclasses import dataclass, field
+
+
+class KubernetesProviderError(Exception):
+    """The Kubernetes API was reachable in principle but the call failed.
+
+    Callers must treat this as "provider state unknown", never as "the cluster
+    is empty".
+    """
+
+
+class KubernetesClientUnavailable(KubernetesProviderError):
+    """No usable client could be built (missing/invalid kubeconfig)."""
+
+
+@dataclass
+class PodListResult:
+    """
+    Explicit provider outcome for a pod listing.
+
+    ``ok=True, pods=[]``  -> the provider confirms the cluster has no pods.
+    ``ok=False``          -> the provider could not be reached; the true state
+                             is UNKNOWN and no destructive reconciliation may
+                             be performed.
+    """
+    ok:    bool
+    pods:  list = field(default_factory=list)
+    error: str | None = None
+
 
 def _parse_cpu(cpu_str: str | None) -> float | None:
     """Convert '125m' → 0.125 cores, '2' → 2.0 cores."""
@@ -212,11 +249,25 @@ class KubernetesClient(BaseIntegration):
             return []
 
     async def list_all_pods(self) -> list[dict]:
-        """List pods across ALL namespaces."""
+        """List pods across ALL namespaces.
+
+        Backwards-compatible convenience wrapper: returns ``[]`` when the
+        cluster cannot be reached. Callers that reconcile or delete database
+        state MUST use :meth:`list_all_pods_checked` instead, because ``[]``
+        here is ambiguous between "no pods" and "unreachable".
+        """
+        try:
+            return await self._list_all_pods_raw()
+        except Exception as e:
+            logger.warning(f"K8s list_all_pods failed: {e}")
+            return []
+
+    async def _list_all_pods_raw(self) -> list[dict]:
+        """List pods across ALL namespaces, raising on any provider failure."""
         try:
             k8s = self._get_client()
             if not k8s:
-                return []
+                raise KubernetesClientUnavailable("kubernetes client unavailable")
             v1 = k8s.CoreV1Api()
             pod_list = v1.list_pod_for_all_namespaces(_request_timeout=20)
 
@@ -267,9 +318,57 @@ class KubernetesClient(BaseIntegration):
                 })
             return result
 
+        except KubernetesClientUnavailable:
+            raise
         except Exception as e:
             logger.warning(f"K8s list_all_pods failed: {e}")
-            return []
+            raise KubernetesProviderError(str(e)) from e
+
+    async def check_reachable(self) -> tuple[bool, str | None]:
+        """
+        Cheap liveness probe against the API server.
+
+        BUG-009: every ``list_*`` helper in this client swallows provider
+        failures and returns ``[]``, which made "cluster unreachable"
+        indistinguishable from "cluster has no resources of this kind". Rather
+        than change all of those call sites, callers that must tell the two
+        apart probe reachability first with a single cheap call.
+
+        Returns ``(True, None)`` when the API server answered, or
+        ``(False, reason)`` when it did not.
+        """
+        try:
+            k8s = self._get_client()
+            if not k8s:
+                return False, "kubernetes client unavailable"
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                None,
+                lambda: k8s.CoreV1Api().get_api_versions(_request_timeout=10),
+            )
+            return True, None
+        except Exception as e:
+            return False, str(e)
+
+    async def list_all_pods_checked(self) -> PodListResult:
+        """
+        Same as :meth:`list_all_pods` but never conflates "the cluster has no
+        pods" with "we could not reach the cluster".
+
+        BUG-003: ``list_all_pods`` returns ``[]`` on any exception. Callers that
+        reconcile DB state against that result treated an unreachable API server
+        as an empty cluster and deleted every pod row. Reconciliation must only
+        delete rows when the provider state is *known*.
+
+        Returns a PodListResult where ``ok is False`` means "state unknown —
+        do not reconcile".
+        """
+        try:
+            pods = await self._list_all_pods_raw()
+            return PodListResult(ok=True, pods=pods, error=None)
+        except Exception as e:
+            logger.warning(f"K8s list_all_pods_checked: provider state unknown: {e}")
+            return PodListResult(ok=False, pods=[], error=str(e))
 
     async def get_node_metrics(self) -> list[dict]:
         """Get node-level CPU/memory usage via metrics-server."""
@@ -292,6 +391,32 @@ class KubernetesClient(BaseIntegration):
             return result
         except Exception:
             return []   # metrics-server may not be installed
+
+    async def get_node_capacity(self) -> list[dict]:
+        """
+        Per-node allocatable capacity, needed to turn absolute usage into a
+        percentage. ``cpu_allocatable`` is in cores, ``memory_allocatable`` in
+        bytes. Returns ``[]`` when the cluster is unreachable.
+        """
+        try:
+            k8s = self._get_client()
+            if not k8s:
+                return []
+            loop = asyncio.get_event_loop()
+            nodes = await loop.run_in_executor(
+                None, lambda: k8s.CoreV1Api().list_node(_request_timeout=10)
+            )
+            result = []
+            for n in nodes.items:
+                alloc = (n.status.allocatable or {}) if n.status else {}
+                result.append({
+                    "name":              n.metadata.name,
+                    "cpu_allocatable":   _parse_cpu(alloc.get("cpu")),
+                    "memory_allocatable": _parse_memory(alloc.get("memory")),
+                })
+            return result
+        except Exception:
+            return []
 
     async def get_pod_metrics(self, namespace: str = None) -> dict[str, dict]:
         """Get pod CPU/memory usage via metrics-server. Returns {pod_name: {cpu, memory}}."""
@@ -331,8 +456,8 @@ class KubernetesClient(BaseIntegration):
                 return {"success": False, "error": "Kubernetes client unavailable"}
 
             v1 = k8s.CoreV1Api()
-            # V1DeleteOptions — import from kubernetes.client directly (v29 compatible)
-            delete_opts = k8s.V1DeleteOptions(grace_period_seconds=0)
+            # BUG-002: model class imported from kubernetes.client, not the API shim
+            delete_opts = V1DeleteOptions(grace_period_seconds=0)
             v1.delete_namespaced_pod(
                 name=name,
                 namespace=namespace,
@@ -380,7 +505,7 @@ class KubernetesClient(BaseIntegration):
             if not has_controller:
                 logger.warning(f"Pod {namespace}/{name} has no controller — restart = delete without recreation")
 
-            delete_opts = k8s.V1DeleteOptions(grace_period_seconds=30)
+            delete_opts = V1DeleteOptions(grace_period_seconds=30)
             v1.delete_namespaced_pod(
                 name=name,
                 namespace=namespace,
@@ -461,37 +586,46 @@ class KubernetesClient(BaseIntegration):
         The command is executed as an argument vector DIRECTLY in the
         container (no /bin/sh wrapper) — this prevents shell injection and is
         the hardened high-risk path.
+
+        BUG-004: a provider/transport failure RAISES ``KubernetesProviderError``
+        instead of being returned as a string. Returning ``f"exec failed: {e}"``
+        made the API answer HTTP 200 ``success: true`` with the error text
+        sitting in ``data.output``, so the UI rendered a connection failure as
+        if it were the command's output.
+
+        Command output — including a non-zero exit's stderr — is still returned
+        normally; only transport/API failures raise.
         """
+        k8s = self._get_client()
+        if not k8s:
+            raise KubernetesClientUnavailable("kubernetes client unavailable")
+
+        if not command_list:
+            raise ValueError("empty command")
+
+        kwargs: dict = dict(
+            name=name,
+            namespace=namespace,
+            command=list(command_list),
+            stderr=True,
+            stdin=False,
+            stdout=True,
+            tty=False,
+            _request_timeout=15,
+        )
+        if container:
+            kwargs["container"] = container
+
         try:
-            k8s = self._get_client()
-            if not k8s:
-                return "Kubernetes client unavailable"
-
-            if not command_list:
-                return "Kubernetes client unavailable: empty command"
-
-            from kubernetes.stream import stream as k8s_stream
-
-            kwargs: dict = dict(
-                name=name,
-                namespace=namespace,
-                command=list(command_list),
-                stderr=True,
-                stdin=False,
-                stdout=True,
-                tty=False,
-                _request_timeout=15,
-            )
-            if container:
-                kwargs["container"] = container
-
             v1     = k8s.CoreV1Api()
             output = k8s_stream(v1.connect_get_namespaced_pod_exec, **kwargs)
-            return output if output else "(no output)"
-
         except Exception as e:
             logger.warning(f"K8s exec_pod failed ({namespace}/{name}): {e}")
-            return f"exec failed: {e}"
+            raise KubernetesProviderError(
+                f"could not execute command in {namespace}/{name}: {e}"
+            ) from e
+
+        return output if output else "(no output)"
 
     async def scale_deployment(
         self,

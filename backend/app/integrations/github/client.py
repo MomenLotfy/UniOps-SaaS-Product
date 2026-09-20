@@ -28,26 +28,55 @@ class GitHubClient:
             "X-GitHub-Api-Version": "2022-11-28",
         }
 
+    # BUG-001: header construction is centralised here. Every request builds its
+    # headers at call time from the current token — there is deliberately no
+    # cached ``self._headers`` attribute to go stale or to be missing.
+
     async def _get(self, path: str, params: dict = None) -> dict | list:
+        return await self._request("GET", path, params=params)
+
+    async def _post(self, path: str, json: dict | None = None) -> httpx.Response:
+        """POST that returns the raw response so callers can branch on status.
+
+        Used by the mutation helpers, which need to distinguish GitHub's
+        201/202 accepted responses from its 403/409/422 rejections.
+        """
+        return await self._request("POST", path, json=json, raw=True)
+
+    async def _request(
+        self,
+        method: str,
+        path: str,
+        params: dict | None = None,
+        json: dict | None = None,
+        raw: bool = False,
+        timeout: int = 15,
+    ):
         try:
             headers = self._build_headers()
-            async with httpx.AsyncClient(timeout=15) as c:
-                r = await c.get(f"{GITHUB_API}{path}", headers=headers, params=params)
-
-            try:
-                body = r.json()
-            except ValueError:
-                body = r.text
-
-            if r.status_code == 200:
-                return body
-
-            message = body.get("message") if isinstance(body, dict) else str(body)
-            logger.warning(f"GitHub API {path} → {r.status_code}: {message}")
-            raise GitHubAPIError(r.status_code, message)
+            async with httpx.AsyncClient(timeout=timeout) as c:
+                r = await c.request(
+                    method, f"{GITHUB_API}{path}",
+                    headers=headers, params=params, json=json,
+                )
         except httpx.RequestError as e:
-            logger.warning(f"GitHub API {path} failed: {e}")
-            raise GitHubAPIError(0, str(e))
+            logger.warning(f"GitHub API {method} {path} failed: {e}")
+            raise GitHubAPIError(0, str(e)) from e
+
+        if raw:
+            return r
+
+        try:
+            body = r.json()
+        except ValueError:
+            body = r.text
+
+        if r.status_code == 200:
+            return body
+
+        message = body.get("message") if isinstance(body, dict) else str(body)
+        logger.warning(f"GitHub API {path} → {r.status_code}: {message}")
+        raise GitHubAPIError(r.status_code, message)
 
     # ── Auth ──────────────────────────────────────────────────────────────────
 
@@ -246,6 +275,22 @@ class GitHubClient:
             for a in data
         ]
 
+    # BUG-001 fix: these three mutation helpers previously read a
+    # ``self._headers`` attribute that was never assigned, so every call raised
+    # AttributeError before issuing any request. They now go through the shared
+    # ``_post`` helper, which builds fresh authorization headers per request.
+
+    @staticmethod
+    def _error_message(r: httpx.Response) -> str:
+        """Extract GitHub's error message from a non-2xx response body."""
+        try:
+            body = r.json()
+        except Exception:
+            return f"HTTP {r.status_code}"
+        if isinstance(body, dict) and body.get("message"):
+            return str(body["message"])
+        return f"HTTP {r.status_code}"
+
     async def rerun_workflow_run(self, owner: str, repo: str, run_id: int | str) -> dict:
         """
         Re-run ALL jobs in a workflow run (including successful ones).
@@ -254,26 +299,21 @@ class GitHubClient:
         Returns: {"success": bool, "run_id": int, "error": str | None}
         """
         try:
-            async with httpx.AsyncClient(timeout=20) as c:
-                r = await c.post(
-                    f"{GITHUB_API}/repos/{owner}/{repo}/actions/runs/{run_id}/rerun",
-                    headers=self._headers,
-                )
             # 201 = queued, 403 = no permission, 409 = already running
+            r = await self._post(
+                f"/repos/{owner}/{repo}/actions/runs/{run_id}/rerun"
+            )
             if r.status_code in (200, 201):
                 logger.info(f"GitHub rerun queued: {owner}/{repo} run={run_id}")
                 return {"success": True, "run_id": int(run_id)}
 
-            # Parse GitHub error body
-            try:
-                body = r.json()
-                msg = body.get("message", f"HTTP {r.status_code}")
-            except Exception:
-                msg = f"HTTP {r.status_code}"
-
+            msg = self._error_message(r)
             logger.warning(f"GitHub rerun failed ({owner}/{repo} run={run_id}): {msg}")
             return {"success": False, "run_id": int(run_id), "error": msg}
 
+        except GitHubAPIError as e:
+            logger.warning(f"GitHub rerun rejected ({owner}/{repo} run={run_id}): {e.message}")
+            return {"success": False, "run_id": int(run_id), "error": e.message}
         except Exception as e:
             logger.error(f"GitHub rerun exception ({owner}/{repo} run={run_id}): {e}")
             return {"success": False, "run_id": int(run_id), "error": str(e)}
@@ -285,22 +325,28 @@ class GitHubClient:
         More efficient than full rerun — skips already-successful jobs.
         """
         try:
-            async with httpx.AsyncClient(timeout=20) as c:
-                r = await c.post(
-                    f"{GITHUB_API}/repos/{owner}/{repo}/actions/runs/{run_id}/rerun-failed-jobs",
-                    headers=self._headers,
-                )
+            r = await self._post(
+                f"/repos/{owner}/{repo}/actions/runs/{run_id}/rerun-failed-jobs"
+            )
             if r.status_code in (200, 201):
                 logger.info(f"GitHub rerun-failed-jobs queued: {owner}/{repo} run={run_id}")
                 return {"success": True, "run_id": int(run_id)}
 
-            try:
-                msg = r.json().get("message", f"HTTP {r.status_code}")
-            except Exception:
-                msg = f"HTTP {r.status_code}"
+            msg = self._error_message(r)
+            logger.warning(
+                f"GitHub rerun-failed-jobs failed ({owner}/{repo} run={run_id}): {msg}"
+            )
             return {"success": False, "run_id": int(run_id), "error": msg}
 
+        except GitHubAPIError as e:
+            logger.warning(
+                f"GitHub rerun-failed-jobs rejected ({owner}/{repo} run={run_id}): {e.message}"
+            )
+            return {"success": False, "run_id": int(run_id), "error": e.message}
         except Exception as e:
+            logger.error(
+                f"GitHub rerun-failed-jobs exception ({owner}/{repo} run={run_id}): {e}"
+            )
             return {"success": False, "run_id": int(run_id), "error": str(e)}
 
     async def cancel_workflow_run(self, owner: str, repo: str, run_id: int | str) -> dict:
@@ -310,20 +356,20 @@ class GitHubClient:
         Returns 202 Accepted with empty body on success.
         """
         try:
-            async with httpx.AsyncClient(timeout=20) as c:
-                r = await c.post(
-                    f"{GITHUB_API}/repos/{owner}/{repo}/actions/runs/{run_id}/cancel",
-                    headers=self._headers,
-                )
+            r = await self._post(
+                f"/repos/{owner}/{repo}/actions/runs/{run_id}/cancel"
+            )
             if r.status_code in (202, 200):
                 logger.info(f"GitHub cancel accepted: {owner}/{repo} run={run_id}")
                 return {"success": True, "run_id": int(run_id)}
-            try:
-                msg = r.json().get("message", f"HTTP {r.status_code}")
-            except Exception:
-                msg = f"HTTP {r.status_code}"
+
+            msg = self._error_message(r)
             logger.warning(f"GitHub cancel failed ({owner}/{repo} run={run_id}): {msg}")
             return {"success": False, "run_id": int(run_id), "error": msg}
+
+        except GitHubAPIError as e:
+            logger.warning(f"GitHub cancel rejected ({owner}/{repo} run={run_id}): {e.message}")
+            return {"success": False, "run_id": int(run_id), "error": e.message}
         except Exception as e:
             logger.error(f"GitHub cancel exception ({owner}/{repo} run={run_id}): {e}")
             return {"success": False, "run_id": int(run_id), "error": str(e)}

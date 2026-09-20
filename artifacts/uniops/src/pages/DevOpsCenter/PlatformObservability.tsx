@@ -26,7 +26,8 @@ interface Props {
 export function PlatformObservability({ showToast }: Props) {
   const [tab, setTab] = useState<ObsSection>('observability');
   const { k8sConnected } = useDevOpsIntegrations();
-  const { pods } = usePods();
+  // BUG-016: only the pod list is used here, so skip the stats fetch.
+  const { pods } = usePods(undefined, { includeStats: false });
 
   return (
     <div>

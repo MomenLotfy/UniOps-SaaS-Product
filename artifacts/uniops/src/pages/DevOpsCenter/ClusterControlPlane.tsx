@@ -39,6 +39,32 @@ const SUB_TABS: { id: CPTab; label: string; icon: React.ElementType }[] = [
   { id: 'hpa',         label: 'Autoscaling',  icon: Zap       },
 ];
 
+/**
+ * BUG-009: unwrap a cluster resource response into rows + degraded state.
+ *
+ * The nine /kubernetes/pods/{workloads,network,batch,config,autoscaling}/*
+ * endpoints used to return a bare array, which made a provider outage
+ * indistinguishable from a healthy cluster with no resources. They now return
+ * `{ items, source, degraded, message }`. Both shapes are accepted so the
+ * transition cannot silently blank a panel.
+ */
+function resourceRows(res: any): { rows: any[]; unavailable: string | null } {
+  const payload = Array.isArray(res) ? res : res?.data ?? res;
+
+  if (Array.isArray(payload)) return { rows: payload, unavailable: null };
+
+  if (payload && typeof payload === 'object' && Array.isArray(payload.items)) {
+    return {
+      rows: payload.items,
+      unavailable: payload.degraded
+        ? (payload.message ?? 'Kubernetes unavailable')
+        : null,
+    };
+  }
+
+  return { rows: [], unavailable: null };
+}
+
 interface Props {
   showToast: (ok: boolean, msg: string) => void;
 }
@@ -50,7 +76,9 @@ export function ClusterControlPlane({ showToast }: Props) {
   const canAct = isAdmin() || hasRole('devops_engineer');
 
   const { k8sConnected, isLoading: intLoading } = useDevOpsIntegrations();
-  const { pods, loading: podsLoading, error: podsError, refetch: refetchPods } = usePods();
+  // BUG-016: podStats is unused here, so skip the stats fetch.
+  const { pods, loading: podsLoading, error: podsError, refetch: refetchPods }
+    = usePods(undefined, { includeStats: false });
   const podActions = usePodActions(refetchPods);
 
   const { data: deployData, loading: depsLoading }
@@ -196,9 +224,10 @@ export function ClusterControlPlane({ showToast }: Props) {
           {tab === 'workloads' && (
             <div className="space-y-4">
               <ClusterSection title="Deployments" icon={Layers}
-                count={(Array.isArray(deployData) ? deployData : deployData?.data ?? []).length}
-                loading={depsLoading}>
-                {(Array.isArray(deployData) ? deployData : deployData?.data ?? []).map((d: any) => (
+                count={resourceRows(deployData).rows.length}
+                loading={depsLoading}
+                unavailable={resourceRows(deployData).unavailable}>
+                {resourceRows(deployData).rows.map((d: any) => (
                   <div key={`${d.namespace}/${d.name}`}
                     className="p-3 rounded-lg border text-xs"
                     style={{ background: 'hsl(230 15% 10%)', borderColor: 'hsl(230 15% 16%)' }}>
@@ -226,8 +255,9 @@ export function ClusterControlPlane({ showToast }: Props) {
               </ClusterSection>
 
               <ClusterSection title="StatefulSets" icon={Server}
-                count={(stsData?.data ?? []).length} loading={stsLoading}>
-                {(stsData?.data ?? []).map((s: any) => (
+                count={resourceRows(stsData).rows.length} loading={stsLoading}
+                unavailable={resourceRows(stsData).unavailable}>
+                {resourceRows(stsData).rows.map((s: any) => (
                   <div key={`${s.namespace}/${s.name}`}
                     className="p-3 rounded-lg border text-xs"
                     style={{ background: 'hsl(230 15% 10%)', borderColor: 'hsl(230 15% 16%)' }}>
@@ -246,8 +276,9 @@ export function ClusterControlPlane({ showToast }: Props) {
               </ClusterSection>
 
               <ClusterSection title="DaemonSets" icon={Shield}
-                count={(dsData?.data ?? []).length} loading={dsLoading}>
-                {(dsData?.data ?? []).map((d: any) => (
+                count={resourceRows(dsData).rows.length} loading={dsLoading}
+                unavailable={resourceRows(dsData).unavailable}>
+                {resourceRows(dsData).rows.map((d: any) => (
                   <div key={`${d.namespace}/${d.name}`}
                     className="p-3 rounded-lg border text-xs"
                     style={{ background: 'hsl(230 15% 10%)', borderColor: 'hsl(230 15% 16%)' }}>
@@ -271,8 +302,9 @@ export function ClusterControlPlane({ showToast }: Props) {
           {tab === 'network' && (
             <div className="space-y-4">
               <ClusterSection title="Services" icon={Network}
-                count={(svcData?.data ?? []).length} loading={svcsLoading}>
-                {(svcData?.data ?? []).map((s: any) => (
+                count={resourceRows(svcData).rows.length} loading={svcsLoading}
+                unavailable={resourceRows(svcData).unavailable}>
+                {resourceRows(svcData).rows.map((s: any) => (
                   <div key={`${s.namespace}/${s.name}`}
                     className="p-3 rounded-lg border text-xs"
                     style={{ background: 'hsl(230 15% 10%)', borderColor: 'hsl(230 15% 16%)' }}>
@@ -300,8 +332,9 @@ export function ClusterControlPlane({ showToast }: Props) {
               </ClusterSection>
 
               <ClusterSection title="Ingresses" icon={Network}
-                count={(ingData?.data ?? []).length} loading={ingsLoading}>
-                {(ingData?.data ?? []).map((ing: any) => (
+                count={resourceRows(ingData).rows.length} loading={ingsLoading}
+                unavailable={resourceRows(ingData).unavailable}>
+                {resourceRows(ingData).rows.map((ing: any) => (
                   <div key={`${ing.namespace}/${ing.name}`}
                     className="p-3 rounded-lg border text-xs"
                     style={{ background: 'hsl(230 15% 10%)', borderColor: 'hsl(230 15% 16%)' }}>
@@ -333,8 +366,9 @@ export function ClusterControlPlane({ showToast }: Props) {
           {/* ── Jobs ──────────────────────────────────────────────────────── */}
           {tab === 'jobs' && (
             <ClusterSection title="Jobs & CronJobs" icon={Clock}
-              count={(jobsData?.data ?? []).length} loading={jobsLoading}>
-              {(jobsData?.data ?? []).map((j: any, i: number) => (
+              count={resourceRows(jobsData).rows.length} loading={jobsLoading}
+                unavailable={resourceRows(jobsData).unavailable}>
+              {resourceRows(jobsData).rows.map((j: any, i: number) => (
                 <div key={i} className="p-3 rounded-lg border text-xs"
                   style={{ background: 'hsl(230 15% 10%)', borderColor: 'hsl(230 15% 16%)' }}>
                   <div className="flex items-center gap-3">
@@ -371,8 +405,9 @@ export function ClusterControlPlane({ showToast }: Props) {
           {tab === 'config' && (
             <div className="space-y-4">
               <ClusterSection title="ConfigMaps" icon={Settings2}
-                count={(cmData?.data ?? []).length} loading={cmsLoading}>
-                {(cmData?.data ?? []).map((cm: any, i: number) => (
+                count={resourceRows(cmData).rows.length} loading={cmsLoading}
+                unavailable={resourceRows(cmData).unavailable}>
+                {resourceRows(cmData).rows.map((cm: any, i: number) => (
                   <div key={i} className="p-3 rounded-lg border text-xs flex items-center gap-3"
                     style={{ background: 'hsl(230 15% 10%)', borderColor: 'hsl(230 15% 16%)' }}>
                     <div className="flex-1">
@@ -386,12 +421,13 @@ export function ClusterControlPlane({ showToast }: Props) {
               </ClusterSection>
 
               <ClusterSection title="Secrets (metadata only)" icon={Shield}
-                count={(secData?.data ?? []).length} loading={secsLoading}>
+                count={resourceRows(secData).rows.length} loading={secsLoading}
+                unavailable={resourceRows(secData).unavailable}>
                 <div className="mb-2 px-3 py-2 rounded-lg text-xs text-yellow-400 flex items-center gap-2"
                   style={{ background: 'hsl(45 100% 50% / 0.05)', border: '1px solid hsl(45 100% 50% / 0.15)' }}>
                   ⚠ Secret values are never exposed — key names only for audit purposes
                 </div>
-                {(secData?.data ?? []).map((s: any, i: number) => (
+                {resourceRows(secData).rows.map((s: any, i: number) => (
                   <div key={i} className="p-3 rounded-lg border text-xs flex items-center gap-3"
                     style={{ background: 'hsl(230 15% 10%)', borderColor: 'hsl(230 15% 16%)' }}>
                     <div className="flex-1">
@@ -409,9 +445,10 @@ export function ClusterControlPlane({ showToast }: Props) {
           {/* ── Autoscaling (HPA) ─────────────────────────────────────────── */}
           {tab === 'hpa' && (
             <ClusterSection title="Horizontal Pod Autoscalers" icon={Zap}
-              count={(Array.isArray(hpaData) ? hpaData : hpaData?.data ?? []).length}
-              loading={hpaLoading}>
-              {(Array.isArray(hpaData) ? hpaData : hpaData?.data ?? []).map((hpa: any, i: number) => {
+              count={resourceRows(hpaData).rows.length}
+              loading={hpaLoading}
+                unavailable={resourceRows(hpaData).unavailable}>
+              {resourceRows(hpaData).rows.map((hpa: any, i: number) => {
                 const pct = hpa.current_replicas / hpa.max_replicas * 100;
                 return (
                   <div key={i} className="p-4 rounded-lg border text-xs"
