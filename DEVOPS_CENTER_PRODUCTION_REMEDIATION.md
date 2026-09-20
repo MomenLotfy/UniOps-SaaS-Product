@@ -757,7 +757,14 @@ classified rather than blanket-edited:
 | `observability.py:376,423,449` | acceptable — `None` produces `source: "unavailable"`, not fake data |
 | `cluster_service.py:55,82,412` | acceptable — client-build failure → caller treats as "no client" |
 | `cluster_service.py:427,440,444` | out of scope — `_parse_cpu`/`_parse_memory` string parsers returning `0.0` |
-| Kubernetes client ×29 | resolved for DevOps surfaces via the `check_reachable()` seam rather than editing all 29 (BUG-009) |
+| Kubernetes client ×18 | resolved for DevOps surfaces via the `check_reachable()` seam rather than editing all 18 (BUG-009) |
+
+The Kubernetes-client figure was **29** in an earlier revision of this table and
+**18** in §11 — the same count stated two different ways. Re-measured against
+current source: `client.py` has 31 `except Exception` blocks, of which **18** have
+a bare `return []` / `return {}` / `return None` within the next three lines (the
+stated methodology). 18 is correct; the 29 was a stale figure carried over from the
+audit. §11 item 4 already said 18 and is unchanged.
 
 ### Other patterns
 
