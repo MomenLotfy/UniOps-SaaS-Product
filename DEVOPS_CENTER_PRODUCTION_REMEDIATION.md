@@ -20,7 +20,7 @@ critical-correctness bugs, all seven P2 provider-honesty bugs, and all five P4
 frontend-correctness bugs. Only **BUG-010** remains, which sits in P3 (excluded
 by standing instruction). A shared provider-failure contract was introduced so
 the fix is one convention rather than thirteen one-off patches. A dedicated
-DevOps Center regression suite of **379 tests** was added, including the two
+DevOps Center regression suite of **396 tests** was added, including the two
 mandatory classes the audit required (reconciliation safety and cluster
 routing).
 
@@ -36,8 +36,8 @@ job to delete every pod row in the database.
 
 | | Before | After |
 |---|---|---|
-| Backend test suite | 290 passed | **669 passed, 0 failed** |
-| DevOps regression suite | none | **379 tests** in `backend/tests/devops/` |
+| Backend test suite | 290 passed | **686 passed, 0 failed** |
+| DevOps regression suite | none | **396 tests** in `backend/tests/devops/` |
 | Provider failure → HTTP | 200 + `success: true` | 502/503 + `INTEGRATION_ERROR` |
 | Dead cluster in UI | empty lists, "connected" | explicit "Cluster unavailable" |
 | Sync on provider failure | deleted all pod rows | deletes nothing |
@@ -768,9 +768,9 @@ requirement is not engaged.
 
 ## 7. Tests added
 
-`backend/tests/devops/` — **379 tests, all passing**.
+`backend/tests/devops/` — **396 tests, all passing**.
 
-Counts are pytest-collected tests (parametrisation expanded), summing to 379.
+Counts are pytest-collected tests (parametrisation expanded), summing to 396.
 
 | File | Collected | Audit class |
 |---|---|---|
@@ -784,7 +784,8 @@ Counts are pytest-collected tests (parametrisation expanded), summing to 379.
 | `test_audit_logging.py` | 7 | audit-trail integrity |
 | `test_api_contract_matrix.py` | 226 | B — authn/isolation/404 across all 71 routes |
 | `test_gitops_mutations.py` | 12 | A/C — ArgoCD sync + rollback |
-| **Total** | **379** | |
+| `test_tenant_isolation_mutations.py` | 17 | B — cross-tenant mutations + RBAC |
+| **Total** | **396** | |
 
 **Class B (mandatory) — API contract for every visible DevOps path.** The route
 table is **derived from the live ASGI app**, not hardcoded, so the sweep cannot
@@ -869,7 +870,7 @@ tenants — not re-implementations of the logic under test.
 | Baseline | full suite | 290 passed, 0 failed (507.54 s) |
 | After P1 | full suite | **344 passed, 0 failed** (631.22 s) |
 | After P2 | full suite | **377 passed, 0 failed** (729.81 s) |
-| DevOps suite | `tests/devops` (379) | **379 passed, 0 failed** |
+| DevOps suite | `tests/devops` (396) | **396 passed, 0 failed** |
 | Frontend | `vite build` | **PASS** (10.03 s, after Phase 4 + ArgoCD pill) |
 | Frontend | `tsc -p tsconfig.json --noEmit` | **PASS** (exit 0, 1157 files, all 12 DevOpsCenter files) |
 | After P2 | full suite incl. summary-endpoint changes | **418 passed, 0 failed** (739.70 s) |
@@ -880,13 +881,14 @@ tenants — not re-implementations of the logic under test.
 | Static analysis | `mypy` 1.10.1 + `ruff` 0.5.7, project `pyproject.toml` | **0 findings on added lines** (baseline-triaged — see below) |
 | Final | full suite after static-analysis fixes | **656 passed, 0 failed** (1079.47 s) |
 | Final | full suite incl. ArgoCD sync/rollback tests | **668 passed, 0 failed** (1129.10 s) |
-| **Final** | full suite incl. ArgoCD TLS guard | **669 passed, 0 failed** (1113.12 s) |
+| Final | full suite incl. ArgoCD TLS guard | **669 passed, 0 failed** (1113.12 s) |
+| **Final** | full suite incl. cross-tenant mutation tests | **686 passed, 0 failed** (1124.64 s) |
 
-The progression 290 → 344 → 377 → 418 → 418 → 425 → 430 → 656 → 668 → **669**
-tracks exactly +54, +33, +41, +7, +5, +226, +12, +1 new tests, with **zero
-failures at every stage**. 669 = 290 baseline + 379 DevOps regression tests,
-confirming the new suite caused no regression anywhere in the existing 290.
-Phase 4 touched **frontend files only**, and the post-P4 backend re-run
+The progression 290 → 344 → 377 → 418 → 418 → 425 → 430 → 656 → 668 → 669 →
+**686** tracks exactly +54, +33, +41, +7, +5, +226, +12, +1, +17 new tests, with
+**zero failures at every stage**. 686 = 290 baseline + 396 DevOps regression
+tests, confirming the new suite caused no regression anywhere in the existing
+290. Phase 4 touched **frontend files only**, and the post-P4 backend re-run
 reproduced 418 exactly.
 
 ### Environment rebuilt mid-verification — recorded, not hidden
@@ -1029,7 +1031,7 @@ evidence actually gathered.
 
 ### Proven locally (real code executed)
 
-- All 379 DevOps regression tests and the full backend suite (669 passed).
+- All 396 DevOps regression tests and the full backend suite (686 passed).
 - BUG-012 arithmetic executed directly against the changed function: 25.0 / 50.0
   / `None` on zero capacity.
 - BUG-013 via real HTTP round-trips through the ASGI app with seeded tenants.
@@ -1037,12 +1039,27 @@ evidence actually gathered.
 - BUG-019 via the real `PipelineService.get_jobs` code path.
 - BUG-003/004/006 via the real client and service code paths with the provider
   layer mocked — mocks exist **only** in tests.
-- Tenant isolation and RBAC previously proven by `scripts/audit_isolation.py`
-  against real tenant-B rows, attacked as tenant A, with the database re-read
-  afterwards: pod GET/logs/events/restart/exec/DELETE → 404 with the row intact;
-  pipelines GET/cancel/rerun → 404; clusters GET/test/PATCH/DELETE → 404 with the
-  row alive. `viewer`/`devops_engineer` → 403 on all six mutation classes;
-  `devops`/`admin` → 201.
+- **Tenant isolation and server-side RBAC, now in the committed suite.** This was
+  originally proven by `scripts/audit_isolation.py`, but that script needs a live
+  server plus untracked fixtures (`audit.db`, `.audit_ids.json`), so the evidence
+  was unreproducible — the report could cite it and nobody could re-run it. The
+  same guarantees are now pytest tests (`test_tenant_isolation_mutations.py`, 17
+  tests) that run in CI without a server.
+
+  Every destructive case re-reads the database afterwards, because "returns 404"
+  is weaker than "did not destroy anything" — a 404 that quietly deleted the
+  victim's row would pass the status assertion and fail the survival one:
+
+  | Attacked as tenant A's admin, owned by tenant B | Result |
+  |---|---|
+  | pod `POST /restart`, `DELETE`, `POST /exec` | 404, row intact, `restart_count` unchanged |
+  | cluster `GET`, `POST /test`, `PATCH`, `DELETE` | 404, row alive, `name` not mutated |
+  | pipeline `GET`, `POST /cancel`, `POST /rerun` | 404, row intact, `status` unchanged |
+
+  A control test proves the 404 comes from the *tenant filter* rather than the
+  endpoint always 404ing. RBAC: `viewer` → 403 on cluster create, GitOps create,
+  alert create, pod restart and pod delete (row intact); `devops_engineer` → not
+  403, proving the denials are real rather than a blanket rejection.
 
 ### Requires live infrastructure — NOT verified here
 
