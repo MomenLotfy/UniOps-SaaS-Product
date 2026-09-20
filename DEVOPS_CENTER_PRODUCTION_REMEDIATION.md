@@ -20,7 +20,7 @@ critical-correctness bugs, all seven P2 provider-honesty bugs, and all five P4
 frontend-correctness bugs. Only **BUG-010** remains, which sits in P3 (excluded
 by standing instruction). A shared provider-failure contract was introduced so
 the fix is one convention rather than thirteen one-off patches. A dedicated
-DevOps Center regression suite of **396 tests** was added, including the two
+DevOps Center regression suite of **400 tests** was added, including the two
 mandatory classes the audit required (reconciliation safety and cluster
 routing).
 
@@ -36,8 +36,8 @@ job to delete every pod row in the database.
 
 | | Before | After |
 |---|---|---|
-| Backend test suite | 290 passed | **686 passed, 0 failed** |
-| DevOps regression suite | none | **396 tests** in `backend/tests/devops/` |
+| Backend test suite | 290 passed | **690 passed, 0 failed** |
+| DevOps regression suite | none | **400 tests** in `backend/tests/devops/` |
 | Provider failure → HTTP | 200 + `success: true` | 502/503 + `INTEGRATION_ERROR` |
 | Dead cluster in UI | empty lists, "connected" | explicit "Cluster unavailable" |
 | Sync on provider failure | deleted all pod rows | deletes nothing |
@@ -664,6 +664,44 @@ to escape `exec_pod` unwrapped — an opaque HTTP 500, exactly the failure mode
 BUG-004 set out to eliminate. A final `except Exception` branch now classifies it
 as `IntegrationError` (502) and audits it first.
 
+### Audit logging is enforced at two layers — verified, not assumed
+
+The standing requirement was to keep audit logging intact (actor, tenant, action,
+resource, result, no secrets). Two distinct mechanisms turned out to provide it,
+and both are now covered by tests:
+
+| Layer | Mechanism | Covered by |
+|---|---|---|
+| Service | `KubernetesService._write_audit` — explicit calls inside pod exec/delete/restart/scale | `test_audit_logging.py` (7) |
+| Middleware | `AuditMiddleware` — logs **every** POST/PUT/PATCH/DELETE, deriving `status` from the response code | `test_gitops_audit_trail.py` (4) |
+
+The GitOps endpoints contain **no** audit code whatsoever — grepping `gitops.py`
+for `AuditLog` or `_write_audit` returns nothing, which reads like a gap. It is
+not: `AuditMiddleware` (registered at `app/main.py:214`, deliberately after
+`JWTAuthMiddleware` so `request.state` carries the identity) records actor,
+tenant, action, resource, resource id, IP, user agent and
+`status="failure"` for any response ≥ 400.
+
+That middleware-level guarantee is easy to break silently — reordering the
+`add_middleware` calls, adding a prefix to `AUDIT_EXCLUDED_PREFIXES`, or having
+the auth middleware stop populating `request.state.user_id` would each stop the
+audit trail while leaving every other test green. It is now locked in: a
+provider-rejected sync (502) produces a row with `status="failure"`, the correct
+actor and `resource_id`; a successful sync produces `status="success"`; a failed
+rollback likewise; and no audit row contains the ArgoCD token, server URL,
+`Authorization` header, kubeconfig or password.
+
+**A test-isolation defect this surfaced.** `AuditMiddleware` resolves
+`app.core.database.AsyncSessionLocal` lazily inside `dispatch`, so it writes to
+`settings.DATABASE_URL` — **bypassing the `get_db` override the test client
+installs**. Audit rows from test runs were therefore landing in the *tracked*
+`backend/uniops_dev.db` (confirmed: 4 rows for a test tenant appeared there).
+This is why that file kept showing as modified after test runs. The new tests
+rebind the session factory to the test engine for the duration of the test; the
+middleware's own logic still runs for real. Any future test asserting on
+middleware-written audit rows needs the same rebinding, or it will silently read
+an empty table while the real dev database accumulates rows.
+
 ---
 
 ## 5. Repo-wide pattern sweeps
@@ -768,9 +806,9 @@ requirement is not engaged.
 
 ## 7. Tests added
 
-`backend/tests/devops/` — **396 tests, all passing**.
+`backend/tests/devops/` — **400 tests, all passing**.
 
-Counts are pytest-collected tests (parametrisation expanded), summing to 396.
+Counts are pytest-collected tests (parametrisation expanded), summing to 400.
 
 | File | Collected | Audit class |
 |---|---|---|
@@ -781,11 +819,12 @@ Counts are pytest-collected tests (parametrisation expanded), summing to 396.
 | `test_provider_contract.py` | 31 | C — unreachable provider + ArgoCD reachability/TLS |
 | `test_resource_endpoints.py` | 41 | B/C — API contract |
 | `test_catalog_filters.py` | 8 | B — API contract |
-| `test_audit_logging.py` | 7 | audit-trail integrity |
+| `test_audit_logging.py` | 7 | audit-trail integrity (service layer) |
+| `test_gitops_audit_trail.py` | 4 | audit-trail integrity (middleware layer) |
 | `test_api_contract_matrix.py` | 226 | B — authn/isolation/404 across all 71 routes |
 | `test_gitops_mutations.py` | 12 | A/C — ArgoCD sync + rollback |
 | `test_tenant_isolation_mutations.py` | 17 | B — cross-tenant mutations + RBAC |
-| **Total** | **396** | |
+| **Total** | **400** | |
 
 **Class B (mandatory) — API contract for every visible DevOps path.** The route
 table is **derived from the live ASGI app**, not hardcoded, so the sweep cannot
@@ -870,7 +909,7 @@ tenants — not re-implementations of the logic under test.
 | Baseline | full suite | 290 passed, 0 failed (507.54 s) |
 | After P1 | full suite | **344 passed, 0 failed** (631.22 s) |
 | After P2 | full suite | **377 passed, 0 failed** (729.81 s) |
-| DevOps suite | `tests/devops` (396) | **396 passed, 0 failed** |
+| DevOps suite | `tests/devops` (400) | **400 passed, 0 failed** |
 | Frontend | `vite build` | **PASS** (10.03 s, after Phase 4 + ArgoCD pill) |
 | Frontend | `tsc -p tsconfig.json --noEmit` | **PASS** (exit 0, 1157 files, all 12 DevOpsCenter files) |
 | After P2 | full suite incl. summary-endpoint changes | **418 passed, 0 failed** (739.70 s) |
@@ -882,14 +921,15 @@ tenants — not re-implementations of the logic under test.
 | Final | full suite after static-analysis fixes | **656 passed, 0 failed** (1079.47 s) |
 | Final | full suite incl. ArgoCD sync/rollback tests | **668 passed, 0 failed** (1129.10 s) |
 | Final | full suite incl. ArgoCD TLS guard | **669 passed, 0 failed** (1113.12 s) |
-| **Final** | full suite incl. cross-tenant mutation tests | **686 passed, 0 failed** (1124.64 s) |
+| Final | full suite incl. cross-tenant mutation tests | **686 passed, 0 failed** (1124.64 s) |
+| **Final** | full suite incl. GitOps audit-trail tests | **690 passed, 0 failed** (1134.78 s) |
 
 The progression 290 → 344 → 377 → 418 → 418 → 425 → 430 → 656 → 668 → 669 →
-**686** tracks exactly +54, +33, +41, +7, +5, +226, +12, +1, +17 new tests, with
-**zero failures at every stage**. 686 = 290 baseline + 396 DevOps regression
-tests, confirming the new suite caused no regression anywhere in the existing
-290. Phase 4 touched **frontend files only**, and the post-P4 backend re-run
-reproduced 418 exactly.
+686 → **690** tracks exactly +54, +33, +41, +7, +5, +226, +12, +1, +17, +4 new
+tests, with **zero failures at every stage**. 690 = 290 baseline + 400 DevOps
+regression tests, confirming the new suite caused no regression anywhere in the
+existing 290. Phase 4 touched **frontend files only**, and the post-P4 backend
+re-run reproduced 418 exactly.
 
 ### Environment rebuilt mid-verification — recorded, not hidden
 
@@ -1031,7 +1071,7 @@ evidence actually gathered.
 
 ### Proven locally (real code executed)
 
-- All 396 DevOps regression tests and the full backend suite (686 passed).
+- All 400 DevOps regression tests and the full backend suite (690 passed).
 - BUG-012 arithmetic executed directly against the changed function: 25.0 / 50.0
   / `None` on zero capacity.
 - BUG-013 via real HTTP round-trips through the ASGI app with seeded tenants.
