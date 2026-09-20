@@ -752,7 +752,7 @@ classified rather than blanket-edited:
 | `backend/app/api/v1/endpoints/gitops.py` | BUG-008 delete→404; ArgoCD `_argocd_reachable()` probe + `argocd_configured` |
 | `backend/app/api/v1/endpoints/catalog.py` | BUG-013 |
 | `artifacts/uniops/.../components.tsx` | `ClusterSection` `unavailable` prop |
-| `artifacts/uniops/.../ClusterControlPlane.tsx` | `resourceRows()`, 18 sites rewired, BUG-016/018 |
+| `artifacts/uniops/.../ClusterControlPlane.tsx` | `resourceRows()` — 9 sections rewired through 27 call sites, BUG-016/018 |
 | `artifacts/uniops/.../ObservabilityTab.tsx` | BUG-014 — reuse `resolveColor()` for SVG `stop-color` |
 | `artifacts/uniops/.../hooks.ts` | BUG-015 (−47 lines, unused import), BUG-016 opt-outs, BUG-017 comments |
 | `artifacts/uniops/.../index.tsx` | BUG-016 — `includeList: false` |
