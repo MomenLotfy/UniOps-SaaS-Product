@@ -1149,7 +1149,7 @@ Only P3 remains. P4 is complete (see §4b).
 
 | ID | Finding | Phase |
 |---|---|---|
-| BUG-010 | `selectedClusterId` (`index.tsx:88,214,215,235`) is never sent to the API, so the cluster selector does not route requests. The nine endpoints now *accept* `cluster_id`; the frontend does not yet send it. `KubernetesSecurity.tsx:886` also sends `?cluster=` where the endpoint expects `?cluster_id=`. | P3 |
+| BUG-010 | `selectedClusterId` (`index.tsx:88,215,216,236` — line numbers re-verified against current source) is never sent to the API, so the cluster selector does not route requests. The nine endpoints now *accept* `cluster_id`; the frontend does not yet send it. Separately, `src/pages/SecurityCenter/sections/KubernetesSecurity.tsx:886` builds `?cluster=${selectedCluster}` for `/kubernetes/pods/cluster/summary`, but that endpoint declares only `cluster_id` (`pods.py:388`), so the parameter is silently ignored — the same file uses the correct `cluster_id` at line 890 for its findings call. | P3 |
 | — | WebSocket fan-out is single-instance only; no Redis pub/sub, no tenant isolation across instances | P3 |
 | — | Rate limiting runs **before** authentication, so identity is unauthenticated at throttle time; not Redis-backed when Redis is configured | P3 |
 | — | ArgoCD TLS verification disabled — see note below | P3 |
