@@ -5,8 +5,9 @@
 **Baseline commit:** `29b139a96ccf8c44f186ef927a73f99ae1ea8573`
 **Authority:** `DEVOPS_CENTER_PRODUCTION_AUDIT.md` (19 findings, BUG-001 … BUG-019)
 **Phases completed:** P0 (baseline), P1 (critical correctness), P2 (provider
-honesty), P4 (frontend correctness)
-**Phase not started:** P3 — excluded by standing instruction
+honesty), P4 (frontend correctness), plus a final hardening pass (§4d) covering
+BUG-010, ArgoCD TLS and the duplicate `DevOpsUser` alias
+**Phase still open:** the remaining P3 WebSocket work — excluded, needs Redis
 
 **Overall status: CODE-VERIFIED — not PRODUCTION VERIFIED.**
 See [§9 Verification status](#9-verification-status) for exactly what was and was not proven.
@@ -15,12 +16,13 @@ See [§9 Verification status](#9-verification-status) for exactly what was and w
 
 ## 1. Summary
 
-**Eighteen of the nineteen audit findings are fixed** — all six P0/P1
-critical-correctness bugs, all seven P2 provider-honesty bugs, and all five P4
-frontend-correctness bugs. Only **BUG-010** remains, which sits in P3 (excluded
-by standing instruction). A shared provider-failure contract was introduced so
+**All nineteen audit findings are fixed** — the six P0/P1 critical-correctness
+bugs, the seven P2 provider-honesty bugs, the five P4 frontend-correctness bugs,
+and finally **BUG-010** (cluster selector routing) in the hardening pass at §4d.
+BUG-010 sat in P3, which was excluded by standing instruction until it was
+explicitly re-opened. A shared provider-failure contract was introduced so
 the fix is one convention rather than thirteen one-off patches. A dedicated
-DevOps Center regression suite of **400 tests** was added, including the two
+DevOps Center regression suite of **428 tests** was added, including the two
 mandatory classes the audit required (reconciliation safety and cluster
 routing).
 
@@ -36,15 +38,15 @@ job to delete every pod row in the database.
 
 | | Before | After |
 |---|---|---|
-| Backend test suite | 290 passed | **690 passed, 0 failed** |
-| DevOps regression suite | none | **400 tests** in `backend/tests/devops/` |
+| Backend test suite | 290 passed | **718 passed, 0 failed** |
+| DevOps regression suite | none | **428 tests** in `backend/tests/devops/` |
 | Provider failure → HTTP | 200 + `success: true` | 502/503 + `INTEGRATION_ERROR` |
 | Dead cluster in UI | empty lists, "connected" | explicit "Cluster unavailable" |
 | Sync on provider failure | deleted all pod rows | deletes nothing |
 | Metric area fills | invalid `#blue` → rendered black | real `#60a5fa` gradient |
 | Destructive confirms | blocking `window.confirm` ×3 | in-app `ConfirmDialog` ×3 |
 | Pod fetches per view | 2 requests, half discarded | only what each view renders |
-| Audit findings resolved | 0 / 19 | **18 / 19** |
+| Audit findings resolved | 0 / 19 | **19 / 19** |
 
 ---
 
@@ -704,6 +706,115 @@ an empty table while the real dev database accumulates rows.
 
 ---
 
+## 4d. Final hardening pass — before live-infrastructure verification
+
+Three items, chosen because each one either blocks a meaningful live test or is
+small enough to be provably safe. Everything else was deliberately deferred
+(see §10).
+
+### 1. ArgoCD TLS verification (five hardcoded `verify=False` removed)
+
+`_get_argocd_creds` already resolves an `insecure` flag —
+`creds.get("insecure") or cfg.get("insecure") or False` — and hands it to the
+five `_argocd_*` helpers. They ignored it and hardcoded
+`httpx.AsyncClient(verify=False, ...)`. All five now use
+`verify=not creds.get("insecure", False)`, matching the two real ArgoCD clients
+that were already correct.
+
+| | `verify=False` call sites in `gitops.py` |
+|---|---|
+| before | **5** (lines 133, 147, 174, 189, 205) |
+| after | **0** |
+| sites honouring `insecure` | 5 helpers + the reachability probe = **6** |
+
+Semantics: `insecure` absent or false → verification **ON**; `insecure: true` →
+verification **OFF** on explicit opt-out. No other behaviour changed.
+
+This was worth doing *before* live verification rather than after: a live ArgoCD
+round-trip performed with `verify=False` cannot tell you anything about TLS, so
+the fix is a precondition for that test being meaningful.
+
+**Verified non-vacuous.** Reverting one helper (`_argocd_sync`) to
+`verify=False` fails two tests: the parametrised default-verification case and
+the source-level guard. Both pass again on restore.
+
+### 2. Duplicate `DevOpsUser` alias removed
+
+`backend/app/api/deps.py` declared `DevOpsUser = Annotated[dict,
+Depends(require_devops)]` twice (lines 180 and 182). The second binding was
+deleted; one remains. No endpoint behaviour changed — the second binding merely
+shadowed an identical first.
+
+### 3. BUG-010 — the cluster selector now routes
+
+`selectedClusterId` was read only to render the dropdown's own label and
+highlight. It now reaches the wire end-to-end:
+
+```
+DevOps page (index.tsx)
+  └─ activeClusterId = selectedClusterId || undefined
+       ├─ usePods(..., { clusterId })            → /kubernetes/pods?cluster_id=
+       │                                         → /kubernetes/pods/stats?cluster_id=
+       ├─ ClusterControlPlane                    → the nine resource endpoints
+       ├─ PlatformObservability → AlertsTab      → /devops-alerts?cluster_id=
+       └─ DeliveryGitOps        → GitOpsTab      → /gitops?cluster_id=
+```
+
+Backend: the nine Control-Plane resource endpoints already accepted
+`cluster_id`. This pass adds it to the two remaining cluster-shaped reads,
+`GET /kubernetes/pods` and `GET /kubernetes/pods/stats`, so the pod table and the
+summary tiles describe the selected cluster rather than the whole tenant.
+
+**Why the pod endpoints needed a resolver rather than a name.** `Pod.cluster` is
+written by the sync job as `data.get("cluster") or integration.name`
+(`sync_pods.py`), and there is no foreign key between `clusters` and
+`integrations`. So the frontend sends the cluster **id**, and
+`KubernetesService.cluster_pod_scope()` resolves it to the set of `Pod.cluster`
+labels belonging to that cluster — its own name plus the name of the integration
+that explicitly names it, the same convention `get_client_for_cluster` already
+uses. Sending a display name from the browser would have risked a filter that
+silently matched nothing, which is the exact failure class this remediation has
+been removing.
+
+Safety properties, each locked by a test:
+
+* an unknown `cluster_id` → **404**, and the response contains no pod names;
+* another tenant's `cluster_id` → **404**, not 403 and not its data;
+* the scope set only ever contains names belonging to the resolved cluster, so
+  scoping cannot leak another cluster's pods;
+* no selection → the parameter is **omitted entirely**, so tenant-wide behaviour
+  is byte-identical to before (the dropdown's "All Clusters" entry is the empty
+  string, which becomes `undefined`, never a blank `cluster_id=`);
+* endpoints with no cluster context are untouched: the Catalog, pipelines, and
+  pod restart/delete/exec (which resolve their cluster from the pod row).
+
+Also fixed while tracing this: `SecurityCenter/sections/KubernetesSecurity.tsx`
+sent `?cluster=<id>` to `/kubernetes/pods/cluster/summary`, which declares only
+`cluster_id`, so FastAPI ignored it and the summary showed tenant-wide data
+beside cluster-scoped panels. Now `?cluster_id=`, matching the two neighbouring
+calls in the same file.
+
+**Deliberately not scoped** (documented rather than silently half-done):
+`/observability/metrics/{cluster,pods,namespaces}`, which read Prometheus and the
+metrics-server rather than the pod table, plus `/devops-alerts/stats` and
+`/gitops/stats/summary`, which declare no `cluster_id`.
+
+### How the frontend half is tested
+
+The repository has no JavaScript test runner — no vitest or jest, no `test`
+script in `package.json` — so a DOM-level test was not possible. Rather than
+re-implement the logic in Python (which would prove nothing about the shipped
+code), `test_cluster_selector_frontend.py` **compiles the real
+`src/pages/DevOpsCenter/hooks.ts` with the workspace's own TypeScript**, rewrites
+only its unresolvable *import specifiers* to stubs, and runs the emitted module
+in Node. The stubbed `useApi` records the exact path the hook builds, so
+"selecting cluster A sends `cluster_id=A`" is observed rather than inferred —
+14 assertions, covering A, B, A→B switching, "All Clusters" omitting the
+parameter, an existing querystring, and URL-encoding of the id.
+
+Both halves were mutation-checked: breaking `clusterScoped` fails the Node test,
+and deleting the `cluster_id` line from `AlertsTab` fails the static wiring test.
+
 ## 5. Repo-wide pattern sweeps
 
 The audit required hunting each root cause across the codebase, not just at the
@@ -829,9 +940,9 @@ requirement is not engaged.
 
 ## 7. Tests added
 
-`backend/tests/devops/` — **400 tests, all passing**.
+`backend/tests/devops/` — **428 tests, all passing**.
 
-Counts are pytest-collected tests (parametrisation expanded), summing to 400.
+Counts are pytest-collected tests (parametrisation expanded), summing to 428.
 
 | File | Collected | Audit class |
 |---|---|---|
@@ -847,7 +958,9 @@ Counts are pytest-collected tests (parametrisation expanded), summing to 400.
 | `test_api_contract_matrix.py` | 226 | B — authn/isolation/404 across all 71 routes |
 | `test_gitops_mutations.py` | 12 | A/C — ArgoCD sync + rollback |
 | `test_tenant_isolation_mutations.py` | 17 | B — cross-tenant mutations + RBAC |
-| **Total** | **400** | |
+| `test_cluster_selector_routing.py` | 23 | E — BUG-010 routing + ArgoCD TLS (§4d) |
+| `test_cluster_selector_frontend.py` | 5 | E — real compiled hook sends `cluster_id` (§4d) |
+| **Total** | **428** | |
 
 **Class B (mandatory) — API contract for every visible DevOps path.** The route
 table is **derived from the live ASGI app**, not hardcoded, so the sweep cannot
@@ -932,7 +1045,7 @@ tenants — not re-implementations of the logic under test.
 | Baseline | full suite | 290 passed, 0 failed (507.54 s) |
 | After P1 | full suite | **344 passed, 0 failed** (631.22 s) |
 | After P2 | full suite | **377 passed, 0 failed** (729.81 s) |
-| DevOps suite | `tests/devops` (400) | **400 passed, 0 failed** |
+| DevOps suite | `tests/devops` (428) | **428 passed, 0 failed** |
 | Frontend | `vite build` | **PASS** (10.03 s, after Phase 4 + ArgoCD pill) |
 | Frontend | `tsc -p tsconfig.json --noEmit` | **PASS** (exit 0, 1157 files, all 12 DevOpsCenter files) |
 | After P2 | full suite incl. summary-endpoint changes | **418 passed, 0 failed** (739.70 s) |
@@ -945,7 +1058,9 @@ tenants — not re-implementations of the logic under test.
 | Final | full suite incl. ArgoCD sync/rollback tests | **668 passed, 0 failed** (1129.10 s) |
 | Final | full suite incl. ArgoCD TLS guard | **669 passed, 0 failed** (1113.12 s) |
 | Final | full suite incl. cross-tenant mutation tests | **686 passed, 0 failed** (1124.64 s) |
-| **Final** | full suite incl. GitOps audit-trail tests | **690 passed, 0 failed** (1134.78 s) |
+| | full suite incl. GitOps audit-trail tests | **690 passed, 0 failed** (1134.78 s) |
+| | DevOps suite after the hardening pass (§4d) | **428 passed, 0 failed** (693.28 s) |
+| **Final** | full suite after the hardening pass | **718 passed, 0 failed** (1262.67 s) |
 
 The progression 290 → 344 → 377 → 418 → 418 → 425 → 430 → 656 → 668 → 669 →
 686 → **690** tracks exactly +54, +33, +41, +7, +5, +226, +12, +1, +17, +4 new
@@ -1094,7 +1209,7 @@ evidence actually gathered.
 
 ### Proven locally (real code executed)
 
-- All 400 DevOps regression tests and the full backend suite (690 passed).
+- All 428 DevOps regression tests and the full backend suite (718 passed).
 - BUG-012 arithmetic executed directly against the changed function: 25.0 / 50.0
   / `None` on zero capacity.
 - BUG-013 via real HTTP round-trips through the ASGI app with seeded tenants.
@@ -1102,6 +1217,17 @@ evidence actually gathered.
 - BUG-019 via the real `PipelineService.get_jobs` code path.
 - BUG-003/004/006 via the real client and service code paths with the provider
   layer mocked — mocks exist **only** in tests.
+- **The cluster selector routes, end-to-end (§4d).** The backend half is proven
+  through real HTTP round-trips: cluster A returns only A's pods, cluster B only
+  B's, switching changes the result, and an unknown or foreign `cluster_id` is a
+  404 whose body contains no pod names. The frontend half runs the **real
+  compiled `hooks.ts`** in Node with a recording transport, so the URLs asserted
+  are the ones the shipped code builds. Both halves were mutation-checked.
+- **ArgoCD verifies TLS by default (§4d).** All five `_argocd_*` helpers plus the
+  reachability probe were asserted to build their client with `verify is True`
+  when `insecure` is absent and `verify is False` when it is set, and a
+  source-level guard (tokenise-stripped) fails if a hardcoded `verify=False`
+  returns.
 - **Tenant isolation and server-side RBAC, now in the committed suite.** This was
   originally proven by `scripts/audit_isolation.py`, but that script needs a live
   server plus untracked fixtures (`audit.db`, `.audit_ids.json`), so the evidence
@@ -1156,21 +1282,31 @@ Only P3 remains. P4 is complete (see §4b).
 
 | ID | Finding | Phase |
 |---|---|---|
-| BUG-010 | `selectedClusterId` (`index.tsx:88,215,216,236` — line numbers re-verified against current source) is never sent to the API, so the cluster selector does not route requests. The nine endpoints now *accept* `cluster_id`; the frontend does not yet send it. Separately, `src/pages/SecurityCenter/sections/KubernetesSecurity.tsx:886` builds `?cluster=${selectedCluster}` for `/kubernetes/pods/cluster/summary`, but that endpoint declares only `cluster_id` (`pods.py:388`), so the parameter is silently ignored — the same file uses the correct `cluster_id` at line 892 for its findings call (`findQs.set('cluster_id', selectedCluster)` — line 890 is the `// Findings` comment, 891 builds `findQs`). | P3 |
+| ~~BUG-010~~ | ~~cluster selector does not route requests~~ **FIXED in the final hardening pass** — see §4d | — |
 | — | WebSocket fan-out is **in-process only** (no Redis pub/sub), so events are lost when the API runs as more than one worker/replica. Half of the original wording was wrong — tenant isolation **is** enforced and is not instance-dependent; see below. | P3 |
 | — | ~~Rate limiting runs **before** authentication; not Redis-backed~~ **WITHDRAWN — this finding was wrong**, see below | — |
-| — | ArgoCD TLS verification disabled — see note below | P3 |
+| ~~—~~ | ~~ArgoCD TLS verification disabled~~ **FIXED in the final hardening pass** — all five helpers honour `insecure`; 0 hardcoded `verify=False` remain. See §4d | — |
 
 Fixed in this pass (P4): BUG-014, BUG-015, BUG-016, BUG-017, BUG-018 — see §4b.
 
-Also documented, unfixed: `DevOpsUser` is declared twice in
-`backend/app/api/deps.py` — lines **180** and **182**, both the identical
-`DevOpsUser = Annotated[dict, Depends(require_devops)]`. It is a type alias, not a
-class (so `grep "class DevOpsUser"` finds nothing); the second binding simply
-shadows the first, so behaviour is unaffected and the **30** endpoints across **7**
-modules that annotate `current_user: DevOpsUser` (`catalog.py`, `clusters.py`,
-`devops_alerts.py`, `gitops.py`, `pipelines.py`, `pods.py`, `remediation.py`) all
-resolve to the same dependency. Cosmetic, but it is a copy-paste artefact worth deleting.
+**Still open after the hardening pass** (all P3, all deferred deliberately — see §4d):
+
+| Finding | Why it waits |
+|---|---|
+| WebSocket fan-out is in-process only (no Redis pub/sub) | needs Redis, which is unavailable here; shipping it untested would be worse than not shipping it |
+| `subscribe`/`unsubscribe` store nothing, so client channel filtering is a no-op | same WebSocket work |
+| `send_to_user` is dead code (zero callers repo-wide) | same WebSocket work |
+| 18 `except Exception` → empty-return sites in the Kubernetes client | out of scope; DevOps surfaces are covered by the `check_reachable()` seam |
+| Two credential stores (`Integration` vs `Cluster.kubeconfig_encrypted`) | correct today; consolidating is a schema decision, not a hardening one |
+| `/observability/metrics/{cluster,pods,namespaces}` ignore the cluster selector | these read Prometheus / the metrics-server, not the pod table, so honouring the selector is a provider-layer change (§4d) |
+| `/devops-alerts/stats` and `/gitops/stats/summary` ignore the cluster selector | neither declares `cluster_id`; the lists beside them *are* scoped, and the counters say so rather than pretending |
+
+Also fixed in the final hardening pass: the duplicate `DevOpsUser` alias in
+`backend/app/api/deps.py` (the second of two identical bindings was deleted;
+the **30** endpoints across **7** modules that annotate `current_user: DevOpsUser`
+resolve to the single remaining one). It was a type alias, not a class, so
+`grep "class DevOpsUser"` finds nothing — the reason an early verification
+attempt came back empty and briefly looked like a false finding.
 
 ### WebSocket fan-out — confirmed, but narrower than stated
 
@@ -1393,22 +1529,38 @@ fixed with regression coverage that locks them in.
 
 Conditions before this can be called production-ready:
 
-1. Live round-trip of the GitHub mutations (BUG-001) against a real account.
+**Closed by the final hardening pass (§4d):**
+
+- ~~ArgoCD TLS verification~~ — done. All five helpers honour `insecure`;
+  0 hardcoded `verify=False` remain in `gitops.py`.
+- ~~BUG-010 — wire `selectedClusterId` through to the API~~ — done. The selector
+  now routes end-to-end to 12 endpoints, with 404s for unknown and foreign
+  cluster ids.
+- ~~`pnpm typecheck` on the workspace's pinned toolchain~~ — done. It could not
+  run earlier because `pnpm` was unavailable; it now runs clean (**exit 0**,
+  1165 files including all 12 DevOpsCenter files), proven non-vacuous by a
+  deliberate-error check. The earlier standalone-TypeScript caveat no longer
+  applies.
+- ~~rate-limit placement/identity~~ — withdrawn as a finding, not "fixed": it was
+  measured to be already correct (see §10).
+
+**Still required:**
+
+1. Live round-trip of the GitHub mutations (BUG-001) against a real account —
+   the highest-risk residual, because those calls were dead code before and have
+   only ever been exercised against a mocked transport.
 2. Live Kubernetes round-trips for scale/delete/restart/exec against a real
    cluster, including a deliberate outage to confirm the degraded path renders.
-3. ArgoCD TLS verification (`verify=False` → `verify=True` / configurable CA).
-4. Redis-backed WebSocket fan-out and rate limiting for multi-instance
-   deployment.
-5. BUG-010 — wire `selectedClusterId` through to the API, or the cluster
-   selector remains decorative.
+3. Live ArgoCD sync/rollback **with TLS verification on** — now that the flag is
+   honoured, this test can actually validate the TLS path.
+4. Live Kubernetes round-trip of the cluster selector itself: select A, confirm
+   A's resources; select B, confirm B's; point it at a cluster the tenant does
+   not own and confirm the 404 surfaces rather than silently showing data.
+5. Redis-backed WebSocket fan-out for multi-instance deployment.
 6. `mypy`/`ruff` on a true 3.12 toolchain. Both were run here (3.11.2 runtime,
    project `pyproject.toml` config) and every finding on a line I added was
    triaged against a `git HEAD` baseline — **0 mypy findings remain on added
    lines** — but 3.12-only diagnostics cannot surface on this interpreter.
-7. **`pnpm typecheck` on the frontend.** Now verified locally via a standalone
-   TypeScript 5.5.4 against the project's `tsconfig.json` — exit 0 across 1157
-   files including all 12 DevOpsCenter files (see §8). Re-run through the
-   workspace's own pinned toolchain in CI.
-8. Full-suite run on PostgreSQL rather than SQLite.
-9. P3 completion: BUG-010 cluster routing, WebSocket Redis pub/sub, rate-limit
-   placement/identity, and ArgoCD TLS.
+7. Full-suite run on PostgreSQL rather than SQLite.
+8. Remaining P3: WebSocket Redis pub/sub, the no-op `subscribe`/`unsubscribe`,
+   and the dead `send_to_user`.
