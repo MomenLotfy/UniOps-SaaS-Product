@@ -97,10 +97,41 @@ async def _get_argocd_creds(tenant_id: str, db: DBSession) -> dict | None:
     }
 
 
+async def _argocd_reachable(creds: dict | None) -> bool:
+    """
+    Real liveness probe for ArgoCD.
+
+    ``argocd_connected`` used to be ``bool(creds)`` — true whenever credentials
+    existed, regardless of whether ArgoCD was answering. The UI renders that
+    flag as a pulsing green "ArgoCD Live" pill, so a dead ArgoCD was displayed
+    as live. Configuration presence is not connectivity; this is the same
+    defect class as BUG-007 (cluster test-connection) and BUG-009.
+    """
+    if not creds or not creds.get("server"):
+        return False
+    try:
+        # Honour the resolved `insecure` flag rather than hardcoding
+        # verify=False. TLS verification is therefore ON by default and is
+        # skipped only on an explicit per-tenant opt-out. Every ArgoCD call in
+        # this module — this probe and the five `_argocd_*` helpers below —
+        # resolves `verify` the same way.
+        async with httpx.AsyncClient(
+            verify=not creds.get("insecure", False), timeout=5
+        ) as client:
+            r = await client.get(
+                f"{creds['server'].rstrip('/')}/api/version",
+                headers={"Authorization": f"Bearer {creds['token']}"},
+            )
+            return r.status_code < 500
+    except Exception as e:
+        logger.warning(f"[gitops] ArgoCD reachability probe failed: {e}")
+        return False
+
+
 async def _argocd_list_apps(creds: dict) -> list[dict]:
     """Call ArgoCD /api/v1/applications."""
     try:
-        async with httpx.AsyncClient(verify=False, timeout=10) as client:
+        async with httpx.AsyncClient(verify=not creds.get("insecure", False), timeout=10) as client:
             r = await client.get(
                 f"{creds['server'].rstrip('/')}/api/v1/applications",
                 headers={"Authorization": f"Bearer {creds['token']}"},
@@ -114,7 +145,7 @@ async def _argocd_list_apps(creds: dict) -> list[dict]:
 
 async def _argocd_sync(creds: dict, app_name: str) -> bool:
     try:
-        async with httpx.AsyncClient(verify=False, timeout=15) as client:
+        async with httpx.AsyncClient(verify=not creds.get("insecure", False), timeout=15) as client:
             r = await client.post(
                 f"{creds['server'].rstrip('/')}/api/v1/applications/{app_name}/sync",
                 headers={"Authorization": f"Bearer {creds['token']}"},
@@ -141,7 +172,7 @@ async def _argocd_rollback(creds: dict, app_name: str, revision: str) -> bool:
                 return False
             id_number = match["id"]
 
-        async with httpx.AsyncClient(verify=False, timeout=15) as client:
+        async with httpx.AsyncClient(verify=not creds.get("insecure", False), timeout=15) as client:
             r = await client.post(
                 f"{creds['server'].rstrip('/')}/api/v1/applications/{app_name}/rollback",
                 headers={"Authorization": f"Bearer {creds['token']}"},
@@ -156,7 +187,7 @@ async def _argocd_rollback(creds: dict, app_name: str, revision: str) -> bool:
 async def _argocd_get_history(creds: dict, app_name: str) -> list[dict]:
     """Fetch deployment history from ArgoCD (revision + id entries)."""
     try:
-        async with httpx.AsyncClient(verify=False, timeout=15) as client:
+        async with httpx.AsyncClient(verify=not creds.get("insecure", False), timeout=15) as client:
             r = await client.get(
                 f"{creds['server'].rstrip('/')}/api/v1/applications/{app_name}",
                 headers={"Authorization": f"Bearer {creds['token']}"},
@@ -172,7 +203,7 @@ async def _argocd_get_history(creds: dict, app_name: str) -> list[dict]:
 async def _argocd_get_revision(creds: dict, app_name: str) -> str | None:
     """Current live sync revision in ArgoCD, or None when unreachable."""
     try:
-        async with httpx.AsyncClient(verify=False, timeout=10) as client:
+        async with httpx.AsyncClient(verify=not creds.get("insecure", False), timeout=10) as client:
             r = await client.get(
                 f"{creds['server'].rstrip('/')}/api/v1/applications/{app_name}",
                 headers={"Authorization": f"Bearer {creds['token']}"},
@@ -492,9 +523,13 @@ async def delete_app(
         select(GitOpsApp).where(GitOpsApp.id == app_id, GitOpsApp.tenant_id == tenant_id)
     )
     app = result.scalar_one_or_none()
-    if app:
-        await db.delete(app)
-        await db.commit()
+    # BUG-008: the tenant filter above is correct — this was never an IDOR.
+    # The defect was returning 204 unconditionally, so a caller was told the
+    # app was deleted when the row was missing or belonged to another tenant.
+    if app is None:
+        raise HTTPException(status_code=404, detail="App not found")
+    await db.delete(app)
+    await db.commit()
 
 
 @router.get("/stats/summary")
@@ -509,6 +544,9 @@ async def get_stats(
         by_health[a.health_status] = by_health.get(a.health_status, 0) + 1
         by_sync[a.sync_status]     = by_sync.get(a.sync_status, 0) + 1
     creds = await _get_argocd_creds(tenant_id, db)
+    # BUG-007-class: report real reachability, not merely "credentials exist".
+    configured = bool(creds)
+    connected  = await _argocd_reachable(creds) if configured else False
     return APIResponse(data={
         "total":       len(apps),
         "healthy":     by_health.get("Healthy", 0),
@@ -516,7 +554,10 @@ async def get_stats(
         "progressing": by_health.get("Progressing", 0),
         "synced":      by_sync.get("Synced", 0),
         "out_of_sync": by_sync.get("OutOfSync", 0),
-        "argocd_connected": bool(creds),
+        "argocd_connected": connected,
+        # Kept distinct so the UI can tell "never configured" from
+        # "configured but unreachable" instead of collapsing both into one pill.
+        "argocd_configured": configured,
     })
 
 

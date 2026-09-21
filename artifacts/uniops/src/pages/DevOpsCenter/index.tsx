@@ -90,6 +90,13 @@ export default function DevOpsCenter() {
   const { data: clustersRaw } = useApi<any>('/clusters');
   const clusterList: { id: string; name: string; environment: string }[] =
     (clustersRaw?.data ?? clustersRaw ?? []);
+  /**
+   * BUG-010: the selector's value as an API parameter. The dropdown's "All
+   * Clusters" entry is the empty string, which must become `undefined` so the
+   * `cluster_id` query parameter is omitted entirely rather than sent blank —
+   * a blank id would be a value the backend has to guess about.
+   */
+  const activeClusterId: string | undefined = selectedClusterId || undefined;
 
   // Module 1 — user / role info
   const { user } = useAuth();
@@ -102,7 +109,8 @@ export default function DevOpsCenter() {
   const canAct = isAdmin() || hasRole('devops_engineer');
 
   const { githubConnected } = useDevOpsIntegrations();
-  const { podStats, refetch: refetchPods } = usePods();
+  // BUG-016: this component renders only the summary tiles, so skip the pod-list fetch.
+  const { podStats, refetch: refetchPods } = usePods(undefined, { includeList: false, clusterId: activeClusterId });
   const { pipelineStats, refetch: refetchPipes } = usePipelines();
 
   const showToast = useCallback((ok: boolean, msg: string) => {
@@ -349,13 +357,13 @@ export default function DevOpsCenter() {
           transition={{ duration: 0.2 }}
         >
           {section === 'control-plane' && (
-            <ClusterControlPlane showToast={showToast} />
+            <ClusterControlPlane showToast={showToast} clusterId={activeClusterId} />
           )}
           {section === 'observability' && (
-            <PlatformObservability showToast={showToast} />
+            <PlatformObservability showToast={showToast} clusterId={activeClusterId} />
           )}
           {section === 'delivery' && (
-            <DeliveryGitOps showToast={showToast} canAct={canAct} />
+            <DeliveryGitOps showToast={showToast} canAct={canAct} clusterId={activeClusterId} />
           )}
           {section === 'catalog' && (
             <CatalogTab showToast={showToast} />

@@ -21,12 +21,16 @@ const SUB_TABS: { id: ObsSection; label: string; icon: React.ElementType }[] = [
 
 interface Props {
   showToast: (ok: boolean, msg: string) => void;
+  /** BUG-010: cluster chosen in the DevOps Center header (`undefined` = all). */
+  clusterId?: string;
 }
 
-export function PlatformObservability({ showToast }: Props) {
+export function PlatformObservability({ showToast, clusterId }: Props) {
   const [tab, setTab] = useState<ObsSection>('observability');
   const { k8sConnected } = useDevOpsIntegrations();
-  const { pods } = usePods();
+  // BUG-016: only the pod list is used here, so skip the stats fetch.
+  // BUG-010: the pod list follows the selected cluster.
+  const { pods } = usePods(undefined, { includeStats: false, clusterId });
 
   return (
     <div>
@@ -61,10 +65,15 @@ export function PlatformObservability({ showToast }: Props) {
           transition={{ duration: 0.18 }}
         >
           {tab === 'observability' && (
+            // BUG-010 note: the metrics panes are deliberately NOT cluster-scoped.
+            // /observability/metrics/{cluster,pods,namespaces} take no `cluster_id`
+            // and read from Prometheus / the metrics-server rather than the pod
+            // table, so honouring the selector there is a provider-layer change,
+            // not a wiring one. The pod list handed to the Logs pane *is* scoped.
             <ObservabilityTab k8sConnected={k8sConnected} pods={pods} />
           )}
           {tab === 'alerts' && (
-            <AlertsTab showToast={showToast} />
+            <AlertsTab showToast={showToast} clusterId={clusterId} />
           )}
         </motion.div>
       </AnimatePresence>

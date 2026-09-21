@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useApi, apiPost, apiDelete } from '@/hooks/use-api';
+// BUG-018: replace the native window.confirm with the existing in-app dialog.
+import { ConfirmDialog } from './components';
 import type {
   Cluster, ClusterProvider, ClusterEnv, ClusterCreatePayload,
   ClusterNode, ClusterNamespace, ClusterDeployment,
@@ -573,6 +575,9 @@ export function ClusterTab({ showToast }: ClusterTabProps) {
   const [detail,    setDetail]    = useState<Cluster | null>(null);
   const [testing,   setTesting]   = useState<Record<string, boolean>>({});
   const [deleting,  setDeleting]  = useState<Record<string, boolean>>({});
+  // BUG-018: pending delete id — the native window.confirm blocked the main
+  // thread and ignored the app's theming.
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   const handleTest = useCallback(async (id: string) => {
     setTesting(p => ({ ...p, [id]: true }));
@@ -588,8 +593,13 @@ export function ClusterTab({ showToast }: ClusterTabProps) {
     }
   }, [showToast, refetch]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!window.confirm('Remove this cluster? This cannot be undone.')) return;
+  // BUG-018: the card button now only stages the deletion; the dialog confirms it.
+  const handleDelete = useCallback((id: string) => setPendingDelete(id), []);
+
+  const confirmDelete = useCallback(async () => {
+    const id = pendingDelete;
+    setPendingDelete(null);
+    if (!id) return;
     setDeleting(p => ({ ...p, [id]: true }));
     try {
       await apiDelete(`/clusters/${id}`);
@@ -600,7 +610,7 @@ export function ClusterTab({ showToast }: ClusterTabProps) {
     } finally {
       setDeleting(p => ({ ...p, [id]: false }));
     }
-  }, [showToast, refetch]);
+  }, [pendingDelete, showToast, refetch]);
 
   if (detail) {
     return (
@@ -679,6 +689,18 @@ export function ClusterTab({ showToast }: ClusterTabProps) {
           />
         )}
       </AnimatePresence>
+
+      {/* BUG-018: in-app confirmation, replacing window.confirm */}
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Remove cluster"
+        description="This cluster will be removed from UniOps. This action cannot be undone."
+        confirmLabel="Remove"
+        danger
+        loading={pendingDelete !== null && (deleting[pendingDelete] ?? false)}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

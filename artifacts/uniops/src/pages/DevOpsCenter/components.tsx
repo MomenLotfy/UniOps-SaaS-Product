@@ -1053,8 +1053,14 @@ interface ClusterSectionProps {
   count: number;
   loading: boolean;
   children: React.ReactNode;
+  /**
+   * BUG-009: set when the backend could not reach the cluster. An outage must
+   * never render as "No resources found" — that reads as a healthy cluster
+   * with nothing in it.
+   */
+  unavailable?: string | null;
 }
-export function ClusterSection({ title, icon: Icon, count, loading, children }: ClusterSectionProps) {
+export function ClusterSection({ title, icon: Icon, count, loading, unavailable, children }: ClusterSectionProps) {
   return (
     <div className="rounded-xl border overflow-hidden"
       style={{ background: 'hsl(230 15% 9%)', borderColor: 'hsl(230 15% 15%)' }}>
@@ -1072,6 +1078,16 @@ export function ClusterSection({ title, icon: Icon, count, loading, children }: 
       <div className="p-4 space-y-2">
         {loading ? (
           <RowSkeleton rows={3} />
+        ) : unavailable ? (
+          <div className="py-4 text-center space-y-1">
+            <p className="text-xs font-medium text-amber-400">Cluster unavailable</p>
+            <p className="text-[11px] text-gray-500">
+              These resources could not be read — the cluster is unreachable, not empty.
+            </p>
+            <p className="text-[11px] text-gray-600 break-words max-w-md mx-auto">
+              {unavailable}
+            </p>
+          </div>
         ) : count === 0 ? (
           <p className="text-xs text-gray-500 py-4 text-center">No resources found</p>
         ) : (

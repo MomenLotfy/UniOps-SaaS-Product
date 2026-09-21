@@ -883,7 +883,12 @@ export default function KubernetesSecurity() {
   const services: any[] = servicesRaw?.data ?? servicesRaw ?? [];
 
   // Cluster summary (workloads)
-  const summaryQs = selectedCluster ? `?cluster=${selectedCluster}` : '';
+  // BUG-010: `selectedCluster` is a cluster *id* (see the `c.id === selectedCluster`
+  // lookup above, and the `?cluster_id=` used for stats and findings). This call
+  // sent it as `?cluster=`, but `/kubernetes/pods/cluster/summary` declares only
+  // `cluster_id`, so the parameter was silently ignored and the summary showed
+  // tenant-wide data while every neighbouring panel was cluster-scoped.
+  const summaryQs = selectedCluster ? `?cluster_id=${selectedCluster}` : '';
   const { data: summaryRaw } = useApi<any>(`/kubernetes/pods/cluster/summary${summaryQs}`);
   const summary = summaryRaw?.data ?? summaryRaw;
 

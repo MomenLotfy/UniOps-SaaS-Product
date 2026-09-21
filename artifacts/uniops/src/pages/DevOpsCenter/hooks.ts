@@ -6,7 +6,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useApi, apiPost, apiDelete } from '@/hooks/use-api';
 import { useIntegrationsCtx } from '@/contexts/IntegrationsContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
-import { usePermissions } from '@/hooks/use-permissions';
 import type { PodStats, PipelineStats, LogLine } from './types';
 
 // Safety-net fallback interval — only fires if WebSocket is disconnected
@@ -25,6 +24,24 @@ const POD_WS_EVENTS = [
 ];
 // Pipeline WS events that should trigger a data refresh
 const PIPE_WS_EVENTS = ['pipeline.update', 'pipeline.started', 'pipeline.completed', 'pipeline.failed'];
+
+// ── BUG-010: cluster scoping helper ───────────────────────────────────────────
+/**
+ * Append the DevOps Center cluster selector's `cluster_id` to an API path.
+ *
+ * Returns `null` unchanged so the existing `useApi(tab === 'x' ? path : null)`
+ * short-circuit keeps working, and returns the path untouched when no cluster
+ * is selected ("All Clusters"), so those requests stay exactly as they were.
+ *
+ * The id — never the cluster's display name — is what goes on the wire: the
+ * backend resolves it tenant-scoped and 404s on an unknown or foreign id,
+ * whereas a name could collide or silently match nothing.
+ */
+export function clusterScoped(path: string | null, clusterId?: string): string | null {
+  if (!path || !clusterId) return path;
+  const sep = path.includes('?') ? '&' : '?';
+  return `${path}${sep}cluster_id=${encodeURIComponent(clusterId)}`;
+}
 
 // ── Integration status (reads from global context — no HTTP request) ──────────
 export function useDevOpsIntegrations() {
@@ -47,12 +64,49 @@ export function useDevOpsIntegrations() {
 }
 
 // ── Pods — WebSocket-driven, no polling ──────────────────────────────────────
-export function usePods(namespace?: string) {
+interface UsePodsOptions {
+  /**
+   * BUG-016: the DevOps root only renders summary tiles from `podStats`, but it
+   * was also fetching the full 100-pod list and throwing it away. Two `usePods`
+   * instances are mounted at once (root + whichever section is active), so that
+   * waste was doubled. Callers can now opt out of either fetch.
+   *
+   * `useApi(null)` short-circuits without issuing a request, so a disabled fetch
+   * is genuinely absent from the network, not merely ignored.
+   */
+  includeList?: boolean;
+  includeStats?: boolean;
+  /**
+   * BUG-010: the DevOps Center cluster selector. When set, both the pod list
+   * and the summary tiles are scoped to that cluster on the *server* via
+   * `?cluster_id=`. The backend resolves it tenant-scoped and answers 404 for
+   * an unknown or foreign id, so a selection can never silently degrade into
+   * "some other cluster".
+   *
+   * Empty string / undefined means "All Clusters" — the parameter is then
+   * omitted entirely and the endpoints keep their tenant-wide behaviour.
+   */
+  clusterId?: string;
+}
+
+export function usePods(namespace?: string, options: UsePodsOptions = {}) {
+  const { includeList = true, includeStats = true, clusterId } = options;
+
   const qs = new URLSearchParams({ page_size: '100' });
   if (namespace) qs.set('namespace', namespace);
+  if (clusterId) qs.set('cluster_id', clusterId);
 
-  const { data, loading, error, refetch } = useApi<any>(`/kubernetes/pods?${qs}`);
-  const { data: stats, refetch: refetchStats } = useApi<PodStats>('/kubernetes/pods/stats');
+  const statsQs = new URLSearchParams();
+  if (clusterId) statsQs.set('cluster_id', clusterId);
+
+  const { data, loading, error, refetch } = useApi<any>(
+    includeList ? `/kubernetes/pods?${qs}` : null
+  );
+  const { data: stats, refetch: refetchStats } = useApi<PodStats>(
+    includeStats
+      ? `/kubernetes/pods/stats${clusterId ? `?${statsQs}` : ''}`
+      : null
+  );
   const { subscribe, status: wsStatus } = useWebSocket();
 
   const refetchAll = useCallback((force?: boolean) => {
@@ -131,7 +185,10 @@ export function usePodLogs(podId: string | null, enabled: boolean) {
     if (!podId) return;
     try {
       const { default: apiClient } = await import('@/services/api/client');
-      // podId is "namespace/name" — maps to /:namespace/:name/logs
+      // BUG-017 (comment-only): podId is the pod's DB id (UUID), NOT
+      // "namespace/name". The backend resolves it with
+      // _get_by_id_tenant(Pod, pod_id, tenant_id) and derives namespace/name
+      // from the row. Call sites pass pod.id (ClusterControlPlane, LogViewerDialog).
       const res  = await apiClient.get<any>(`/kubernetes/pods/${podId}/logs?tail=200`);
       const json = res.data;
       const raw: string = json?.data?.content ?? json?.content ?? json?.data ?? '';
@@ -189,7 +246,9 @@ export function usePodActions(refetchPods: () => void) {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
 
-  // podId = "namespace/name"
+  // BUG-017 (comment-only): podId is the pod's DB id (UUID), NOT "namespace/name".
+  // Applies to restart and forceDelete below — both hit /{pod_id}... routes that
+  // the backend resolves by primary key within the tenant.
   const restart = useCallback(async (podId: string): Promise<string> => {
     setLoading(true); setError(null);
     try {
@@ -219,53 +278,6 @@ export function usePodActions(refetchPods: () => void) {
   }, [refetchPods]);
 
   return { loading, error, restart, forceDelete };
-}
-
-// ── RBAC gates (Module 2 — Epic 8) ───────────────────────────────────────────
-export function useDevOpsRBAC() {
-  const { isAdmin, hasRole, role } = usePermissions();
-
-  const canAct        = isAdmin() || hasRole('devops_engineer');
-  const canViewLogs   = canAct || hasRole('security_engineer') || hasRole('cost_analyst');
-  const canCreateSvc  = canAct;
-  const canRestartPod = canAct;
-  const canScale      = canAct;
-
-  return { canAct, canViewLogs, canCreateSvc, canRestartPod, canScale, role };
-}
-
-// ── Catalog services — Epic 7 backend wiring ─────────────────────────────────
-export function useCatalogServices(opts?: { status?: string; type?: string; search?: string }) {
-  const qs = new URLSearchParams({ page_size: '50' });
-  if (opts?.status) qs.set('status', opts.status);
-  if (opts?.type)   qs.set('type',   opts.type);
-  if (opts?.search) qs.set('search', opts.search);
-
-  const { data, loading, error, refetch } = useApi<any>(`/catalog/services?${qs}`);
-  const { data: statsRaw }                = useApi<any>('/catalog/stats');
-  const { subscribe, status: wsStatus }   = useWebSocket();
-
-  const services = (data?.data ?? data ?? []) as any[];
-  const stats    = statsRaw?.data ?? null;
-
-  // Subscribe to WS catalog events to trigger live refresh
-  useEffect(() => {
-    const CATALOG_EVENTS = [
-      'service.created', 'service.repo_created', 'service.building',
-      'service.deploying', 'service.deployed', 'service.failed', 'service.synced',
-    ];
-    const unsubs = CATALOG_EVENTS.map(evt => subscribe(evt, () => refetch()));
-    return () => unsubs.forEach(u => u());
-  }, [subscribe, refetch]);
-
-  // Fallback polling when WS is offline
-  useEffect(() => {
-    if (wsStatus === 'connected') return;
-    const id = setInterval(refetch, FALLBACK_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [wsStatus, refetch]);
-
-  return { services, stats, loading, error, refetch };
 }
 
 // ── Pipeline actions ──────────────────────────────────────────────────────────

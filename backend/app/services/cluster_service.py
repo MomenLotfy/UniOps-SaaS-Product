@@ -21,7 +21,9 @@ from app.schemas.cluster import (
     ClusterNode, ClusterNamespace, ClusterService,
     ClusterIngress, ClusterDeployment, NodeCondition,
 )
-from app.core.exceptions import NotFoundError, ValidationError
+from app.core.exceptions import (
+    IntegrationUnavailableError, NotFoundError, ValidationError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -154,14 +156,45 @@ class ClusterService:
     # ── Health check / test connection ───────────────────────────────────────
 
     async def test_connection(self, tenant_id: str, cluster_id: str) -> dict:
+        """
+        Run a real health check and report the outcome truthfully.
+
+        BUG-007: this used to return ``message: "Connection successful"``
+        unconditionally whenever ``_run_health_check`` did not raise — and
+        ``_run_health_check`` does not raise when it cannot build a client, it
+        just records ``status = "disconnected"``. The result was a response
+        claiming success for a cluster that was never reached.
+        """
         cluster = await self.get_cluster(tenant_id, cluster_id)
         try:
             await self._run_health_check(cluster)
             await self.db.commit()
-            return {"status": cluster.status, "k8s_version": cluster.k8s_version,
-                    "node_count": cluster.node_count, "message": "Connection successful"}
         except Exception as e:
-            return {"status": "error", "message": str(e)}
+            cluster.status = "error"
+            cluster.error_message = str(e)
+            cluster.last_health_check = datetime.now(timezone.utc)
+            try:
+                await self.db.commit()
+            except Exception:
+                await self.db.rollback()
+            raise IntegrationUnavailableError(
+                "Kubernetes", f"Connection failed: {e}"
+            )
+
+        if cluster.status != "connected":
+            # The health check ran but could not reach the cluster.
+            raise IntegrationUnavailableError(
+                "Kubernetes",
+                cluster.error_message
+                or f"Connection failed: cluster status is '{cluster.status}'",
+            )
+
+        return {
+            "status":      cluster.status,
+            "k8s_version": cluster.k8s_version,
+            "node_count":  cluster.node_count,
+            "message":     "Connection successful",
+        }
 
     async def _run_health_check(self, cluster: Cluster) -> None:
         import kubernetes as k8s

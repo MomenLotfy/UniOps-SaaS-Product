@@ -6,7 +6,10 @@ Kubernetes pod sync — two modes:
 """
 import asyncio
 from datetime import datetime, timezone
+from typing import Any
+
 from sqlalchemy import select
+
 from app.utils.logger import logger
 
 
@@ -40,7 +43,17 @@ async def _sync_pods(tenant_id: str | None = None) -> dict:
     from app.models.pod import Pod
     from app.utils.encryption import decrypt
 
-    summary = {"integrations": 0, "pods_synced": 0, "pods_deleted": 0}
+    # Annotated explicitly: with mixed int/list values mypy widens the inferred
+    # value type to `object`, which breaks every `+=` and `.append` below.
+    summary: dict[str, Any] = {
+        "integrations": 0,
+        "pods_synced": 0,
+        "pods_deleted": 0,
+        # BUG-003: make provider failure visible in the sync result instead of
+        # silently presenting it as a successful sync of zero pods.
+        "integrations_failed": 0,
+        "errors": [],
+    }
 
     async with AsyncSessionLocal() as db:
         query = select(Integration).where(
@@ -56,6 +69,11 @@ async def _sync_pods(tenant_id: str | None = None) -> dict:
         logger.info(f"Snapshot sync: {len(integrations)} K8s integrations")
 
         for integration in integrations:
+            # Capture identity BEFORE the try block: after db.rollback() the
+            # ORM instance is expired and touching an attribute would trigger a
+            # lazy reload on a session with no active connection.
+            integration_id   = integration.id
+            integration_name = integration.name
             try:
                 # Decrypt credentials
                 creds = {}
@@ -70,8 +88,24 @@ async def _sync_pods(tenant_id: str | None = None) -> dict:
                 from app.integrations.kubernetes.client import KubernetesClient
                 client = KubernetesClient(config)
 
-                # Fetch all pods across all namespaces
-                pods_data = await client.list_all_pods()
+                # BUG-003: fetch pods with an explicit success/failure signal.
+                # ``ok=False`` means the provider state is UNKNOWN — in that
+                # case we must not delete anything, because an unreachable API
+                # server is indistinguishable from an empty cluster.
+                listing = await client.list_all_pods_checked()
+                if not listing.ok:
+                    logger.error(
+                        f"Pod sync skipped for {integration.name} "
+                        f"({integration.id}): provider unavailable — "
+                        f"{listing.error}. Existing pod rows preserved."
+                    )
+                    summary["integrations_failed"] += 1
+                    summary["errors"].append(
+                        {"integration": integration.name, "error": listing.error}
+                    )
+                    continue
+
+                pods_data = listing.pods
 
                 # Try to enrich with metrics-server data
                 metrics = await client.get_pod_metrics()
@@ -107,7 +141,9 @@ async def _sync_pods(tenant_id: str | None = None) -> dict:
 
                     summary["pods_synced"] += 1
 
-                # Remove pods that no longer exist in the cluster
+                # Remove pods that no longer exist in the cluster.
+                # Safe to run: we only reach here when the provider confirmed
+                # its state (listing.ok is True).
                 existing_pods = await db.execute(
                     select(Pod).where(
                         Pod.tenant_id == integration.tenant_id,
@@ -125,8 +161,12 @@ async def _sync_pods(tenant_id: str | None = None) -> dict:
                 logger.info(f"Synced {len(pods_data)} pods for {integration.name}")
 
             except Exception as e:
-                logger.error(f"Pod sync failed for {integration.id}: {e}")
+                logger.error(f"Pod sync failed for {integration_id}: {e}")
                 await db.rollback()
+                summary["integrations_failed"] += 1
+                summary["errors"].append(
+                    {"integration": integration_name, "error": str(e)}
+                )
 
     return summary
 
