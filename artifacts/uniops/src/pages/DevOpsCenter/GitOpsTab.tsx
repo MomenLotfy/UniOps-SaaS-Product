@@ -463,9 +463,15 @@ function AppCard({ app, onSync, onDelete, onHistory, onRollback, busy }: AppCard
 
 interface GitOpsTabProps {
   showToast: (ok: boolean, msg: string) => void;
+  /**
+   * BUG-010: cluster chosen in the DevOps Center header (`undefined` = all).
+   * GitOps applications carry a `cluster_id` column and `GET /gitops` filters on
+   * it, so the selector scopes this list server-side.
+   */
+  clusterId?: string;
 }
 
-export function GitOpsTab({ showToast }: GitOpsTabProps) {
+export function GitOpsTab({ showToast, clusterId }: GitOpsTabProps) {
   const [showAdd,      setShowAdd]      = useState(false);
   const [detailApp,    setDetailApp]    = useState<GitOpsApp | null>(null);    // history panel
   const [rollbackApp,  setRollbackApp]  = useState<GitOpsApp | null>(null);
@@ -479,6 +485,8 @@ export function GitOpsTab({ showToast }: GitOpsTabProps) {
   const qs = new URLSearchParams();
   if (healthFilter !== 'all') qs.set('health_status', healthFilter);
   if (syncFilter   !== 'all') qs.set('sync_status',   syncFilter);
+  // BUG-010: scope the application list to the selected cluster.
+  if (clusterId)              qs.set('cluster_id',    clusterId);
 
   const { data: appsRaw, loading, refetch } = useApi<any>(`/gitops?${qs}`);
   const { data: statsRaw }                  = useApi<any>('/gitops/stats/summary');

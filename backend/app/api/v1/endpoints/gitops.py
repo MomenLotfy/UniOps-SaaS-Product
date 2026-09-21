@@ -111,9 +111,10 @@ async def _argocd_reachable(creds: dict | None) -> bool:
         return False
     try:
         # Honour the resolved `insecure` flag rather than hardcoding
-        # verify=False. TLS verification is therefore ON by default here; the
-        # five pre-existing helpers in this module still hardcode verify=False
-        # and remain a documented P3 item.
+        # verify=False. TLS verification is therefore ON by default and is
+        # skipped only on an explicit per-tenant opt-out. Every ArgoCD call in
+        # this module — this probe and the five `_argocd_*` helpers below —
+        # resolves `verify` the same way.
         async with httpx.AsyncClient(
             verify=not creds.get("insecure", False), timeout=5
         ) as client:
@@ -130,7 +131,7 @@ async def _argocd_reachable(creds: dict | None) -> bool:
 async def _argocd_list_apps(creds: dict) -> list[dict]:
     """Call ArgoCD /api/v1/applications."""
     try:
-        async with httpx.AsyncClient(verify=False, timeout=10) as client:
+        async with httpx.AsyncClient(verify=not creds.get("insecure", False), timeout=10) as client:
             r = await client.get(
                 f"{creds['server'].rstrip('/')}/api/v1/applications",
                 headers={"Authorization": f"Bearer {creds['token']}"},
@@ -144,7 +145,7 @@ async def _argocd_list_apps(creds: dict) -> list[dict]:
 
 async def _argocd_sync(creds: dict, app_name: str) -> bool:
     try:
-        async with httpx.AsyncClient(verify=False, timeout=15) as client:
+        async with httpx.AsyncClient(verify=not creds.get("insecure", False), timeout=15) as client:
             r = await client.post(
                 f"{creds['server'].rstrip('/')}/api/v1/applications/{app_name}/sync",
                 headers={"Authorization": f"Bearer {creds['token']}"},
@@ -171,7 +172,7 @@ async def _argocd_rollback(creds: dict, app_name: str, revision: str) -> bool:
                 return False
             id_number = match["id"]
 
-        async with httpx.AsyncClient(verify=False, timeout=15) as client:
+        async with httpx.AsyncClient(verify=not creds.get("insecure", False), timeout=15) as client:
             r = await client.post(
                 f"{creds['server'].rstrip('/')}/api/v1/applications/{app_name}/rollback",
                 headers={"Authorization": f"Bearer {creds['token']}"},
@@ -186,7 +187,7 @@ async def _argocd_rollback(creds: dict, app_name: str, revision: str) -> bool:
 async def _argocd_get_history(creds: dict, app_name: str) -> list[dict]:
     """Fetch deployment history from ArgoCD (revision + id entries)."""
     try:
-        async with httpx.AsyncClient(verify=False, timeout=15) as client:
+        async with httpx.AsyncClient(verify=not creds.get("insecure", False), timeout=15) as client:
             r = await client.get(
                 f"{creds['server'].rstrip('/')}/api/v1/applications/{app_name}",
                 headers={"Authorization": f"Bearer {creds['token']}"},
@@ -202,7 +203,7 @@ async def _argocd_get_history(creds: dict, app_name: str) -> list[dict]:
 async def _argocd_get_revision(creds: dict, app_name: str) -> str | None:
     """Current live sync revision in ArgoCD, or None when unreachable."""
     try:
-        async with httpx.AsyncClient(verify=False, timeout=10) as client:
+        async with httpx.AsyncClient(verify=not creds.get("insecure", False), timeout=10) as client:
             r = await client.get(
                 f"{creds['server'].rstrip('/')}/api/v1/applications/{app_name}",
                 headers={"Authorization": f"Bearer {creds['token']}"},

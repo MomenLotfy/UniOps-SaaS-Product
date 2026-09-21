@@ -25,6 +25,24 @@ const POD_WS_EVENTS = [
 // Pipeline WS events that should trigger a data refresh
 const PIPE_WS_EVENTS = ['pipeline.update', 'pipeline.started', 'pipeline.completed', 'pipeline.failed'];
 
+// ── BUG-010: cluster scoping helper ───────────────────────────────────────────
+/**
+ * Append the DevOps Center cluster selector's `cluster_id` to an API path.
+ *
+ * Returns `null` unchanged so the existing `useApi(tab === 'x' ? path : null)`
+ * short-circuit keeps working, and returns the path untouched when no cluster
+ * is selected ("All Clusters"), so those requests stay exactly as they were.
+ *
+ * The id — never the cluster's display name — is what goes on the wire: the
+ * backend resolves it tenant-scoped and 404s on an unknown or foreign id,
+ * whereas a name could collide or silently match nothing.
+ */
+export function clusterScoped(path: string | null, clusterId?: string): string | null {
+  if (!path || !clusterId) return path;
+  const sep = path.includes('?') ? '&' : '?';
+  return `${path}${sep}cluster_id=${encodeURIComponent(clusterId)}`;
+}
+
 // ── Integration status (reads from global context — no HTTP request) ──────────
 export function useDevOpsIntegrations() {
   const { integrations, isLoading, isConnected } = useIntegrationsCtx();
@@ -58,19 +76,36 @@ interface UsePodsOptions {
    */
   includeList?: boolean;
   includeStats?: boolean;
+  /**
+   * BUG-010: the DevOps Center cluster selector. When set, both the pod list
+   * and the summary tiles are scoped to that cluster on the *server* via
+   * `?cluster_id=`. The backend resolves it tenant-scoped and answers 404 for
+   * an unknown or foreign id, so a selection can never silently degrade into
+   * "some other cluster".
+   *
+   * Empty string / undefined means "All Clusters" — the parameter is then
+   * omitted entirely and the endpoints keep their tenant-wide behaviour.
+   */
+  clusterId?: string;
 }
 
 export function usePods(namespace?: string, options: UsePodsOptions = {}) {
-  const { includeList = true, includeStats = true } = options;
+  const { includeList = true, includeStats = true, clusterId } = options;
 
   const qs = new URLSearchParams({ page_size: '100' });
   if (namespace) qs.set('namespace', namespace);
+  if (clusterId) qs.set('cluster_id', clusterId);
+
+  const statsQs = new URLSearchParams();
+  if (clusterId) statsQs.set('cluster_id', clusterId);
 
   const { data, loading, error, refetch } = useApi<any>(
     includeList ? `/kubernetes/pods?${qs}` : null
   );
   const { data: stats, refetch: refetchStats } = useApi<PodStats>(
-    includeStats ? '/kubernetes/pods/stats' : null
+    includeStats
+      ? `/kubernetes/pods/stats${clusterId ? `?${statsQs}` : ''}`
+      : null
   );
   const { subscribe, status: wsStatus } = useWebSocket();
 

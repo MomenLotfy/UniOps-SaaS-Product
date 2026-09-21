@@ -24,6 +24,7 @@ import {
   useDevOpsIntegrations,
   usePods,
   usePodActions,
+  clusterScoped,
 } from './hooks';
 import type { PodRow } from './types';
 
@@ -67,9 +68,15 @@ function resourceRows(res: any): { rows: any[]; unavailable: string | null } {
 
 interface Props {
   showToast: (ok: boolean, msg: string) => void;
+  /**
+   * BUG-010: the cluster chosen in the DevOps Center header. Forwarded to every
+   * cluster-scoped request this section makes, so the selector actually routes
+   * instead of only relabelling itself. `undefined` = "All Clusters".
+   */
+  clusterId?: string;
 }
 
-export function ClusterControlPlane({ showToast }: Props) {
+export function ClusterControlPlane({ showToast, clusterId }: Props) {
   const [tab, setTab] = useState<CPTab>('clusters');
 
   const { isAdmin, hasRole } = usePermissions();
@@ -77,28 +84,29 @@ export function ClusterControlPlane({ showToast }: Props) {
 
   const { k8sConnected, isLoading: intLoading } = useDevOpsIntegrations();
   // BUG-016: podStats is unused here, so skip the stats fetch.
+  // BUG-010: the pod list follows the selected cluster.
   const { pods, loading: podsLoading, error: podsError, refetch: refetchPods }
-    = usePods(undefined, { includeStats: false });
+    = usePods(undefined, { includeStats: false, clusterId });
   const podActions = usePodActions(refetchPods);
 
   const { data: deployData, loading: depsLoading }
-    = useApi<any>(tab === 'workloads' ? '/kubernetes/pods/workloads/deployments' : null);
+    = useApi<any>(clusterScoped(tab === 'workloads' ? '/kubernetes/pods/workloads/deployments' : null, clusterId));
   const { data: stsData, loading: stsLoading }
-    = useApi<any>(tab === 'workloads' ? '/kubernetes/pods/workloads/statefulsets' : null);
+    = useApi<any>(clusterScoped(tab === 'workloads' ? '/kubernetes/pods/workloads/statefulsets' : null, clusterId));
   const { data: dsData, loading: dsLoading }
-    = useApi<any>(tab === 'workloads' ? '/kubernetes/pods/workloads/daemonsets' : null);
+    = useApi<any>(clusterScoped(tab === 'workloads' ? '/kubernetes/pods/workloads/daemonsets' : null, clusterId));
   const { data: svcData, loading: svcsLoading }
-    = useApi<any>(tab === 'network' ? '/kubernetes/pods/network/services' : null);
+    = useApi<any>(clusterScoped(tab === 'network' ? '/kubernetes/pods/network/services' : null, clusterId));
   const { data: ingData, loading: ingsLoading }
-    = useApi<any>(tab === 'network' ? '/kubernetes/pods/network/ingresses' : null);
+    = useApi<any>(clusterScoped(tab === 'network' ? '/kubernetes/pods/network/ingresses' : null, clusterId));
   const { data: jobsData, loading: jobsLoading }
-    = useApi<any>(tab === 'jobs' ? '/kubernetes/pods/batch/jobs' : null);
+    = useApi<any>(clusterScoped(tab === 'jobs' ? '/kubernetes/pods/batch/jobs' : null, clusterId));
   const { data: cmData, loading: cmsLoading }
-    = useApi<any>(tab === 'config' ? '/kubernetes/pods/config/configmaps' : null);
+    = useApi<any>(clusterScoped(tab === 'config' ? '/kubernetes/pods/config/configmaps' : null, clusterId));
   const { data: secData, loading: secsLoading }
-    = useApi<any>(tab === 'config' ? '/kubernetes/pods/config/secrets' : null);
+    = useApi<any>(clusterScoped(tab === 'config' ? '/kubernetes/pods/config/secrets' : null, clusterId));
   const { data: hpaData, loading: hpaLoading }
-    = useApi<any>(tab === 'hpa' ? '/kubernetes/pods/autoscaling/hpa' : null);
+    = useApi<any>(clusterScoped(tab === 'hpa' ? '/kubernetes/pods/autoscaling/hpa' : null, clusterId));
 
   const [confirmPodAction, setConfirmPodAction] = useState<{ type: 'restart' | 'delete'; pod: PodRow } | null>(null);
   const [eventsPod, setEventsPod]   = useState<PodRow | null>(null);

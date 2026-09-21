@@ -24,9 +24,15 @@ const SUB_TABS: { id: DeliverySection; label: string; icon: React.ElementType }[
 interface Props {
   showToast: (ok: boolean, msg: string) => void;
   canAct:    boolean;
+  /**
+   * BUG-010: cluster chosen in the DevOps Center header. Forwarded to GitOps,
+   * whose applications carry a `cluster_id`. Pipelines are CI/CD objects with no
+   * cluster of their own, so the selector is intentionally not applied to them.
+   */
+  clusterId?: string;
 }
 
-export function DeliveryGitOps({ showToast, canAct }: Props) {
+export function DeliveryGitOps({ showToast, canAct, clusterId }: Props) {
   const [tab, setTab] = useState<DeliverySection>('gitops');
 
   const { gitConnected, isLoading: intLoading } = useDevOpsIntegrations();
@@ -97,7 +103,7 @@ export function DeliveryGitOps({ showToast, canAct }: Props) {
 
           {/* ── GitOps ─────────────────────────────────────────────────────── */}
           {tab === 'gitops' && (
-            <GitOpsTab showToast={showToast} />
+            <GitOpsTab showToast={showToast} clusterId={clusterId} />
           )}
 
           {/* ── CI/CD Pipelines ────────────────────────────────────────────── */}

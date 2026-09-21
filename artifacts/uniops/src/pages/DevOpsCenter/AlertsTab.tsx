@@ -318,9 +318,15 @@ function AlertRow({ alert: a, onAction, onDelete, busy }: AlertRowProps) {
 
 interface AlertsTabProps {
   showToast: (ok: boolean, msg: string) => void;
+  /**
+   * BUG-010: cluster chosen in the DevOps Center header (`undefined` = all).
+   * Only the alert list is scoped — `/devops-alerts/stats` declares no
+   * `cluster_id`, so the counters stay tenant-wide rather than pretending.
+   */
+  clusterId?: string;
 }
 
-export function AlertsTab({ showToast }: AlertsTabProps) {
+export function AlertsTab({ showToast, clusterId }: AlertsTabProps) {
   const [statusFilter,   setStatusFilter]   = useState<'all' | AlertStatus>('all');
   const [severityFilter, setSeverityFilter] = useState<'all' | AlertSeverity>('all');
   const [showCreate,     setShowCreate]     = useState(false);
@@ -332,6 +338,8 @@ export function AlertsTab({ showToast }: AlertsTabProps) {
   const qs = new URLSearchParams();
   if (statusFilter   !== 'all') qs.set('status',   statusFilter);
   if (severityFilter !== 'all') qs.set('severity', severityFilter);
+  // BUG-010: scope the list to the selected cluster (server-side filter).
+  if (clusterId)                qs.set('cluster_id', clusterId);
 
   const { data: alertsRaw, loading, refetch } = useApi<any>(`/devops-alerts?${qs}`);
   const { data: statsRaw }                    = useApi<any>('/devops-alerts/stats');

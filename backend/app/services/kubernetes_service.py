@@ -49,6 +49,39 @@ class KubernetesService(BaseService):
 
     # ── Read operations ───────────────────────────────────────────────────────
 
+    async def cluster_pod_scope(self, tenant_id: str, cluster_id: str) -> set[str]:
+        """
+        BUG-010: the set of ``Pod.cluster`` values that belong to ``cluster_id``.
+
+        ``Pod.cluster`` is written by the sync job as the provider-reported
+        cluster name or, failing that, the *integration* name
+        (``sync_pods.py``: ``pod.cluster = data.get("cluster") or
+        integration.name``). There is no foreign key between ``clusters`` and
+        ``integrations``, so a cluster is identified here by the same convention
+        ``get_client_for_cluster`` already uses: its own name, or the name of
+        the integration that explicitly names it.
+
+        Safety properties, all deliberate:
+
+        * resolves through ``resolve_cluster``, so an unknown or other-tenant
+          ``cluster_id`` raises ``NotFoundError`` -> HTTP 404. No silent
+          substitution of a different cluster.
+        * the returned set only ever contains names belonging to the resolved
+          cluster, so scoping by it cannot leak another cluster's pods.
+        * a cluster whose pods were synced under a different label simply yields
+          an empty list — which is a true statement about that cluster, not a
+          fallback to an arbitrary one.
+        """
+        cluster = await self.resolve_cluster(tenant_id, cluster_id)
+        names: set[str] = {cluster.name}
+        integrations = await self._list_tenant_k8s_integrations(tenant_id)
+        integration = self._match_integration(
+            integrations, cluster_id
+        ) or self._match_integration(integrations, cluster.name)
+        if integration is not None:
+            names.add(integration.name)
+        return names
+
     async def list_pods(
         self,
         tenant_id: str,
@@ -57,12 +90,20 @@ class KubernetesService(BaseService):
         namespace: Optional[str] = None,
         cluster: Optional[str] = None,
         status: Optional[str] = None,
+        cluster_id: Optional[str] = None,
     ) -> PaginatedResponse:
         query = select(Pod).where(Pod.tenant_id == tenant_id)
         if namespace:
             query = query.where(Pod.namespace == namespace)
         if cluster:
             query = query.where(Pod.cluster == cluster)
+        if cluster_id:
+            # BUG-010: the DevOps Center cluster selector sends the cluster's
+            # *id*; resolution is tenant-scoped and 404s on an unknown or
+            # foreign id rather than quietly serving another cluster.
+            query = query.where(
+                Pod.cluster.in_(await self.cluster_pod_scope(tenant_id, cluster_id))
+            )
         if status:
             query = query.where(Pod.status == status)
 
@@ -80,12 +121,22 @@ class KubernetesService(BaseService):
         pod = await self._get_by_id_tenant(Pod, pod_id, tenant_id)
         return PodResponse.model_validate(pod)
 
-    async def get_stats(self, tenant_id: str) -> PodStats:
-        result = await self.db.execute(
+    async def get_stats(
+        self, tenant_id: str, cluster_id: Optional[str] = None
+    ) -> PodStats:
+        query = (
             select(Pod.status, Pod.cpu_usage, Pod.memory_usage,
                    Pod.cpu_limit, Pod.memory_limit, Pod.restart_count)
             .where(Pod.tenant_id == tenant_id)
         )
+        if cluster_id:
+            # BUG-010: the summary tiles must describe the selected cluster,
+            # not the whole tenant, when a cluster is selected. Same
+            # tenant-scoped resolution as list_pods — 404 on a foreign id.
+            query = query.where(
+                Pod.cluster.in_(await self.cluster_pod_scope(tenant_id, cluster_id))
+            )
+        result = await self.db.execute(query)
         rows = result.fetchall()
         stats = PodStats(total=len(rows))
         cpu_usages, mem_usages = [], []

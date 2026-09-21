@@ -20,16 +20,26 @@ async def list_pods(
     namespace: Optional[str] = Query(None),
     cluster: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
+    cluster_id: Optional[str] = Query(
+        None, description="Scope to a specific cluster owned by this tenant"
+    ),
 ):
     svc = KubernetesService(db)
-    result = await svc.list_pods(tenant_id, page, page_size, namespace, cluster, status)
+    result = await svc.list_pods(
+        tenant_id, page, page_size, namespace, cluster, status, cluster_id
+    )
     return APIResponse(data=result)
 
 
 @router.get("/stats", response_model=APIResponse[PodStats])
-async def get_pod_stats(current_user: CurrentUser, tenant_id: TenantID, db: DBSession):
+async def get_pod_stats(
+    current_user: CurrentUser, tenant_id: TenantID, db: DBSession,
+    cluster_id: Optional[str] = Query(
+        None, description="Scope the summary to a specific cluster owned by this tenant"
+    ),
+):
     svc = KubernetesService(db)
-    stats = await svc.get_stats(tenant_id)
+    stats = await svc.get_stats(tenant_id, cluster_id)
     return APIResponse(data=stats)
 
 
