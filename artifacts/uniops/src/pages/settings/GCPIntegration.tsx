@@ -36,7 +36,11 @@ export default function GCPIntegration() {
     setIsLoading(true);
     setStatus('idle');
     try {
-      await integrationsApi.connectGCP({ projectId: form.projectId, serviceAccountKey: form.serviceAccountKey });
+      await integrationsApi.connectGCS(
+        form.serviceAccountKey,
+        'Google Cloud',
+        form.projectId,
+      );
       setStatus('success');
       setTimeout(() => navigate(-1), 2000);
     } catch (err) {

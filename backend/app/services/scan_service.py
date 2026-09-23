@@ -308,6 +308,9 @@ class ScanService(BaseService):
 
         query = (
             select(
+                Scan.id,
+                Scan.branch,
+                Scan.commit_sha,
                 Scan.security_score,
                 Scan.ai_summary,
                 Scan.ai_suggestions,
@@ -348,6 +351,10 @@ class ScanService(BaseService):
                 "status":        "no_scan",
                 "repo_id":       repo_id,
                 "repo_name":     None,
+                "scan_id":       None,
+                "branch":        None,
+                "commit_sha":    None,
+                "scanners_run": {},
                 "ai_summary":    "No security scans have been run yet. Trigger a scan from the Security Center to get your security score.",
                 "ai_suggestions": [
                     "Connect a GitHub or GitLab integration to enable repository scanning",
@@ -358,7 +365,7 @@ class ScanService(BaseService):
                 "breakdown": None,
             }
 
-        (scan_score, ai_summary, ai_suggestions, completed_at,
+        (scan_id, branch, commit_sha, scan_score, ai_summary, ai_suggestions, completed_at,
          scanned_repo_id, raw_results,
          critical, high, medium, low, secrets, misconfig,
          scanners_run, scanned_repo_name) = row
@@ -379,6 +386,10 @@ class ScanService(BaseService):
                 "status":        "no_score",
                 "repo_id":       scanned_repo_id,
                 "repo_name":     scanned_repo_name,
+                "scan_id":       scan_id,
+                "branch":        branch,
+                "commit_sha":    commit_sha,
+                "scanners_run":  scanners_run or {},
                 "ai_summary":    ai_summary,
                 "ai_suggestions": ai_suggestions or [],
                 "last_scan_at":  completed_at.isoformat() if completed_at else None,
@@ -395,6 +406,10 @@ class ScanService(BaseService):
             "status":         "completed",
             "repo_id":        scanned_repo_id,
             "repo_name":      scanned_repo_name,
+            "scan_id":        scan_id,
+            "branch":         branch,
+            "commit_sha":     commit_sha,
+            "scanners_run":   scanners_run or {},
             "ai_summary":     ai_summary,
             "ai_suggestions": ai_suggestions or [],
             "ai_source":      _ai_source,
@@ -609,6 +624,7 @@ def _scan_to_dict(scan: Scan) -> dict:
         "id":             scan.id,
         "repo_id":        scan.repo_id,
         "branch":         scan.branch,
+        "commit_sha":     scan.commit_sha,
         "status":         scan.status,
         "error_message":  scan.error_message,
         "started_at":     scan.started_at.isoformat() if scan.started_at else None,

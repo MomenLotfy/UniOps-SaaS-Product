@@ -992,7 +992,7 @@ export default function KubernetesSecurity() {
               {c.name}
               {(c.findings_count ?? 0) > 0 && (
                 <span className="px-1.5 py-0.5 text-[9px] rounded-full bg-red-500/20 text-red-400">
-                  {c.findings_count}
+                  {c.findings_count ?? 0}
                 </span>
               )}
             </button>

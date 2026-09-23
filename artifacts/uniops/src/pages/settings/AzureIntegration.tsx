@@ -20,7 +20,16 @@ export default function AzureIntegration() {
     setIsLoading(true);
     setStatus('idle');
     try {
-      await integrationsApi.connectAzure(form);
+      await integrationsApi.connectByToken(
+        'azure',
+        form.clientSecret,
+        'Azure',
+        {
+          tenant_id: form.tenantId,
+          client_id: form.clientId,
+          subscription_id: form.subscriptionId,
+        },
+      );
       setStatus('success');
       setTimeout(() => navigate(-1), 2000);
     } catch (err) {

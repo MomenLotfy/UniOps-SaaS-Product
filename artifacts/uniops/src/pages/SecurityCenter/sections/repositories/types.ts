@@ -59,7 +59,8 @@ export interface ScanHistoryEntry {
 }
 
 export interface RepoScore {
-  score: number;
+  score: number | null;
+  status?: 'completed' | 'no_scan' | 'no_score';
   breakdown?: {
     sast?: number;
     deps?: number;
@@ -70,9 +71,15 @@ export interface RepoScore {
   ai_summary?: string | null;
   ai_suggestions?: string[];
   repo?: string;
+  repo_name?: string | null;
   repo_id?: string;
-  scan_id?: string;
-  scanned_at?: string;
+  scan_id?: string | null;
+  branch?: string | null;
+  commit_sha?: string | null;
+  scanners_run?: Record<string, string>;
+  last_scan_at?: string | null;
+  scanned_at?: string | null;
+  ai_source?: 'llm' | 'fallback' | 'unknown';
 }
 
 export type RiskLevel = 'critical' | 'high' | 'medium' | 'low';

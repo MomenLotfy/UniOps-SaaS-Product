@@ -1,4 +1,3 @@
-from __future__ import annotations
 """
 ArgoCD Integration Layer — real sync engine for Epic 9.
 
