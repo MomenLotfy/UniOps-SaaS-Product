@@ -669,6 +669,19 @@ wheels = [
 ]
 
 [[package]]
+name = "fakeredis"
+version = "2.38.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "redis" },
+    { name = "sortedcontainers" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bf/6b/ad7db311fea3a62f7e359720cc8c064f06f8f0006e65272f50d3a23d37f6/fakeredis-2.38.0.tar.gz", hash = "sha256:d2abfd24652f86501044499bf08c9d639db050f695eefc06b8b8b6f0bb24dbd6", size = 271116, upload-time = "2026-09-08T21:15:04.806Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ec/8e/9a80a8808e8a723aacb3a5d9df07890b46b363a056b372d3cd2e655259fe/fakeredis-2.38.0-py3-none-any.whl", hash = "sha256:d9fb0518c4eaa35f1f2c94df6b4a4c97ff3ca9f43d6cc8112317a9037d244301", size = 167360, upload-time = "2026-09-08T21:15:03.219Z" },
+]
+
+[[package]]
 name = "fastapi"
 version = "0.111.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2183,6 +2196,7 @@ dependencies = [
     { name = "celery", extra = ["redis"] },
     { name = "cryptography" },
     { name = "email-validator" },
+    { name = "fakeredis" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "joblib" },
@@ -2239,6 +2253,7 @@ requires-dist = [
     { name = "celery", extras = ["redis"], specifier = "==5.4.0" },
     { name = "cryptography", specifier = "==42.0.8" },
     { name = "email-validator", specifier = ">=2.3.0" },
+    { name = "fakeredis", specifier = ">=2.38.0" },
     { name = "fastapi", specifier = "==0.111.0" },
     { name = "httpx", specifier = "==0.27.0" },
     { name = "joblib", specifier = "==1.4.2" },

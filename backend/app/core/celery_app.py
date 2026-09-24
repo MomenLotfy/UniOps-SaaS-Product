@@ -94,10 +94,9 @@ try:
             "retrain-ml-models-weekly": {
                 "task":     "app.tasks.train_ml_models.retrain_all",
                 "schedule": 604_800.0,   # 7 days = 7 × 24 × 60 × 60
-                "kwargs":   {"force": False},   # skip if not enough new data
             },
             "generate-ml-insights-daily": {
-                "task":     "app.tasks.generate_insights.run_for_all_tenants",
+                "task":     "app.tasks.generate_insights.generate_all_insights",
                 "schedule": 86_400.0,    # 24 hours — same cadence as cleanup
             },
         },

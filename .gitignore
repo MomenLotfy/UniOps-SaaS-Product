@@ -20,3 +20,5 @@ artifacts/uniops/node_modules/
 # local dev virtualenvs (sandbox-only)
 backend/.venv/
 backend/.venv_*/
+.pythonlibs/
+backend/celerybeat-schedule.*

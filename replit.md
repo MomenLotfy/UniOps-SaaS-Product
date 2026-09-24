@@ -8,17 +8,19 @@ A multi-tenant DevSecOps SaaS platform unifying DevOps, Security, FinOps, and AI
 - **Backend**: FastAPI + Uvicorn in `backend/`, served on port 3001
 - **Database**: Replit PostgreSQL (`postgresql+asyncpg://postgres:password@helium/heliumdb?sslmode=disable`)
 - **Queue**: Redis (port 6379) + Celery worker + Celery beat
-- **Python**: 3.11 via Nix, packages in `backend/venv/` managed with `uv`
+- **Python**: 3.11 via Nix, packages in root `.pythonlibs/` managed with `uv`
 
 ## Workflows
 
 | Name | Command |
 |------|---------|
-| Backend API | `cd backend && venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001` |
+| Backend API | `cd backend && ../.pythonlibs/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001` |
 | Start application | `PORT=5000 pnpm --filter @workspace/uniops run dev` |
 | Redis Server | `redis-server --port 6379 --loglevel notice` |
-| Celery Worker | `cd backend && until redis-cli -p 6379 ping ...; do sleep 2; done && venv/bin/celery -A app.core.celery_app worker --loglevel=info -c 2` |
-| Celery Beat | `cd backend && until redis-cli -p 6379 ping ...; do sleep 2; done && venv/bin/celery -A app.core.celery_app beat --loglevel=info` |
+| Celery Worker | `cd backend && until redis-cli -p 6379 ping ...; do sleep 2; done && ../.pythonlibs/bin/celery -A app.core.celery_app worker --loglevel=info -c 2` |
+| Celery Beat | `cd backend && until redis-cli -p 6379 ping ...; do sleep 2; done && ../.pythonlibs/bin/celery -A app.core.celery_app beat --loglevel=info --schedule /tmp/uniops-celerybeat-schedule` |
+
+Run the `Project` workflow to start all five services. For a fresh import, install the pnpm workspace dependencies with `pnpm install --frozen-lockfile`; Python dependencies are listed in `backend/requirements.txt` and installed into the root `.pythonlibs/` environment. The frontend uses relative `/api` and `/ws` requests, proxied by Vite to port 3001. The database connection is supplied by the workspace environment; optional external integrations require their own credentials.
 
 ## Database Migrations
 
