@@ -10,6 +10,8 @@ from app.models.scan import Repository, Scan
 from app.models.tenant import Tenant
 from app.models.threat import Threat
 from app.models.vulnerability import Vulnerability
+from app.models.policy_violation import PolicyViolation
+from app.models.security_policy import SecurityPolicy
 from app.services.scan_engine import RawFinding, ScanResult
 from tests.conftest import TestSessionLocal
 
@@ -157,6 +159,41 @@ async def test_vulnerability_finding_is_persisted(db_session, fake_scan_worker):
     assert vulnerability.cve_id == "CVE-2026-0001"
     assert vulnerability.repo_id == scan.repo_id
     assert vulnerability.detected_by == ["deps"]
+
+
+@pytest.mark.asyncio
+async def test_scan_worker_persists_policy_violation_for_matching_finding(
+    db_session, fake_scan_worker
+):
+    tenant = Tenant(name="Policy tenant", slug="policy-tenant")
+    db_session.add(tenant)
+    await db_session.flush()
+    fake_scan_worker["acme/policy"] = [_vulnerability()]
+    policy = SecurityPolicy(
+        tenant_id=tenant.id,
+        name="Block critical CVEs",
+        category="dependencies",
+        severity="critical",
+        status="active",
+        enforcement="enforce",
+        rules=[{"key": "block_critical_cves"}],
+    )
+    db_session.add(policy)
+    await db_session.commit()
+    scan = await _create_scan(db_session, tenant_id=tenant.id, repo_name="acme/policy")
+
+    await _run_scan(db_session, scan)
+
+    violation = (
+        await db_session.execute(
+            select(PolicyViolation).where(PolicyViolation.scan_id == scan.id)
+        )
+    ).scalar_one()
+    assert violation.tenant_id == tenant.id
+    assert violation.policy_id == policy.id
+    assert violation.entity_type == "vulnerability"
+    assert violation.rule_key == "block_critical_cves"
+    assert violation.was_blocked is True
 
 
 @pytest.mark.asyncio
