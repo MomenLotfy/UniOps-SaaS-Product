@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "fLj7AmG4sX7tlpRtS0sli"
+uri = "file://SECURITY_CENTER_AUDIT.md"
+type = "text"
+title = "Security Center Verification Audit"
+description = "Evidence-based A–L audit of the current Security Center and DevSecOps Center implementation, including final REAL/PARTIAL/BROKEN/MOCK/STUB/UNVERIFIED classifications."
+logical_id = "98a47301-0588-4a25-9766-8b23ac5fe736"
+content_hash = "sha256:0aa403fc343c14c2c1b71ef260717d366790854a59ad2cc74965c76cc5befb36"
+size = 43783
+mtime_ms = 1790220199550
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:af461f0f-23c5-4ee7-ac9c-0f5be48d869a/98a47301-0588-4a25-9766-8b23ac5fe736/c17a80ae-854f-4286-a38b-0bc0a9381ca9"
+storage_version_token = "1790220220591746"
+content_type = "text/markdown"

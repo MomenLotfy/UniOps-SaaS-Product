@@ -1,0 +1,161 @@
+Do NOT implement new features yet.
+I want you to perform a strict verification audit of the current Security Center / DevSecOps Center implementation.
+The previous report claims that most features are fully functional, but I do NOT want to trust those claims without evidence.
+Your job is to verify the implementation against the actual source code and runtime behavior.
+IMPORTANT:
+Do NOT add mock/demo/fake data.
+Do NOT modify business logic.
+Do NOT redesign architecture.
+Do NOT mark a feature as functional just because the UI renders or an API returns HTTP 200.
+Trace each feature end-to-end: UI → API → service → database/external integration → returned data → UI.
+Identify hardcoded values, placeholder responses, fake calculations, fallback demo data, incomplete services, and endpoints that return empty/default data.
+If something cannot be verified, mark it UNVERIFIED instead of assuming it works.
+Audit every current Security Center section:
+Overview
+Repositories
+Infrastructure
+Assets
+Kubernetes
+Threats
+Vulnerabilities
+Security Posture
+Remediation
+Intelligence
+Compliance
+Policies
+Exceptions
+Governance Overview
+Ownership
+SLA Tracker
+Reports
+SBOM
+Security Copilot
+Also audit the Integrations system and verify how integrations feed data into these sections.
+For EVERY feature report:
+UI component/file
+API endpoint(s)
+Backend service(s)
+Database tables/models used
+External provider/API used
+Whether the data is real
+Whether the calculation is real
+Whether the feature is actually actionable
+Authentication/authorization
+Tenant isolation
+Error handling
+Empty state behavior
+Any hardcoded/mock/demo values
+Any TODO/stub implementation
+Exact evidence from the code
+Final status: REAL / PARTIAL / MOCK / STUB / BROKEN / UNVERIFIED
+Pay special attention to:
+Security scanning
+Verify whether repository scanning actually performs real:
+SAST
+dependency vulnerability scanning
+secret scanning
+container scanning
+IaC scanning
+CI/CD security analysis
+SBOM generation
+Verify which scanners are actually executed (for example Trivy, Semgrep, Gitleaks, Syft, etc.) and where their results are stored.
+Do NOT assume a scanner is real just because the UI has a card for it.
+Scores
+Verify the actual implementation of:
+Health Score
+Risk Score
+Security Score
+severity calculations
+exposure risk
+compliance penalties
+trend
+previous score
+Find the exact backend code/formula responsible for every score.
+Report whether the score is:
+calculated from real findings
+partially calculated
+hardcoded
+generated from mock data
+or impossible to verify.
+Repository metadata
+Verify:
+repository name
+owner
+provider
+visibility
+default branch
+language
+Dockerfile detection
+CI/CD detection
+GitHub Actions detection
+Jenkins detection
+These values MUST come from the actual repository/provider data.
+Scan history
+Verify that every scan creates a persistent scan record and that the UI reads actual historical records.
+Check for:
+duplicate scans
+missing history
+overwritten results
+incorrect timestamps
+cross-repository contamination
+results from one repository appearing on another repository.
+Multi-tenancy
+Verify that repository findings, scans, assets, vulnerabilities, SBOMs, reports and integrations are properly tenant-scoped.
+Integrations
+Audit all currently implemented integration providers.
+For each provider determine:
+connection flow
+credential storage
+validation
+connection status persistence
+disconnect flow
+sync flow
+duplicate connection prevention
+data synchronization
+retry/error handling
+which Security Center features consume its data
+Most importantly, verify that connecting the same provider multiple times cannot duplicate repositories/assets/findings.
+Security Copilot
+Verify whether Copilot actually uses an LLM.
+Identify:
+LLM provider
+model
+gateway
+prompt/context construction
+retrieved Security Center data
+RAG/vector search if any
+tool calling if any
+fallback behavior
+If there is no real LLM, explicitly mark it as NOT REAL instead of calling it functional.
+Reports
+Verify that reports are generated from real stored data and are not static templates with fake values.
+SBOM
+Verify:
+actual SBOM generation
+scanner/tool used
+package/component extraction
+vulnerability mapping
+persistence
+repository association
+export/download
+refresh behavior.
+Output
+Do NOT fix anything yet.
+Produce a detailed audit report with this structure:
+A. Executive Summary
+B. Feature-by-Feature Verification Matrix
+C. Integration Verification Matrix
+D. Real Data / Mock Data Findings
+E. Security Scanner Verification
+F. Score Calculation Verification
+G. Multi-Tenant Isolation Verification
+H. Critical Bugs
+I. Missing Implementations
+J. Architecture Problems
+K. Recommended Fix Order
+L. Exact Files/Functions That Need Changes
+For every finding provide concrete evidence from the repository.
+At the end provide:
+REAL FEATURES PARTIAL FEATURES BROKEN FEATURES MOCK/FAKE FEATURES STUB FEATURES UNVERIFIED FEATURES
+Do not make assumptions.
+Do not call the system production-ready unless every critical path has been verified end-to-end.
