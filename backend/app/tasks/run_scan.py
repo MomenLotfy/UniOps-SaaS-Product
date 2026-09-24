@@ -198,6 +198,7 @@ async def _run_scan_async(scan_id: str) -> None:
                 f"{len(threat_dicts)} threats, {len(vuln_dicts)} vulnerabilities (pre-dedup)"
             )
 
+            dedup_count = 0
             for td in threat_dicts:
                 stored = await _upsert_threat(db, td)
                 if stored == "merged":

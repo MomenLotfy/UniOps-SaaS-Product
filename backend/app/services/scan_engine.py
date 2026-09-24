@@ -1063,7 +1063,7 @@ class ResultAdapter:
                 "deps":      "vulnerable_dependency",
             }
             loc = f"{f.file_path}:{f.line}" if f.file_path and f.line else (f.file_path or repo_full_name)
-            raw = f.raw_data or {}
+            raw = f.raw or {}
             fingerprint_src = "|".join([
                 str(tenant_id or ""),
                 str(repo_id or ""),
@@ -1088,6 +1088,7 @@ class ResultAdapter:
                 "mitre_tactic":    f.mitre_tactic or "TA0001",
                 "mitre_technique": f.rule_id,
                 "raw_data": {
+                    **raw,
                     "scanner": f.scanner,
                     "file":    f.file_path,
                     "line":    f.line,
