@@ -124,3 +124,7 @@ LOG_LEVEL = "INFO"
 LOG_FORMAT = "text"
 OTEL_SDK_DISABLED = "true"
 RATE_LIMIT_ENABLED = "false"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 180000
