@@ -1,9 +1,9 @@
 const ITEMS = [
   { color: '#4ade80', label: 'Real-time Monitoring' },
-  { color: '#60a5fa', label: 'Kubernetes Orchestration' },
+  { color: '#007acc', label: 'Kubernetes Orchestration' },
   { color: '#f87171', label: 'Security Vulnerability Scan' },
   { color: '#fbbf24', label: 'Cloud Cost Intelligence' },
-  { color: '#c084fc', label: 'AI-Powered Root Cause Analysis' },
+  { color: '#007acc', label: 'AI-Powered Root Cause Analysis' },
   { color: '#2dd4bf', label: 'CI/CD Pipeline Automation' },
 ];
 
