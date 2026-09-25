@@ -20,7 +20,7 @@ from app.models.security_exception import SecurityException
 from app.models.policy_violation import PolicyViolation
 from app.models.threat import Threat
 from app.models.vulnerability import Vulnerability
-from app.models.scan import Repository
+from app.models.scan import Repository, Scan
 from app.models.repository_risk import RepositoryRiskScore
 from app.models.security_posture import SecurityPostureScore
 from app.utils.logger import logger
@@ -229,7 +229,7 @@ class PolicyEvaluator:
         ``violations`` counts new violation lifecycle rows created by this
         scan. A finding that remains present on a later scan updates its
         existing open row and increments that row's ``occurrence_count``; it
-        does not inflate this count or the policy's ``violations_count``.
+        does not inflate this count or the policy's active ``violations_count``.
         ``blocked`` and ``audit_flags`` still reflect every matching finding
         in the current scan.
         """
@@ -242,6 +242,12 @@ class PolicyEvaluator:
         )).scalars().all()
 
         if not policies:
+            await self._resolve_unobserved_finding_violations(
+                tenant_id=tenant_id,
+                scan_id=scan_id,
+                observed_keys=set(),
+            )
+            await self.db.commit()
             return {"violations": 0, "blocked": False, "audit_flags": 0}
 
         # Load active exceptions (to suppress matching violations)
@@ -281,6 +287,7 @@ class PolicyEvaluator:
         violations_created = 0
         blocked            = False
         audit_flags        = 0
+        observed_keys: set[tuple[str, str, str, str]] = set()
 
         for finding, ftype in findings:
             if finding.id in excepted_findings:
@@ -297,6 +304,7 @@ class PolicyEvaluator:
                     if not matched:
                         continue
 
+                    observed_keys.add((policy.id, ftype, finding.id, rule_key))
                     violation = await self._record_violation(
                         tenant_id=       tenant_id,
                         policy_id=       policy.id,
@@ -323,6 +331,11 @@ class PolicyEvaluator:
                     else:
                         audit_flags += 1
 
+        await self._resolve_unobserved_finding_violations(
+            tenant_id=tenant_id,
+            scan_id=scan_id,
+            observed_keys=observed_keys,
+        )
         await self.db.commit()
 
         # Check repository and posture policies
@@ -339,6 +352,80 @@ class PolicyEvaluator:
             "audit_flags": audit_flags,
             "scan_id":    scan_id,
         }
+
+    async def _resolve_unobserved_finding_violations(
+        self,
+        *,
+        tenant_id: str,
+        scan_id: str,
+        observed_keys: set[tuple[str, str, str, str]],
+    ) -> None:
+        """Close finding violations absent from a completed repository scan.
+
+        Repository and posture violations are intentionally excluded: these
+        are evaluated independently from scanner findings.
+        """
+        scan = (
+            await self.db.execute(
+                select(Scan).where(
+                    Scan.id == scan_id,
+                    Scan.tenant_id == tenant_id,
+                    Scan.status == "completed",
+                )
+            )
+        ).scalar_one_or_none()
+        if not scan or not scan.repo_id:
+            return
+
+        violations = (
+            await self.db.execute(
+                select(PolicyViolation)
+                .join(Scan, PolicyViolation.scan_id == Scan.id)
+                .where(
+                    PolicyViolation.tenant_id == tenant_id,
+                    PolicyViolation.status == "open",
+                    PolicyViolation.entity_type.in_(("threat", "vulnerability")),
+                    Scan.tenant_id == tenant_id,
+                    Scan.repo_id == scan.repo_id,
+                )
+            )
+        ).scalars().all()
+
+        now = datetime.now(timezone.utc)
+        resolved_policy_ids = set()
+        for violation in violations:
+            key = (
+                violation.policy_id,
+                violation.entity_type,
+                violation.entity_id,
+                violation.rule_key,
+            )
+            if key not in observed_keys:
+                violation.status = "resolved"
+                violation.resolved_at = now
+                resolved_policy_ids.add(violation.policy_id)
+
+        # The policy counter is used as an active-violation total. Recompute it
+        # for affected policies so it stays correct while resolved rows remain
+        # available as lifecycle history.
+        for policy_id in resolved_policy_ids:
+            open_count = (
+                await self.db.execute(
+                    select(func.count(PolicyViolation.id)).where(
+                        PolicyViolation.tenant_id == tenant_id,
+                        PolicyViolation.policy_id == policy_id,
+                        PolicyViolation.status == "open",
+                    )
+                )
+            ).scalar_one()
+            await self.db.execute(
+                update(SecurityPolicy)
+                .where(
+                    SecurityPolicy.tenant_id == tenant_id,
+                    SecurityPolicy.id == policy_id,
+                )
+                .values(violations_count=open_count)
+            )
 
     async def _record_violation(
         self,
