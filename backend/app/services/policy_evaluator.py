@@ -252,10 +252,20 @@ class PolicyEvaluator:
                 SecurityException.status    == "approved",
             )
         )).scalars().all()
-        excepted_findings = {
-            e.finding_id for e in exceptions
-            if e.finding_id and (e.expires_at is None or e.expires_at > now)
-        }
+        excepted_findings = set()
+        for exception in exceptions:
+            if not exception.finding_id:
+                continue
+
+            expires_at = exception.expires_at
+            if expires_at is not None and expires_at.tzinfo is None:
+                # Some databases (including SQLite in tests) return timezone-
+                # aware columns as naive datetimes. Treat those as UTC, matching
+                # the timestamps written by the application.
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+            if expires_at is None or expires_at > now:
+                excepted_findings.add(exception.finding_id)
 
 
         # Load threats and vulnerabilities for this scan

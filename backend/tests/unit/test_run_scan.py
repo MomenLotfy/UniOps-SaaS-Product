@@ -2,11 +2,13 @@
 
 import tempfile
 from copy import deepcopy
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from sqlalchemy import select
 
 from app.models.scan import Repository, Scan
+from app.models.security_exception import SecurityException
 from app.models.tenant import Tenant
 from app.models.threat import Threat
 from app.models.vulnerability import Vulnerability
@@ -194,6 +196,107 @@ async def test_scan_worker_persists_policy_violation_for_matching_finding(
     assert violation.entity_type == "vulnerability"
     assert violation.rule_key == "block_critical_cves"
     assert violation.was_blocked is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("case", "should_suppress"),
+    [
+        ("approved_matching", True),
+        ("expired", False),
+        ("pending", False),
+        ("other_tenant", False),
+        ("other_finding", False),
+    ],
+)
+async def test_scan_worker_only_suppresses_matching_active_approved_exceptions(
+    db_session, fake_scan_worker, case, should_suppress
+):
+    tenant = Tenant(name=f"Exception tenant {case}", slug=f"exception-tenant-{case}")
+    db_session.add(tenant)
+    await db_session.flush()
+    scan = await _create_scan(
+        db_session, tenant_id=tenant.id, repo_name=f"acme/exception-{case}"
+    )
+
+    finding = Vulnerability(
+        tenant_id=tenant.id,
+        scan_id=scan.id,
+        repo_id=scan.repo_id,
+        cve_id="CVE-2026-0001",
+        title="Vulnerable dependency",
+        description="A regression-test vulnerability",
+        severity="critical",
+        package_name="example-package",
+        package_version="1.0.0",
+        status="open",
+        detected_by=["deps"],
+    )
+    policy = SecurityPolicy(
+        tenant_id=tenant.id,
+        name="Block critical CVEs",
+        category="dependencies",
+        severity="critical",
+        status="active",
+        enforcement="enforce",
+        rules=[{"key": "block_critical_cves"}],
+    )
+    db_session.add_all([finding, policy])
+    await db_session.flush()
+
+    exception_tenant_id = tenant.id
+    if case == "other_tenant":
+        other_tenant = Tenant(
+            name="Exception from another tenant",
+            slug="other-exception-tenant",
+        )
+        db_session.add(other_tenant)
+        await db_session.flush()
+        exception_tenant_id = other_tenant.id
+
+    exception_finding_id = finding.id
+    if case == "other_finding":
+        exception_finding_id = "different-finding-id"
+
+    expires_at = datetime.now(timezone.utc) + timedelta(days=1)
+    if case == "expired":
+        expires_at = datetime.now(timezone.utc) - timedelta(days=1)
+
+    exception = SecurityException(
+        tenant_id=exception_tenant_id,
+        finding_id=exception_finding_id,
+        title="Accepted dependency risk",
+        justification="Accepted for regression test",
+        risk_acceptance="The risk is tracked",
+        status="pending" if case == "pending" else "approved",
+        requested_by="test-user",
+        approved_by=None if case == "pending" else "test-reviewer",
+        expires_at=expires_at,
+    )
+    db_session.add(exception)
+    await db_session.commit()
+
+    fake_scan_worker[f"acme/exception-{case}"] = [_vulnerability()]
+    tenant_id = tenant.id
+    scan_id = scan.id
+    policy_id = policy.id
+    finding_id = finding.id
+    await _run_scan(db_session, scan)
+
+    violations = (
+        await db_session.execute(
+            select(PolicyViolation)
+            .where(PolicyViolation.scan_id == scan_id)
+            .execution_options(populate_existing=True)
+        )
+    ).scalars().all()
+    if should_suppress:
+        assert violations == []
+    else:
+        assert len(violations) == 1
+        assert violations[0].tenant_id == tenant_id
+        assert violations[0].policy_id == policy_id
+        assert violations[0].entity_id == finding_id
 
 
 @pytest.mark.asyncio

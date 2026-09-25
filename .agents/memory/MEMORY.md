@@ -2,4 +2,4 @@
 - [AWS integration full sync fix](aws-integration-sync.md) — after connecting AWS, must trigger costs + asset discovery + security hub + posture snapshot; previously only costs ran.
 - [Alembic migration quirks](alembic-migration-quirks.md) — asyncpg incompatibilities, version_num column width fix, bridge migration pattern for missing FK targets.
 - [Exceptions tab filters](exceptions-tab-filters.md) — category filter maps to finding_type (not exception_type); revoke endpoint requires tenant_id for IDOR prevention; severity uses JSON key accessor.
-- [Async worker test sessions](async-worker-test-sessions.md) — query fresh state after a worker commits; don't expire ORM objects in the primary AsyncSession before reading their attributes.
+- [Async worker test sessions](async-worker-test-sessions.md) — query fresh committed state, and normalize SQLite-loaded timestamps before timezone-aware comparisons.
