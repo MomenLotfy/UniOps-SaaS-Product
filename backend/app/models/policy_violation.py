@@ -1,14 +1,18 @@
 from __future__ import annotations
 from datetime import datetime
-from sqlalchemy import String, ForeignKey, JSON, DateTime, Boolean, Text
+from sqlalchemy import String, ForeignKey, JSON, DateTime, Boolean, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import BaseModel
 
 
 class PolicyViolation(BaseModel):
     """
-    A single policy-rule violation found during a scan.
-    Created by PolicyEvaluator when a finding breaks an active policy.
+    A policy-rule violation lifecycle.
+
+    Repeated scans of the same policy/entity/rule keep one open row and bump
+    ``occurrence_count`` instead of creating duplicate active violations.
+    Resolved or suppressed rows remain as history; a later recurrence starts
+    a new lifecycle row.
     """
     __tablename__ = "policy_violations"
 
@@ -38,6 +42,11 @@ class PolicyViolation(BaseModel):
 
     # Raw context for debugging
     context:         Mapped[dict]       = mapped_column(JSON, default=dict)
+
+    # How many scans have observed this violation lifecycle
+    occurrence_count: Mapped[int]          = mapped_column(Integer, default=1, nullable=False)
+    first_seen_at:    Mapped[datetime|None] = mapped_column(DateTime(timezone=True))
+    last_seen_at:     Mapped[datetime|None] = mapped_column(DateTime(timezone=True))
 
     # Resolved when the underlying finding is fixed
     resolved_at:     Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

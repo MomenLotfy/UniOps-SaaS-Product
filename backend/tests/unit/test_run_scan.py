@@ -197,6 +197,54 @@ async def test_scan_worker_persists_policy_violation_for_matching_finding(
 
 
 @pytest.mark.asyncio
+async def test_repeated_scan_keeps_one_policy_violation_and_tracks_occurrences(
+    db_session, fake_scan_worker
+):
+    tenant = Tenant(name="Policy repeat tenant", slug="policy-repeat-tenant")
+    db_session.add(tenant)
+    await db_session.flush()
+    fake_scan_worker["acme/policy-repeat"] = [_vulnerability()]
+    policy = SecurityPolicy(
+        tenant_id=tenant.id,
+        name="Block critical CVEs",
+        category="dependencies",
+        severity="critical",
+        status="active",
+        enforcement="enforce",
+        rules=[{"key": "block_critical_cves"}],
+    )
+    db_session.add(policy)
+    await db_session.commit()
+
+    first_scan = await _create_scan(
+        db_session, tenant_id=tenant.id, repo_name="acme/policy-repeat"
+    )
+    await _run_scan(db_session, first_scan)
+    second_scan = await _create_scan(
+        db_session,
+        tenant_id=tenant.id,
+        repo_name="acme/policy-repeat",
+        repo_id=first_scan.repo_id,
+    )
+    await _run_scan(db_session, second_scan)
+
+    violations = (
+        await db_session.execute(
+            select(PolicyViolation).where(PolicyViolation.policy_id == policy.id)
+        )
+    ).scalars().all()
+    assert len(violations) == 1
+    assert violations[0].status == "open"
+    assert violations[0].scan_id == second_scan.id
+    assert violations[0].occurrence_count == 2
+
+    stored_policy = await db_session.get(
+        SecurityPolicy, policy.id, populate_existing=True
+    )
+    assert stored_policy.violations_count == 1
+
+
+@pytest.mark.asyncio
 async def test_repeated_scan_deduplicates_findings_and_updates_occurrence(
     db_session, fake_scan_worker
 ):
