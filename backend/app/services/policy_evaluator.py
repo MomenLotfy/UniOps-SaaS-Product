@@ -20,7 +20,7 @@ from app.models.security_exception import SecurityException
 from app.models.policy_violation import PolicyViolation
 from app.models.threat import Threat
 from app.models.vulnerability import Vulnerability
-from app.models.scan import Repository
+from app.models.scan import Repository, Scan
 from app.models.repository_risk import RepositoryRiskScore
 from app.models.security_posture import SecurityPostureScore
 from app.utils.logger import logger
@@ -225,7 +225,13 @@ class PolicyEvaluator:
     async def evaluate_scan(self, tenant_id: str, scan_id: str) -> dict:
         """
         Run all active policies against the scan's threats and vulnerabilities.
-        Returns {violations, blocked, audit_flags}.
+
+        ``violations`` counts new violation lifecycle rows created by this
+        scan. A finding that remains present on a later scan updates its
+        existing open row and increments that row's ``occurrence_count``; it
+        does not inflate this count or the policy's active ``violations_count``.
+        ``blocked`` and ``audit_flags`` still reflect every matching finding
+        in the current scan.
         """
         # Load active policies
         policies = (await self.db.execute(
@@ -236,6 +242,12 @@ class PolicyEvaluator:
         )).scalars().all()
 
         if not policies:
+            await self._resolve_unobserved_finding_violations(
+                tenant_id=tenant_id,
+                scan_id=scan_id,
+                observed_keys=set(),
+            )
+            await self.db.commit()
             return {"violations": 0, "blocked": False, "audit_flags": 0}
 
         # Load active exceptions (to suppress matching violations)
@@ -246,10 +258,20 @@ class PolicyEvaluator:
                 SecurityException.status    == "approved",
             )
         )).scalars().all()
-        excepted_findings = {
-            e.finding_id for e in exceptions
-            if e.finding_id and (e.expires_at is None or e.expires_at > now)
-        }
+        excepted_findings = set()
+        for exception in exceptions:
+            if not exception.finding_id:
+                continue
+
+            expires_at = exception.expires_at
+            if expires_at is not None and expires_at.tzinfo is None:
+                # Some databases (including SQLite in tests) return timezone-
+                # aware columns as naive datetimes. Treat those as UTC, matching
+                # the timestamps written by the application.
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+            if expires_at is None or expires_at > now:
+                excepted_findings.add(exception.finding_id)
 
 
         # Load threats and vulnerabilities for this scan
@@ -265,6 +287,7 @@ class PolicyEvaluator:
         violations_created = 0
         blocked            = False
         audit_flags        = 0
+        observed_keys: set[tuple[str, str, str, str]] = set()
 
         for finding, ftype in findings:
             if finding.id in excepted_findings:
@@ -281,8 +304,8 @@ class PolicyEvaluator:
                     if not matched:
                         continue
 
-                    # Create violation record
-                    violation = PolicyViolation(
+                    observed_keys.add((policy.id, ftype, finding.id, rule_key))
+                    violation = await self._record_violation(
                         tenant_id=       tenant_id,
                         policy_id=       policy.id,
                         scan_id=         scan_id,
@@ -294,28 +317,25 @@ class PolicyEvaluator:
                         severity=        policy.severity,
                         enforcement_mode=policy.enforcement,
                         was_blocked=     policy.enforcement == "enforce",
-                        status=          "open",
                         context={
                             "policy_name":  policy.name,
                             "finding_type": ftype,
                             "severity":     getattr(finding, "severity", None),
                         },
                     )
-                    self.db.add(violation)
-                    violations_created += 1
+                    if violation:
+                        violations_created += 1
 
                     if policy.enforcement == "enforce":
                         blocked = True
                     else:
                         audit_flags += 1
 
-                    # Update policy violation count
-                    await self.db.execute(
-                        update(SecurityPolicy)
-                        .where(SecurityPolicy.id == policy.id)
-                        .values(violations_count=SecurityPolicy.violations_count + 1)
-                    )
-
+        await self._resolve_unobserved_finding_violations(
+            tenant_id=tenant_id,
+            scan_id=scan_id,
+            observed_keys=observed_keys,
+        )
         await self.db.commit()
 
         # Check repository and posture policies
@@ -332,6 +352,163 @@ class PolicyEvaluator:
             "audit_flags": audit_flags,
             "scan_id":    scan_id,
         }
+
+    async def _resolve_unobserved_finding_violations(
+        self,
+        *,
+        tenant_id: str,
+        scan_id: str,
+        observed_keys: set[tuple[str, str, str, str]],
+    ) -> None:
+        """Close finding violations absent from a completed repository scan.
+
+        Repository and posture violations are intentionally excluded: these
+        are evaluated independently from scanner findings.
+        """
+        scan = (
+            await self.db.execute(
+                select(Scan).where(
+                    Scan.id == scan_id,
+                    Scan.tenant_id == tenant_id,
+                    Scan.status == "completed",
+                )
+            )
+        ).scalar_one_or_none()
+        if not scan or not scan.repo_id:
+            return
+
+        violations = (
+            await self.db.execute(
+                select(PolicyViolation)
+                .join(Scan, PolicyViolation.scan_id == Scan.id)
+                .where(
+                    PolicyViolation.tenant_id == tenant_id,
+                    PolicyViolation.status == "open",
+                    PolicyViolation.entity_type.in_(("threat", "vulnerability")),
+                    Scan.tenant_id == tenant_id,
+                    Scan.repo_id == scan.repo_id,
+                )
+            )
+        ).scalars().all()
+
+        now = datetime.now(timezone.utc)
+        resolved_policy_ids = set()
+        for violation in violations:
+            key = (
+                violation.policy_id,
+                violation.entity_type,
+                violation.entity_id,
+                violation.rule_key,
+            )
+            if key not in observed_keys:
+                violation.status = "resolved"
+                violation.resolved_at = now
+                resolved_policy_ids.add(violation.policy_id)
+
+        # The policy counter is used as an active-violation total. Recompute it
+        # for affected policies so it stays correct while resolved rows remain
+        # available as lifecycle history.
+        for policy_id in resolved_policy_ids:
+            open_count = (
+                await self.db.execute(
+                    select(func.count(PolicyViolation.id)).where(
+                        PolicyViolation.tenant_id == tenant_id,
+                        PolicyViolation.policy_id == policy_id,
+                        PolicyViolation.status == "open",
+                    )
+                )
+            ).scalar_one()
+            await self.db.execute(
+                update(SecurityPolicy)
+                .where(
+                    SecurityPolicy.tenant_id == tenant_id,
+                    SecurityPolicy.id == policy_id,
+                )
+                .values(violations_count=open_count)
+            )
+
+    async def _record_violation(
+        self,
+        *,
+        tenant_id: str,
+        policy_id: str,
+        scan_id: str,
+        entity_type: str,
+        entity_id: str,
+        entity_title: str | None,
+        rule_key: str,
+        rule_description: str,
+        severity: str,
+        enforcement_mode: str,
+        was_blocked: bool,
+        context: dict,
+    ) -> PolicyViolation | None:
+        """Create or update one policy violation lifecycle.
+
+        An open violation is identified by the policy, rule, and finding/entity
+        within a tenant. Keeping the row open preserves a stable active
+        violation for operators while ``scan_id`` and ``last_seen_at`` point
+        to the latest observation. Closed lifecycles are intentionally not
+        reused so their history remains visible.
+
+        Returns the newly-created row, or ``None`` when an existing open row
+        was updated.
+        """
+        existing = (
+            await self.db.execute(
+                select(PolicyViolation)
+                .where(
+                    PolicyViolation.tenant_id == tenant_id,
+                    PolicyViolation.policy_id == policy_id,
+                    PolicyViolation.entity_type == entity_type,
+                    PolicyViolation.entity_id == entity_id,
+                    PolicyViolation.rule_key == rule_key,
+                    PolicyViolation.status == "open",
+                )
+                .order_by(PolicyViolation.created_at.asc())
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+        now = datetime.now(timezone.utc)
+
+        if existing:
+            is_new_scan_observation = existing.scan_id != scan_id
+            existing.scan_id = scan_id
+            existing.entity_title = entity_title
+            existing.rule_description = rule_description
+            existing.severity = severity
+            existing.enforcement_mode = enforcement_mode
+            existing.was_blocked = was_blocked
+            existing.context = context
+            if is_new_scan_observation:
+                existing.occurrence_count = (existing.occurrence_count or 1) + 1
+            existing.last_seen_at = now
+            return None
+
+        violation = PolicyViolation(
+            tenant_id=tenant_id,
+            policy_id=policy_id,
+            scan_id=scan_id,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            entity_title=entity_title,
+            rule_key=rule_key,
+            rule_description=rule_description,
+            severity=severity,
+            enforcement_mode=enforcement_mode,
+            was_blocked=was_blocked,
+            status="open",
+            context=context,
+            first_seen_at=now,
+            last_seen_at=now,
+        )
+        self.db.add(violation)
+        await self.db.execute(
+            update(SecurityPolicy)
+            .where(SecurityPolicy.id == policy_id)
+            .values(violations_count=SecurityPolicy.violations_count + 1)
+        )
+        return violation
 
     async def _check_entity_policies(
         self, tenant_id: str, scan_id: str, policies: list[SecurityPolicy]
@@ -360,15 +537,20 @@ class PolicyEvaluator:
             if repo and not repo.is_private:
                 for p in entity_policies:
                     if any(r.get("key") == "require_private_repos" for r in (p.rules or [])):
-                        violation = PolicyViolation(
-                            tenant_id=tenant_id, policy_id=p.id, scan_id=scan_id,
-                            entity_type="repository", entity_id=repo.id, entity_title=repo.full_name,
-                            rule_key="require_private_repos", rule_description=f"Repository '{repo.full_name}' is public",
-                            severity=p.severity, enforcement_mode=p.enforcement,
-                            was_blocked=(p.enforcement == "enforce"), status="open",
+                        await self._record_violation(
+                            tenant_id=tenant_id,
+                            policy_id=p.id,
+                            scan_id=scan_id,
+                            entity_type="repository",
+                            entity_id=repo.id,
+                            entity_title=repo.full_name,
+                            rule_key="require_private_repos",
+                            rule_description=f"Repository '{repo.full_name}' is public",
+                            severity=p.severity,
+                            enforcement_mode=p.enforcement,
+                            was_blocked=(p.enforcement == "enforce"),
                             context={"repo_full_name": repo.full_name, "is_private": False},
                         )
-                        self.db.add(violation)
 
         # 2. Risk & Score Checks
         if scan.repo_id:
@@ -384,30 +566,38 @@ class PolicyEvaluator:
                             threshold = rule.get("threshold", 0)
                             score = risk.security_score or 0.0
                             if score < threshold:
-                                violation = PolicyViolation(
-                                    tenant_id=tenant_id, policy_id=p.id, scan_id=scan_id,
-                                    entity_type="repository", entity_id=scan.repo_id,
-                                    entity_title=f"Score: {score}", rule_key=key,
+                                await self._record_violation(
+                                    tenant_id=tenant_id,
+                                    policy_id=p.id,
+                                    scan_id=scan_id,
+                                    entity_type="repository",
+                                    entity_id=scan.repo_id,
+                                    entity_title=f"Score: {score}",
+                                    rule_key=key,
                                     rule_description=f"Security score {score} is below threshold {threshold}",
-                                    severity=p.severity, enforcement_mode=p.enforcement,
-                                    was_blocked=(p.enforcement == "enforce"), status="open",
+                                    severity=p.severity,
+                                    enforcement_mode=p.enforcement,
+                                    was_blocked=(p.enforcement == "enforce"),
                                     context={"score": score, "threshold": threshold},
                                 )
-                                self.db.add(violation)
 
                         elif key == "block_high_risk_repos":
                             levels = rule.get("levels", ["critical", "high"])
                             if risk.risk_level.lower() in [l.lower() for l in levels]:
-                                violation = PolicyViolation(
-                                    tenant_id=tenant_id, policy_id=p.id, scan_id=scan_id,
-                                    entity_type="repository", entity_id=scan.repo_id,
-                                    entity_title=f"Risk: {risk.risk_level}", rule_key=key,
+                                await self._record_violation(
+                                    tenant_id=tenant_id,
+                                    policy_id=p.id,
+                                    scan_id=scan_id,
+                                    entity_type="repository",
+                                    entity_id=scan.repo_id,
+                                    entity_title=f"Risk: {risk.risk_level}",
+                                    rule_key=key,
                                     rule_description=f"Repository risk level '{risk.risk_level}' is blocked",
-                                    severity=p.severity, enforcement_mode=p.enforcement,
-                                    was_blocked=(p.enforcement == "enforce"), status="open",
+                                    severity=p.severity,
+                                    enforcement_mode=p.enforcement,
+                                    was_blocked=(p.enforcement == "enforce"),
                                     context={"risk_level": risk.risk_level, "blocked_levels": levels},
                                 )
-                                self.db.add(violation)
 
         # 3. Compliance Check (Tenant level)
         posture = (await self.db.execute(
@@ -422,16 +612,20 @@ class PolicyEvaluator:
                         threshold = rule.get("threshold", 0)
                         score = posture.compliance_score
                         if score < threshold:
-                            violation = PolicyViolation(
-                                tenant_id=tenant_id, policy_id=p.id, scan_id=scan_id,
-                                entity_type="tenant", entity_id=tenant_id,
-                                entity_title="Compliance Posture", rule_key="require_passing_compliance",
+                            await self._record_violation(
+                                tenant_id=tenant_id,
+                                policy_id=p.id,
+                                scan_id=scan_id,
+                                entity_type="tenant",
+                                entity_id=tenant_id,
+                                entity_title="Compliance Posture",
+                                rule_key="require_passing_compliance",
                                 rule_description=f"Compliance score {score} is below threshold {threshold}",
-                                severity=p.severity, enforcement_mode=p.enforcement,
-                                was_blocked=(p.enforcement == "enforce"), status="open",
+                                severity=p.severity,
+                                enforcement_mode=p.enforcement,
+                                was_blocked=(p.enforcement == "enforce"),
                                 context={"score": score, "threshold": threshold},
                             )
-                            self.db.add(violation)
 
         await self.db.commit()
 
@@ -501,5 +695,8 @@ def _viol_dict(v: PolicyViolation) -> dict:
         "is_suppressed":   v.is_suppressed,
         "status":          v.status,
         "context":         v.context,
+        "occurrence_count":v.occurrence_count,
+        "first_seen_at":   v.first_seen_at.isoformat() if v.first_seen_at else None,
+        "last_seen_at":    v.last_seen_at.isoformat() if v.last_seen_at else None,
         "created_at":      v.created_at.isoformat() if v.created_at else None,
     }

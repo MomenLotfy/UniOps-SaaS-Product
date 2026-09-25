@@ -324,14 +324,16 @@ async def _run_scan_async(scan_id: str) -> None:
             try:
                 from app.services.policy_evaluator import PolicyEvaluator
                 evaluator = PolicyEvaluator(db)
-                viol_count = await evaluator.evaluate_scan(
+                policy_result = await evaluator.evaluate_scan(
                     tenant_id=tenant_id,
                     scan_id=scan_id,
-                    findings=result.findings,
-                    repo_full_name=full_name,
                 )
-                if viol_count:
-                    logger.info(f"[scan:{scan_id}] Policy Engine: {viol_count} violation(s) recorded")
+                violations = policy_result.get("violations", 0)
+                if violations:
+                    logger.info(
+                        f"[scan:{scan_id}] Policy Engine: "
+                        f"{violations} violation(s) recorded"
+                    )
             except Exception as policy_exc:
                 logger.warning(f"[scan:{scan_id}] Policy evaluation failed (non-fatal): {policy_exc}")
 
