@@ -35,7 +35,7 @@ export default function Metrics() {
           <div className="lp-metric-card">
             <div className="lp-m-val lp-blue">{fmt(1)}</div>
             <div className="lp-m-lbl">{t('metric2')}</div>
-            <div className="lp-m-chg" style={{ color: '#60a5fa' }}>↑ 12 today</div>
+            <div className="lp-m-chg" style={{ color: '#007acc' }}>↑ 12 today</div>
           </div>
           <div className="lp-metric-card">
             <div className="lp-m-val lp-amber">${fmt(2)}<span style={{ fontSize: '1rem' }}>K</span></div>

@@ -5,10 +5,10 @@ export default function Features() {
   const { t } = useLanding();
 
   const features = [
-    { icon: 'ti-settings-automation', iconColor: '#818cf8', bg: 'rgba(99,102,241,.12)', title: t('f1_t'), desc: t('f1_d'), tags: ['Kubernetes', 'CI/CD', 'Auto-Deploy'] },
+    { icon: 'ti-settings-automation', iconColor: '#007acc', bg: 'rgba(0,122,204,.12)', title: t('f1_t'), desc: t('f1_d'), tags: ['Kubernetes', 'CI/CD', 'Auto-Deploy'] },
     { icon: 'ti-shield-lock', iconColor: '#f87171', bg: 'rgba(239,68,68,.1)', title: t('f2_t'), desc: t('f2_d'), tags: ['CVE Scan', 'Compliance', 'Threat Intel'] },
     { icon: 'ti-coins', iconColor: '#fbbf24', bg: 'rgba(245,158,11,.1)', title: t('f3_t'), desc: t('f3_d'), tags: ['Cost Anomaly', 'AWS Billing', 'Savings AI'] },
-    { icon: 'ti-brain', iconColor: '#60a5fa', bg: 'rgba(6,182,212,.1)', title: t('f4_t'), desc: t('f4_d'), tags: ['Predictive AI', 'Root Cause', 'Anomaly ML'] },
+    { icon: 'ti-brain', iconColor: '#007acc', bg: 'rgba(0,122,204,.1)', title: t('f4_t'), desc: t('f4_d'), tags: ['Predictive AI', 'Root Cause', 'Anomaly ML'] },
   ];
 
   return (

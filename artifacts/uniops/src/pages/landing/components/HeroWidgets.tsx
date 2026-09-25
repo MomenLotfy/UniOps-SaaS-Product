@@ -45,7 +45,7 @@ function DeployCard() {
         <path d={line} fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <div className="lp-val lp-green" style={{ position: 'absolute', bottom: 10, right: 12, fontSize: 18 }}>
-        {last.toFixed(2)}<span style={{ fontSize: 11, fontWeight: 400, opacity: .5 }}>/day</span>
+        {last.toFixed(2)}<span style={{ fontSize: 11, fontWeight: 400, color: 'var(--lp-muted)', opacity: 1 }}>/day</span>
       </div>
     </div>
   );
@@ -68,8 +68,8 @@ function CloudCostCard() {
     <div className="lp-card lp-w1 lp-h1" style={{ padding: 12, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
       <span className="lp-label">Cloud Cost</span>
       <div className="lp-val lp-amber">$128<span style={{ fontSize: 13, fontWeight: 400, opacity: .6 }}>.50</span></div>
-      <div style={{ fontSize: 11 }}><span className="lp-red">↑ 12.3%</span> <span style={{ opacity: .5 }}>MTD</span></div>
-      <div style={{ fontSize: 10, opacity: .45, marginTop: 2 }}>AWS $82 · GCP $46</div>
+      <div style={{ fontSize: 11 }}><span className="lp-red">↑ 12.3%</span> <span style={{ color: 'var(--lp-muted)', opacity: 1 }}>MTD</span></div>
+      <div style={{ fontSize: 10, color: 'var(--lp-muted)', opacity: 1, marginTop: 2 }}>AWS $82 · GCP $46</div>
     </div>
   );
 }
@@ -94,7 +94,7 @@ function ActiveTasksCard() {
           <span style={{ fontSize: 11, color: 'var(--lp-text)' }}>ML Training</span>
           <span className="lp-badge lp-bg-purple">{p1}%</span>
         </div>
-        <div className="lp-prog-bg"><div className="lp-prog-fill" style={{ width: p1 + '%', background: 'linear-gradient(90deg,#7c3aed,#c084fc)' }}></div></div>
+        <div className="lp-prog-bg"><div className="lp-prog-fill" style={{ width: p1 + '%', background: 'linear-gradient(90deg,#007acc,#006db8)' }}></div></div>
       </div>
       <div style={{ marginTop: 8 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -123,7 +123,7 @@ function ThemeModeCard() {
       <span className="lp-label" style={{ marginTop: 2 }}>Theme Mode</span>
       <button
         onClick={toggleTheme}
-        style={{ marginTop: 4, borderRadius: 99, padding: '2px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all .35s', background: isLight ? 'rgba(251,191,36,.1)' : 'rgba(96,165,250,.1)', border: `1px solid ${isLight ? 'rgba(251,191,36,.35)' : 'rgba(96,165,250,.35)'}`, color: isLight ? '#fbbf24' : '#60a5fa' }}>
+        style={{ marginTop: 4, borderRadius: 99, padding: '2px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all .35s', background: isLight ? 'rgba(251,191,36,.1)' : 'rgba(0,122,204,.1)', border: `1px solid ${isLight ? 'rgba(251,191,36,.35)' : 'rgba(0,122,204,.35)'}`, color: isLight ? '#b77900' : '#007acc' }}>
         {isLight ? 'LIGHT' : 'DARK'}
       </button>
     </div>
@@ -140,8 +140,8 @@ function MLServingCard() {
     <div className="lp-card lp-w1 lp-h1" style={{ padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 2 }}>
       <span className="lp-label">ML Serving</span>
       <i className="ti ti-cpu lp-purple" style={{ fontSize: 26, margin: '2px 0' }}></i>
-      <div className="lp-val lp-purple" style={{ fontSize: 18 }}>{lat}<span style={{ fontSize: 11, fontWeight: 400, opacity: .5 }}>ms</span></div>
-      <span style={{ fontSize: 10, opacity: .45 }}>P99 latency</span>
+      <div className="lp-val lp-purple" style={{ fontSize: 18 }}>{lat}<span style={{ fontSize: 11, fontWeight: 400, color: 'var(--lp-muted)', opacity: 1 }}>ms</span></div>
+      <span style={{ fontSize: 10, color: 'var(--lp-muted)', opacity: 1 }}>P99 latency</span>
       <div className="lp-dot" style={{ background: '#4ade80', position: 'absolute', bottom: 10, right: 10 }}></div>
     </div>
   );
@@ -188,7 +188,7 @@ function AlertsCard() {
         {visible.map((x, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0', borderBottom: '1px solid var(--lp-border)' }}>
             <span className={`lp-badge ${x.cls}`} style={{ flexShrink: 0, fontSize: 9 }}>!</span>
-            <span style={{ fontSize: 11, color: 'var(--lp-text)', opacity: .8 }}>{x.txt}</span>
+            <span style={{ fontSize: 11, color: 'var(--lp-text)', opacity: 1 }}>{x.txt}</span>
           </div>
         ))}
       </div>
