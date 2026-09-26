@@ -29,15 +29,15 @@ export default function Hero() {
           </div>
           <div className="lp-hero-stats">
             <div>
-              <div className="lp-stat-num">500+</div>
+              <div className="lp-stat-num">0+</div>
               <div className="lp-stat-lbl">{t('stat1')}</div>
             </div>
             <div>
-              <div className="lp-stat-num">99.9%</div>
+              <div className="lp-stat-num">0%</div>
               <div className="lp-stat-lbl">{t('stat2')}</div>
             </div>
             <div>
-              <div className="lp-stat-num">40%</div>
+              <div className="lp-stat-num">0%</div>
               <div className="lp-stat-lbl">{t('stat3')}</div>
             </div>
           </div>
