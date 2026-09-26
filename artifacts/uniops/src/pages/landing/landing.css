@@ -120,40 +120,46 @@
 }
 .lp-pill-btn.active{background:var(--lp-grad);color:#fff;}
 
-.lp-theme-switch{
-  --switch-height:30px;
-  --switch-width:68px;
-  --switch-margin:3px;
-  --switch-day:#5ba9d3;
-  --switch-night:#0f405b;
-  --switch-sun:#f6d35a;
-  --switch-ease:cubic-bezier(.77,0,.175,1);
-  --switch-duration:.85s;
-  position:relative;
-  width:var(--switch-width);
-  height:var(--switch-height);
+.lp-theme-shadow{
+  display:inline-flex;
   flex-shrink:0;
-  overflow:hidden;
-  border:1px solid rgba(15,64,91,.2);
   border-radius:999px;
-  background:var(--switch-day);
   box-shadow:2px 4px 12px -2px rgba(0,0,0,.25);
+}
+.lp-theme-switch{
+  --theme-font-size:3.2px;
+  --theme-height:10em;
+  --theme-width:24em;
+  --theme-margin:.5em;
+  --theme-night:rgba(15,64,91,1);
+  --theme-day:rgba(91,169,211,1);
+  --theme-sun:rgba(246,211,90,1);
+  --theme-ease:cubic-bezier(.770,0,.175,1);
+  --theme-duration:.85s;
+  position:relative;
+  width:var(--theme-width);
+  height:var(--theme-height);
+  overflow:hidden;
+  border:0;
+  border-radius:999px;
+  background-color:var(--theme-day);
   cursor:pointer;
   appearance:none;
-  transition:border-color .2s,box-shadow .2s;
+  font-size:var(--theme-font-size);
+  outline:0;
+  transition:box-shadow .2s;
 }
 .lp-theme-switch::after{
   content:"";
   position:absolute;
   inset:0;
   z-index:1;
-  background:var(--switch-night);
+  background-color:var(--theme-night);
   opacity:0;
-  transition:opacity var(--switch-duration) var(--switch-ease);
+  transition:opacity var(--theme-duration) var(--theme-ease);
 }
 .lp-theme-switch:hover{
-  border-color:rgba(0,122,204,.65);
-  box-shadow:2px 5px 16px -2px rgba(0,0,0,.35);
+  box-shadow:0 0 0 2px rgba(0,122,204,.3);
 }
 .lp-theme-switch:focus-visible{
   outline:2px solid var(--lp-primary);
@@ -164,23 +170,22 @@
   inset:0;
   z-index:2;
   overflow:hidden;
-  transform:translate3d(calc(var(--switch-width) - var(--switch-height)),0,0);
+  transform:translate3d(calc(var(--theme-width) - var(--theme-height)),0,0);
   transform-origin:right;
-  transition:transform var(--switch-duration) var(--switch-ease);
+  transition:transform var(--theme-duration) var(--theme-ease);
 }
 .lp-theme-switch.is-active .lp-theme-inner{
   transform:translate3d(0,0,0);
 }
 .lp-theme-globe{
   position:relative;
-  width:calc(var(--switch-height) - (var(--switch-margin) * 2));
-  height:calc(var(--switch-height) - (var(--switch-margin) * 2));
-  margin:var(--switch-margin) 0 0 var(--switch-margin);
-  overflow:hidden;
-  border-radius:50%;
-  background:var(--switch-sun);
+  width:calc(var(--theme-height) - (var(--theme-margin) * 2));
+  height:calc(var(--theme-height) - (var(--theme-margin) * 2));
+  margin:var(--theme-margin) 0 0 var(--theme-margin);
+  border-radius:999px;
+  background-color:var(--theme-sun);
   transform:rotate(90deg);
-  transition:transform var(--switch-duration) var(--switch-ease);
+  transition:transform var(--theme-duration) var(--theme-ease);
   z-index:1;
 }
 .lp-theme-globe-circle{
@@ -189,26 +194,26 @@
   bottom:0;
   left:50%;
   width:100%;
-  border-radius:50%;
-  background:var(--switch-day);
+  border-radius:999px;
+  background-color:var(--theme-day);
   transform:translate3d(50%,0,0);
-  transition:transform var(--switch-duration) var(--switch-ease),background-color var(--switch-duration) var(--switch-ease);
+  transition:transform var(--theme-duration) var(--theme-ease),background-color var(--theme-duration) var(--theme-ease);
 }
 .lp-theme-switch.is-active .lp-theme-globe-circle{
-  background:var(--switch-night);
+  background-color:var(--theme-night);
   transform:translate3d(-10%,0,0);
 }
 .lp-theme-moon{
   position:absolute;
   inset:0;
-  border-radius:50%;
-  opacity:0;
-  background:
-    radial-gradient(circle at 30% 32%,rgba(255,255,255,.26) 0 7%,transparent 8%),
-    radial-gradient(circle at 65% 68%,rgba(255,255,255,.18) 0 10%,transparent 11%),
-    radial-gradient(circle at 72% 25%,rgba(255,255,255,.2) 0 5%,transparent 6%);
+  width:100%;
+  height:100%;
+  border-radius:999px;
+  object-fit:cover;
   transform:scaleX(-1);
-  transition:opacity var(--switch-duration) var(--switch-ease);
+  opacity:0;
+  z-index:1;
+  transition:opacity var(--theme-duration) var(--theme-ease);
 }
 .lp-theme-switch.is-active .lp-theme-globe{
   transform:rotate(0);
@@ -219,63 +224,38 @@
 .lp-theme-stars{
   position:absolute;
   inset:0;
-  opacity:.95;
-  background:
-    radial-gradient(circle at 68% 28%,#fff 0 1px,transparent 1.5px),
-    radial-gradient(circle at 79% 56%,#fff 0 1px,transparent 1.5px),
-    radial-gradient(circle at 60% 72%,#fff 0 1px,transparent 1.5px),
-    radial-gradient(circle at 88% 37%,#fff 0 1px,transparent 1.5px);
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:right;
   transform:scale(.25);
   transform-origin:right;
-  transition:transform var(--switch-duration) var(--switch-ease);
+  transition:transform var(--theme-duration) var(--theme-ease);
+  z-index:2;
 }
 .lp-theme-switch.is-active .lp-theme-stars{
   transform:scale(.9);
 }
 .lp-theme-cloud{
   position:absolute;
+  z-index:0;
   bottom:0;
-  z-index:3;
-  width:24px;
-  height:10px;
-  border-radius:999px 999px 3px 3px;
-  background:rgba(255,255,255,.92);
-  transition:transform var(--switch-duration) var(--switch-ease);
-}
-.lp-theme-cloud::before,
-.lp-theme-cloud::after{
-  content:"";
-  position:absolute;
-  bottom:2px;
-  border-radius:50%;
-  background:inherit;
-}
-.lp-theme-cloud::before{
-  left:4px;
-  width:11px;
-  height:11px;
-}
-.lp-theme-cloud::after{
-  left:12px;
-  width:8px;
-  height:8px;
+  width:auto;
+  transition:transform var(--theme-duration) var(--theme-ease);
 }
 .lp-theme-cloud-one{
   left:0;
-  height:9px;
-  transform:translate3d(0,0,0);
+  height:65%;
 }
 .lp-theme-cloud-two{
-  left:12px;
-  height:7px;
-  opacity:.8;
-  transform:translate3d(0,0,0);
+  left:3em;
+  height:50%;
 }
 .lp-theme-switch.is-active .lp-theme-cloud-one{
-  transform:translate3d(-12px,7px,0);
+  transform:translate3d(-3em,1em,0);
 }
 .lp-theme-switch.is-active .lp-theme-cloud-two{
-  transform:translate3d(-4px,20px,0);
+  transform:translate3d(-1em,3em,0);
 }
 
 .lp-btn-p{
