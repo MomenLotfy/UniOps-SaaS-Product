@@ -10,7 +10,7 @@ export default function Footer() {
         <div>
           <a href="#" className="lp-logo lp-footer-logo" aria-label="UniOps home">
             <img
-              className="lp-logo-img"
+              className={`lp-logo-img ${theme === 'dark' ? 'lp-logo-img-dark' : 'lp-logo-img-light'}`}
               src={theme === 'dark' ? darkModeLogo : lightModeLogo}
               alt="UniOps"
             />
