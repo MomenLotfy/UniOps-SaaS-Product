@@ -5,9 +5,9 @@ export default function HowItWorks() {
   const { t } = useLanding();
 
   const steps = [
-    { n: '01', title: t('step1_t'), desc: t('step1_d') },
-    { n: '02', title: t('step2_t'), desc: t('step2_d') },
-    { n: '03', title: t('step3_t'), desc: t('step3_d') },
+    { n: '00', title: t('step1_t'), desc: t('step1_d') },
+    { n: '00', title: t('step2_t'), desc: t('step2_d') },
+    { n: '00', title: t('step3_t'), desc: t('step3_d') },
   ];
 
   return (
@@ -20,8 +20,8 @@ export default function HowItWorks() {
         </FadeIn>
         <FadeIn as="div" className="lp-how-grid">
           <div className="lp-how-line"></div>
-          {steps.map((s) => (
-            <div className="lp-step" key={s.n}>
+          {steps.map((s, i) => (
+            <div className="lp-step" key={`${s.n}-${i}`}>
               <div className="lp-step-n"><span>{s.n}</span></div>
               <div className="lp-step-t">{s.title}</div>
               <div className="lp-step-d">{s.desc}</div>
