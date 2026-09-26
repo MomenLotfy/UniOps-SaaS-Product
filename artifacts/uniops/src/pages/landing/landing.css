@@ -84,14 +84,10 @@
   max-width:1240px;margin:0 auto;padding:0 2rem;
   display:flex;align-items:center;justify-content:space-between;gap:1.25rem;
 }
-.lp-logo{display:flex;align-items:center;gap:.6rem;text-decoration:none;flex-shrink:0;}
-.lp-logo-box{
-  width:34px;height:34px;border-radius:8px;
-  background:var(--lp-grad);
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 18px rgba(0,122,204,.4);
-}
-.lp-logo-name{font-size:1.15rem;font-weight:700;color:var(--lp-text);letter-spacing:-.3px;}
+.lp-logo{display:flex;align-items:center;text-decoration:none;flex-shrink:0;}
+.lp-logo-img{display:block;width:112px;height:36px;object-fit:contain;object-position:left center;}
+.lp-footer-logo{margin-bottom:.3rem;}
+.lp-footer-logo .lp-logo-img{width:96px;height:30px;}
 
 .lp-nav-links{display:flex;align-items:center;gap:.3rem;flex:1;justify-content:center;}
 .lp-nl{

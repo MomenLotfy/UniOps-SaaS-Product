@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanding } from '../context/LandingContext';
+import darkModeLogo from '../../../assets/logo-darkmode.svg';
+import lightModeLogo from '../../../assets/logo-lightmode.svg';
 
 export default function Navbar() {
   const { theme, toggleTheme, lang, setLang, t } = useLanding();
@@ -15,15 +17,12 @@ export default function Navbar() {
   return (
     <nav className={`lp-nav${scrolled ? ' sc' : ''}`}>
       <div className="lp-nav-in">
-        <a href="#" className="lp-logo">
-          <div className="lp-logo-box">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5" />
-              <line x1="12" y1="22" x2="12" y2="15.5" />
-              <polyline points="22 8.5 12 15.5 2 8.5" />
-            </svg>
-          </div>
-          <span className="lp-logo-name">UniOps</span>
+        <a href="#" className="lp-logo" aria-label="UniOps home">
+          <img
+            className="lp-logo-img"
+            src={theme === 'dark' ? darkModeLogo : lightModeLogo}
+            alt="UniOps"
+          />
         </a>
 
         <div className="lp-nav-links">
