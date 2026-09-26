@@ -15,7 +15,17 @@ function buildSparkPath(data: number[]) {
 }
 
 function DeployCard() {
-  const data = Array.from({ length: 30 }, () => 0);
+  const [data, setData] = useState(() => Array.from({ length: 30 }, (_, i) => 1.4 + i * 0.06 + (Math.random() - 0.4) * 0.3));
+  useEffect(() => {
+    const id = setInterval(() => {
+      setData((prev) => {
+        const next = prev.slice(1);
+        next.push(Math.max(0.5, prev[prev.length - 1] + (Math.random() - 0.38) * 0.35));
+        return next;
+      });
+    }, 3000);
+    return () => clearInterval(id);
+  }, []);
   const { line, area } = useMemo(() => buildSparkPath(data), [data]);
   const last = data[data.length - 1];
   return (
@@ -46,7 +56,7 @@ function CICDCard() {
     <div className="lp-card lp-w1 lp-h1" style={{ padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
       <span className="lp-label">CI/CD</span>
       <i className="ti ti-git-branch lp-blue" style={{ fontSize: 26 }}></i>
-      <span style={{ fontSize: 11, color: 'var(--lp-muted)' }}>build #000</span>
+      <span style={{ fontSize: 11, color: 'var(--lp-muted)' }}>build #247</span>
       <span className="lp-badge lp-bg-green" style={{ marginTop: 2 }}>pass</span>
       <div className="lp-dot" style={{ background: '#4ade80', position: 'absolute', bottom: 10, right: 10 }}></div>
     </div>
@@ -57,17 +67,25 @@ function CloudCostCard() {
   return (
     <div className="lp-card lp-w1 lp-h1" style={{ padding: 12, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
       <span className="lp-label">Cloud Cost</span>
-      <div className="lp-val lp-amber">$0<span style={{ fontSize: 13, fontWeight: 400, opacity: .6 }}>.00</span></div>
-      <div style={{ fontSize: 11 }}><span className="lp-red">↑ 0%</span> <span style={{ color: 'var(--lp-muted)', opacity: 1 }}>MTD</span></div>
-      <div style={{ fontSize: 10, color: 'var(--lp-muted)', opacity: 1, marginTop: 2 }}>AWS $0 · GCP $0</div>
+      <div className="lp-val lp-amber">$128<span style={{ fontSize: 13, fontWeight: 400, opacity: .6 }}>.50</span></div>
+      <div style={{ fontSize: 11 }}><span className="lp-red">↑ 12.3%</span> <span style={{ color: 'var(--lp-muted)', opacity: 1 }}>MTD</span></div>
+      <div style={{ fontSize: 10, color: 'var(--lp-muted)', opacity: 1, marginTop: 2 }}>AWS $82 · GCP $46</div>
     </div>
   );
 }
 
 function ActiveTasksCard() {
-  const p1 = 0;
-  const p2 = 0;
-  const p3 = 0;
+  const [p1, setP1] = useState(72);
+  const [p2, setP2] = useState(88);
+  const [p3, setP3] = useState(45);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setP1((v) => { let n = Math.min(100, v + Math.floor(Math.random() * 5) + 1); if (n >= 99) n = 10 + Math.floor(Math.random() * 20); return n; });
+      setP2((v) => { let n = Math.min(100, v + Math.floor(Math.random() * 4) + 1); if (n >= 99) n = 15 + Math.floor(Math.random() * 25); return n; });
+      setP3((v) => { let n = Math.min(100, v + Math.floor(Math.random() * 6) + 1); if (n >= 99) n = 5 + Math.floor(Math.random() * 30); return n; });
+    }, 2500);
+    return () => clearInterval(id);
+  }, []);
   return (
     <div className="lp-card lp-w2 lp-h1" style={{ padding: '12px 14px' }}>
       <div className="lp-label" style={{ marginBottom: 8 }}>Active Tasks</div>
@@ -113,21 +131,30 @@ function ThemeModeCard() {
 }
 
 function MLServingCard() {
-  const lat = 0;
+  const [lat, setLat] = useState(23);
+  useEffect(() => {
+    const id = setInterval(() => setLat(Math.round(18 + Math.random() * 14)), 2000);
+    return () => clearInterval(id);
+  }, []);
   return (
     <div className="lp-card lp-w1 lp-h1" style={{ padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 2 }}>
       <span className="lp-label">ML Serving</span>
       <i className="ti ti-cpu lp-purple" style={{ fontSize: 26, margin: '2px 0' }}></i>
       <div className="lp-val lp-purple" style={{ fontSize: 18 }}>{lat}<span style={{ fontSize: 11, fontWeight: 400, color: 'var(--lp-muted)', opacity: 1 }}>ms</span></div>
-      <span style={{ fontSize: 10, color: 'var(--lp-muted)', opacity: 1 }}>P0 latency</span>
+      <span style={{ fontSize: 10, color: 'var(--lp-muted)', opacity: 1 }}>P99 latency</span>
       <div className="lp-dot" style={{ background: '#4ade80', position: 'absolute', bottom: 10, right: 10 }}></div>
     </div>
   );
 }
 
 function ClockCard() {
-  const time = '00:00:00';
-  const date = 'Day 00';
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const date = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit' });
   return (
     <div className="lp-card lp-w1 lp-h1" style={{ padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 4 }}>
       <span className="lp-val" style={{ fontSize: 20, letterSpacing: '-1px' }}>{time}</span>
@@ -137,10 +164,10 @@ function ClockCard() {
 }
 
 const ALERTS = [
-  { cls: 'lp-bg-red', txt: 'CPU spike · node-00' },
-  { cls: 'lp-bg-amber', txt: 'Redis memory 0%' },
-  { cls: 'lp-bg-blue', txt: 'Deploy #000 started' },
-  { cls: 'lp-bg-green', txt: 'ML model v0.0 ready' },
+  { cls: 'lp-bg-red', txt: 'CPU spike · node-03' },
+  { cls: 'lp-bg-amber', txt: 'Redis memory 87%' },
+  { cls: 'lp-bg-blue', txt: 'Deploy #247 started' },
+  { cls: 'lp-bg-green', txt: 'ML model v2.1 ready' },
   { cls: 'lp-bg-purple', txt: 'Scan scheduled' },
 ];
 
