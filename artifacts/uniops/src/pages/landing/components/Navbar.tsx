@@ -37,8 +37,23 @@ export default function Navbar() {
             <button className={`lp-pill-btn${lang === 'ar' ? ' active' : ''}`} onClick={() => setLang('ar')}>AR</button>
           </div>
 
-          <button className="lp-theme-btn" onClick={toggleTheme} title="Toggle theme">
-            <i className={theme === 'dark' ? 'ti ti-moon' : 'ti ti-sun'}></i>
+          <button
+            className={`lp-theme-switch${theme === 'dark' ? ' is-active' : ''}`}
+            onClick={toggleTheme}
+            type="button"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-pressed={theme === 'dark'}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            <span className="lp-theme-cloud lp-theme-cloud-one" aria-hidden="true" />
+            <span className="lp-theme-cloud lp-theme-cloud-two" aria-hidden="true" />
+            <span className="lp-theme-inner" aria-hidden="true">
+              <span className="lp-theme-globe">
+                <span className="lp-theme-moon" />
+                <span className="lp-theme-globe-circle" />
+              </span>
+              <span className="lp-theme-stars" />
+            </span>
           </button>
 
           <Link to="/auth/login" className="lp-btn-login">
