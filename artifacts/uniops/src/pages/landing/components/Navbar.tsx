@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import { useLanding } from '../context/LandingContext';
 import darkModeLogo from '../../../assets/logo-darkmode.svg';
 import lightModeLogo from '../../../assets/logo-lightmode.svg';
+import cloudOne from '../../../assets/theme-switch/cloud-1.svg';
+import cloudTwo from '../../../assets/theme-switch/cloud-2.svg';
+import moon from '../../../assets/theme-switch/moon.svg';
+import stars from '../../../assets/theme-switch/stars.svg';
 
 export default function Navbar() {
   const { theme, toggleTheme, lang, setLang, t } = useLanding();
@@ -37,24 +41,44 @@ export default function Navbar() {
             <button className={`lp-pill-btn${lang === 'ar' ? ' active' : ''}`} onClick={() => setLang('ar')}>AR</button>
           </div>
 
-          <button
-            className={`lp-theme-switch${theme === 'dark' ? ' is-active' : ''}`}
-            onClick={toggleTheme}
-            type="button"
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            aria-pressed={theme === 'dark'}
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          >
-            <span className="lp-theme-cloud lp-theme-cloud-one" aria-hidden="true" />
-            <span className="lp-theme-cloud lp-theme-cloud-two" aria-hidden="true" />
-            <span className="lp-theme-inner" aria-hidden="true">
-              <span className="lp-theme-globe">
-                <span className="lp-theme-moon" />
-                <span className="lp-theme-globe-circle" />
+          <span className="lp-theme-shadow">
+            <button
+              className={`lp-theme-switch${theme === 'dark' ? ' is-active' : ''}`}
+              onClick={toggleTheme}
+              type="button"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              aria-pressed={theme === 'dark'}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              <img
+                className="lp-theme-cloud lp-theme-cloud-two"
+                src={cloudOne}
+                alt=""
+                aria-hidden="true"
+              />
+              <img
+                className="lp-theme-cloud lp-theme-cloud-one"
+                src={cloudTwo}
+                alt=""
+                aria-hidden="true"
+              />
+              <span className="lp-theme-inner" aria-hidden="true">
+                <span className="lp-theme-globe">
+                  <img
+                    className="lp-theme-moon"
+                    src={moon}
+                    alt=""
+                  />
+                  <span className="lp-theme-globe-circle" />
+                </span>
+                <img
+                  className="lp-theme-stars"
+                  src={stars}
+                  alt=""
+                />
               </span>
-              <span className="lp-theme-stars" />
-            </span>
-          </button>
+            </button>
+          </span>
 
           <Link to="/auth/login" className="lp-btn-login">
             <i className="ti ti-login" style={{ fontSize: '.88rem' }}></i>

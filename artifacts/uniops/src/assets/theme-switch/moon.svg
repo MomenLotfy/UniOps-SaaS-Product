@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-hidden="true">
+  <defs>
+    <linearGradient id="moon-shade" x1="15%" y1="15%" x2="85%" y2="85%">
+      <stop offset="0" stop-color="#fff9d8"/>
+      <stop offset="1" stop-color="#f6d35a"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#moon-shade)" d="M82 7C61 19 48 39 50 58c2 18 15 31 33 35-8 5-18 7-28 5C28 94 10 76 10 50S28 6 53 2c10-1 20 1 29 5Z"/>
+  <g fill="#dfbd4e" opacity=".42">
+    <circle cx="38" cy="34" r="7"/>
+    <circle cx="29" cy="59" r="4"/>
+    <circle cx="55" cy="76" r="6"/>
+  </g>
+</svg>
