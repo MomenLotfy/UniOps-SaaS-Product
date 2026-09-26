@@ -19,7 +19,7 @@ export default function Navbar() {
       <div className="lp-nav-in">
         <a href="#" className="lp-logo" aria-label="UniOps home">
           <img
-            className="lp-logo-img"
+            className={`lp-logo-img ${theme === 'dark' ? 'lp-logo-img-dark' : 'lp-logo-img-light'}`}
             src={theme === 'dark' ? darkModeLogo : lightModeLogo}
             alt="UniOps"
           />
