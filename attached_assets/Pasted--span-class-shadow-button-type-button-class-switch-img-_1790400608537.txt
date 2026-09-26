@@ -1,0 +1,197 @@
+<span class="shadow">
+  <button type="button" class="switch">
+    <img class="switch__cloud --2" src="https://assets.codepen.io/58281/cloud-1.svg" />
+    <img class="switch__cloud --1" src="https://assets.codepen.io/58281/cloud-2.svg" />
+    <div class="switch__inner">
+      <div class="switch-globe">
+        <img class="switch-globe__moon" src="https://assets.codepen.io/58281/moon_1.png" />
+        <div class="switch-globe__circle"></div>
+      </div>
+      <img class="switch__stars" src="https://assets.codepen.io/58281/stars.svg" />
+    </div>
+  </button>
+</span>
+
+
+
+
+
+html, body{
+  height: 100%;
+}
+
+html{
+  font-size: 10px;
+}
+
+body{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button{
+  outline: 0;
+  background: transparent;
+  border-radius: 0;
+  border: 0;
+  appearance: none;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.switch{
+  --font-size: 10px; // Change this to control the scaling of the switch
+  
+  --height: 10em;
+  --width: 24em;
+  --margin: 0.5em;
+  
+  --color-night: rgba(15, 64, 91, 1);
+  --color-day: rgba(91, 169, 211, 1);
+  --color-sun:  rgba(246, 211, 90, 1);
+  
+  --ease: cubic-bezier(0.770, 0.000, 0.175, 1.000);
+  --duration: .85s;
+  
+  font-size: var(--font-size);
+  position: relative;
+  width: var(--width);
+  height: var(--height);
+  border-radius: 999px;
+  background-color: var(--color-day);
+  overflow: hidden;
+  z-index: 2;
+  
+  &:after{
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: var(--color-night);
+    transition: opacity var(--duration) var(--ease);
+    opacity: 0;
+    z-index: 1;
+  }
+  
+  &__inner{
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    transform-origin: right;
+    transform: translate3d(calc(var(--width) - var(--height)), 0, 0);
+    transition: transform var(--duration) var(--ease);
+    z-index: 2;
+
+    .is-active & {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+  
+  &-globe{
+    --size: calc(var(--height) - (var(--margin) * 2));
+    
+    position: relative;
+    height: var(--size);
+    width: var(--size);
+    margin: var(--margin) 0 0 var(--margin);
+    border-radius: 999px;
+    background-color: var(--color-sun);
+    transform: rotate(90deg);
+    transition: transform var(--duration) var(--ease);
+    z-index: 1;
+    
+    &__circle{
+      position: absolute;
+      top: 0; bottom: 0;
+      left: 50%;
+      width: 100%;
+      border-radius: 999px;
+      background-color: var(--color-day);
+      transform: translate3d(50%, 0, 0);
+      transition: 
+        transform var(--duration) var(--ease), 
+        background-color var(--duration) var(--ease);
+      
+      .is-active & {
+        background-color: var(--color-night);
+        transform: translate3d(-10%, 0, 0);
+      }
+    }
+    
+    &__moon{
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%; width: 100%;
+      border-radius: 999px;
+      object-fit: cover;
+      transform: scaleX(-1);
+      opacity: 0;
+      transition: opacity var(--duration) var(--ease);
+      
+      .is-active & {
+        opacity: 1;
+      }
+    }
+    
+    .is-active & {
+      transform: rotate(0);
+    }
+  }
+  
+  &__stars{
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%; width: 100%;
+    object-fit: contain;
+    object-position: right;
+    transform-origin: right;
+    transform: scale(.25);
+    transition: transform var(--duration) var(--ease);
+    z-index: 2;
+    
+    .is-active & {
+      transform: scale(0.9);
+    }
+  }
+  
+  &__cloud{
+    position: absolute;
+    transition: transform var(--duration) var(--ease);
+    width: auto;
+    bottom: 0;
+    
+    &.--1{
+      left: 0;
+      height: 65%;
+      
+      .is-active & {
+        transform: translate3d(-3rem, 1rem, 0);
+      }
+    }
+    
+    &.--2{
+      left: 3rem;
+      height: 50%;
+      
+      .is-active & {
+        transform: translate3d(-1rem, 3rem, 0);
+      }
+    }
+  }
+  
+  &.is-active{
+    
+    &:after{
+      opacity: 1;
+    }
+  }
+}
+
+.shadow{
+  box-shadow: 2px 4px 12px -2px rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+}
+
+document.querySelector('button').addEventListener('click', ({ currentTarget }) => currentTarget.classList.toggle('is-active'))
