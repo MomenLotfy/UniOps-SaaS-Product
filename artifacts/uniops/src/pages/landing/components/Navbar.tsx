@@ -3,10 +3,6 @@ import { Link } from 'react-router-dom';
 import { useLanding } from '../context/LandingContext';
 import darkModeLogo from '../../../assets/logo-darkmode.svg';
 import lightModeLogo from '../../../assets/logo-lightmode.svg';
-import cloudOne from '../../../assets/theme-switch/cloud-1.svg';
-import cloudTwo from '../../../assets/theme-switch/cloud-2.svg';
-import moon from '../../../assets/theme-switch/moon.svg';
-import stars from '../../../assets/theme-switch/stars.svg';
 
 export default function Navbar() {
   const { theme, toggleTheme, lang, setLang, t } = useLanding();
@@ -42,42 +38,30 @@ export default function Navbar() {
           </div>
 
           <span className="lp-theme-shadow">
-            <button
-              className={`lp-theme-switch${theme === 'dark' ? ' is-active' : ''}`}
-              onClick={toggleTheme}
-              type="button"
-              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-              aria-pressed={theme === 'dark'}
-              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            >
-              <img
-                className="lp-theme-cloud lp-theme-cloud-two"
-                src={cloudOne}
-                alt=""
-                aria-hidden="true"
+            <label className="switch">
+              <input
+                className="switch__input"
+                type="checkbox"
+                role="switch"
+                checked={theme === 'dark'}
+                onChange={toggleTheme}
+                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
               />
-              <img
-                className="lp-theme-cloud lp-theme-cloud-one"
-                src={cloudTwo}
-                alt=""
-                aria-hidden="true"
-              />
-              <span className="lp-theme-inner" aria-hidden="true">
-                <span className="lp-theme-globe">
-                  <img
-                    className="lp-theme-moon"
-                    src={moon}
-                    alt=""
-                  />
-                  <span className="lp-theme-globe-circle" />
-                </span>
-                <img
-                  className="lp-theme-stars"
-                  src={stars}
-                  alt=""
-                />
+              <span className="switch__icon" aria-hidden="true">
+                <span className="switch__icon-part switch__icon-part--1"></span>
+                <span className="switch__icon-part switch__icon-part--2"></span>
+                <span className="switch__icon-part switch__icon-part--3"></span>
+                <span className="switch__icon-part switch__icon-part--4"></span>
+                <span className="switch__icon-part switch__icon-part--5"></span>
+                <span className="switch__icon-part switch__icon-part--6"></span>
+                <span className="switch__icon-part switch__icon-part--7"></span>
+                <span className="switch__icon-part switch__icon-part--8"></span>
+                <span className="switch__icon-part switch__icon-part--9"></span>
+                <span className="switch__icon-part switch__icon-part--10"></span>
+                <span className="switch__icon-part switch__icon-part--11"></span>
               </span>
-            </button>
+              <span className="switch__sr">Dark Mode</span>
+            </label>
           </span>
 
           <Link to="/auth/login" className="lp-btn-login">
