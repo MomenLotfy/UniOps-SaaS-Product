@@ -266,43 +266,43 @@
   --switch-amber:#fbbf24;
 }
 .lp-theme-shadow .switch__input{
-  background-color:var(--switch-primary);
+  background-color:var(--switch-night);
 }
 .lp-theme-shadow .switch__input:before{
-  background-color:var(--switch-surface);
-}
-.lp-theme-shadow .switch__icon{
-  background-color:var(--switch-surface);
-}
-.lp-theme-shadow .switch__icon-part--1{
-  background-color:var(--switch-amber);
-}
-.lp-theme-shadow .switch__icon-part--2{
-  background-color:var(--switch-primary-deep);
-}
-.lp-theme-shadow .switch__icon-part--3{
-  box-shadow:0 0 0 .625em var(--switch-amber) inset;
-}
-.lp-theme-shadow .switch__icon-part--3 ~ .switch__icon-part{
-  background-color:var(--switch-amber);
-}
-.lp-theme-shadow .switch__input:checked{
-  background-color:var(--switch-night);
-}
-.lp-theme-shadow .switch__input:checked:before{
   background-color:var(--switch-primary);
 }
-.lp-theme-shadow .switch__input:checked ~ .switch__icon{
+.lp-theme-shadow .switch__icon{
   background-color:var(--switch-light);
 }
-.lp-theme-shadow .switch__input:checked ~ .switch__icon .switch__icon-part--1{
-  background-color:var(--switch-light);
+.lp-theme-shadow .switch__icon-part--1{
+  background-color:var(--switch-primary);
 }
-.lp-theme-shadow .switch__input:checked ~ .switch__icon .switch__icon-part--2{
+.lp-theme-shadow .switch__icon-part--2{
   background-color:var(--switch-night);
 }
+.lp-theme-shadow .switch__icon-part--3{
+  box-shadow:0 0 0 .625em var(--switch-night) inset;
+}
+.lp-theme-shadow .switch__icon-part--3 ~ .switch__icon-part{
+  background-color:var(--switch-primary);
+}
+.lp-theme-shadow .switch__input:checked{
+  background-color:var(--switch-primary);
+}
+.lp-theme-shadow .switch__input:checked:before{
+  background-color:var(--switch-night);
+}
+.lp-theme-shadow .switch__input:checked ~ .switch__icon{
+  background-color:var(--switch-surface);
+}
+.lp-theme-shadow .switch__input:checked ~ .switch__icon .switch__icon-part--1{
+  background-color:var(--switch-surface);
+}
+.lp-theme-shadow .switch__input:checked ~ .switch__icon .switch__icon-part--2{
+  background-color:var(--switch-primary-deep);
+}
 .lp-theme-shadow .switch__input:checked ~ .switch__icon .switch__icon-part--3{
-  box-shadow:0 0 0 .25em var(--switch-night) inset;
+  box-shadow:0 0 0 .25em var(--switch-primary-deep) inset;
 }
 
 .lp-btn-p{
