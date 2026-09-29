@@ -1,4 +1,4 @@
-# Security Center — System Design Report
+# Security Center — System Design Blueprint
 
 ## 1. Executive Summary
 
@@ -137,25 +137,25 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.1 Overview (Security Posture Dashboard)
 
-**Purpose** – Provide a high‑level health snapshot of the tenant’s security posture, combining threat, vulnerability, compliance, asset, and policy scores.
+**Purpose** – Provide a high‑level health snapshot of the tenant’s security posture, combining threat, vulnerability, compliance, asset, and policy scores.  
 
-**Inputs** – Aggregated counts from DB tables: `Threat`, `Vulnerability`, `Compliance`, `Asset`, `Policy`, plus historical `SecurityPostureScore` rows.
+**Inputs** – Aggregated counts from DB tables: `Threat`, `Vulnerability`, `Compliance`, `Asset`, `Policy`, plus historical `SecurityPostureScore` rows.  
 
-**Processing** – `SecurityPostureService` reads aggregates, applies weighting, and returns a score per dimension. UI normalizes missing data to defaults (e.g., 100 for no threats). Mock‑derived “misconfiguration categories” are hard‑coded based on risk counts.
+**Processing** – `SecurityPostureService` reads aggregates, applies weighting, and returns a score per dimension. UI normalizes missing data to defaults (e.g., 100 for no threats). Mock‑derived “misconfiguration categories” are hard‑coded based on risk counts.  
 
-**Outputs** – Overall posture score, per‑dimension scores, trend chart data, KPI cards (critical findings, compliance coverage).
+**Outputs** – Overall posture score, per‑dimension scores, trend chart data, KPI cards (critical findings, compliance coverage).  
 
-**Lifecycle** – No explicit states; renders `loading → data (or empty) → error`.
+**Lifecycle** – No explicit states; renders `loading → data (or empty) → error`.  
 
-**Data Model** – `SecurityPostureScore` (tenant_id, score, timestamp, breakdown JSON).
+**Data Model** – `SecurityPostureScore` (tenant_id, score, timestamp, breakdown JSON).  
 
-**Current UI** – Dashboard with KPI cards, bar/line charts, empty‑state messages (`OverviewCharts.tsx:374‑378`).
+**Current UI** – Dashboard with KPI cards, bar/line charts, empty‑state messages (`OverviewCharts.tsx:374‑378`).  
 
-**UX Problems** – Inconsistent empty‑data defaults across dimensions; mock categories not flagged as synthetic; no drill‑down from KPI cards.
+**UX Problems** – Inconsistent empty‑data defaults across dimensions; mock categories not flagged as synthetic; no drill‑down from KPI cards.  
 
-**Classification** – *Security Overview* → Dashboard.
+**Classification** – *Security Overview* → Dashboard.  
 
-**Recommended UI Model** – **Dashboard** with explicit “No data” banners and a *Detail* link on each KPI to navigate to the corresponding service.
+**Recommended UI Model** – **Dashboard** with explicit “No data” banners and a *Detail* link on each KPI to navigate to the corresponding service.  
 
 **Proposed Redesign** – Add a shared `FindingBadge` component, surface mock‑derived categories with a “synthetic” tag, and ensure all score cards link to their service (e.g., Threats → Threats tab).
 
@@ -163,27 +163,27 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.2 Repositories & Repository Scanning
 
-**Purpose** – List code repositories, trigger security scans, view scan history.
+**Purpose** – List code repositories, trigger security scans, view scan history.  
 
-**Inputs** – `Repository` rows, `Scan` rows, scanner binaries.
+**Inputs** – `Repository` rows, `Scan` rows, scanner binaries.  
 
-**Processing** – `run_scan.py` clones repo, runs `scan_engine` (SAST, secrets, dependency, optional container/CI), persists `Threat`/`Vulnerability` rows, computes scan score.
+**Processing** – `run_scan.py` clones repo, runs `scan_engine` (SAST, secrets, dependency, optional container/CI), persists `Threat`/`Vulnerability` rows.  
 
-**Outputs** – Scan status (`queued`, `scanning`, `completed`, `failed`), scan summary, findings linked to repository.
+**Outputs** – Scan status (`queued`, `scanning`, `completed`, `failed`), scan summary, findings linked to repository.  
 
-**Lifecycle** – `Not Configured → Scanning → Completed → Findings Available → Remediated` (theoretically).
+**Lifecycle** – `Not Configured → Scanning → Completed → Findings Available → Remediated` (theoretically).  
 
-**Data Model** – `Repository`, `Scan` (id, repo_id, status, timestamps, raw_results).
+**Data Model** – `Repository`, `Scan` (id, repo_id, status, timestamps, raw_results).  
 
-**Current UI** – Repository list table, drawer with repo details; scan button triggers API call; empty state when no repos.
+**Current UI** – Repository list table, drawer with repo details; scan button triggers API call; empty state when no repos.  
 
-**Critical Issues** – **BROKEN**: `dedup_count` used before init (`run_scan.py:201‑209`) and `RawFinding.raw_data` mismatch (`scan_engine.py:1066`). These cause runtime `UnboundLocalError` / `AttributeError`, marking every scan as **failed**.
+**Critical Issues** – **BROKEN**: `dedup_count` used before init (`run_scan.py:201‑209`) and `RawFinding.raw_data` mismatch (`scan_engine.py:1066`). These cause runtime `UnboundLocalError` / `AttributeError`, marking every scan as **failed**.  
 
-**UX Problems** – No indication of scan progress, no error detail when scan fails, drawer does not show scan results.
+**UX Problems** – No indication of scan progress, no error detail when scan fails, drawer does not show scan results.  
 
-**Classification** – *Security Scanning* → Wizard/Scanner.
+**Classification** – *Security Scanning* → Wizard/Scanner.  
 
-**Recommended UI Model** – **Scanner / Wizard**: Step‑by‑step UI guiding the user through repo selection, scan configuration, progress view, and results.
+**Recommended UI Model** – **Scanner / Wizard**: Step‑by‑step UI guiding the user through repo selection, scan configuration, progress view, and results.  
 
 **Proposed Redesign** – Fix backend defects, then build a multi‑step wizard that shows real‑time progress (using WebSocket events), and on success displays a findings explorer (linking to Threats/Vulnerabilities tabs).
 
@@ -191,25 +191,25 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.3 Infrastructure (Clusters & Assets)
 
-**Purpose** – Show cloud infrastructure assets (clusters, assets, costs, alerts).
+**Purpose** – Show cloud infrastructure assets (clusters, assets, costs, alerts).  
 
-**Inputs** – `Cluster` rows, `Asset` rows, cost data from AWS Cost Explorer, alert data.
+**Inputs** – `Cluster` rows, `Asset` rows, cost data from AWS Cost Explorer, alert data.  
 
-**Processing** – `AssetDiscoveryService` syncs assets from AWS; `ClusterService` aggregates usage.
+**Processing** – `AssetDiscoveryService` syncs assets from AWS; `ClusterService` aggregates usage.  
 
-**Outputs** – Asset list, cost summary, alert counts, topology charts.
+**Outputs** – Asset list, cost summary, alert counts, topology charts.  
 
-**Lifecycle** – `Empty → Syncing → Synced → Error`.
+**Lifecycle** – `Empty → Syncing → Synced → Error`.  
 
-**Data Model** – `Cluster`, `Asset`, `CostSnapshot`, `Alert`.
+**Data Model** – `Cluster`, `Asset`, `CostSnapshot`, `Alert`.  
 
-**Current UI** – Section with charts and tables; empty states when no data (`OverviewInfra.tsx:104‑126`).
+**Current UI** – Section with charts and tables; empty states when no data (`OverviewInfra.tsx:104‑126`).  
 
-**UX Problems** – Empty‑state handling is clear, but no filtering by region/account; sync status is only a local in‑memory flag.
+**UX Problems** – Empty‑state handling is clear, but no filtering by region/account; sync status is only a local in‑memory flag.  
 
-**Classification** – *Cloud Security / Infrastructure Security* → Dashboard + Table.
+**Classification** – *Cloud Security / Infrastructure Security* → Dashboard + Table.  
 
-**Recommended UI Model** – **Dashboard** for cost/alert KPIs plus **Table+Detail** for asset list.
+**Recommended UI Model** – **Dashboard** for cost/alert KPIs plus **Table+Detail** for asset list.  
 
 **Proposed Redesign** – Replace in‑memory `_SYNC_STATE` with a persisted `AssetSyncRun` model, surface sync progress, and add filters (region, type).
 
@@ -217,23 +217,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.4 Assets
 
-**Purpose** – Discover and display cloud assets (e.g., S3 buckets, EC2 instances).
+**Purpose** – Discover and display cloud assets (e.g., S3 buckets, EC2 instances).  
 
-**Inputs** – Provider‑fetched asset metadata.
+**Inputs** – Provider‑fetched asset metadata.  
 
-**Processing** – `asset_discovery_service.py` upserts `Asset` rows; `assets.py` API returns stats.
+**Processing** – `asset_discovery_service.py` upserts `Asset` rows; `assets.py` API returns stats.  
 
-**Outputs** – Asset list, asset‑type breakdown charts.
+**Outputs** – Asset list, asset‑type breakdown charts.  
 
-**Lifecycle** – `Not Synced → Syncing → Synced → Error`.
+**Lifecycle** – `Not Synced → Syncing → Synced → Error`.  
 
-**Data Model** – `Asset` (id, tenant_id, type, identifier, tags, last_seen).
+**Data Model** – `Asset` (id, tenant_id, type, identifier, tags, last_seen).  
 
-**Current UI** – List table with stats; empty state messages (`AssetCharts.tsx:143`).
+**Current UI** – List table with stats; empty state messages (`AssetCharts.tsx:143`).  
 
-**UX Problems** – Sync action is a button that fires an API call but provides no progress feedback; missing bulk actions (tag edit, delete).
+**UX Problems** – Sync action is a button that fires an API call but provides no progress feedback; missing bulk actions (tag edit, delete).  
 
-**Classification** – *Infrastructure Security* → Table+Detail.
+**Classification** – *Infrastructure Security* → Table+Detail.  
 
 **Recommended UI Model** – **Table + Detail** with sidebar showing asset metadata, and a **Sync wizard** that displays real‑time progress.
 
@@ -241,23 +241,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.5 Kubernetes Security
 
-**Purpose** – Scan Kubernetes clusters for pod‑level security findings.
+**Purpose** – Scan Kubernetes clusters for pod‑level security findings.  
 
-**Inputs** – Cluster definitions, pod metadata, optional scan results.
+**Inputs** – Cluster definitions, pod metadata, optional scan results.  
 
-**Processing** – `k8s_security_service.py` aggregates pod findings; `sync_pods.py` syncs pod status.
+**Processing** – `k8s_security_service.py` aggregates pod findings; `sync_pods.py` syncs pod status.  
 
-**Outputs** – Pod list, finding counts, topology view.
+**Outputs** – Pod list, finding counts, topology view.  
 
-**Lifecycle** – `Empty → Syncing → Synced → Error`.
+**Lifecycle** – `Empty → Syncing → Synced → Error`.  
 
-**Data Model** – `Cluster`, `Pod`, `K8sFinding`.
+**Data Model** – `Cluster`, `Pod`, `K8sFinding`.  
 
-**Current UI** – Section with topology graph, tables, empty‑state messages (`KubernetesSecurity.tsx:296‑662`).
+**Current UI** – Section with topology graph, tables, empty‑state messages (`KubernetesSecurity.tsx:296‑662`).  
 
-**UX Problems** – No direct feed from external providers (e.g., Falco); topology view shows no data when sync is missing.
+**UX Problems** – No direct feed from external providers (e.g., Falco); topology view shows no data when sync is missing.  
 
-**Classification** – *Container Security / K8s Security* → Graph + Table.
+**Classification** – *Container Security / K8s Security* → Graph + Table.  
 
 **Recommended UI Model** – **Graph / Relationship View** for topology, supplemented by **Table** for detailed findings.
 
@@ -265,23 +265,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.6 Threats
 
-**Purpose** – List and manage security threats (e.g., AWS Security Hub findings).
+**Purpose** – List and manage security threats (e.g., AWS Security Hub findings).  
 
-**Inputs** – `Threat` rows generated by scan adapters.
+**Inputs** – `Threat` rows generated by scan adapters.  
 
-**Processing** – CRUD API, status updates (resolve, suppress), tenant isolation.
+**Processing** – CRUD API, status updates (resolve, suppress), tenant isolation.  
 
-**Outputs** – Threat list, stats, detail view.
+**Outputs** – Threat list, stats, detail view.  
 
-**Lifecycle** – `New → Investigating → Resolved / Suppressed`.
+**Lifecycle** – `New → Investigating → Resolved / Suppressed`.  
 
-**Data Model** – `Threat` (id, tenant_id, source, severity, status, raw_data, timestamps).
+**Data Model** – `Threat` (id, tenant_id, source, severity, status, raw_data, timestamps).  
 
-**Current UI** – Table with status badges, filter toolbar, empty state (`Threats.tsx:274,507`).
+**Current UI** – Table with status badges, filter toolbar, empty state (`Threats.tsx:274,507`).  
 
-**UX Problems** – MITRE fields may be missing; no bulk actions; resolve workflow not clearly guided.
+**UX Problems** – MITRE fields may be missing; no bulk actions; resolve workflow not clearly guided.  
 
-**Classification** – *Threat Detection* → Findings Explorer.
+**Classification** – *Threat Detection* → Findings Explorer.  
 
 **Recommended UI Model** – **Findings Explorer** with sidebar detail, bulk resolve, and risk triage workflow.
 
@@ -289,23 +289,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.7 Vulnerabilities
 
-**Purpose** – Display vulnerabilities from code‑dependency scans and external feeds.
+**Purpose** – Display vulnerabilities from code‑dependency scans and external feeds.  
 
-**Inputs** – `Vulnerability` rows (CVE, Dependabot, Security Hub).
+**Inputs** – `Vulnerability` rows (CVE, Dependabot, Security Hub).  
 
-**Processing** – CRUD, stats, CVSS computation.
+**Processing** – CRUD, stats, CVSS computation.  
 
-**Outputs** – Vulnerability list, CVSS cards, fixable/unfixable counts.
+**Outputs** – Vulnerability list, CVSS cards, fixable/unfixable counts.  
 
-**Lifecycle** – `Open → Fixed → Dismissed`.
+**Lifecycle** – `Open → Fixed → Dismissed`.  
 
-**Data Model** – `Vulnerability` (id, tenant_id, cve, package, version, severity, fix_available, raw_data).
+**Data Model** – `Vulnerability` (id, tenant_id, cve, package, version, severity, fix_available, raw_data).  
 
-**Current UI** – Table with filters, CVSS cards, empty state (`Vulnerabilities.tsx:1013‑1017`).
+**Current UI** – Table with filters, CVSS cards, empty state (`Vulnerabilities.tsx:1013‑1017`).  
 
-**UX Problems** – No direct link to source repository; fix action is a placeholder.
+**UX Problems** – No direct link to source repository; fix action is a placeholder.  
 
-**Classification** – *Vulnerability Management* → Findings Explorer.
+**Classification** – *Vulnerability Management* → Findings Explorer.  
 
 **Recommended UI Model** – **Findings Explorer** with integrated fix guidance (link to repo/commit) and bulk remediate.
 
@@ -313,23 +313,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.8 Security Posture (Score Service)
 
-**Purpose** – Compute a weighted security score from multiple dimensions.
+**Purpose** – Compute a weighted security score from multiple dimensions.  
 
-**Inputs** – Aggregated counts from threat, vulnerability, compliance, asset, policy tables.
+**Inputs** – Aggregated counts from threat, vulnerability, compliance, asset, policy tables.  
 
-**Processing** – `SecurityPostureService` applies weighting formulas; misconfiguration categories are derived mock data.
+**Processing** – `SecurityPostureService` applies weighting formulas; misconfiguration categories are derived mock data.  
 
-**Outputs** – Overall score (0‑100), dimension scores, trend snapshots.
+**Outputs** – Overall score (0‑100), dimension scores, trend snapshots.  
 
-**Lifecycle** – `Snapshot created → Stored → Queried`.
+**Lifecycle** – `Snapshot created → Stored → Queried`.  
 
-**Data Model** – `SecurityPostureScore` (tenant_id, score, breakdown JSON, created_at).
+**Data Model** – `SecurityPostureScore` (tenant_id, score, breakdown JSON, created_at).  
 
-**Current UI** – KPI widgets, line chart for trend (`SecurityPosture.tsx`). Empty defaults differ per dimension.
+**Current UI** – KPI widgets, line chart for trend (`SecurityPosture.tsx`). Empty defaults differ per dimension.  
 
-**UX Problems** – Inconsistent empty defaults; mock categories not labeled; no explanation of weighting.
+**UX Problems** – Inconsistent empty defaults; mock categories not labeled; no explanation of weighting.  
 
-**Classification** – *Risk Management / Security Overview* → Dashboard.
+**Classification** – *Risk Management / Security Overview* → Dashboard.  
 
 **Recommended UI Model** – **Risk Dashboard** with clear legends, “no data” indicators, and a *What‑this‑means* tooltip.
 
@@ -337,23 +337,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.9 Remediation
 
-**Purpose** – Create, execute, and track remediation plans for findings.
+**Purpose** – Create, execute, and track remediation plans for findings.  
 
-**Inputs** – Selected findings (threats/vulns), optional playbooks.
+**Inputs** – Selected findings (threats/vulns), optional playbooks.  
 
-**Processing** – `remediation.py` stores plan, tracks worker status; cancel is a no‑op stub.
+**Processing** – `remediation.py` stores plan, tracks worker status; cancel is a no‑op stub.  
 
-**Outputs** – Remediation plan record, execution logs, status timeline.
+**Outputs** – Remediation plan record, execution logs, status timeline.  
 
-**Lifecycle** – `Planned → Running → Completed / Cancelled`.
+**Lifecycle** – `Planned → Running → Completed / Cancelled`.  
 
-**Data Model** – `RemediationPlan` (id, tenant_id, steps JSON, status, created_at, logs).
+**Data Model** – `RemediationPlan` (id, tenant_id, steps JSON, status, created_at, logs).  
 
-**Current UI** – Timeline view, empty state, placeholder cancel button.
+**Current UI** – Timeline view, empty state, placeholder cancel button.  
 
-**UX Problems** – Cancel does nothing; no progress feedback; UI does not enforce step ordering.
+**UX Problems** – Cancel does nothing; no progress feedback; UI does not enforce step ordering.  
 
-**Classification** – *Remediation Workspace*.
+**Classification** – *Remediation Workspace*.  
 
 **Recommended UI Model** – **Remediation Workspace** with Kanban‑style steps, real‑time worker status, and actionable logs.
 
@@ -361,23 +361,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.10 Intelligence
 
-**Purpose** – Aggregate external threat‑intelligence feeds (IOC, actors, techniques).
+**Purpose** – Aggregate external threat‑intelligence feeds (IOC, actors, techniques).  
 
-**Inputs** – Provider APIs (unspecified), stored `IntelligenceRecord` rows.
+**Inputs** – Provider APIs (unspecified), stored `IntelligenceRecord` rows.  
 
-**Processing** – `intelligence.py` fetches, normalizes, stores records.
+**Processing** – `intelligence.py` fetches, normalizes, stores records.  
 
-**Outputs** – Feed list, record detail, sync status.
+**Outputs** – Feed list, record detail, sync status.  
 
-**Lifecycle** – `Empty → Syncing → Synced`.
+**Lifecycle** – `Empty → Syncing → Synced`.  
 
-**Data Model** – `IntelligenceRecord` (type, source, data, timestamps).
+**Data Model** – `IntelligenceRecord` (type, source, data, timestamps).  
 
-**Current UI** – Tabs for IOCs, actors, malware; sync button; empty states.
+**Current UI** – Tabs for IOCs, actors, malware; sync button; empty states.  
 
-**UX Problems** – No feed data; sync may hide errors; UI does not indicate freshness.
+**UX Problems** – No feed data; sync may hide errors; UI does not indicate freshness.  
 
-**Classification** – *Threat Intelligence* → Findings Explorer.
+**Classification** – *Threat Intelligence* → Findings Explorer.  
 
 **Recommended UI Model** – **Findings Explorer** with filter by feed, confidence score, and TTL.
 
@@ -385,23 +385,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.11 Compliance
 
-**Purpose** – Track compliance frameworks, controls, evidence, assessments.
+**Purpose** – Track compliance frameworks, controls, evidence, assessments.  
 
-**Inputs** – Framework definitions, control mappings, evidence artifacts.
+**Inputs** – Framework definitions, control mappings, evidence artifacts.  
 
-**Processing** – CRUD, assessment scoring, exception handling.
+**Processing** – CRUD, assessment scoring, exception handling.  
 
-**Outputs** – Framework status, control gaps, assessment reports.
+**Outputs** – Framework status, control gaps, assessment reports.  
 
-**Lifecycle** – `Not Assessed → Assessed → Exception Applied → Closed`.
+**Lifecycle** – `Not Assessed → Assessed → Exception Applied → Closed`.  
 
-**Data Model** – `Framework`, `Control`, `Evidence`, `Assessment`, `Exception`.
+**Data Model** – `Framework`, `Control`, `Evidence`, `Assessment`, `Exception`.  
 
-**Current UI** – Tabbed view per framework; tables for controls/evidence; PDF export button.
+**Current UI** – Tabbed view per framework; tables for controls/evidence; PDF export button.  
 
-**UX Problems** – Empty states shown, but no guidance on how to add evidence; export not verified.
+**UX Problems** – Empty states shown, but no guidance on how to add evidence; export not verified.  
 
-**Classification** – *Compliance* → Dashboard + Table.
+**Classification** – *Compliance* → Dashboard + Table.  
 
 **Recommended UI Model** – **Dashboard** for overall compliance score and **Table + Detail** for per‑control view.
 
@@ -409,23 +409,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.12 Policies
 
-**Purpose** – Define security policies and evaluate violations.
+**Purpose** – Define security policies and evaluate violations.  
 
-**Inputs** – Policy definitions, evaluated findings.
+**Inputs** – Policy definitions, evaluated findings.  
 
-**Processing** – Policy evaluator seeds built‑in policies, computes violations.
+**Processing** – Policy evaluator seeds built‑in policies, computes violations.  
 
-**Outputs** – Policy list, violation counts, enforcement status.
+**Outputs** – Policy list, violation counts, enforcement status.  
 
-**Lifecycle** – `Defined → Evaluated → Violated → Fixed`.
+**Lifecycle** – `Defined → Evaluated → Violated → Fixed`.  
 
-**Data Model** – `Policy`, `PolicyViolation`.
+**Data Model** – `Policy`, `PolicyViolation`.  
 
-**Current UI** – List with stats, seed button, empty state.
+**Current UI** – List with stats, seed button, empty state.  
 
-**UX Problems** – No UI for editing policy rules; violation details sparse.
+**UX Problems** – No UI for editing policy rules; violation details sparse.  
 
-**Classification** – *Policy Management* → Configuration / Policy Workspace.
+**Classification** – *Policy Management* → Configuration / Policy Workspace.  
 
 **Recommended UI Model** – **Configuration / Policy Workspace** with rule editor, live violation preview.
 
@@ -433,23 +433,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.13 Exceptions
 
-**Purpose** – Allow users to create temporary exceptions for findings.
+**Purpose** – Allow users to create temporary exceptions for findings.  
 
-**Inputs** – Target finding ID, reason, expiry.
+**Inputs** – Target finding ID, reason, expiry.  
 
-**Processing** – Create, revoke, list exceptions; tenant‑scoped.
+**Processing** – Create, revoke, list exceptions; tenant‑scoped.  
 
-**Outputs** – Exception record, status.
+**Outputs** – Exception record, status.  
 
-**Lifecycle** – `Active → Revoked → Expired`.
+**Lifecycle** – `Active → Revoked → Expired`.  
 
-**Data Model** – `Exception` (id, tenant_id, finding_id, reason, expires_at).
+**Data Model** – `Exception` (id, tenant_id, finding_id, reason, expires_at).  
 
-**Current UI** – Table with create/revoke actions; empty state.
+**Current UI** – Table with create/revoke actions; empty state.  
 
-**UX Problems** – No bulk revoke; UI shows plain list without contextual linking to the finding.
+**UX Problems** – No bulk revoke; UI shows plain list without contextual linking to the finding.  
 
-**Classification** – *Exception Management* → Table + Detail.
+**Classification** – *Exception Management* → Table + Detail.  
 
 **Recommended UI Model** – **Table + Detail** with inline linking to the associated threat/vulnerability.
 
@@ -457,23 +457,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.14 Governance
 
-**Purpose** – Provide a high‑level governance overview (risk, SLA, ownership, remediation).
+**Purpose** – Provide a high‑level governance overview (risk, SLA, ownership, remediation).  
 
-**Inputs** – Aggregated data from many services.
+**Inputs** – Aggregated data from many services.  
 
-**Processing** – `governance_overview.py` builds a composite view.
+**Processing** – `governance_overview.py` builds a composite view.  
 
-**Outputs** – Scores, risk heatmap, SLA metrics, ownership coverage.
+**Outputs** – Scores, risk heatmap, SLA metrics, ownership coverage.  
 
-**Lifecycle** – Similar to Overview – snapshot based.
+**Lifecycle** – Similar to Overview – snapshot based.  
 
-**Data Model** – Composite – no dedicated table, just on‑the‑fly aggregation.
+**Data Model** – Composite – no dedicated table, just on‑the‑fly aggregation.  
 
-**Current UI** – Chart/summary section with empty states.
+**Current UI** – Chart/summary section with empty states.  
 
-**UX Problems** – Redundant with Overview; no drill‑down links.
+**UX Problems** – Redundant with Overview; no drill‑down links.  
 
-**Classification** – *Security Overview* → Dashboard.
+**Classification** – *Security Overview* → Dashboard.  
 
 **Recommended UI Model** – Consolidate into the **Overview Dashboard**; de‑duplicate.
 
@@ -481,23 +481,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.15 Ownership
 
-**Purpose** – Map resources (assets, clusters, repos) to owners.
+**Purpose** – Map resources (assets, clusters, repos) to owners.  
 
-**Inputs** – Ownership assignments, resource metadata.
+**Inputs** – Ownership assignments, resource metadata.  
 
-**Processing** – CRUD, import/export CSV.
+**Processing** – CRUD, import/export CSV.  
 
-**Outputs** – Ownership table, coverage stats.
+**Outputs** – Ownership table, coverage stats.  
 
-**Lifecycle** – `Empty → Imported → Updated`.
+**Lifecycle** – `Empty → Imported → Updated`.  
 
-**Data Model** – `Ownership` (resource_id, owner_id, tenant_id).
+**Data Model** – `Ownership` (resource_id, owner_id, tenant_id).  
 
-**Current UI** – List, import/export buttons; edit action triggers a local alert placeholder.
+**Current UI** – List, import/export buttons; edit action triggers a local alert placeholder.  
 
-**UX Problems** – Edit does not persist; no validation.
+**UX Problems** – Edit does not persist; no validation.  
 
-**Classification** – *Governance / Asset Ownership* → Table + Detail.
+**Classification** – *Governance / Asset Ownership* → Table + Detail.  
 
 **Recommended UI Model** – **Table + Detail** with in‑line edit modal that calls the API.
 
@@ -505,23 +505,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.16 SLA Tracker
 
-**Purpose** – Track service‑level agreement compliance for threat/vulnerability resolution.
+**Purpose** – Track service‑level agreement compliance for threat/vulnerability resolution.  
 
-**Inputs** – Findings, timestamps, SLA windows (24h, 7d, 30d, 90d).
+**Inputs** – Findings, timestamps, SLA windows (24h, 7d, 30d, 90d).  
 
-**Processing** – `sla_service.py` calculates overdue status, aggregates.
+**Processing** – `sla_service.py` calculates overdue status, aggregates.  
 
-**Outputs** – SLA summary cards, overdue list.
+**Outputs** – SLA summary cards, overdue list.  
 
-**Lifecycle** – `Synced → Overdue → Resolved`.
+**Lifecycle** – `Synced → Overdue → Resolved`.  
 
-**Data Model** – `FindingSLA` (finding_id, sla_window, breached_at).
+**Data Model** – `FindingSLA` (finding_id, sla_window, breached_at).  
 
-**Current UI** – Summary cards, static window values, empty state.
+**Current UI** – Summary cards, static window values, empty state.  
 
-**UX Problems** – Windows are hard‑coded; no ability to configure per‑tenant.
+**UX Problems** – Windows are hard‑coded; no ability to configure per‑tenant.  
 
-**Classification** – *Risk Management* → Dashboard.
+**Classification** – *Risk Management* → Dashboard.  
 
 **Recommended UI Model** – **Risk Dashboard** with configurable SLA windows per tenant.
 
@@ -529,23 +529,23 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.17 Reports
 
-**Purpose** – Generate downloadable security reports (executive, vulnerability, posture, etc.).
+**Purpose** – Generate downloadable security reports (executive, vulnerability, posture, etc.).  
 
-**Inputs** – Aggregated data from all services.
+**Inputs** – Aggregated data from all services.  
 
-**Processing** – `reports_service.py` compiles templates, builds JSON/HTML; Excel branch returns error string, PDF branch absent.
+**Processing** – `reports_service.py` compiles templates, builds JSON/HTML; Excel branch returns error string, PDF branch absent.  
 
-**Outputs** – Report files (JSON, Excel stub, PDF missing), download URLs.
+**Outputs** – Report files (JSON, Excel stub, PDF missing), download URLs.  
 
-**Lifecycle** – `Requested → Compiled → Ready → Downloaded`.
+**Lifecycle** – `Requested → Compiled → Ready → Downloaded`.  
 
-**Data Model** – `Report` (id, tenant_id, template, content_blob, created_at).
+**Data Model** – `Report` (id, tenant_id, template, content_blob, created_at).  
 
-**Current UI** – List of templates, create/delete actions; export buttons.
+**Current UI** – List of templates, create/delete actions; export buttons.  
 
-**UX Problems** – Export formats not implemented; no schedule view.
+**UX Problems** – Export formats not implemented; no schedule view.  
 
-**Classification** – *Reporting* → Dashboard + Export.
+**Classification** – *Reporting* → Dashboard + Export.  
 
 **Recommended UI Model** – **Dashboard** with *Generate* wizard, then **Table** of generated reports with download links.
 
@@ -553,9 +553,9 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 ### 7.18 SBOM
 
-**Purpose** – Generate a Software Bill‑of‑Materials for repositories.
+**Purpose** – Generate a Software Bill‑of‑Materials for repositories.  
 
-**Inputs** – Repository source files; optional Syft binary.
+**Inputs** – Repository source files; optional Syft binary.  
 
 **Processing** – `sbom_service.py` parses manifests (fallback) or runs Syft; stores CycloneDX/SPDX; tries to enrich packages with version/CPE/EPSS/KEV (returns `None`). Package vulnerability lookup always returns empty.
 
@@ -603,15 +603,15 @@ Below each service is described according to the workflow phases (Purpose, Input
 
 | Pattern | Current Implementation | Recommended Consistency |
 |---|---|---|
-| **Header** – service title, status badge, primary action | Implemented per section (e.g., `Overview`, `Threats`) | Standard Header component with props: `title`, `status`, `actionButtons`.
-| **Filters / Search Toolbar** | Present in many sections, but varying APIs | Unified `FilterBar` component with query param sync.
-| **Loading / Empty / Error States** | Each component defines its own messages | Central `StatefulView` component handling `loading`, `empty`, `error` with consistent icons.
-| **Detail Drawer / Modal** | Used in Repositories, Assets, Threats, etc. | Shared `DetailDrawer` that receives `entityType` and fetches via generic API.
-| **Status Badges (Severity)** | Hard‑coded colors per service | Global `SeverityBadge` using a shared severity scale (Critical, High, Medium, Low, Info).
-| **Action Confirmation** | Inconsistent (some use `window.confirm`, others no guard) | Global `ConfirmDialog` for destructive actions.
-| **Permission Visibility** | Tenant guards in API; UI often shows actions irrespective of role | Role‑aware UI hide/show via `usePermissions` hook.
-| **Pagination / Infinite Scroll** | Some tables paginate, others load all | Consistent pagination component with server‑side paging.
-| **Bulk Actions** | Rarely present | Add bulk action toolbar where appropriate (Threats, Vulnerabilities, Exceptions).
+| **Header** – service title, status badge, primary action | Implemented per section (e.g., `Overview`, `Threats`) | Standard Header component with props: `title`, `status`, `actionButtons` |
+| **Filters / Search Toolbar** | Present in many sections, but varying APIs | Unified `FilterBar` component with query param sync |
+| **Loading / Empty / Error States** | Each component defines its own messages | Central `StatefulView` component handling `loading`, `empty`, `error` with consistent icons |
+| **Detail Drawer / Modal** | Used in Repositories, Assets, Threats, etc. | Shared `DetailDrawer` that receives `entityType` and fetches via generic API |
+| **Status Badges (Severity)** | Hard‑coded colors per service | Global `SeverityBadge` using a shared severity scale (Critical, High, Medium, Low, Info) |
+| **Action Confirmation** | Inconsistent (some use `window.confirm`, others no guard) | Global `ConfirmDialog` for destructive actions |
+| **Permission Visibility** | Tenant guards in API; UI often shows actions irrespective of role | Role‑aware UI hide/show via `usePermissions` hook |
+| **Pagination / Infinite Scroll** | Some tables paginate, others load all | Consistent pagination component with server‑side paging |
+| **Bulk Actions** | Rarely present | Add bulk action toolbar where appropriate (Threats, Vulnerabilities, Exceptions) |
 
 ---
 
@@ -632,7 +632,6 @@ interface FindingBase {
   raw_data: JSON; // provider payload
 }
 ```
-
 *Current* – Threat and Vulnerability tables follow this shape but are separate models.
 *Proposed* – Introduce a common `FindingBase` view (SQL view or GraphQL interface) for UI components to consume.
 
@@ -664,7 +663,6 @@ Database (PostgreSQL) – tenant‑scoped tables
  ▼
 External Providers (AWS, GitHub, GitLab, K8s, etc.)
 ```
-
 **PROPOSED ADDITIONS** – Add **Event Bus** (e.g., Redis Pub/Sub) for real‑time scan progress; introduce **Background Worker** status persistence for scans and syncs.
 
 ---
@@ -724,7 +722,7 @@ Security Center
 | **Layout** | Tab‑based, each section uses its own component set. | Service‑appropriate UI model (Dashboard, Explorer, Wizard, Graph, Workspace). |
 | **Components** | Repeated cards/tables per service. | Shared component library (Header, FilterBar, StateView, DetailDrawer, SeverityBadge). |
 | **Workflow** | No guided flow; actions are scattered. | Guided workflows (e.g., Scan Wizard → Findings Explorer → Remediation Workspace). |
-| **Visualization** | Mix of charts, tables, cards; inconsistent. | Consistent visual language per UI model; use appropriate chart type (risk matrix, dependency graph, timeline). |
+| **Visualization** | Mix of charts, tables, cards; inconsistent. | Consistent visual language per UI model (risk matrix, dependency graph, timeline). |
 | **States** | Loading / empty / error only. | Explicit lifecycle states (Not Configured, Running, Completed, Failed) with badges. |
 | **Backend** | Almost all services have API endpoints; some workers broken. | Same APIs but with fixed defects; add background‑task status endpoints. |
 | **UX** | Placeholder actions, missing progress, mock data not labeled. | Clear confirmations, progress indicators, synthetic data flagged, role‑aware visibility. |
@@ -745,13 +743,13 @@ Security Center
 | Intelligence | Minor – unify table layout, add freshness indicator. |
 | Compliance | Minor – add export flow, link to evidence upload UI. |
 | Policies | Medium – add rule editor component, integrate with Findings Explorer. |
-| Exceptions | Minor – add bulk revoke, link to finding detail. |
-| Governance | Remove duplicate; collapse into Overview. |
-| Ownership | Minor – replace alert placeholder with modal form. |
-| SLA Tracker | Minor – make windows configurable UI, add overdue badge. |
-| Reports | Major – implement proper Excel/PDF export, add generation wizard. |
-| SBOM | Major – replace synthetic tree with true dependency graph component. |
-| Security Copilot | Minor – add “Live model” badge, error handling UI. |
+| Exceptions | Minor – add bulk revoke, link to finding detail.
+| Governance | Remove duplicate; collapse into Overview.
+| Ownership | Minor – replace alert placeholder with modal form.
+| SLA Tracker | Minor – make windows configurable UI, add overdue badge.
+| Reports | Major – implement Excel/PDF generation, add generation wizard.
+| SBOM | Major – replace synthetic tree with true dependency graph component.
+| Security Copilot | Minor – add “Live model” badge, error handling UI.
 
 ---
 
@@ -844,10 +842,10 @@ Security Center
 2. **SBOM Enhancements** – Implement real package vulnerability lookup and proper dependency graph storage.
 3. **Unified Finding Model** – Add `FindingBase` view and shared UI components.
 4. **Remediation Workspace** – Build worker status persistence, UI Kanban view.
-5. **Scanner Wizard UI** – Replace repository list with step‑by‑step wizard using new progress API.
+5. **Scanner Wizard UI** – Replace current list with step‑by‑step wizard using new progress API.
 6. **Report Export** – Implement Excel/PDF generation and scheduling.
 7. **Ownership Edit Persistence** – Replace alert placeholder with API call and modal UI.
-8. **Policy Rule Editor** – Add rule CRUD UI and backend.
+8. **Policy Rule Editor** – Add rule editor component and backend.
 9. **SLA Configurable Windows** – Add DB model and UI controls.
 10. **Security Copilot Production Integration** – Add proper Anthropic key handling and UI indicator.
 
